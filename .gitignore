@@ -1,6 +1,4 @@
 .idea/
 .vscode/
-venv/
-.cache/
 *.ignore.*
 .ignore
