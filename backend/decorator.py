@@ -44,9 +44,10 @@ def textea_export(path: str, **decorator_kwargs):
             "decorated_params": decorated_params,
         }
 
-        @app.get('/param/{}'.format(function_name))
-        async def function_signature():
-            return decorated_function
+        get_wrapper = app.get('/param/{}'.format(function_name))
+        decorated_function_param_getter = lambda : decorated_function
+        decorated_function_param_getter.__setattr__('__name__', '{}_param_getter'.format(function_name))
+        get_wrapper(decorated_function_param_getter)
 
         @wraps(function)
         async def wrapper():
