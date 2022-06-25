@@ -45,12 +45,12 @@ def textea_export(path: str, **decorator_kwargs):
         }
 
         get_wrapper = app.get('/param/{}'.format(function_name))
-        decorated_function_param_getter = lambda : decorated_function
+        decorated_function_param_getter = lambda: decorated_function
         decorated_function_param_getter.__setattr__('__name__', '{}_param_getter'.format(function_name))
         get_wrapper(decorated_function_param_getter)
 
         @wraps(function)
-        async def wrapper():
+        def wrapper():
             request_kwargs = flask.request.form
             function_kwargs = dict()
             for request_arg_name, request_arg in request_kwargs.items():

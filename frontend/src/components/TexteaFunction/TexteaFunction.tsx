@@ -1,5 +1,9 @@
 import React from "react";
-const baseURL = "http://localhost:4010";
+import { Stack } from "@mui/material";
+import TexteaFunctionInfoCard from "./TexteaFunctionInfoCard";
+import TexteaFunctionCallerCard from "./TexteaFunctionCallerCard";
+
+export const baseURL = "http://localhost:4010";
 
 export interface TexteaFunctionProps {
   functionName: string;
@@ -24,15 +28,14 @@ export default class TexteaFunction extends React.Component<
   }
 
   async componentDidMount() {
-    const res = await fetch(
+    const response = await fetch(
       new URL(`/param/${this.props.functionName}`, baseURL),
       {
         method: "GET",
       }
     );
     try {
-      const functionParams = await res.json();
-      console.log(functionParams);
+      const functionParams = await response.json();
       this.setState({
         isLoaded: true,
         functionParams,
@@ -47,21 +50,16 @@ export default class TexteaFunction extends React.Component<
 
   render() {
     return (
-      <div>
-        <div className="TexteaFunctionDebugInfo">
-          <p style={{ fontWeight: "bold" }}>Debug Info</p>
-          <p>
-            Function Name:&nbsp;
-            <code>{this.props.functionName}</code>
-          </p>
-          <p>
-            Function Param:&nbsp;
-            <code>
-              {JSON.stringify(this.state.functionParams, null, 1) ?? "null"}
-            </code>
-          </p>
-        </div>
-      </div>
+      <Stack spacing={2}>
+        <TexteaFunctionInfoCard
+          functionName={this.props.functionName}
+          functionParams={this.state.functionParams}
+        />
+        <TexteaFunctionCallerCard
+          functionName={this.props.functionName}
+          functionParams={this.state.functionParams}
+        />
+      </Stack>
     );
   }
 }

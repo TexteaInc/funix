@@ -1,6 +1,6 @@
 import React from "react";
 import "./App.css";
-import TexteaFunction from "./components/TexteaFunction";
+import TexteaFunction from "./components/TexteaFunction/TexteaFunction";
 
 function App() {
   document.title = "PyDataFront";
