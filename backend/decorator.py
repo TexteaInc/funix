@@ -62,6 +62,8 @@ def textea_export(path: str, **decorator_kwargs):
                     elif function_arg_type_name == 'dict' or function_arg_type_name == 'list':
                         function_kwargs[request_arg_name] = json.loads(request_arg)
             wrapped_function = function(**function_kwargs)
+            if not isinstance(wrapped_function, (str, dict, tuple)):
+                wrapped_function = str(wrapped_function)
             return wrapped_function
 
         post_wrapper = app.post('/call/{}'.format(path))

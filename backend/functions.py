@@ -1,7 +1,7 @@
 from decorator import textea_export
 
 
-@textea_export(path='/calc', type={
+@textea_export(path='calc', type={
     'possible': ['add', 'minus']
 })
 def calc(a: int, b: int, type: str):
