@@ -4,7 +4,7 @@ from functools import wraps
 
 import flask
 
-from app import app
+from pydatafront import app
 
 __supported_basic_types = ['int', 'float', 'str']
 __supported_types = __supported_basic_types + ['dict', 'list']
@@ -12,7 +12,7 @@ __decorated_functions_list = list()
 
 
 @app.get('/list')
-async def __textea_export_func_list():
+def __textea_export_func_list():
     return {
         "list": __decorated_functions_list,
     }

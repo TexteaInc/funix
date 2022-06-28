@@ -1,4 +1,4 @@
-from decorator import textea_export
+from pydatafront.decorator import textea_export
 
 
 @textea_export(path='calc', type={
