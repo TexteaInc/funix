@@ -10,8 +10,8 @@ Place your functions in `backend/function.py`.
 
 ```shell
 cd backend
-python3 -m pip install -r ./requirements.txt
-flask run -p 4010 # we use port 4010 
+python3 -m pip install -r ./pydatafront/requirements.txt
+python3 -m pydatafront functions --host localhost --port 4010
 ```
 
 
