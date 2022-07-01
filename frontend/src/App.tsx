@@ -1,14 +1,14 @@
 import React from "react";
-import "./App.css";
-import TexteaFunction from "./components/TexteaFunction/TexteaFunction";
-import { Stack } from "@mui/material";
+import { Container } from "@mui/material";
+import { TexteaFunctionList } from "./components/TexteaFunctionList";
+import { TexteaFunctionPreview } from "./components/TexteaFunctionPreview";
 
 function App() {
   return (
-    <Stack spacing={2} className="App">
-      <TexteaFunction functionName="test" />
-      <TexteaFunction functionName="calc" />
-    </Stack>
+    <Container>
+      <TexteaFunctionList />
+      <TexteaFunctionPreview />
+    </Container>
   );
 }
 
