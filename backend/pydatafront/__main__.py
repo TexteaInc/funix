@@ -7,5 +7,6 @@ if __name__ == '__main__':
     parser.add_argument('--host', help='host of backend', action='store', default='localhost')
     parser.add_argument('--port', help='port of backend', action='store', default='4010')
     parsed_sys_args = parser.parse_args(sys.argv)
+    decorator.enable_wrapper()
     importlib.import_module(parsed_sys_args.main_class)
     app.run(host=parsed_sys_args.host, port=parsed_sys_args.port)

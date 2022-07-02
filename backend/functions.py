@@ -2,7 +2,7 @@ from pydatafront.decorator import textea_export
 
 
 @textea_export(path='calc', type={
-    'possible': ['add', 'minus']
+    'whitelist': ['add', 'minus']
 })
 def calc(a: int, b: int, type: str):
     if type == 'add':
@@ -13,8 +13,13 @@ def calc(a: int, b: int, type: str):
         raise 'invalid parameter type'
 
 
+@textea_export(path='calc_add')
+def calc_add(a: int, b: int):
+    return calc(a, b, 'add')
+
+
 @textea_export(path='test', username={
-    'possible': ['turx']
+    'whitelist': ['turx']
 }, pi={
     'example': [3.1415926535]
 }, arr={

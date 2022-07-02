@@ -150,8 +150,8 @@ export default class TexteaFunctionCallerCard extends React.Component<
   }
 
   getInputField(argName: string, argParams: any) {
-    if (argParams.hasOwnProperty("possible")) {
-      const menuItems = argParams["possible"].map((element: any) =>
+    if (argParams.hasOwnProperty("whitelist")) {
+      const menuItems = argParams["whitelist"].map((element: any) =>
         this.iterateCandidatesForSelectMenuItems(
           element,
           argName,

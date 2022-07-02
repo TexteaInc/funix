@@ -9,6 +9,7 @@ function App() {
     <Stack spacing={2} className="App">
       <TexteaFunction functionName="test" />
       <TexteaFunction functionName="calc" />
+      <TexteaFunction functionName="calc_add" />
     </Stack>
   );
 }
