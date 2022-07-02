@@ -1,16 +1,14 @@
 import React from "react";
-import "./App.css";
-import TexteaFunction from "./components/TexteaFunction/TexteaFunction";
-import { Stack } from "@mui/material";
+import { Container } from "@mui/material";
+import { TexteaFunctionList } from "./components/TexteaFunctionList";
+import { TexteaFunctionSelected } from "./components/TexteaFunctionSelected";
 
 function App() {
-  document.title = "PyDataFront";
   return (
-    <Stack spacing={2} className="App">
-      <TexteaFunction functionName="test" />
-      <TexteaFunction functionName="calc" />
-      <TexteaFunction functionName="calc_add" />
-    </Stack>
+    <Container>
+      <TexteaFunctionList />
+      <TexteaFunctionSelected />
+    </Container>
   );
 }
 

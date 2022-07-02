@@ -2,8 +2,7 @@ import React from "react";
 import { Stack } from "@mui/material";
 import TexteaFunctionInfoCard from "./TexteaFunctionInfoCard";
 import TexteaFunctionCallerCard from "./TexteaFunctionCallerCard";
-
-export const baseURL = "http://localhost:4010";
+import { API_URL } from "../../shared";
 
 export interface TexteaFunctionProps {
   functionName: string;
@@ -27,9 +26,9 @@ export default class TexteaFunction extends React.Component<
     };
   }
 
-  async componentDidMount() {
+  async updateState() {
     const response = await fetch(
-      new URL(`/param/${this.props.functionName}`, baseURL),
+      new URL(`/param/${this.props.functionName}`, API_URL),
       {
         method: "GET",
       }
@@ -45,6 +44,20 @@ export default class TexteaFunction extends React.Component<
         isLoaded: true,
         error,
       });
+    }
+  }
+
+  async componentDidMount() {
+    await this.updateState();
+  }
+
+  async componentDidUpdate(prevProps: TexteaFunctionProps) {
+    if (prevProps !== this.props) {
+      this.setState({
+        error: null,
+        isLoaded: false,
+      });
+      await this.updateState();
     }
   }
 

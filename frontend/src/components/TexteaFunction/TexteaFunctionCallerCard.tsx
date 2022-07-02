@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import React from "react";
 import SendIcon from "@mui/icons-material/Send";
-import { baseURL } from "./TexteaFunction";
+import { API_URL } from "../../shared";
 
 export interface TexteaFunctionCallerCardProps {
   functionName: string;
@@ -43,6 +43,15 @@ export default class TexteaFunctionCallerCard extends React.Component<
       form: {},
       customized: [],
     });
+  }
+
+  componentDidUpdate(prevProps: TexteaFunctionCallerCardProps) {
+    if (prevProps !== this.props) {
+      this.setState({
+        form: {},
+        customized: [],
+      });
+    }
   }
 
   handleInputChange(event: any) {
@@ -88,7 +97,7 @@ export default class TexteaFunctionCallerCard extends React.Component<
     event.preventDefault();
     const data = new FormData(event.target);
     const response = await fetch(
-      new URL(this.props.functionParams?.path, baseURL),
+      new URL(this.props.functionParams?.path, API_URL),
       {
         method: "POST",
         body: data,
