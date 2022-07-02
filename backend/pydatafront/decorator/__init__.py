@@ -42,8 +42,8 @@ def textea_export(path: str, **decorator_kwargs):
             for decorator_arg_name, decorator_arg_dict in decorator_kwargs.items():
                 if decorator_arg_name not in decorated_params.keys():
                     decorated_params[decorator_arg_name] = dict()
-                if 'possible' in decorator_arg_dict.keys():
-                    decorated_params[decorator_arg_name]['possible'] = decorator_arg_dict['possible']
+                if 'whitelist' in decorator_arg_dict.keys():
+                    decorated_params[decorator_arg_name]['whitelist'] = decorator_arg_dict['whitelist']
                 elif 'example' in decorator_arg_dict.keys():
                     decorated_params[decorator_arg_name]['example'] = decorator_arg_dict['example']
             decorated_function = {
