@@ -24,7 +24,7 @@ def enable_wrapper():
             }
 
 
-def textea_export(path: str, **decorator_kwargs):
+def textea_export(path: str, config: list, input: list, **decorator_kwargs):
     def decorator(function: callable):
         if __wrapper_enabled:
             function_name = getattr(function, '__name__')
@@ -53,6 +53,8 @@ def textea_export(path: str, **decorator_kwargs):
             decorated_function = {
                 "path": '/call/{}'.format(path),
                 "decorated_params": decorated_params,
+                "input": input,
+                "config": config
             }
 
             get_wrapper = app.get('/param/{}'.format(function_name))
