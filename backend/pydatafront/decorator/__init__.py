@@ -28,7 +28,11 @@ def textea_export(path: str, **decorator_kwargs):
     def decorator(function: callable):
         if __wrapper_enabled:
             function_name = getattr(function, '__name__')
-            __decorated_functions_list.append(function_name)
+            function_preview = {
+                "name": function_name,
+                "path": "/param/{}".format(path)
+            }
+            __decorated_functions_list.append(function_preview)
 
             function_signature = inspect.signature(function)
             function_params = function_signature.parameters
