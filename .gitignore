@@ -3,3 +3,4 @@
 *.ignore.*
 .ignore
 *.ignore
+__pycache__
