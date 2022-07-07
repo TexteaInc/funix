@@ -3,3 +3,7 @@
 *.ignore.*
 .ignore
 *.ignore
+__pycache__
+build
+*.egg-info
+venv/
