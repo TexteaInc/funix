@@ -36,14 +36,12 @@ def textea_export(path: str, **decorator_kwargs):
 
             function_signature = inspect.signature(function)
             function_params = function_signature.parameters
-            output_type = getattr(function_signature.return_annotation, '__name__')
             decorated_params = dict()
 
-            if 'output_dict' in decorator_kwargs.keys():
-                output_type = dict()
-                for key, tp in decorator_kwargs['output_dict'].items():
-                    output_type[key] = getattr(tp, '__name__')
-                decorator_kwargs.pop('output_dict')
+            output_type = dict()
+            for key, tp in getattr(function_signature.return_annotation, '__annotations__').items():
+                output_type[key] = getattr(getattr(tp, '__args__')[0], '__name__')
+
 
             input=[]
             config=[]
@@ -68,6 +66,8 @@ def textea_export(path: str, **decorator_kwargs):
                 function_arg_name = function_param.name
                 if decorated_params[function_arg_name]['treat_as'] == 'column':
                     function_arg_type_name = getattr(function_param.annotation.__args__[0], '__name__')
+                elif decorated_params[function_arg_name]['treat_as'] == 'cell':
+                    raise "Don't use cell!"
                 else:
                     function_arg_type_name = getattr(function_param.annotation, '__name__')
                 if function_arg_name not in decorated_params.keys():
