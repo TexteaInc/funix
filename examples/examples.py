@@ -1,5 +1,25 @@
 from pydatafront.decorator import textea_export
 
+import tel_search
+
+@textea_export(path='bioinfo_telomere_check', 
+        sRNA={'example':
+            ['CCCTAAACCCTAAACCCTAT',  # False
+             'CCCTAAACCCTAAACCCTAA',   # True, 20-nt 
+             'CCCTAAACCCTAAACCC',    # False , too short 
+             'CCCTAAACCCTAAACCCTAAAC', # True, 22-nt
+             'CTAAACCCTAAACCCTAAACCCT' # True, 25-nt
+           ]}, 
+        repeat_unit= {'example': ["CCCTAAA"]}
+)
+
+def bioinfo_telomere_check(sRNA:str, repeat_unit:str):
+    check_result = tel_search.search_telomeres([sRNA], repeat_unit)
+    if check_result[0]:
+        return "This IS a telomere"
+    else:
+        return "This is NOT a telomere"
+
 
 @textea_export(path='calc', type={
     'whitelist': ['add', 'minus']
