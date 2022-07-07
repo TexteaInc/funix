@@ -24,7 +24,7 @@ def enable_wrapper():
             }
 
 
-def textea_export(path: str, config: list, input: list, **decorator_kwargs):
+def textea_export(path: str, **decorator_kwargs):
     def decorator(function: callable):
         if __wrapper_enabled:
             function_name = getattr(function, '__name__')
@@ -36,7 +36,19 @@ def textea_export(path: str, config: list, input: list, **decorator_kwargs):
 
             function_signature = inspect.signature(function)
             function_params = function_signature.parameters
+            output_type = getattr(function_signature.return_annotation, '__name__')
             decorated_params = dict()
+
+            if 'output_dict' in decorator_kwargs.keys():
+                output_type = dict()
+                for key, tp in decorator_kwargs['output_dict'].items():
+                    output_type[key] = getattr(tp, '__name__')
+                decorator_kwargs.pop('output_dict')
+
+            input=[]
+            config=[]
+            input_attr=""
+
             for _, function_param in function_params.items():
                 function_arg_name = function_param.name
                 function_arg_type_name = getattr(function_param.annotation, '__name__')
@@ -46,6 +58,14 @@ def textea_export(path: str, config: list, input: list, **decorator_kwargs):
             for decorator_arg_name, decorator_arg_dict in decorator_kwargs.items():
                 if decorator_arg_name not in decorated_params.keys():
                     decorated_params[decorator_arg_name] = dict()
+                if decorator_arg_dict['treat_as'] == 'config':
+                    config.append(decorator_arg_name)
+                else:
+                    input.append(decorator_arg_name)
+                    input_attr = decorator_arg_dict['treat_as'] if input_attr == '' else input_attr
+                    if input_attr != decorator_arg_dict['treat_as']:
+                        raise "Error: input type doesn't match"
+
                 if 'whitelist' in decorator_arg_dict.keys():
                     decorated_params[decorator_arg_name]['whitelist'] = decorator_arg_dict['whitelist']
                 elif 'example' in decorator_arg_dict.keys():
@@ -53,11 +73,12 @@ def textea_export(path: str, config: list, input: list, **decorator_kwargs):
             decorated_function = {
                 "path": '/call/{}'.format(path),
                 "decorated_params": decorated_params,
-                "input": input,
-                "config": config
+                "input": {'content': input, 'type': input_attr},
+                "config": config,
+                "output_type": output_type
             }
 
-            get_wrapper = app.get('/param/{}'.format(function_name))
+            get_wrapper = app.get('/param/{}'.format(path))
             decorated_function_param_getter = lambda: decorated_function
             decorated_function_param_getter.__setattr__('__name__', '{}_param_getter'.format(function_name))
             get_wrapper(decorated_function_param_getter)
