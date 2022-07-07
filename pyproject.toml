@@ -6,3 +6,6 @@ dependencies = [
   "flask",
   "flask_cors"
 ]
+
+[tool.setuptools.packages.find]
+where = ["backend"]
