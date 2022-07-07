@@ -59,9 +59,9 @@ def textea_export(path: str, **decorator_kwargs):
                 if decorator_arg_name not in decorated_params.keys():
                     decorated_params[decorator_arg_name] = dict()
                 if decorator_arg_dict['treat_as'] == 'config':
-                    config.append(decorator_arg_name)
+                    decorated_params[decorator_arg_name]['treat_as'] = 'config'
                 else:
-                    input.append(decorator_arg_name)
+                    decorated_params[decorator_arg_name]['treat_as'] = decorator_arg_dict['treat_as']
                     input_attr = decorator_arg_dict['treat_as'] if input_attr == '' else input_attr
                     if input_attr != decorator_arg_dict['treat_as']:
                         raise "Error: input type doesn't match"
@@ -73,8 +73,6 @@ def textea_export(path: str, **decorator_kwargs):
             decorated_function = {
                 "path": '/call/{}'.format(path),
                 "decorated_params": decorated_params,
-                "input": {'content': input, 'type': input_attr},
-                "config": config,
                 "output_type": output_type
             }
 
