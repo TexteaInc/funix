@@ -1,4 +1,5 @@
 from pydatafront.decorator import textea_export
+from typing import List
 
 @textea_export(
     path='calc',
@@ -7,10 +8,10 @@ from pydatafront.decorator import textea_export
         'treat_as': 'config'
     },
     a={
-       'treat_as' : 'column'
+       'treat_as' : 'cell'
     },
     b={
-       'treat_as' : 'column'
+       'treat_as' : 'cell'
     }
 )
 def calc(a: int, b: int, type: str) -> int:
@@ -25,10 +26,10 @@ def calc(a: int, b: int, type: str) -> int:
 @textea_export(
     path='calc_add',
     a={
-        'treat_as' : 'column'
+        'treat_as' : 'cell'
     },
     b={
-        'treat_as' : 'column'
+        'treat_as' : 'cell'
     }
 )
 def calc_add(a: int, b: int) -> int:
@@ -76,8 +77,8 @@ def test(username: str, pi: float, d: dict, arr: list) -> str:
         'sub': int,
     }
 )
-def add_with_sub(a: int, b: int) -> dict:
+def add_with_sub(a: List[int], b: List[int]) -> dict:
     return {
-        'add': a + b,
-        'sub': a - b
+        'add': sum(a) + sum(b),
+        'sub': sum(a) - sum(b)
     }

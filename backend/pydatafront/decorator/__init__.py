@@ -48,13 +48,6 @@ def textea_export(path: str, **decorator_kwargs):
             input=[]
             config=[]
             input_attr=""
-
-            for _, function_param in function_params.items():
-                function_arg_name = function_param.name
-                function_arg_type_name = getattr(function_param.annotation, '__name__')
-                if function_arg_name not in decorated_params.keys():
-                    decorated_params[function_arg_name] = dict()
-                decorated_params[function_arg_name]['type'] = function_arg_type_name
             for decorator_arg_name, decorator_arg_dict in decorator_kwargs.items():
                 if decorator_arg_name not in decorated_params.keys():
                     decorated_params[decorator_arg_name] = dict()
@@ -70,6 +63,16 @@ def textea_export(path: str, **decorator_kwargs):
                     decorated_params[decorator_arg_name]['whitelist'] = decorator_arg_dict['whitelist']
                 elif 'example' in decorator_arg_dict.keys():
                     decorated_params[decorator_arg_name]['example'] = decorator_arg_dict['example']
+
+            for _, function_param in function_params.items():
+                function_arg_name = function_param.name
+                if decorated_params[function_arg_name]['treat_as'] == 'column':
+                    function_arg_type_name = getattr(function_param.annotation.__args__[0], '__name__')
+                else:
+                    function_arg_type_name = getattr(function_param.annotation, '__name__')
+                if function_arg_name not in decorated_params.keys():
+                    decorated_params[function_arg_name] = dict()
+                decorated_params[function_arg_name]['type'] = function_arg_type_name
             decorated_function = {
                 "path": '/call/{}'.format(path),
                 "decorated_params": decorated_params,
