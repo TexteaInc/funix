@@ -4,7 +4,9 @@ import { List, ListItem, ListItemButton } from "@mui/material";
 import { useStore } from "../store";
 
 export const TexteaFunctionList: React.FC = () => {
-  const [state, setState] = useState<{ functions: string[] }>({
+  const [state, setState] = useState<{
+    functions: { name: string; path: string }[];
+  }>({
     functions: [],
   });
   useEffect(() => {
@@ -32,22 +34,19 @@ export const TexteaFunctionList: React.FC = () => {
     };
   }, []);
 
-  const handleFetchFunctionDetail = useCallback(
-    async (functionName: string) => {
-      useStore.setState({
-        selectedFunction: functionName,
-      });
-    },
-    []
-  );
+  const handleFetchFunctionDetail = useCallback(async (name: string) => {
+    useStore.setState({
+      selectedFunction: name,
+    });
+  }, []);
   return (
     <List>
       {state.functions.map((functionName) => (
         <ListItem key={`TexteaFunctionList-${functionName}`}>
           <ListItemButton
-            onClick={() => handleFetchFunctionDetail(functionName)}
+            onClick={() => handleFetchFunctionDetail(functionName.name)}
           >
-            {functionName}
+            {functionName.name}
           </ListItemButton>
         </ListItem>
       ))}

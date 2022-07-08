@@ -1,57 +1,60 @@
 from pydatafront.decorator import textea_export
+from typing import List, TypedDict
 
-import tel_search
+class calc_return(TypedDict):
+    output: List[int]
 
-@textea_export(path='bioinfo_telomere_check', 
-        sRNA={'example':
-            ['CCCTAAACCCTAAACCCTAT',  # False
-             'CCCTAAACCCTAAACCCTAA',   # True, 20-nt 
-             'CCCTAAACCCTAAACCC',    # False , too short 
-             'CCCTAAACCCTAAACCCTAAAC', # True, 22-nt
-             'CTAAACCCTAAACCCTAAACCCT' # True, 25-nt
-           ]}, 
-        repeat_unit= {'example': ["CCCTAAA"]}
+@textea_export(
+    path='calc',
+    type={
+        'whitelist': ['add', 'minus'],
+        'treat_as': 'config'
+    },
+    a={
+       'treat_as' : 'column'
+    },
+    b={
+       'treat_as' : 'column'
+    }
 )
-
-def bioinfo_telomere_check(sRNA:str, repeat_unit:str):
-    check_result = tel_search.search_telomeres([sRNA], repeat_unit)
-    if check_result[0]:
-        return "This IS a telomere"
-    else:
-        return "This is NOT a telomere"
-
-
-@textea_export(path='calc', type={
-    'whitelist': ['add', 'minus']
-})
-def calc(a: int, b: int, type: str):
+def calc(a: List[int], b: List[int], type: str) -> calc_return:
     if type == 'add':
-        return a + b
+        return {'output': [a[i] + b[i] for i in range(min(len(a), len(b)))]}
     elif type == 'minus':
-        return a - b
+        return {'output': [a[i] - b[i] for i in range(min(len(a), len(b)))]}
     else:
         raise 'invalid parameter type'
 
 
-@textea_export(path='calc_add')
-def calc_add(a: int, b: int):
+@textea_export(
+    path='calc_add',
+    a={
+        'treat_as' : 'column'
+    },
+    b={
+        'treat_as' : 'column'
+    }
+)
+def calc_add(a: List[int], b: List[int]) -> calc_return:
     return calc(a, b, 'add')
 
 
-@textea_export(path='test', username={
-    'whitelist': ['turx']
-}, pi={
-    'example': [3.1415926535]
-}, arr={
-    'example': [
-        [1, 2, 3],
-        [4, 5, 6]
-    ]
-})
-def test(username: str, pi: float, d: dict, arr: list):
-    s = ''
-    s += ('{}, {}\n').format(username, type(username))
-    s += ('{}, {}\n').format(pi, type(pi))
-    s += ('{}, {}\n').format(d, type(d))
-    s += ('{}, {}\n').format(arr, type(arr))
-    return s
+
+class add_with_sub_return(TypedDict):
+    add: List[int]
+    sub: List[int]
+
+@textea_export(
+    path='owo',
+    a={
+        'treat_as': 'column'
+    },
+    b={
+        'treat_as' : 'column'
+    }
+)
+def add_with_sub(a: List[int], b: List[int]) -> add_with_sub_return:
+    return {
+        'add': [a[i] + b[i] for i in range(min(len(a), len(b)))],
+        'sub': [a[i] - b[i] for i in range(min(len(a), len(b)))],
+    }
