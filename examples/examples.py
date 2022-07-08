@@ -9,6 +9,7 @@ class telomere_check_return(TypedDict):
 
 
 @textea_export(path='bioinfo_telomere_check',
+               description="A telomere is a region of repetitive DNA sequences at the end of a chromosome. Find the belongings of a repeat unit.",
                sRNAs={'treat_as': 'column',
                       'example':
                           [
@@ -35,6 +36,7 @@ class calc_return(TypedDict):
 
 @textea_export(
     path='calc',
+    description='perform some basic math calculation',
     type={
         'whitelist': ['add', 'minus'],
         'treat_as': 'config'
@@ -57,6 +59,7 @@ def calc(a: List[int], b: List[int], type: str) -> calc_return:
 
 @textea_export(
     path='calc_add',
+    description='add two column',
     a={
         'treat_as': 'column'
     },
