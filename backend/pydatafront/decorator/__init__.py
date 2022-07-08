@@ -24,13 +24,14 @@ def enable_wrapper():
             }
 
 
-def textea_export(path: str, **decorator_kwargs):
+def textea_export(path: str, description: str = "", **decorator_kwargs):
     def decorator(function: callable):
         if __wrapper_enabled:
             function_name = getattr(function, '__name__')
             function_preview = {
                 "name": function_name,
-                "path": "/param/{}".format(path)
+                "path": "/param/{}".format(path),
+                "desc": description
             }
             __decorated_functions_list.append(function_preview)
 
