@@ -86,20 +86,25 @@ def textea_export(path: str, **decorator_kwargs):
 
             @wraps(function)
             def wrapper():
-                request_kwargs = flask.request.form
-                function_kwargs = dict()
-                for request_arg_name, request_arg in request_kwargs.items():
-                    function_arg_type = function_params[request_arg_name].annotation
-                    function_arg_type_name = getattr(function_arg_type, '__name__')
-                    if request_arg_name in function_params.keys():
-                        if function_arg_type_name in __supported_basic_types:
-                            function_kwargs[request_arg_name] = function_arg_type(request_arg)
-                        elif function_arg_type_name == 'dict' or function_arg_type_name == 'list':
-                            function_kwargs[request_arg_name] = json.loads(request_arg)
-                wrapped_function = function(**function_kwargs)
-                if not isinstance(wrapped_function, (str, dict, tuple)):
-                    wrapped_function = str(wrapped_function)
-                return wrapped_function
+                if flask.request.content_type.startswith('application/json'):
+                    # for textea-sheet
+                    wrapped_function = function(**flask.request.get_json())
+                    return wrapped_function
+                else:
+                    request_kwargs = flask.request.form
+                    function_kwargs = dict()
+                    for request_arg_name, request_arg in request_kwargs.items():
+                        function_arg_type = function_params[request_arg_name].annotation
+                        function_arg_type_name = getattr(function_arg_type, '__name__')
+                        if request_arg_name in function_params.keys():
+                            if function_arg_type_name in __supported_basic_types:
+                                function_kwargs[request_arg_name] = function_arg_type(request_arg)
+                            elif function_arg_type_name == 'dict' or function_arg_type_name == 'list':
+                                function_kwargs[request_arg_name] = json.loads(request_arg)
+                    wrapped_function = function(**function_kwargs)
+                    if not isinstance(wrapped_function, (str, dict, tuple)):
+                        wrapped_function = str(wrapped_function)
+                    return wrapped_function
 
             post_wrapper = app.post('/call/{}'.format(path))
             post_wrapper(wrapper)
