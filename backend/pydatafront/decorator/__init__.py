@@ -30,8 +30,7 @@ def textea_export(path: str, description: str = "", **decorator_kwargs):
             function_name = getattr(function, '__name__')
             function_preview = {
                 "name": function_name,
-                "path": "/param/{}".format(path),
-                "desc": description
+                "path": "/param/{}".format(path)
             }
             __decorated_functions_list.append(function_preview)
 
@@ -77,7 +76,8 @@ def textea_export(path: str, description: str = "", **decorator_kwargs):
             decorated_function = {
                 "path": '/call/{}'.format(path),
                 "decorated_params": decorated_params,
-                "output_type": output_type
+                "output_type": output_type,
+                "desc": description
             }
 
             get_wrapper = app.get('/param/{}'.format(path))
