@@ -5,7 +5,7 @@ import { useStore } from "../store";
 
 export const TexteaFunctionList: React.FC = () => {
   const [state, setState] = useState<{
-    functions: { name: string; path: string }[];
+    functions: string[];
   }>({
     functions: [],
   });
@@ -44,9 +44,9 @@ export const TexteaFunctionList: React.FC = () => {
       {state.functions.map((functionName) => (
         <ListItem key={`TexteaFunctionList-${functionName}`}>
           <ListItemButton
-            onClick={() => handleFetchFunctionDetail(functionName.name)}
+            onClick={() => handleFetchFunctionDetail(functionName)}
           >
-            {functionName.name}
+            {functionName}
           </ListItemButton>
         </ListItem>
       ))}

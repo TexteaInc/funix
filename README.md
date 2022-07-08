@@ -1,6 +1,6 @@
 # PyDataFront
 
-Supported Types: `int`, `float`, `str`, `list`, `dict`
+Supported Types: `int`, `float`, `str`, `list`, `dict`, `typing.List`, `typing.Dict`, `typing.Optional`, `typing.TypedDict`
 
 ## Installation
 
