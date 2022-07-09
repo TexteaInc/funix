@@ -71,7 +71,7 @@ def textea_export(path: str, description: str = "", **decorator_kwargs):
     def decorator(function: callable):
         if __wrapper_enabled:
             function_name = getattr(function, "__name__")  # function name as id to retrieve function info
-            __decorated_functions_list.append(function_name)
+            __decorated_functions_list.append({"name": function_name, "path": "/param/{}".format(path)})
 
             function_signature = inspect.signature(function)
             function_params = function_signature.parameters
