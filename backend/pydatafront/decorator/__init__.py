@@ -2,6 +2,7 @@ import builtins
 import inspect
 import json
 import re
+import traceback
 from functools import wraps
 
 import flask
@@ -128,24 +129,41 @@ def textea_export(path: str, description: str = "", **decorator_kwargs):
 
             @wraps(function)
             def wrapper():
-                if flask.request.content_type.startswith("application/json"):
-                    # for textea-sheet
-                    wrapped_function = function(**flask.request.get_json())
-                    return wrapped_function
-                else:
-                    request_kwargs = flask.request.form
-                    function_kwargs = dict()
-                    for request_arg_name, request_arg in request_kwargs.items():
-                        if request_arg_name in function_params.keys():
-                            function_arg_type = function_params[request_arg_name].annotation
-                            function_arg_type_name = get_type_name(function_arg_type)
-                            extracted_request_arg = extract_request_arg(function_arg_type_name, request_arg)
-                            if extracted_request_arg is not None:
-                                function_kwargs[request_arg_name] = extracted_request_arg
-                    wrapped_function = function(**function_kwargs)
-                    if not isinstance(wrapped_function, (str, dict, tuple)):
-                        wrapped_function = str(wrapped_function)
-                    return wrapped_function
+                try:
+                    if flask.request.content_type.startswith("application/json"):
+                        # for textea-sheet
+                        wrapped_function = function(**flask.request.get_json())
+                        return wrapped_function
+                    else:
+                        request_kwargs = flask.request.form
+                        function_kwargs = dict()
+                        for request_arg_name, request_arg in request_kwargs.items():
+                            if request_arg_name in function_params.keys():
+                                function_arg_type = function_params[request_arg_name].annotation
+                                function_arg_type_name = get_type_name(function_arg_type)
+                                extracted_request_arg = extract_request_arg(function_arg_type_name, request_arg)
+                                if extracted_request_arg is not None:
+                                    function_kwargs[request_arg_name] = extracted_request_arg
+
+                        @wraps(function)
+                        def wrapped_function(**wrapped_function_kwargs):
+                            try:
+                                result = function(**wrapped_function_kwargs)
+                                if not isinstance(result, (str, dict, tuple)):
+                                    result = str(result)
+                                return result
+                            except:
+                                return {
+                                    "error_type": "function",
+                                    "error_body": traceback.format_exc()
+                                }
+
+                        return wrapped_function(**function_kwargs)
+                except:
+                    return {
+                        "error_type": "wrapper",
+                        "error_body": traceback.format_exc()
+                    }
 
             post_wrapper = app.post("/call/{}".format(path))
             post_wrapper(wrapper)
