@@ -3,6 +3,7 @@ import inspect
 import json
 import re
 import traceback
+from uuid import uuid4 as uuid
 from functools import wraps
 
 import flask
@@ -70,8 +71,14 @@ def extract_request_arg(function_arg_type_name, request_arg):
 def textea_export(path: str, description: str = "", **decorator_kwargs):
     def decorator(function: callable):
         if __wrapper_enabled:
+            id: str = str(uuid())
             function_name = getattr(function, "__name__")  # function name as id to retrieve function info
-            __decorated_functions_list.append({"name": function_name, "path": "/param/{}".format(path)})
+            __decorated_functions_list.append({
+                "id": id,
+                "name": function_name,
+                "path": "/param/{}".format(path),
+                "description": description
+            })
 
             function_signature = inspect.signature(function)
             function_params = function_signature.parameters
@@ -113,10 +120,12 @@ def textea_export(path: str, description: str = "", **decorator_kwargs):
                 decorated_params[function_arg_name]["type"] = function_arg_type_name
 
             decorated_function = {
+                "id": id,
+                "name": function_name,
                 "path": "/call/{}".format(path),
-                "decorated_params": decorated_params,
+                "params": decorated_params,
                 "output_type": output_type_parsed,
-                "desc": description
+                "description": description
             }
 
             get_wrapper = app.get("/param/{}".format(path))
