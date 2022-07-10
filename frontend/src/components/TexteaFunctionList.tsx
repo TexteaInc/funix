@@ -1,23 +1,22 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { API_URL } from "../shared";
+import { localApiURL } from "../shared";
 import { List, ListItem, ListItemButton } from "@mui/material";
 import { useStore } from "../store";
 
+import { FunctionPreview, getList } from "@textea/shared";
+
 export const TexteaFunctionList: React.FC = () => {
   const [state, setState] = useState<{
-    functions: string[];
+    functions: FunctionPreview[];
   }>({
     functions: [],
   });
   useEffect(() => {
-    const abortController = new AbortController();
     async function queryData() {
       try {
-        const record: any = await fetch(new URL("/list", API_URL), {
-          signal: abortController.signal,
-        }).then((response) => response.json());
+        const { list } = await getList(new URL("/list", localApiURL));
         setState({
-          functions: record.list,
+          functions: list,
         });
         console.log("fetch data success");
       } catch (e) {
@@ -28,10 +27,8 @@ export const TexteaFunctionList: React.FC = () => {
         }
       }
     }
+
     queryData().then();
-    return () => {
-      abortController.abort();
-    };
   }, []);
 
   const handleFetchFunctionDetail = useCallback(async (name: string) => {
@@ -41,12 +38,12 @@ export const TexteaFunctionList: React.FC = () => {
   }, []);
   return (
     <List>
-      {state.functions.map((functionName) => (
-        <ListItem key={`TexteaFunctionList-${functionName}`}>
+      {state.functions.map((preview) => (
+        <ListItem key={`TexteaFunctionList-${preview.name}`}>
           <ListItemButton
-            onClick={() => handleFetchFunctionDetail(functionName)}
+            onClick={() => handleFetchFunctionDetail(preview.name)}
           >
-            {functionName}
+            {preview.name}
           </ListItemButton>
         </ListItem>
       ))}

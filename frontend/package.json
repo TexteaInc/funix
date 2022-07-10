@@ -12,7 +12,7 @@
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^13.3.0",
     "@testing-library/user-event": "^13.2.1",
-    "@textea/shared": "^0.8.0",
+    "@textea/shared": "^0.8.1",
     "@types/jest": "^27.0.1",
     "@types/node": "^16.7.13",
     "@types/react": "^18.0.15",
@@ -54,6 +54,8 @@
   },
   "devDependencies": {
     "@types/markdown-it": "^12.2.3",
+    "@typescript-eslint/eslint-plugin": "^5.30.5",
+    "@typescript-eslint/parser": "^5.30.5",
     "eslint": "^8.19.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
