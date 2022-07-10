@@ -122,7 +122,7 @@ def textea_export(path: str, description: str = "", **decorator_kwargs):
             decorated_function = {
                 "id": id,
                 "name": function_name,
-                "path": "/call/{}".format(path),
+                "callee": "/call/{}".format(path),
                 "params": decorated_params,
                 "output_type": output_type_parsed,
                 "description": description
