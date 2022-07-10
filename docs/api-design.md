@@ -67,7 +67,10 @@ type PostResponseSuccess = {
     // we cannot find a type that describe different responses
     [key: string]: any[]
 }
-type PostResponseError = {}
+type PostResponseError = {
+    "error_type": "wrapper" | "function"
+    "error_body": string
+}
 const response = await fetch(`/call/xxx`, {
     method: 'POST',
     body: JSON.stringify(body),
