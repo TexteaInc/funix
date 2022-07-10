@@ -41,7 +41,7 @@ class remove_3_prime_adapter_return(TypedDict):
                              "AAGCTCAGGAGGGATAGCGCCTCGTATGCCGTCTTCTGCTT", # full 3' adapter
                              "AAGCTCAGGAGGGATAGCGCCTCGTATGCCGTCTTCTGCTTCTGAATTAATT", # additional seq after 3' adapter, 
                              "AAGCTCAGGAGGGATAGCGCCTCGTATG", # <8 nt io 3' adapter
-                             "AAGCTCAGGAGGGATAGCGCCGTATG", # no match at all
+                             "AAGCTCAGGAGGGATAGCGCCGTATG" # no match at all
                            ]
                        ]
                     }, 
