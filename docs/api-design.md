@@ -5,7 +5,7 @@ Assume pydatafront server host is `API_URL=localhost:4000`
 ## Base Type from Python to JavaScript/TypeScript
 
 ```ts
-export type BaseType = 'int' | 'str' | 'list' | 'dict'
+type BaseType = 'int' | 'str' | 'list' | 'dict'
 ```
 
 ## Get list of all functions
