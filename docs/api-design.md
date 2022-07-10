@@ -1,19 +1,24 @@
 # API Design
 
-Assume pydatafront server host is `API_URL=localhost:4000`
+## Type and Usage
 
-## Base Type from Python to JavaScript/TypeScript
+### Base Type from Python to JavaScript/TypeScript
 
 ```ts
 type BaseType = 'int' | 'str' | 'list' | 'dict'
 ```
 
-## Get list of all functions
+### Get list of all functions
 
 ```ts
 const listURL = new URL('/list', API_URL)
 type FunctionPreview = {
+    /**
+     * Unique ID that won't make conflct
+     */
+    id: string
     name: string
+    description: string
     path: `/param/${string}`
 }
 type ListResponse = {
@@ -30,11 +35,22 @@ list.map(fn => {
 })
 ```
 
-## Get details of one function
+### Get details of one function
 
 ```ts
-type FnDetailResponse = {
-    decorated_params: {
+type FunctionDetail = {
+    /**
+     * Unique ID that won't make conflct
+     */
+    id: string
+    /**
+     * Display Name
+     */
+    name: string
+    /**
+     * Params of the function
+     */
+    params: {
         [key: string]: {
             type: BaseType
             treat_as: 'config' | 'column' | 'cell'
@@ -42,24 +58,34 @@ type FnDetailResponse = {
             example?: any[]
         }
     }
-    output_type: {
+    /**
+     * Output data
+     */
+    output: {
         [key: string]: BaseType
     }
-    path: `/call/${string}`
-    desc: string
+    /**
+     * Where to call this function
+     */
+    callee: `/call/${string}`
+    /**
+     * Description of this function
+     */
+    description: string
 }
 const fnDetailURL = new URL('/param/xxx', API_URL)
-const response = await fetch(fnDetailURL, {
+const response: FunctionDetail = await fetch(fnDetailURL, {
     method: 'GET'
 }).then(res => res.json())
-
-console.assert(typeof response.decorated_params === 'object')
-console.assert(typeof response.output_type === 'object')
-console.assert(typeof response.path === 'string')
-console.assert(typeof response.desc === 'string')
+console.assert(typeof response.id === 'string')
+console.assert(typeof response.name === 'string')
+console.assert(typeof response.params === 'object')
+console.assert(typeof response.output === 'object')
+console.assert(typeof response.callee === 'string')
+console.assert(typeof response.description === 'string')
 ```
 
-## Cell a function
+### Call a function
 
 ```ts
 const body = {}
@@ -71,7 +97,7 @@ type PostResponseError = {
     "error_type": "wrapper" | "function"
     "error_body": string
 }
-const response = await fetch(`/call/xxx`, {
+const response = await fetch(new URL(`/call/xxx`, API_URL), {
     method: 'POST',
     body: JSON.stringify(body),
     headers: {
@@ -79,3 +105,30 @@ const response = await fetch(`/call/xxx`, {
     }
 }).then(res => res.json())
 ```
+
+## Q&A
+
+1. Why the `description` field among the `FunctionPreview` and `FunctionDetail`?
+
+In the frontend, we will display a list of all function to the client.
+
+Most of the time, user just like lookup a dictionary and search for only one result.
+
+![Google Sheet Example](assets/google-sheet.png)
+
+2. What's `id`? Why not just use `name` or `path`?
+
+The `id` is a **unique identifier**.
+
+For example, our `textea-sheet` load two servers' functions
+
+They have the same function which called `plus_a_b`.
+They will have same `name` and `path` in this case.
+
+In our frontend, we use
+[UUID 4](https://en.wikipedia.org/wiki/Universally_unique_identifier#Version_4_(random))
+as standard generator tool of `id`.
+
+## Defects
+
+We cannot tell detail of `dict` and `list` type from python.
