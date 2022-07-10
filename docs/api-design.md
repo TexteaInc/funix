@@ -14,7 +14,7 @@ type BaseType = 'int' | 'str' | 'list' | 'dict'
 const listURL = new URL('/list', API_URL)
 type FunctionPreview = {
     /**
-     * Unique ID that won't make conflct
+     * Unique ID that won't make conflict
      */
     id: string
     name: string
@@ -40,7 +40,7 @@ list.map(fn => {
 ```ts
 type FunctionDetail = {
     /**
-     * Unique ID that won't make conflct
+     * Unique ID that won't make conflict
      */
     id: string
     /**
