@@ -65,7 +65,7 @@ console.assert(typeof response.desc === 'string')
 const body = {}
 type PostResponseSuccess = {
     // we cannot find a type that describe different responses
-    [key: string]: any[]
+    [key: string]: any
 }
 type PostResponseError = {
     "error_type": "wrapper" | "function"
