@@ -2,7 +2,8 @@ import React from "react";
 import { Stack } from "@mui/material";
 import TexteaFunctionInfoCard from "./TexteaFunctionInfoCard";
 import TexteaFunctionCallerCard from "./TexteaFunctionCallerCard";
-import { API_URL } from "../../shared";
+import { localApiURL } from "../../shared";
+import { getParam } from "@textea/shared";
 
 export interface TexteaFunctionProps {
   functionName: string;
@@ -27,14 +28,10 @@ export default class TexteaFunction extends React.Component<
   }
 
   async updateState() {
-    const response = await fetch(
-      new URL(`/param/${this.props.functionName}`, API_URL),
-      {
-        method: "GET",
-      }
-    );
     try {
-      const functionParams = await response.json();
+      const functionParams = await getParam(
+        new URL(`/param/${this.props.functionName}`, localApiURL)
+      );
       this.setState({
         isLoaded: true,
         functionParams,

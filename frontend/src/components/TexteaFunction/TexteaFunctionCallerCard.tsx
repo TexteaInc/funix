@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import React from "react";
 import SendIcon from "@mui/icons-material/Send";
-import { API_URL } from "../../shared";
+import { localApiURL } from "../../shared";
 
 export interface TexteaFunctionCallerCardProps {
   functionName: string;
@@ -97,7 +97,7 @@ export default class TexteaFunctionCallerCard extends React.Component<
     event.preventDefault();
     const data = new FormData(event.target);
     const response = await fetch(
-      new URL(this.props.functionParams?.path, API_URL),
+      new URL(this.props.functionParams?.path, localApiURL),
       {
         method: "POST",
         body: data,
