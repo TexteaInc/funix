@@ -59,9 +59,9 @@ type FunctionDetail = {
         }
     }
     /**
-     * Output data
+     * Output data type
      */
-    output: {
+    output_type: {
         [key: string]: BaseType
     }
     /**
