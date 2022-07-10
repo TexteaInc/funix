@@ -119,7 +119,7 @@ def textea_export(path: str, description: str = "", **decorator_kwargs):
                 "desc": description
             }
 
-            get_wrapper = app.get("/param/{}".format(function_name))
+            get_wrapper = app.get("/param/{}".format(path))
 
             def decorated_function_param_getter():
                 return decorated_function
