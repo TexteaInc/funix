@@ -6,19 +6,12 @@ import { useStore } from "../store";
 import { FunctionPreview, getList } from "@textea/shared";
 
 export const TexteaFunctionList: React.FC = () => {
-  const [state, setState] = useState<{
-    functions: FunctionPreview[];
-  }>({
-    functions: [],
-  });
+  const [state, setState] = useState<FunctionPreview[]>([]);
   useEffect(() => {
     async function queryData() {
       try {
         const { list } = await getList(new URL("/list", localApiURL));
-        setState({
-          functions: list,
-        });
-        console.log("fetch data success");
+        setState(list);
       } catch (e) {
         if (e instanceof Error && e.name === "AbortError") {
           // do nothing, only expect AbortError
@@ -38,7 +31,7 @@ export const TexteaFunctionList: React.FC = () => {
   }, []);
   return (
     <List>
-      {state.functions.map((preview) => (
+      {state.map((preview) => (
         <ListItem key={`TexteaFunctionList-${preview.name}`}>
           <ListItemButton
             onClick={() => handleFetchFunctionDetail(preview.name)}
