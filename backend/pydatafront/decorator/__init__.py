@@ -117,6 +117,14 @@ def textea_export(path: str, description: str = "", **decorator_kwargs):
                     function_arg_type_name = get_type_name(function_param.annotation)
                 if function_arg_name not in decorated_params.keys():
                     decorated_params[function_arg_name] = dict()
+                if function_arg_type_name == None:
+                    print(function_param)
+                    continue
+                typing_container_search_result = re.search(
+                    "typing\.(?P<containerType>List|Dict)\[(?P<contentType>.*)]",
+                    function_arg_type_name)
+                if isinstance(typing_container_search_result, re.Match):
+                    function_arg_type_name = typing_container_search_result.group("contentType")
                 decorated_params[function_arg_name]["type"] = function_arg_type_name
 
             decorated_function = {
