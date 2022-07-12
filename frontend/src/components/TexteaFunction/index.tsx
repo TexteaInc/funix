@@ -7,6 +7,7 @@ import {
   CardContent,
   Divider,
   Grid,
+  Stack,
   TextField,
   Typography,
 } from "@mui/material";
@@ -55,9 +56,9 @@ export const TexteaFunction: React.FC<FunctionDetailProps> = ({ preview }) => {
           <Divider />
           <Typography variant="body2">Param Preview</Typography>
           <ReactJson src={detail.params} collapsed />
-          <Typography variant="body1">Input your data</Typography>
-          <form onSubmit={handleSubmit}>
-            <Grid direction="column" container spacing={1}>
+          <Stack spacing={1}>
+            <Typography variant="body1">Input your data</Typography>
+            <Stack spacing={1}>
               {Object.entries(detail.params).map(([key, value]) => (
                 <Grid container spacing={1} alignItems="center" key={key}>
                   <Grid item xs="auto">
@@ -67,13 +68,24 @@ export const TexteaFunction: React.FC<FunctionDetailProps> = ({ preview }) => {
                     <Autocomplete
                       freeSolo
                       getOptionLabel={(label) =>
-                        typeof label === "string" ? label : String(label)
+                        typeof label === "string"
+                          ? label
+                          : Array.isArray(label)
+                          ? `[${label}]`
+                          : String(label)
                       }
                       onInputChange={(event, v) => {
-                        setForm((form) => ({
-                          ...form,
-                          [key]: value.type === "int" ? Number(v) : v,
-                        }));
+                        if (/List/.test(value.type)) {
+                          setForm((form) => ({
+                            ...form,
+                            [key]: v.substring(1, v.length - 2).split(","),
+                          }));
+                        } else {
+                          setForm((form) => ({
+                            ...form,
+                            [key]: value.type === "int" ? Number(v) : v,
+                          }));
+                        }
                       }}
                       renderInput={(params) => (
                         <TextField
@@ -88,12 +100,17 @@ export const TexteaFunction: React.FC<FunctionDetailProps> = ({ preview }) => {
                   </Grid>
                 </Grid>
               ))}
-            </Grid>
-            <Button type="submit" variant="contained" endIcon={<SendIcon />}>
+            </Stack>
+            <Button
+              type="submit"
+              onClick={handleSubmit}
+              variant="contained"
+              endIcon={<SendIcon />}
+            >
               Submit
             </Button>
-            <ReactJson src={response} />
-          </form>
+            <ReactJson src={response ?? {}} />
+          </Stack>
         </CardContent>
       </Card>
     </>
