@@ -15,10 +15,10 @@ import {
 import React from "react";
 import SendIcon from "@mui/icons-material/Send";
 import { localApiURL } from "../../shared";
+import { FunctionDetail } from "@textea/shared";
 
 export interface TexteaFunctionCallerCardProps {
-  functionName: string;
-  functionParams: any;
+  detail: FunctionDetail;
 }
 
 export interface TexteaFunctionCallerCardState {
@@ -31,30 +31,33 @@ export default class TexteaFunctionCallerCard extends React.Component<
   TexteaFunctionCallerCardProps,
   TexteaFunctionCallerCardState
 > {
+  state = {
+    form: {},
+    customized: [],
+    responseStr: "",
+  } as TexteaFunctionCallerCardState;
+
   constructor(props: TexteaFunctionCallerCardProps) {
     super(props);
-    this.handleInputChange = this.handleInputChange.bind(this);
-    this.handleExampleInputChange = this.handleExampleInputChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  componentDidMount() {
+  componentDidMount = () => {
     this.setState({
       form: {},
       customized: [],
     });
-  }
+  };
 
-  componentDidUpdate(prevProps: TexteaFunctionCallerCardProps) {
+  componentDidUpdate = (prevProps: TexteaFunctionCallerCardProps) => {
     if (prevProps !== this.props) {
       this.setState({
         form: {},
         customized: [],
       });
     }
-  }
+  };
 
-  handleInputChange(event: any) {
+  handleInputChange = (event: any) => {
     const target = event.target;
     const value = target.type === "checkbox" ? target.checked : target.value;
     const name = target.name;
@@ -65,9 +68,9 @@ export default class TexteaFunctionCallerCard extends React.Component<
         [name]: value,
       },
     }));
-  }
+  };
 
-  handleExampleInputChange(event: any) {
+  handleExampleInputChange = (event: any) => {
     const target = event.target;
     let value = target.type === "checkbox" ? target.checked : target.value;
     const name = target.name;
@@ -91,23 +94,22 @@ export default class TexteaFunctionCallerCard extends React.Component<
         [name]: value,
       },
     }));
-  }
+  };
 
-  async handleSubmit(event: any) {
+  handleSubmit = async (event: any) => {
     event.preventDefault();
     const data = new FormData(event.target);
     const response = await fetch(
-      new URL(this.props.functionParams?.path, localApiURL),
+      new URL(this.props.detail.callee, localApiURL),
       {
         method: "POST",
         body: data,
       }
     );
     this.setState({ responseStr: await response.text() });
-  }
+  };
 
-  getFunctionParamsRows(decoratedParams: any) {
-    if (!decoratedParams) return "null";
+  getFunctionParamsRows = (decoratedParams: FunctionDetail["params"]) => {
     const rows = Object.keys(decoratedParams)?.map((argName: string) => (
       <Grid
         container
@@ -137,13 +139,13 @@ export default class TexteaFunctionCallerCard extends React.Component<
         </Stack>
       </form>
     );
-  }
+  };
 
-  iterateCandidatesForSelectMenuItems(
+  iterateCandidatesForSelectMenuItems = (
     element: any,
     argName: string,
     argType: string
-  ) {
+  ) => {
     const supportedBasicTypes = ["int", "float", "str"];
     let elementStr: string;
     if (supportedBasicTypes.includes(argType)) {
@@ -156,9 +158,9 @@ export default class TexteaFunctionCallerCard extends React.Component<
         {elementStr}
       </MenuItem>
     );
-  }
+  };
 
-  getInputField(argName: string, argParams: any) {
+  getInputField = (argName: string, argParams: any) => {
     if (argParams.hasOwnProperty("whitelist")) {
       const menuItems = argParams["whitelist"].map((element: any) =>
         this.iterateCandidatesForSelectMenuItems(
@@ -236,9 +238,9 @@ export default class TexteaFunctionCallerCard extends React.Component<
         </FormControl>
       );
     }
-  }
+  };
 
-  getResponse() {
+  getResponse = () => {
     return (
       <Stack>
         <Typography variant="h6">Last Response</Typography>
@@ -247,18 +249,16 @@ export default class TexteaFunctionCallerCard extends React.Component<
         </Typography>
       </Stack>
     );
-  }
+  };
 
   render() {
     return (
       <Card>
         <CardContent>
           <Stack spacing={1}>
-            <Typography variant="h4">{this.props.functionName}</Typography>
+            <Typography variant="h4">{this.props.detail.name}</Typography>
             <Divider />
-            {this.getFunctionParamsRows(
-              this.props.functionParams?.decorated_params
-            )}
+            {this.getFunctionParamsRows(this.props.detail.params)}
             <Divider />
             {this.getResponse()}
           </Stack>
