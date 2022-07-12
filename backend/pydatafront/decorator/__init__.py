@@ -3,6 +3,7 @@ import inspect
 import json
 import re
 import traceback
+from uuid import uuid4 as uuid
 from functools import wraps
 
 import flask
@@ -70,8 +71,14 @@ def extract_request_arg(function_arg_type_name, request_arg):
 def textea_export(path: str, description: str = "", **decorator_kwargs):
     def decorator(function: callable):
         if __wrapper_enabled:
+            id: str = str(uuid())
             function_name = getattr(function, "__name__")  # function name as id to retrieve function info
-            __decorated_functions_list.append({"name": function_name, "path": "/param/{}".format(path)})
+            __decorated_functions_list.append({
+                "id": id,
+                "name": function_name,
+                "path": "/param/{}".format(path),
+                "description": description
+            })
 
             function_signature = inspect.signature(function)
             function_params = function_signature.parameters
@@ -110,13 +117,23 @@ def textea_export(path: str, description: str = "", **decorator_kwargs):
                     function_arg_type_name = get_type_name(function_param.annotation)
                 if function_arg_name not in decorated_params.keys():
                     decorated_params[function_arg_name] = dict()
+                if function_arg_type_name == None:
+                    print(function_param)
+                    continue
+                typing_container_search_result = re.search(
+                    "typing\.(?P<containerType>List|Dict)\[(?P<contentType>.*)]",
+                    function_arg_type_name)
+                if isinstance(typing_container_search_result, re.Match):
+                    function_arg_type_name = typing_container_search_result.group("contentType")
                 decorated_params[function_arg_name]["type"] = function_arg_type_name
 
             decorated_function = {
-                "path": "/call/{}".format(path),
-                "decorated_params": decorated_params,
+                "id": id,
+                "name": function_name,
+                "callee": "/call/{}".format(path),
+                "params": decorated_params,
                 "output_type": output_type_parsed,
-                "desc": description
+                "description": description
             }
 
             get_wrapper = app.get("/param/{}".format(path))

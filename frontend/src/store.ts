@@ -1,9 +1,8 @@
-import create from "zustand";
+import { atom } from "jotai";
+import { FunctionPreview } from "@textea/shared";
 
 export type Store = {
-  selectedFunction: null | any;
+  selectedFunction: null | FunctionPreview;
 };
 
-export const useStore = create<Store>(() => ({
-  selectedFunction: null,
-}));
+export const storeAtom = atom<Store>({ selectedFunction: null });

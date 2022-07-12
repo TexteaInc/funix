@@ -1,48 +1,40 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { localApiURL } from "../shared";
 import { List, ListItem, ListItemButton } from "@mui/material";
-import { useStore } from "../store";
+import { storeAtom } from "../store";
 
 import { FunctionPreview, getList } from "@textea/shared";
+import { useAtom } from "jotai";
 
 export const TexteaFunctionList: React.FC = () => {
-  const [state, setState] = useState<{
-    functions: FunctionPreview[];
-  }>({
-    functions: [],
-  });
+  const [, setStore] = useAtom(storeAtom);
+  const onceRef = useRef(true);
+  const [state, setState] = useState<FunctionPreview[]>([]);
   useEffect(() => {
     async function queryData() {
-      try {
-        const { list } = await getList(new URL("/list", localApiURL));
-        setState({
-          functions: list,
-        });
-        console.log("fetch data success");
-      } catch (e) {
-        if (e instanceof Error && e.name === "AbortError") {
-          // do nothing, only expect AbortError
-        } else {
-          throw e;
-        }
-      }
+      const { list } = await getList(new URL("/list", localApiURL));
+      setState(list);
     }
-
-    queryData().then();
+    if (onceRef.current) {
+      queryData().then();
+      onceRef.current = false;
+    }
   }, []);
 
-  const handleFetchFunctionDetail = useCallback(async (name: string) => {
-    useStore.setState({
-      selectedFunction: name,
-    });
-  }, []);
+  const handleFetchFunctionDetail = useCallback(
+    (functionPreview: FunctionPreview) => {
+      setStore((store) => ({
+        ...store,
+        selectedFunction: functionPreview,
+      }));
+    },
+    []
+  );
   return (
     <List>
-      {state.functions.map((preview) => (
+      {state.map((preview) => (
         <ListItem key={`TexteaFunctionList-${preview.name}`}>
-          <ListItemButton
-            onClick={() => handleFetchFunctionDetail(preview.name)}
-          >
+          <ListItemButton onClick={() => handleFetchFunctionDetail(preview)}>
             {preview.name}
           </ListItemButton>
         </ListItem>
