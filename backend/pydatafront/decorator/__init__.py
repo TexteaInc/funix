@@ -140,19 +140,24 @@ def textea_export(path: str, description: str = "", **decorator_kwargs):
             def wrapper():
                 try:
                     if flask.request.content_type.startswith("application/json"):
-                        # for textea-sheet
                         request_kwargs = flask.request.get_json()
                     else:
                         # deprecated
                         request_kwargs = flask.request.form
-                    function_kwargs = dict()
-                    for request_arg_name, request_arg in request_kwargs.items():
-                        if request_arg_name in function_params.keys():
-                            function_arg_type = function_params[request_arg_name].annotation
-                            function_arg_type_name = get_type_name(function_arg_type)
-                            extracted_request_arg = extract_request_arg(function_arg_type_name, request_arg)
-                            if extracted_request_arg is not None:
-                                function_kwargs[request_arg_name] = extracted_request_arg
+
+                    if request_kwargs.get("__textea_sheet", False):
+                        # for textea-sheet
+                        del request_kwargs["__textea_sheet"]
+                        function_kwargs = request_kwargs
+                    else:
+                        function_kwargs = dict()
+                        for request_arg_name, request_arg in request_kwargs.items():
+                            if request_arg_name in function_params.keys():
+                                function_arg_type = function_params[request_arg_name].annotation
+                                function_arg_type_name = get_type_name(function_arg_type)
+                                extracted_request_arg = extract_request_arg(function_arg_type_name, request_arg)
+                                if extracted_request_arg is not None:
+                                    function_kwargs[request_arg_name] = extracted_request_arg
 
                     @wraps(function)
                     def wrapped_function(**wrapped_function_kwargs):
