@@ -30,7 +30,6 @@ export const TexteaFunction: React.FC<FunctionDetailProps> = ({ preview }) => {
   const handleSubmit = useCallback(
     async (event: any) => {
       event.preventDefault();
-      console.log("form", form);
       const response = await callFunction(
         new URL(detail!.callee, localApiURL),
         form
@@ -75,7 +74,12 @@ export const TexteaFunction: React.FC<FunctionDetailProps> = ({ preview }) => {
                           : String(label)
                       }
                       onInputChange={(event, v) => {
-                        if (/List/.test(value.type)) {
+                        if (value.type.includes("typing")) {
+                          setForm((form) => ({
+                            ...form,
+                            [key]: v,
+                          }));
+                        } else if (/List/.test(value.type)) {
                           setForm((form) => ({
                             ...form,
                             [key]: v.substring(1, v.length - 2).split(","),

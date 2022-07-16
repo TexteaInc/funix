@@ -117,14 +117,6 @@ def textea_export(path: str, description: str = "", **decorator_kwargs):
                     function_arg_type_name = get_type_name(function_param.annotation)
                 if function_arg_name not in decorated_params.keys():
                     decorated_params[function_arg_name] = dict()
-                if function_arg_type_name == None:
-                    print(function_param)
-                    continue
-                typing_container_search_result = re.search(
-                    "typing\.(?P<containerType>List|Dict)\[(?P<contentType>.*)]",
-                    function_arg_type_name)
-                if isinstance(typing_container_search_result, re.Match):
-                    function_arg_type_name = typing_container_search_result.group("contentType")
                 decorated_params[function_arg_name]["type"] = function_arg_type_name
 
             decorated_function = {
@@ -149,33 +141,33 @@ def textea_export(path: str, description: str = "", **decorator_kwargs):
                 try:
                     if flask.request.content_type.startswith("application/json"):
                         # for textea-sheet
-                        wrapped_function = function(**flask.request.get_json())
-                        return wrapped_function
+                        request_kwargs = flask.request.get_json()
                     else:
+                        # deprecated
                         request_kwargs = flask.request.form
-                        function_kwargs = dict()
-                        for request_arg_name, request_arg in request_kwargs.items():
-                            if request_arg_name in function_params.keys():
-                                function_arg_type = function_params[request_arg_name].annotation
-                                function_arg_type_name = get_type_name(function_arg_type)
-                                extracted_request_arg = extract_request_arg(function_arg_type_name, request_arg)
-                                if extracted_request_arg is not None:
-                                    function_kwargs[request_arg_name] = extracted_request_arg
+                    function_kwargs = dict()
+                    for request_arg_name, request_arg in request_kwargs.items():
+                        if request_arg_name in function_params.keys():
+                            function_arg_type = function_params[request_arg_name].annotation
+                            function_arg_type_name = get_type_name(function_arg_type)
+                            extracted_request_arg = extract_request_arg(function_arg_type_name, request_arg)
+                            if extracted_request_arg is not None:
+                                function_kwargs[request_arg_name] = extracted_request_arg
 
-                        @wraps(function)
-                        def wrapped_function(**wrapped_function_kwargs):
-                            try:
-                                result = function(**wrapped_function_kwargs)
-                                if not isinstance(result, (str, dict, tuple)):
-                                    result = str(result)
-                                return result
-                            except:
-                                return {
-                                    "error_type": "function",
-                                    "error_body": traceback.format_exc()
-                                }
+                    @wraps(function)
+                    def wrapped_function(**wrapped_function_kwargs):
+                        try:
+                            result = function(**wrapped_function_kwargs)
+                            if not isinstance(result, (str, dict, tuple)):
+                                result = str(result)
+                            return result
+                        except:
+                            return {
+                                "error_type": "function",
+                                "error_body": traceback.format_exc()
+                            }
 
-                        return wrapped_function(**function_kwargs)
+                    return wrapped_function(**function_kwargs)
                 except:
                     return {
                         "error_type": "wrapper",

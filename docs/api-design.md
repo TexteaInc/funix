@@ -5,7 +5,7 @@
 ### Base Type from Python to JavaScript/TypeScript
 
 ```ts
-type BaseType = 'int' | 'str' | 'list' | 'dict'
+type PyType = 'int' | 'str' | 'list' | 'dict' | 'typing.List[int]' | 'typing.List[str]'
 ```
 
 ### Get list of all functions
@@ -52,7 +52,7 @@ type FunctionDetail = {
      */
     params: {
         [key: string]: {
-            type: BaseType
+            type: PyType
             treat_as: 'config' | 'column' | 'cell'
             whitelist?: string[]
             example?: any[]
@@ -62,7 +62,7 @@ type FunctionDetail = {
      * Output data type
      */
     output_type: {
-        [key: string]: BaseType
+        [key: string]: PyType
     }
     /**
      * Where to call this function
