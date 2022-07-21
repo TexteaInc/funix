@@ -1924,11 +1924,6 @@
   dependencies:
     "@babel/runtime" "^7.12.5"
 
-"@textea/shared@^0.9.0-preview.4":
-  version "0.9.0-preview.4"
-  resolved "https://registry.yarnpkg.com/@textea/shared/-/shared-0.9.0-preview.4.tgz#d48f9e54e5f5d5d51b98d7372011432bfda71d20"
-  integrity sha512-csA5q7CScve2C5Byj0dbaJAYXNLVWZzZNw02cdLAN86im3ru9KXWKgABW2irNh51xiBfNEMugqVspDb64UM6bw==
-
 "@tootallnate/once@1":
   version "1.1.2"
   resolved "https://registry.npmjs.org/@tootallnate/once/-/once-1.1.2.tgz"

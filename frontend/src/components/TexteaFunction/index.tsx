@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { callFunction, FunctionDetail, FunctionPreview } from "@textea/shared";
+import { callFunction, FunctionDetail, FunctionPreview } from "../../shared";
 import {
   Autocomplete,
   Button,
@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import ReactJson from "react-json-view";
 import useSWR from "swr";
-import { localApiURL } from "../../shared";
+import { localApiURL } from "../../constants";
 import SendIcon from "@mui/icons-material/Send";
 
 export type FunctionDetailProps = {

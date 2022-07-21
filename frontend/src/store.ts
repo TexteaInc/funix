@@ -1,5 +1,5 @@
 import { atom } from "jotai";
-import { FunctionPreview } from "@textea/shared";
+import { FunctionPreview } from "./shared";
 
 export type Store = {
   selectedFunction: null | FunctionPreview;
