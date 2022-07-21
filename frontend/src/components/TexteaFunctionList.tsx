@@ -5,7 +5,7 @@ import { storeAtom } from "../store";
 import { useAtom } from "jotai";
 import { FunctionPreview, getList } from "../shared";
 
-export const TexteaFunctionList: React.FC = () => {
+const TexteaFunctionList: React.FC = () => {
   const [, setStore] = useAtom(storeAtom);
   const onceRef = useRef(true);
   const [state, setState] = useState<FunctionPreview[]>([]);
@@ -41,3 +41,5 @@ export const TexteaFunctionList: React.FC = () => {
     </List>
   );
 };
+
+export default TexteaFunctionList;

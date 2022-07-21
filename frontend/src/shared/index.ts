@@ -28,8 +28,6 @@ export type FunctionPreview = {
    */
   id: string;
   name: string;
-  description: string;
-  path: `/param/${string}`;
 };
 
 export type GetListResponse = {
@@ -80,6 +78,10 @@ export type FunctionDetail = {
    * Description of this function
    */
   description: string;
+  /**
+   * Schema for react-jsonschema-form
+   */
+  schema: Record<string, any>;
 };
 
 export async function getParam(

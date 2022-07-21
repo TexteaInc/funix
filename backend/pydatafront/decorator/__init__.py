@@ -10,7 +10,7 @@ import flask
 
 from pydatafront import app
 
-__supported_basic_types = ["int", "float", "str"]
+__supported_basic_types = ["int", "float", "str", "bool"]
 __supported_types = __supported_basic_types + ["dict", "list"]
 __decorated_functions_list = list()
 __wrapper_enabled = False
@@ -37,6 +37,46 @@ def get_type_name(annotation):
             return getattr(annotation, "__name__")
     else:
         return str(annotation)
+
+
+def get_type_prop(function_arg_type_name):
+    # Basic and List only
+    if function_arg_type_name in __supported_basic_types:
+        if function_arg_type_name == "int":
+            return {
+                "type": "integer"
+            }
+        elif function_arg_type_name == "bool":
+            return {
+                "type": "boolean"
+            }
+        elif function_arg_type_name == "float":
+            return {
+                "type": "number"
+            }
+        elif function_arg_type_name == "str":
+            return {
+                "type": "string"
+            }
+        else:
+            raise "Unsupported Basic Type"
+    elif function_arg_type_name == "list":
+        return {
+            "type": "array"
+        }
+    else:
+        typing_list_search_result = re.search(
+            "typing\.(?P<containerType>List)\[(?P<contentType>.*)]",
+            function_arg_type_name)
+        if isinstance(typing_list_search_result, re.Match):  # typing.List, typing.Dict
+            content_type = typing_list_search_result.group("contentType")
+            if content_type in __supported_basic_types:
+                return {
+                    "type": "array",
+                    "items": get_type_prop(content_type)
+                }
+            else:
+                raise "Unsupported Content Type"
 
 
 def extract_request_arg(function_arg_type_name, request_arg):
@@ -75,14 +115,13 @@ def textea_export(path: str, description: str = "", **decorator_kwargs):
             function_name = getattr(function, "__name__")  # function name as id to retrieve function info
             __decorated_functions_list.append({
                 "id": id,
-                "name": function_name,
-                "path": "/param/{}".format(path),
-                "description": description
+                "name": function_name
             })
 
             function_signature = inspect.signature(function)
             function_params = function_signature.parameters
             decorated_params = dict()
+            json_schema_props = dict()
 
             output_type_raw = getattr(function_signature.return_annotation, "__annotations__")
             if getattr(type(output_type_raw), "__name__") == "dict":
@@ -118,6 +157,9 @@ def textea_export(path: str, description: str = "", **decorator_kwargs):
                 if function_arg_name not in decorated_params.keys():
                     decorated_params[function_arg_name] = dict()
                 decorated_params[function_arg_name]["type"] = function_arg_type_name
+                if function_arg_name not in json_schema_props.keys():
+                    json_schema_props[function_arg_name] = dict()
+                json_schema_props[function_arg_name] = get_type_prop(function_arg_type_name)
 
             decorated_function = {
                 "id": id,
@@ -125,10 +167,16 @@ def textea_export(path: str, description: str = "", **decorator_kwargs):
                 "callee": "/call/{}".format(path),
                 "params": decorated_params,
                 "output_type": output_type_parsed,
-                "description": description
+                "description": description,
+                "schema": {
+                    "title": function_name,
+                    "description": description,
+                    "type": "object",
+                    "properties": json_schema_props
+                }
             }
 
-            get_wrapper = app.get("/param/{}".format(path))
+            get_wrapper = app.get("/param/{}".format(id))
 
             def decorated_function_param_getter():
                 return decorated_function

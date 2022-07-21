@@ -1,10 +1,10 @@
 import { storeAtom } from "../store";
 import { Typography } from "@mui/material";
 import React, { Suspense } from "react";
-import { TexteaFunction } from "./TexteaFunction";
 import { useAtom } from "jotai";
+import TexteaFunction from "./TexteaFunction";
 
-export const TexteaFunctionSelected: React.FC = () => {
+const TexteaFunctionSelected: React.FC = () => {
   const [{ selectedFunction }] = useAtom(storeAtom);
   if (!selectedFunction) {
     return <Typography variant="h5">No selected function</Typography>;
@@ -15,3 +15,5 @@ export const TexteaFunctionSelected: React.FC = () => {
     </Suspense>
   );
 };
+
+export default TexteaFunctionSelected;
