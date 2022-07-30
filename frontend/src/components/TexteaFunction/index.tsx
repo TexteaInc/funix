@@ -7,6 +7,7 @@ import useSWR from "swr";
 import { localApiURL } from "../../constants";
 import { Card, CardContent, Stack, Typography } from "@mui/material";
 import ReactJson from "react-json-view";
+import TextExtendedWidget from "./TextExtendedWidget";
 
 export type FunctionDetailProps = {
   preview: FunctionPreview;
@@ -19,21 +20,19 @@ const TexteaFunction: React.FC<FunctionDetailProps> = ({ preview }) => {
   const [form, setForm] = useState<Record<string, any>>({});
   const [response, setResponse] = useState<any | null>(null);
 
-  const functionDetail = detail!;
+  if (detail == null) {
+    console.log("Failed to display function detail");
+    return <div />;
+  }
 
-  const onChange = async (
-    { formData }: Record<string, any>,
-    e: SyntheticEvent
-  ) => {
-    console.log("Changed form:", formData);
-    console.log("Event: ", e);
-    setForm(formData);
-  };
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const functionDetail = detail!;
 
   const onSubmit = async (
     { formData }: Record<string, any>,
     e: SyntheticEvent
   ) => {
+    setForm(formData);
     console.log("Data submitted: ", formData);
     console.log("Event: ", e);
     const response = await callFunction(
@@ -46,6 +45,10 @@ const TexteaFunction: React.FC<FunctionDetailProps> = ({ preview }) => {
     setResponse(response);
   };
 
+  const widgets = {
+    TextWidget: TextExtendedWidget,
+  };
+
   return (
     <Stack spacing={2}>
       <Card>
@@ -53,8 +56,8 @@ const TexteaFunction: React.FC<FunctionDetailProps> = ({ preview }) => {
           <Form
             schema={functionDetail.schema}
             formData={form}
-            onChange={onChange}
             onSubmit={onSubmit}
+            widgets={widgets}
           />
         </CardContent>
       </Card>

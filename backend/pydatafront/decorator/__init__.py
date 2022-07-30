@@ -77,6 +77,11 @@ def get_type_prop(function_arg_type_name):
                 }
             else:
                 raise "Unsupported Content Type"
+        else:
+            # temp workaround for typing.Optional[str], not support other types
+            return {
+                "type": "string"
+            }
 
 
 def extract_request_arg(function_arg_type_name, request_arg):
@@ -157,9 +162,16 @@ def textea_export(path: str, description: str = "", **decorator_kwargs):
                 if function_arg_name not in decorated_params.keys():
                     decorated_params[function_arg_name] = dict()
                 decorated_params[function_arg_name]["type"] = function_arg_type_name
+
                 if function_arg_name not in json_schema_props.keys():
                     json_schema_props[function_arg_name] = dict()
                 json_schema_props[function_arg_name] = get_type_prop(function_arg_type_name)
+                if json_schema_props[function_arg_name]["type"] != "array":
+                    # support (treat_as == config) only
+                    if "whitelist" in decorated_params[function_arg_name].keys():
+                        json_schema_props[function_arg_name]["whitelist"] = decorated_params[function_arg_name]["whitelist"]
+                    elif "example" in decorated_params[function_arg_name].keys():
+                        json_schema_props[function_arg_name]["example"] = decorated_params[function_arg_name]["example"]
 
             decorated_function = {
                 "id": id,
