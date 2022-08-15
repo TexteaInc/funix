@@ -3,8 +3,8 @@ import inspect
 import json
 import re
 import traceback
-from uuid import uuid4 as uuid
 from functools import wraps
+from uuid import uuid4 as uuid
 
 import flask
 
@@ -28,15 +28,38 @@ def enable_wrapper():
             }
 
 
-def get_type_name(annotation):
+def get_type_dict(annotation):
     if isinstance(annotation, object):  # is class
         annotation_type_class_name = getattr(type(annotation), "__name__")
         if annotation_type_class_name == "_GenericAlias":
-            return str(annotation)
+            if getattr(annotation, "__module__") == "typing":
+                if getattr(annotation, "_name") == "List":
+                    return {
+                        "type": str(annotation)
+                    }
+                elif str(getattr(annotation, "__origin__")) == "typing.Literal":
+                    literal_first_type = get_type_dict(type(getattr(annotation, "__args__")[0]))["type"]
+                    return {
+                        "type": literal_first_type,
+                        "whitelist": getattr(annotation, "__args__")
+                    }
+                elif str(getattr(annotation, "__origin__")) == "typing.Union":
+                    union_first_type = get_type_dict(getattr(annotation, "__args__")[0])["type"]
+                    return {
+                        "type": union_first_type
+                    }
+                else:
+                    raise "Unsupported typing"
+            else:
+                raise "Support typing only"
         elif annotation_type_class_name == "type":
-            return getattr(annotation, "__name__")
+            return {
+                "type": getattr(annotation, "__name__")
+            }
     else:
-        return str(annotation)
+        return {
+            "type": str(annotation)
+        }
 
 
 def get_type_prop(function_arg_type_name):
@@ -78,10 +101,7 @@ def get_type_prop(function_arg_type_name):
             else:
                 raise "Unsupported Content Type"
         else:
-            # temp workaround for typing.Optional[str], not support other types
-            return {
-                "type": "string"
-            }
+            raise "Unsupported Container Type"
 
 
 def extract_request_arg(function_arg_type_name, request_arg):
@@ -149,6 +169,7 @@ def textea_export(path: str, description: str = "", **decorator_kwargs):
                         raise "Error: input type doesn't match"
 
                 if "whitelist" in decorator_arg_dict.keys():
+                    # deprecated, for compatibility
                     decorated_params[decorator_arg_name]["whitelist"] = decorator_arg_dict["whitelist"]
                 elif "example" in decorator_arg_dict.keys():
                     decorated_params[decorator_arg_name]["example"] = decorator_arg_dict["example"]
@@ -158,18 +179,27 @@ def textea_export(path: str, description: str = "", **decorator_kwargs):
                 if decorated_params[function_arg_name]["treat_as"] == "cell":
                     raise "Don't use cell!"
                 else:
-                    function_arg_type_name = get_type_name(function_param.annotation)
+                    function_arg_type_dict = get_type_dict(function_param.annotation)
                 if function_arg_name not in decorated_params.keys():
                     decorated_params[function_arg_name] = dict()
-                decorated_params[function_arg_name]["type"] = function_arg_type_name
+                decorated_params[function_arg_name].update(function_arg_type_dict)
+                default_example = function_param.default
+                if default_example is not inspect.Parameter.empty:
+                    if "example" in decorated_params[function_arg_name].keys():
+                        decorated_params[function_arg_name].get("example").append(default_example)
+                    else:
+                        decorated_params[function_arg_name]["example"] = [
+                            default_example
+                        ]
 
                 if function_arg_name not in json_schema_props.keys():
                     json_schema_props[function_arg_name] = dict()
-                json_schema_props[function_arg_name] = get_type_prop(function_arg_type_name)
+                json_schema_props[function_arg_name] = get_type_prop(function_arg_type_dict["type"])
                 if json_schema_props[function_arg_name]["type"] != "array":
                     # support (treat_as == config) only
                     if "whitelist" in decorated_params[function_arg_name].keys():
-                        json_schema_props[function_arg_name]["whitelist"] = decorated_params[function_arg_name]["whitelist"]
+                        json_schema_props[function_arg_name]["whitelist"] = decorated_params[function_arg_name][
+                            "whitelist"]
                     elif "example" in decorated_params[function_arg_name].keys():
                         json_schema_props[function_arg_name]["example"] = decorated_params[function_arg_name]["example"]
 
@@ -214,7 +244,7 @@ def textea_export(path: str, description: str = "", **decorator_kwargs):
                         for request_arg_name, request_arg in request_kwargs.items():
                             if request_arg_name in function_params.keys():
                                 function_arg_type = function_params[request_arg_name].annotation
-                                function_arg_type_name = get_type_name(function_arg_type)
+                                function_arg_type_name = get_type_dict(function_arg_type)
                                 extracted_request_arg = extract_request_arg(function_arg_type_name, request_arg)
                                 if extracted_request_arg is not None:
                                     function_kwargs[request_arg_name] = extracted_request_arg
