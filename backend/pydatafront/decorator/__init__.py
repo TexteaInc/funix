@@ -1,6 +1,4 @@
-import builtins
 import inspect
-import json
 import re
 import traceback
 from functools import wraps
@@ -94,44 +92,13 @@ def get_type_prop(function_arg_type_name):
             function_arg_type_name)
         if isinstance(typing_list_search_result, re.Match):  # typing.List, typing.Dict
             content_type = typing_list_search_result.group("contentType")
-            if content_type in __supported_basic_types:
-                return {
-                    "type": "array",
-                    "items": get_type_prop(content_type)
-                }
-            else:
-                raise "Unsupported Content Type"
+            # (content_type in __supported_basic_types) for textea-sheet only
+            return {
+                "type": "array",
+                "items": get_type_prop(content_type)
+            }
         else:
             raise "Unsupported Container Type"
-
-
-def extract_request_arg(function_arg_type_name, request_arg):
-    if function_arg_type_name in __supported_basic_types:
-        converter = getattr(builtins, function_arg_type_name)
-        return converter(request_arg)
-    elif function_arg_type_name == "dict" or function_arg_type_name == "list":
-        return json.loads(request_arg)
-    else:
-        typing_container_search_result = re.search(
-            "typing\.(?P<containerType>List|Dict)\[(?P<contentType>.*)]",
-            function_arg_type_name)
-        typing_union_search_result = re.search(
-            "typing\.Union\[(?P<unionTypes>.*)]",
-            function_arg_type_name)
-        if isinstance(typing_container_search_result, re.Match):  # typing.List, typing.Dict
-            content_type = typing_container_search_result.group("contentType")
-            if content_type in __supported_basic_types:
-                return json.loads(request_arg)
-        elif isinstance(typing_union_search_result, re.Match):  # typing.Union (for typing.Optional only)
-            union_types_raw = typing_union_search_result.group("unionTypes")
-            union_types = union_types_raw.split(", ")
-            if (request_arg is None or request_arg == "") and "NoneType" in union_types:
-                return None
-            else:
-                union_types.remove("NoneType")
-            if len(union_types) == 1:
-                return extract_request_arg(union_types[0], request_arg)
-        raise "Unsupported type"
 
 
 def textea_export(path: str, description: str = "", destination: Literal["column", "row", "sheet"] = None,
@@ -150,13 +117,20 @@ def textea_export(path: str, description: str = "", destination: Literal["column
             decorated_params = dict()
             json_schema_props = dict()
 
-            output_type_raw = getattr(function_signature.return_annotation, "__annotations__")
-            if getattr(type(output_type_raw), "__name__") == "dict":
-                output_type_parsed = dict()
-                for output_type_key, output_type_value in output_type_raw.items():
-                    output_type_parsed[output_type_key] = str(output_type_value)
+            if function_signature.return_annotation is not inspect._empty:
+                # return type dict enforcement for textea-sheet only
+                try:
+                    return_type_raw = getattr(function_signature.return_annotation, "__annotations__")
+                    if getattr(type(return_type_raw), "__name__") == "dict":
+                        return_type_parsed = dict()
+                        for return_type_key, return_type_value in return_type_raw.items():
+                            return_type_parsed[return_type_key] = str(return_type_value)
+                    else:
+                        return_type_parsed = str(return_type_raw)
+                except:
+                    return_type_parsed = get_type_dict(function_signature.return_annotation)["type"]
             else:
-                output_type_parsed = output_type_raw
+                return_type_parsed = None
 
             input_attr = ""
             for decorator_arg_name, decorator_arg_dict in decorator_kwargs.items():
@@ -185,6 +159,7 @@ def textea_export(path: str, description: str = "", destination: Literal["column
                 if function_arg_name not in decorated_params.keys():
                     decorated_params[function_arg_name] = dict()
                 decorated_params[function_arg_name].update(function_arg_type_dict)
+
                 default_example = function_param.default
                 if default_example is not inspect.Parameter.empty:
                     if "example" in decorated_params[function_arg_name].keys():
@@ -209,7 +184,7 @@ def textea_export(path: str, description: str = "", destination: Literal["column
                 "id": id,
                 "name": function_name,
                 "params": decorated_params,
-                "output_type": output_type_parsed,
+                "output_type": return_type_parsed,
                 "description": description,
                 "schema": {
                     "title": function_name,
@@ -231,25 +206,7 @@ def textea_export(path: str, description: str = "", destination: Literal["column
             @wraps(function)
             def wrapper():
                 try:
-                    if flask.request.content_type.startswith("application/json"):
-                        request_kwargs = flask.request.get_json()
-                    else:
-                        # deprecated
-                        request_kwargs = flask.request.form
-
-                    if request_kwargs.get("__textea_sheet", False):
-                        # for textea-sheet
-                        del request_kwargs["__textea_sheet"]
-                        function_kwargs = request_kwargs
-                    else:
-                        function_kwargs = dict()
-                        for request_arg_name, request_arg in request_kwargs.items():
-                            if request_arg_name in function_params.keys():
-                                function_arg_type = function_params[request_arg_name].annotation
-                                function_arg_type_name = get_type_dict(function_arg_type)
-                                extracted_request_arg = extract_request_arg(function_arg_type_name, request_arg)
-                                if extracted_request_arg is not None:
-                                    function_kwargs[request_arg_name] = extracted_request_arg
+                    function_kwargs = flask.request.get_json()
 
                     @wraps(function)
                     def wrapped_function(**wrapped_function_kwargs):

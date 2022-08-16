@@ -39,7 +39,6 @@ const TexteaFunction: React.FC<FunctionDetailProps> = ({ preview }) => {
       new URL(`/call/${functionDetail.id}`, localApiURL),
       {
         ...formData,
-        __textea_sheet: true,
       }
     );
     setResponse(response);

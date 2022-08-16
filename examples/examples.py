@@ -4,6 +4,12 @@ import tel_search
 import vector_strip
 from pydatafront.decorator import textea_export
 
+@textea_export(path="hello",
+   your_name={"treat_as":"config"}
+)
+def hello_world(your_name:str) -> str:
+  return "Welcome to PyDataFront, {your_name}!"
+
 
 class telomere_check_return(TypedDict):
     is_telomere: List[bool]
@@ -143,6 +149,26 @@ def calc_default_add(a: List[int], b: List[int], op: Optional[str] = "add") -> c
     return calc(a, b, op)
 
 
+@textea_export(
+    path="calc_boolean_add",
+    description="operate two columns with boolean add",
+    a={
+        "treat_as": "column"
+    },
+    b={
+        "treat_as": "column"
+    },
+    add={
+        "treat_as": "config"
+    }
+)
+def calc_boolean_add(a: List[int], b: List[int], add: bool) -> calc_return:
+    if add:
+        return calc(a, b, "add")
+    else:
+        return calc(a, b, "minus")
+
+
 class add_with_sub_return(TypedDict):
     add: List[int]
     sub: List[int]
@@ -161,4 +187,17 @@ def add_with_sub(a: List[int], b: List[int]) -> add_with_sub_return:
     return {
         "add": [a[i] + b[i] for i in range(min(len(a), len(b)))],
         "sub": [a[i] - b[i] for i in range(min(len(a), len(b)))],
+    }
+
+
+# only supported by PyDataFront
+@textea_export(
+    path="nested-array",
+    a={
+        "treat_as": "column"
+    }
+)
+def nested_array(a: List[List[int]]):
+    return {
+        "output": str(a)
     }
