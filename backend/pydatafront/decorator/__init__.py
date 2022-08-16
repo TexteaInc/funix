@@ -4,6 +4,7 @@ import json
 import re
 import traceback
 from functools import wraps
+from typing import Literal
 from uuid import uuid4 as uuid
 
 import flask
@@ -133,7 +134,8 @@ def extract_request_arg(function_arg_type_name, request_arg):
         raise "Unsupported type"
 
 
-def textea_export(path: str, description: str = "", **decorator_kwargs):
+def textea_export(path: str, description: str = "", destination: Literal["column", "row", "sheet"] = None,
+                  **decorator_kwargs):
     def decorator(function: callable):
         if __wrapper_enabled:
             id: str = str(uuid())
@@ -215,7 +217,8 @@ def textea_export(path: str, description: str = "", **decorator_kwargs):
                     "description": description,
                     "type": "object",
                     "properties": json_schema_props
-                }
+                },
+                "destination": destination
             }
 
             get_wrapper = app.get("/param/{}".format(id))

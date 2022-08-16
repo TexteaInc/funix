@@ -11,6 +11,7 @@ class telomere_check_return(TypedDict):
 
 @textea_export(path="bioinfo_telomere_check",
                description="A telomere is a region of repetitive DNA sequences at the end of a chromosome. Find the belongings of a repeat unit.",
+               destination="column",
                sRNAs={"treat_as": "column",
                       "example":
                           [
