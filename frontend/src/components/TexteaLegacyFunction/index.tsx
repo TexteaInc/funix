@@ -22,7 +22,7 @@ export type FunctionDetailProps = {
 
 const TexteaLegacyFunction: React.FC<FunctionDetailProps> = ({ preview }) => {
   const { data: detail } = useSWR<FunctionDetail>(
-    new URL(`/param/${preview.id}`, localApiURL).toString()
+    new URL(`/param/${preview.path}`, localApiURL).toString()
   );
   const [form, setForm] = useState<Record<string, any>>({});
   const [response, setResponse] = useState<any | null>(null);
@@ -31,7 +31,7 @@ const TexteaLegacyFunction: React.FC<FunctionDetailProps> = ({ preview }) => {
     async (event: any) => {
       event.preventDefault();
       const response = await callFunction(
-        new URL(detail!.callee, localApiURL),
+        new URL(`/call/${detail!.id}`, localApiURL),
         form
       );
       setResponse(response);
@@ -50,7 +50,7 @@ const TexteaLegacyFunction: React.FC<FunctionDetailProps> = ({ preview }) => {
             {detail.name}
           </Typography>
           <Typography sx={{ mb: 1.5 }} color="text.secondary">
-            {new URL(detail.callee, localApiURL).toString()}
+            {new URL(`/call/${detail.id}`, localApiURL).toString()}
           </Typography>
           <Divider />
           <Typography variant="body2">Param Preview</Typography>

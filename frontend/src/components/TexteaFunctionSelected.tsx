@@ -11,7 +11,7 @@ const TexteaFunctionSelected: React.FC = () => {
   }
   return (
     <Suspense fallback="loading function detail">
-      <TexteaFunction preview={selectedFunction} key={selectedFunction.id} />
+      <TexteaFunction preview={selectedFunction} key={selectedFunction.path} />
     </Suspense>
   );
 };

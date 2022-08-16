@@ -141,8 +141,8 @@ def textea_export(path: str, description: str = "", destination: Literal["column
             id: str = str(uuid())
             function_name = getattr(function, "__name__")  # function name as id to retrieve function info
             __decorated_functions_list.append({
-                "id": id,
-                "name": function_name
+                "name": function_name,
+                "path": path
             })
 
             function_signature = inspect.signature(function)
@@ -208,7 +208,6 @@ def textea_export(path: str, description: str = "", destination: Literal["column
             decorated_function = {
                 "id": id,
                 "name": function_name,
-                "callee": "/call/{}".format(path),
                 "params": decorated_params,
                 "output_type": output_type_parsed,
                 "description": description,
@@ -221,7 +220,7 @@ def textea_export(path: str, description: str = "", destination: Literal["column
                 "destination": destination
             }
 
-            get_wrapper = app.get("/param/{}".format(id))
+            get_wrapper = app.get("/param/{}".format(path))
 
             def decorated_function_param_getter():
                 return decorated_function
@@ -272,7 +271,7 @@ def textea_export(path: str, description: str = "", destination: Literal["column
                         "error_body": traceback.format_exc()
                     }
 
-            post_wrapper = app.post("/call/{}".format(path))
+            post_wrapper = app.post("/call/{}".format(id))
             post_wrapper(wrapper)
             wrapper._decorator_name_ = "textea_export"
         return function

@@ -15,7 +15,7 @@ export type FunctionDetailProps = {
 
 const TexteaFunction: React.FC<FunctionDetailProps> = ({ preview }) => {
   const { data: detail } = useSWR<FunctionDetail>(
-    new URL(`/param/${preview.id}`, localApiURL).toString()
+    new URL(`/param/${preview.path}`, localApiURL).toString()
   );
   const [form, setForm] = useState<Record<string, any>>({});
   const [response, setResponse] = useState<any | null>(null);
@@ -36,7 +36,7 @@ const TexteaFunction: React.FC<FunctionDetailProps> = ({ preview }) => {
     console.log("Data submitted: ", formData);
     console.log("Event: ", e);
     const response = await callFunction(
-      new URL(functionDetail.callee, localApiURL),
+      new URL(`/call/${functionDetail.id}`, localApiURL),
       {
         ...formData,
         __textea_sheet: true,

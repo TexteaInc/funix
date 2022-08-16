@@ -23,11 +23,11 @@ export function matchType(type: BaseType): CellType {
 }
 
 export type FunctionPreview = {
-  /**
-   * Unique ID that won't make conflict
-   */
-  id: string;
   name: string;
+  /**
+   * Unique path that won't make conflict
+   */
+  path: string;
 };
 
 export type GetListResponse = {
@@ -70,10 +70,6 @@ export type FunctionDetail = {
   output_type: {
     [key: string]: BaseType;
   };
-  /**
-   * Where to call this function
-   */
-  callee: `/call/${string}`;
   /**
    * Description of this function
    */
