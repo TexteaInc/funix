@@ -2,7 +2,7 @@ import React, { SyntheticEvent, useState } from "react";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import Form from "@rjsf/material-ui/v5";
-import { callFunction, FunctionDetail, FunctionPreview } from "../../shared";
+import { callFunctionRaw, FunctionDetail, FunctionPreview } from "../../shared";
 import useSWR from "swr";
 import { localApiURL } from "../../constants";
 import { Card, CardContent, Stack, Typography } from "@mui/material";
@@ -18,7 +18,7 @@ const TexteaFunction: React.FC<FunctionDetailProps> = ({ preview }) => {
     new URL(`/param/${preview.path}`, localApiURL).toString()
   );
   const [form, setForm] = useState<Record<string, any>>({});
-  const [response, setResponse] = useState<any | null>(null);
+  const [response, setResponse] = useState<string | null>(null);
 
   if (detail == null) {
     console.log("Failed to display function detail");
@@ -35,17 +35,38 @@ const TexteaFunction: React.FC<FunctionDetailProps> = ({ preview }) => {
     setForm(formData);
     console.log("Data submitted: ", formData);
     console.log("Event: ", e);
-    const response = await callFunction(
+    const response = await callFunctionRaw(
       new URL(`/call/${functionDetail.id}`, localApiURL),
       {
         ...formData,
       }
     );
-    setResponse(response);
+    setResponse(response.toString());
   };
 
   const widgets = {
     TextWidget: TextExtendedWidget,
+  };
+
+  type ResponseViewProps = {
+    response: string | null;
+  };
+
+  const ResponseView: React.FC<ResponseViewProps> = ({ response }) => {
+    if (response == null) {
+      return (
+        <Typography variant="body1">
+          Execute the function first to see response here
+        </Typography>
+      );
+    } else {
+      try {
+        const parsedResponse = JSON.parse(response);
+        return <ReactJson src={parsedResponse ?? {}} />;
+      } catch (e) {
+        return <code>{response ?? ""}</code>;
+      }
+    }
   };
 
   return (
@@ -63,7 +84,7 @@ const TexteaFunction: React.FC<FunctionDetailProps> = ({ preview }) => {
       <Card>
         <CardContent>
           <Typography variant="h5">Response</Typography>
-          <ReactJson src={response ?? {}} />
+          <ResponseView response={response} />
         </CardContent>
       </Card>
       <Card>

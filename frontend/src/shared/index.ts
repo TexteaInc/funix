@@ -121,3 +121,19 @@ export async function callFunction(
     },
   });
 }
+
+export async function callFunctionRaw(
+  url: URL,
+  body: CallBody,
+  init?: RequestInit
+): Promise<string | PostCallResponseError> {
+  return fetch(url, {
+    ...init,
+    method: "POST",
+    body: JSON.stringify(body),
+    headers: {
+      ...init?.headers,
+      "Content-Type": "application/json",
+    },
+  }).then((response) => response.text());
+}

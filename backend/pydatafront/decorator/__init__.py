@@ -168,17 +168,20 @@ def textea_export(path: str, description: str = "", destination: Literal["column
                         decorated_params[function_arg_name]["example"] = [
                             default_example
                         ]
+                    decorated_params[function_arg_name]["default"] = default_example
+                elif decorated_params[function_arg_name]["type"] == "bool":
+                    decorated_params[function_arg_name]["default"] = False
 
                 if function_arg_name not in json_schema_props.keys():
                     json_schema_props[function_arg_name] = dict()
                 json_schema_props[function_arg_name] = get_type_prop(function_arg_type_dict["type"])
-                if json_schema_props[function_arg_name]["type"] != "array":
-                    # support (treat_as == config) only
-                    if "whitelist" in decorated_params[function_arg_name].keys():
-                        json_schema_props[function_arg_name]["whitelist"] = decorated_params[function_arg_name][
-                            "whitelist"]
-                    elif "example" in decorated_params[function_arg_name].keys():
-                        json_schema_props[function_arg_name]["example"] = decorated_params[function_arg_name]["example"]
+                if "whitelist" in decorated_params[function_arg_name].keys():
+                    json_schema_props[function_arg_name]["whitelist"] = decorated_params[function_arg_name][
+                        "whitelist"]
+                elif "example" in decorated_params[function_arg_name].keys():
+                    json_schema_props[function_arg_name]["example"] = decorated_params[function_arg_name]["example"]
+                if "default" in decorated_params[function_arg_name].keys():
+                    json_schema_props[function_arg_name]["default"] = decorated_params[function_arg_name]["default"]
 
             decorated_function = {
                 "id": id,

@@ -4,11 +4,12 @@ import tel_search
 import vector_strip
 from pydatafront.decorator import textea_export
 
+
 @textea_export(path="hello",
-   your_name={"treat_as":"config"}
-)
-def hello_world(your_name:str) -> str:
-  return "Welcome to PyDataFront, {your_name}!"
+               your_name={"treat_as": "config"}
+               )
+def hello_world(your_name: str) -> str:
+    return f"Welcome to PyDataFront, {your_name}!"
 
 
 class telomere_check_return(TypedDict):
