@@ -2,7 +2,7 @@ import inspect
 import re
 import traceback
 from functools import wraps
-from typing import Literal
+from typing import Literal, Optional
 from uuid import uuid4 as uuid
 
 import flask
@@ -42,10 +42,11 @@ def get_type_dict(annotation):
                         "type": literal_first_type,
                         "whitelist": getattr(annotation, "__args__")
                     }
-                elif str(getattr(annotation, "__origin__")) == "typing.Union":
+                elif str(getattr(annotation, "__origin__")) == "typing.Union":  # typing.Optional
                     union_first_type = get_type_dict(getattr(annotation, "__args__")[0])["type"]
                     return {
-                        "type": union_first_type
+                        "type": union_first_type,
+                        "optional": True
                     }
                 else:
                     raise "Unsupported typing"
@@ -101,15 +102,21 @@ def get_type_prop(function_arg_type_name):
             raise "Unsupported Container Type"
 
 
-def textea_export(path: str, description: str = "", destination: Literal["column", "row", "sheet"] = None,
-                  **decorator_kwargs):
+def textea_export(path: Optional[str] = None, description: Optional[str] = "",
+                  destination: Literal["column", "row", "sheet", None] = None, **decorator_kwargs):
     def decorator(function: callable):
         if __wrapper_enabled:
             id: str = str(uuid())
             function_name = getattr(function, "__name__")  # function name as id to retrieve function info
+
+            if path is None:
+                endpoint = function_name
+            else:
+                endpoint = path
+
             __decorated_functions_list.append({
                 "name": function_name,
-                "path": path
+                "path": endpoint
             })
 
             function_signature = inspect.signature(function)
@@ -152,6 +159,11 @@ def textea_export(path: str, description: str = "", destination: Literal["column
 
             for _, function_param in function_params.items():
                 function_arg_name = function_param.name
+                if function_arg_name not in decorated_params.keys():
+                    decorated_params[function_arg_name] = dict()  # default
+
+                if "treat_as" not in decorated_params[function_arg_name].keys():
+                    decorated_params[function_arg_name]["treat_as"] = "config"  # default
                 if decorated_params[function_arg_name]["treat_as"] == "cell":
                     raise "Don't use cell!"
                 else:
@@ -171,6 +183,9 @@ def textea_export(path: str, description: str = "", destination: Literal["column
                     decorated_params[function_arg_name]["default"] = default_example
                 elif decorated_params[function_arg_name]["type"] == "bool":
                     decorated_params[function_arg_name]["default"] = False
+                elif "optional" in decorated_params[function_arg_name].keys() and \
+                        decorated_params[function_arg_name]["optional"]:
+                    decorated_params[function_arg_name]["default"] = None
 
                 if function_arg_name not in json_schema_props.keys():
                     json_schema_props[function_arg_name] = dict()
@@ -198,7 +213,7 @@ def textea_export(path: str, description: str = "", destination: Literal["column
                 "destination": destination
             }
 
-            get_wrapper = app.get("/param/{}".format(path))
+            get_wrapper = app.get("/param/{}".format(endpoint))
 
             def decorated_function_param_getter():
                 return decorated_function

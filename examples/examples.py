@@ -1,13 +1,11 @@
-from typing import List, TypedDict, Optional, Literal
+from typing import List, TypedDict, Literal
 
 import tel_search
 import vector_strip
 from pydatafront.decorator import textea_export
 
 
-@textea_export(path="hello",
-               your_name={"treat_as": "config"}
-               )
+@textea_export()
 def hello_world(your_name: str) -> str:
     return f"Welcome to PyDataFront, {your_name}!"
 
@@ -146,7 +144,7 @@ def calc_add(a: List[int], b: List[int]) -> calc_return:
         "treat_as": "config"
     }
 )
-def calc_default_add(a: List[int], b: List[int], op: Optional[str] = "add") -> calc_return:
+def calc_default_add(a: List[int], b: List[int], op: str = "add") -> calc_return:
     return calc(a, b, op)
 
 
