@@ -138,3 +138,9 @@ def add_with_sub(a: List[int], b: List[int]) -> add_with_sub_return:
         "add": [a[i] + b[i] for i in range(min(len(a), len(b)))],
         "sub": [a[i] - b[i] for i in range(min(len(a), len(b)))],
     }
+
+
+@textea_export()
+def hello_world(your_name:str) :
+#   return {"output": f"Welcome to PyDataFront, {your_name}!"}
+   return  f"Welcome to PyDataFront, {your_name}!"
