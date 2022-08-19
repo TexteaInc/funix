@@ -202,7 +202,7 @@ def textea_export(path: Optional[str] = None, description: Optional[str] = "",
                 "id": id,
                 "name": function_name,
                 "params": decorated_params,
-                "output_type": return_type_parsed,
+                "return_type": return_type_parsed,
                 "description": description,
                 "schema": {
                     "title": function_name,

@@ -65,9 +65,9 @@ export type FunctionDetail = {
    */
   params: Record<string, Param>;
   /**
-   * Output data type
+   * Return data type
    */
-  output_type: {
+  return_type: {
     [key: string]: BaseType;
   };
   /**
