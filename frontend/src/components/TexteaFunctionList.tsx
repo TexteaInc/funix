@@ -1,12 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { localApiURL } from "../shared";
+import { localApiURL } from "../constants";
 import { List, ListItem, ListItemButton } from "@mui/material";
 import { storeAtom } from "../store";
-
-import { FunctionPreview, getList } from "@textea/shared";
 import { useAtom } from "jotai";
+import { FunctionPreview, getList } from "../shared";
 
-export const TexteaFunctionList: React.FC = () => {
+const TexteaFunctionList: React.FC = () => {
   const [, setStore] = useAtom(storeAtom);
   const onceRef = useRef(true);
   const [state, setState] = useState<FunctionPreview[]>([]);
@@ -42,3 +41,5 @@ export const TexteaFunctionList: React.FC = () => {
     </List>
   );
 };
+
+export default TexteaFunctionList;

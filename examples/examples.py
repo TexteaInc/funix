@@ -1,7 +1,13 @@
-from typing import List, TypedDict, Optional
+from typing import List, TypedDict, Literal
 
-import tel_search, vector_strip
+import tel_search
+import vector_strip
 from pydatafront.decorator import textea_export
+
+
+@textea_export()
+def hello_world(your_name: str) -> str:
+    return f"Welcome to PyDataFront, {your_name}!"
 
 
 class telomere_check_return(TypedDict):
@@ -30,42 +36,47 @@ def bioinfo_telomere_check(sRNAs: List[str], repeat_unit: str) -> telomere_check
     check_result = tel_search.search_telomeres(sRNAs, repeat_unit)
     return {"is_telomere": check_result}
 
+
 class remove_3_prime_adapter_return(TypedDict):
     removal_result_sequence: List[str]
     # removal_result_code: List[int]
 
-@textea_export( path='bioinfo_remove_3_prime_adapter',
-                description="Remove 3' prime adapter from the end of an RNA-seq",
-                sRNAs={'treat_as':'column',
-                       'example': [
-                           ["AAGCTCAGGAGGGATAGCGCCTCGTATGCCGTCTTCTGC", # shorter than full 3' adapter
-                             "AAGCTCAGGAGGGATAGCGCCTCGTATGCCGTCTTCTGCTT", # full 3' adapter
-                             "AAGCTCAGGAGGGATAGCGCCTCGTATGCCGTCTTCTGCTTCTGAATTAATT", # additional seq after 3' adapter, 
-                             "AAGCTCAGGAGGGATAGCGCCTCGTATG", # <8 nt io 3' adapter
-                             "AAGCTCAGGAGGGATAGCGCCGTATG" # no match at all
+
+@textea_export(path='bioinfo_remove_3_prime_adapter',
+               description="Remove 3' prime adapter from the end of an RNA-seq",
+               sRNAs={'treat_as': 'column',
+                      'example': [
+                          ["AAGCTCAGGAGGGATAGCGCCTCGTATGCCGTCTTCTGC",  # shorter than full 3' adapter
+                           "AAGCTCAGGAGGGATAGCGCCTCGTATGCCGTCTTCTGCTT",  # full 3' adapter
+                           "AAGCTCAGGAGGGATAGCGCCTCGTATGCCGTCTTCTGCTTCTGAATTAATT",  # additional seq after 3' adapter,
+                           "AAGCTCAGGAGGGATAGCGCCTCGTATG",  # <8 nt io 3' adapter
+                           "AAGCTCAGGAGGGATAGCGCCGTATG"  # no match at all
                            ]
-                       ]
-                    }, 
-                adapter_3_prime={'treat_as':'config', 
-                                 'example': ["TCGTATGCCGTCTTCTGCTT"]
-                               }, 
-                minimal_match_length={'treat_as':'config', 'example':[6]}
+                      ]
+                      },
+               adapter_3_prime={'treat_as': 'config',
+                                'example': ["TCGTATGCCGTCTTCTGCTT"]
+                                },
+               minimal_match_length={'treat_as': 'config', 'example': [6]}
                )
-def bioinfo_remove_3_prime_adapter(sRNAs: List[str], adapter_3_prime: str, minimal_match_length:int) -> remove_3_prime_adapter_return:
+def bioinfo_remove_3_prime_adapter(sRNAs: List[str], adapter_3_prime: str,
+                                   minimal_match_length: int) -> remove_3_prime_adapter_return:
     return_codes, return_seqs = vector_strip.remove_3_prime_adapter_vectorized(
-                                    sRNAs=sRNAs, 
-                                    adapter_3_prime=adapter_3_prime, 
-                                    minimal_match_length=minimal_match_length)
+        sRNAs=sRNAs,
+        adapter_3_prime=adapter_3_prime,
+        minimal_match_length=minimal_match_length)
 
-    print ("hello, world")
+    print("hello, world")
 
-    return {"removal_result_sequence":return_seqs}
+    return {"removal_result_sequence": return_seqs}
     # return {"removal_result_code": return_codes, "removal_result_sequence":return_seqs}
 
 
 class calc_return(TypedDict):
     output: List[int]
 
+
+# "whitelist" field is deprecated
 @textea_export(
     path="calc",
     description="perform some basic math calculation",
@@ -87,6 +98,23 @@ def calc(a: List[int], b: List[int], op: str) -> calc_return:
         return {"output": [a[i] - b[i] for i in range(min(len(a), len(b)))]}
     else:
         raise "invalid parameter op"
+
+
+@textea_export(
+    path="calc_literal",
+    description="perform some basic math calculation",
+    op={
+        "treat_as": "config"
+    },
+    a={
+        "treat_as": "column"
+    },
+    b={
+        "treat_as": "column"
+    }
+)
+def calc_literal(a: List[int], b: List[int], op: Literal["add", "minus"]) -> calc_return:
+    return calc(a, b, op)
 
 
 @textea_export(
@@ -116,8 +144,28 @@ def calc_add(a: List[int], b: List[int]) -> calc_return:
         "treat_as": "config"
     }
 )
-def calc_default_add(a: List[int], b: List[int], op: Optional[str] = "add") -> calc_return:
+def calc_default_add(a: List[int], b: List[int], op: str = "add") -> calc_return:
     return calc(a, b, op)
+
+
+@textea_export(
+    path="calc_boolean_add",
+    description="operate two columns with boolean add",
+    a={
+        "treat_as": "column"
+    },
+    b={
+        "treat_as": "column"
+    },
+    add={
+        "treat_as": "config"
+    }
+)
+def calc_boolean_add(a: List[int], b: List[int], add: bool) -> calc_return:
+    if add:
+        return calc(a, b, "add")
+    else:
+        return calc(a, b, "minus")
 
 
 class add_with_sub_return(TypedDict):
@@ -141,7 +189,14 @@ def add_with_sub(a: List[int], b: List[int]) -> add_with_sub_return:
     }
 
 
-@textea_export()
-def hello_world(your_name:str) :
-#   return {"output": f"Welcome to PyDataFront, {your_name}!"}
-   return  f"Welcome to PyDataFront, {your_name}!"
+# only supported by PyDataFront
+@textea_export(
+    path="nested-array",
+    a={
+        "treat_as": "column"
+    }
+)
+def nested_array(a: List[List[int]]):
+    return {
+        "output": str(a)
+    }
