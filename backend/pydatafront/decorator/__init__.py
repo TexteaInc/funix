@@ -36,7 +36,7 @@ def get_type_dict(annotation):
                     return {
                         "type": str(annotation)
                     }
-                elif str(getattr(annotation, "__origin__")) == "typing.Literal":
+                elif str(getattr(annotation, "__origin__")) == "typing.Literal":  # Python 3.8
                     literal_first_type = get_type_dict(type(getattr(annotation, "__args__")[0]))["type"]
                     return {
                         "type": literal_first_type,
@@ -52,10 +52,21 @@ def get_type_dict(annotation):
                     raise "Unsupported typing"
             else:
                 raise "Support typing only"
+        elif annotation_type_class_name == "_LiteralGenericAlias":  # Python 3.10
+            if str(getattr(annotation, "__origin__")) == "typing.Literal":
+                literal_first_type = get_type_dict(type(getattr(annotation, "__args__")[0]))["type"]
+                return {
+                    "type": literal_first_type,
+                    "whitelist": getattr(annotation, "__args__")
+                }
+            else:
+                raise "Unsupported annotation"
         elif annotation_type_class_name == "type":
             return {
                 "type": getattr(annotation, "__name__")
             }
+        else:
+            raise "Unsupported annotation_type_class_name"
     else:
         return {
             "type": str(annotation)
