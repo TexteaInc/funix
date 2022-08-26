@@ -1,13 +1,14 @@
-import React, { SyntheticEvent, useState } from "react";
+import React, { useState } from "react";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import Form from "@rjsf/material-ui/v5";
 import { callFunctionRaw, FunctionDetail, FunctionPreview } from "../../shared";
 import useSWR from "swr";
 import { localApiURL } from "../../constants";
-import { Card, CardContent, Stack, Typography } from "@mui/material";
+import { Button, Card, CardContent, Stack, Typography } from "@mui/material";
 import ReactJson from "react-json-view";
 import TextExtendedWidget from "./TextExtendedWidget";
+import ObjectFieldSheetTemplate from "./ObjectFieldSheetTemplate";
 
 export type FunctionDetailProps = {
   preview: FunctionPreview;
@@ -28,24 +29,29 @@ const TexteaFunction: React.FC<FunctionDetailProps> = ({ preview }) => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const functionDetail = detail!;
 
-  const onSubmit = async (
-    { formData }: Record<string, any>,
-    e: SyntheticEvent
-  ) => {
+  const handleChange = ({ formData }: Record<string, any>) => {
+    // console.log("Data changed: ", formData);
     setForm(formData);
-    console.log("Data submitted: ", formData);
-    console.log("Event: ", e);
+  };
+
+  const handleSubmit = async () => {
+    console.log("Data submitted: ", form);
     const response = await callFunctionRaw(
       new URL(`/call/${functionDetail.id}`, localApiURL),
-      {
-        ...formData,
-      }
+      form
     );
     setResponse(response.toString());
   };
 
   const widgets = {
     TextWidget: TextExtendedWidget,
+  };
+
+  const uiSchema = {
+    "ui:ObjectFieldTemplate": ObjectFieldSheetTemplate,
+    "ui:submitButtonOptions": {
+      norender: true,
+    },
   };
 
   type ResponseViewProps = {
@@ -69,16 +75,24 @@ const TexteaFunction: React.FC<FunctionDetailProps> = ({ preview }) => {
     }
   };
 
+  const formElement = (
+    <Form
+      schema={functionDetail.schema}
+      formData={form}
+      onChange={handleChange}
+      widgets={widgets}
+      uiSchema={uiSchema}
+    />
+  );
+
   return (
     <Stack spacing={2}>
       <Card>
         <CardContent>
-          <Form
-            schema={functionDetail.schema}
-            formData={form}
-            onSubmit={onSubmit}
-            widgets={widgets}
-          />
+          {formElement}
+          <Button variant="contained" onClick={handleSubmit} sx={{ mt: 1 }}>
+            Submit
+          </Button>
         </CardContent>
       </Card>
       <Card>
