@@ -13,7 +13,6 @@ def hello_world(your_name: str) -> str:
 class telomere_check_return(TypedDict):
     is_telomere: List[bool]
 
-
 @textea_export(path="bioinfo_telomere_check",
                description="A telomere is a region of repetitive DNA sequences at the end of a chromosome. Find the belongings of a repeat unit.",
                destination="column",
@@ -200,3 +199,13 @@ def nested_array(a: List[List[int]]):
     return {
         "output": str(a)
     }
+
+
+# transform test
+# just create a new sheet of two columns of integers, regardless of the input
+@textea_export(
+        destination = "sheet"
+        )
+def transform_test(a: List[int]):
+    return {"column1": [1,2,3], 
+            "column2": [4,5,6]}
