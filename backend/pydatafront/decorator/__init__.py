@@ -154,6 +154,7 @@ def textea_export(path: Optional[str] = None, description: Optional[str] = "",
             for decorator_arg_name, decorator_arg_dict in decorator_kwargs.items():
                 if decorator_arg_name not in decorated_params.keys():
                     decorated_params[decorator_arg_name] = dict()
+
                 if decorator_arg_dict["treat_as"] == "config":
                     decorated_params[decorator_arg_name]["treat_as"] = "config"
                 else:
@@ -161,6 +162,9 @@ def textea_export(path: Optional[str] = None, description: Optional[str] = "",
                     input_attr = decorator_arg_dict["treat_as"] if input_attr == "" else input_attr
                     if input_attr != decorator_arg_dict["treat_as"]:
                         raise "Error: input type doesn't match"
+
+                if "widget" in decorator_arg_dict.keys():
+                    decorated_params[decorator_arg_name]["widget"] = decorator_arg_dict["widget"]
 
                 if "whitelist" in decorator_arg_dict.keys():
                     # deprecated, for compatibility
@@ -208,6 +212,9 @@ def textea_export(path: Optional[str] = None, description: Optional[str] = "",
                     json_schema_props[function_arg_name]["example"] = decorated_params[function_arg_name]["example"]
                 if "default" in decorated_params[function_arg_name].keys():
                     json_schema_props[function_arg_name]["default"] = decorated_params[function_arg_name]["default"]
+
+                if "widget" in decorated_params[function_arg_name].keys():
+                    json_schema_props[function_arg_name]["widget"] = decorated_params[function_arg_name]["widget"]
 
             decorated_function = {
                 "id": id,

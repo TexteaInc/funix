@@ -15,7 +15,7 @@ let rowIdCounter = 0;
 
 const ObjectFieldSheetTemplate = (props: ObjectFieldProps) => {
   const configElements: SchemaField[] = [];
-  const arrayElements: any[] = [];
+  const arrayElementsInSheet: any[] = [];
   const columns: GridColDef[] = [
     {
       field: "id",
@@ -25,12 +25,17 @@ const ObjectFieldSheetTemplate = (props: ObjectFieldProps) => {
   ];
 
   props.properties.map((element: any) => {
-    const isArray = element.content.props.schema.type === "array";
-    if (!isArray) {
-      configElements.push(element.content);
+    const elementContent = element.content;
+    const elementProps = elementContent.props;
+    const isArrayInSheet =
+      elementProps.schema.type === "array" &&
+      elementProps.schema.hasOwnProperty("widget") &&
+      Array.isArray(elementProps.schema.widget) &&
+      elementProps.schema.widget.includes("sheet");
+    if (!isArrayInSheet) {
+      configElements.push(elementContent);
     } else {
-      arrayElements.push(element.content);
-      const elementProps = element.content.props;
+      arrayElementsInSheet.push(elementContent);
       const itemType = elementProps.schema.items.type;
       const gridColType = itemType === "integer" ? "number" : itemType;
       let newColumn: GridColDef = {
@@ -78,7 +83,7 @@ const ObjectFieldSheetTemplate = (props: ObjectFieldProps) => {
     });
     for (const column of columns) {
       if (column.field == "id") continue;
-      const arrayElementsWithKey = arrayElements.filter(
+      const arrayElementsWithKey = arrayElementsInSheet.filter(
         (arrayElement) => arrayElement.key === column.field
       );
       for (const arrayElementWithKey of arrayElementsWithKey) {
@@ -154,7 +159,7 @@ const ObjectFieldSheetTemplate = (props: ObjectFieldProps) => {
   };
 
   const getNewDataGridElementIfAvailable = () => {
-    if (arrayElements.length != 0)
+    if (arrayElementsInSheet.length != 0)
       return (
         <Card className="property-wrapper" sx={{ mt: 1 }}>
           <Box sx={{ width: "100%" }} padding={1}>

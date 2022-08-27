@@ -13,6 +13,7 @@ def hello_world(your_name: str) -> str:
 class telomere_check_return(TypedDict):
     is_telomere: List[bool]
 
+
 @textea_export(path="bioinfo_telomere_check",
                description="A telomere is a region of repetitive DNA sequences at the end of a chromosome. Find the belongings of a repeat unit.",
                destination="column",
@@ -120,10 +121,12 @@ def calc_literal(a: List[int], b: List[int], op: Literal["add", "minus"]) -> cal
     path="calc_add",
     description="add two column",
     a={
-        "treat_as": "column"
+        "treat_as": "column",
+        "widget": ["sheet"]
     },
     b={
-        "treat_as": "column"
+        "treat_as": "column",
+        "widget": ["sheet"]
     }
 )
 def calc_add(a: List[int], b: List[int]) -> calc_return:
@@ -167,6 +170,26 @@ def calc_boolean_add(a: List[int], b: List[int], add: bool) -> calc_return:
         return calc(a, b, "minus")
 
 
+@textea_export(
+    description="operate two columns with boolean add with mixed list widgets",
+    a={
+        "treat_as": "column"
+    },
+    b={
+        "treat_as": "column",
+        "widget": ["sheet"]
+    },
+    add={
+        "treat_as": "config"
+    }
+)
+def calc_boolean_mixed_add(a: List[int], b: List[int], add: bool = True) -> calc_return:
+    if add:
+        return calc(a, b, "add")
+    else:
+        return calc(a, b, "minus")
+
+
 class add_with_sub_return(TypedDict):
     add: List[int]
     sub: List[int]
@@ -204,8 +227,8 @@ def nested_array(a: List[List[int]]):
 # transform test
 # just create a new sheet of two columns of integers, regardless of the input
 @textea_export(
-        destination = "sheet"
-        )
+    destination="sheet"
+)
 def transform_test(a: List[int]):
-    return {"column1": [1,2,3], 
-            "column2": [4,5,6]}
+    return {"column1": [1, 2, 3],
+            "column2": [4, 5, 6]}
