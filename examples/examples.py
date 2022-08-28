@@ -190,6 +190,23 @@ def calc_boolean_mixed_add(a: List[int], b: List[int], add: bool = True) -> calc
         return calc(a, b, "minus")
 
 
+@textea_export(
+    description="add two column with example and whitelist",
+    a={
+        "treat_as": "column",
+        "example": [[1, 2, 3], [4, 5, 6]],
+        "widget": ["sheet"]
+    },
+    b={
+        "treat_as": "column",
+        "whitelist": [[7, 8, 9], [-1, -2, -3]],
+        "widget": ["sheet"]
+    }
+)
+def calc_add_example_whitelist(a: List[int], b: List[int]) -> calc_return:
+    return calc(a, b, "add")
+
+
 class add_with_sub_return(TypedDict):
     add: List[int]
     sub: List[int]

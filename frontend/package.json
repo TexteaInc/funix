@@ -21,6 +21,7 @@
     "@types/react-dom": "^18.0.6",
     "jotai": "^1.7.4",
     "markdown-it": "^13.0.1",
+    "material-ui-popup-state": "^4.0.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-json-view": "^1.21.3",

@@ -8,7 +8,7 @@ import { localApiURL } from "../../constants";
 import { Button, Card, CardContent, Stack, Typography } from "@mui/material";
 import ReactJson from "react-json-view";
 import TextExtendedWidget from "./TextExtendedWidget";
-import ObjectFieldSheetTemplate from "./ObjectFieldSheetTemplate";
+import ObjectFieldExtendedTemplate from "./ObjectFieldExtendedTemplate";
 
 export type FunctionDetailProps = {
   preview: FunctionPreview;
@@ -48,7 +48,7 @@ const TexteaFunction: React.FC<FunctionDetailProps> = ({ preview }) => {
   };
 
   const uiSchema = {
-    "ui:ObjectFieldTemplate": ObjectFieldSheetTemplate,
+    "ui:ObjectFieldTemplate": ObjectFieldExtendedTemplate,
     "ui:submitButtonOptions": {
       norender: true,
     },

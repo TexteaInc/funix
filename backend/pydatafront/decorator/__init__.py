@@ -167,7 +167,6 @@ def textea_export(path: Optional[str] = None, description: Optional[str] = "",
                     decorated_params[decorator_arg_name]["widget"] = decorator_arg_dict["widget"]
 
                 if "whitelist" in decorator_arg_dict.keys():
-                    # deprecated, for compatibility
                     decorated_params[decorator_arg_name]["whitelist"] = decorator_arg_dict["whitelist"]
                 elif "example" in decorator_arg_dict.keys():
                     decorated_params[decorator_arg_name]["example"] = decorator_arg_dict["example"]
