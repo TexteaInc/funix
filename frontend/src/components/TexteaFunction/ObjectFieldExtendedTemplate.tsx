@@ -6,6 +6,7 @@ import {
   Divider,
   FormControl,
   InputLabel,
+  Menu,
   MenuItem,
   Select,
   SelectChangeEvent,
@@ -22,7 +23,12 @@ import {
   GridRowsProp,
   GridSelectionModel,
 } from "@mui/x-data-grid";
-import { bindHover, bindPopover } from "material-ui-popup-state";
+import {
+  bindHover,
+  bindMenu,
+  bindPopover,
+  bindTrigger,
+} from "material-ui-popup-state";
 import HoverPopover from "material-ui-popup-state/HoverPopover";
 import { usePopupState } from "material-ui-popup-state/hooks";
 import { GridColType } from "@mui/x-data-grid/models/colDef/gridColType";
@@ -51,11 +57,15 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
     const hasArrayExample =
       elementProps.schema.type === "array" &&
       elementProps.schema.hasOwnProperty("example") &&
-      Array.isArray(elementProps.schema.example);
+      Array.isArray(elementProps.schema.example) &&
+      elementProps.schema.example.length != 0 &&
+      Array.isArray(elementProps.schema.example[0]);
     const hasArrayWhitelist =
       elementProps.schema.type === "array" &&
       elementProps.schema.hasOwnProperty("whitelist") &&
-      Array.isArray(elementProps.schema.whitelist);
+      Array.isArray(elementProps.schema.whitelist) &&
+      elementProps.schema.whitelist.length != 0 &&
+      Array.isArray(elementProps.schema.whitelist[0]);
     let arrayValueSelector = <></>;
     if (hasArrayExample || hasArrayWhitelist) {
       let arrayValueSelectorCandidates: Array<any>[];
@@ -71,10 +81,14 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
         });
       }
       const [candidateValueSelected, setCandidateValueSelected] = useState<
-        Array<any>[] | undefined
-      >(undefined);
-      const handleCandidateSelection = (e: SelectChangeEvent<any>) => {
-        const targetArray: any[] = JSON.parse(e.target.value);
+        string | []
+      >([]);
+
+      const handleCandidateSelectionEvent = (e: SelectChangeEvent<any>) =>
+        handleCandidateSelection(e.target.value);
+
+      const handleCandidateSelection = (newSelection: string) => {
+        const targetArray: any[] = JSON.parse(newSelection);
         const possiblySheetColumns = columns.filter(
           (column) => column.field == elementProps.name
         );
@@ -100,61 +114,102 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
         } else {
           elementProps.onChange(targetArray);
         }
-        setCandidateValueSelected(e.target.value);
+        if (hasArrayWhitelist) {
+          setCandidateValueSelected(newSelection);
+        }
       };
       const labelText = `${elementProps.name} Selector (${
         hasArrayWhitelist ? "whitelist" : "example"
       })`;
-      arrayValueSelector = (
-        <Box>
-          <FormControl fullWidth>
-            <InputLabel>{labelText}</InputLabel>
-            <Select
-              label={labelText}
-              value={candidateValueSelected}
-              onChange={handleCandidateSelection}
-            >
-              {arrayValueSelectorCandidates.map((candidate) => {
-                const candidateJson = JSON.stringify(candidate, null, 1);
-                const candidateRows: GridRowsProp = candidate.map(
-                  (candidateRowValue, index) => ({
-                    id: index,
-                    [elementProps.name]: JSON.stringify(candidateRowValue),
-                  })
-                );
-                const popupState = usePopupState({
-                  variant: "popover",
-                  popupId: `popover-${elementProps.name}`,
-                });
-                return (
-                  <MenuItem value={candidateJson}>
-                    <code {...bindHover(popupState)}>{candidateJson}</code>
-                    <HoverPopover {...bindPopover(popupState)}>
-                      <Card
-                        onClick={stopEventPropagation}
-                        onMouseDown={stopEventPropagation}
-                        sx={{ padding: 1 }}
-                      >
-                        <Typography
-                          variant="subtitle2"
-                          sx={{ marginBottom: 1 }}
-                        >
-                          Column Preview
-                        </Typography>
-                        <DataGrid
-                          columns={[{ field: elementProps.name }]}
-                          rows={candidateRows}
-                          sx={{ minHeight: 400 }}
-                        />
-                      </Card>
-                    </HoverPopover>
-                  </MenuItem>
-                );
-              })}
-            </Select>
-          </FormControl>
-        </Box>
-      );
+
+      const getMenuItems = (candidates: Array<any>[], parentPopupState: any) =>
+        candidates.map((candidate) => {
+          const candidateJson = JSON.stringify(candidate, null, 1);
+          const candidateRows: GridRowsProp = candidate.map(
+            (candidateRowValue, index) => {
+              const rowValueJsonStr = JSON.stringify(candidateRowValue);
+              const toUseJson =
+                rowValueJsonStr.length > 0 &&
+                (rowValueJsonStr[0] == "[" || rowValueJsonStr[0] == "{");
+              return {
+                id: index,
+                [elementProps.name]: toUseJson
+                  ? rowValueJsonStr
+                  : candidateRowValue,
+              };
+            }
+          );
+          const popupState = usePopupState({
+            variant: "popover",
+            popupId: `popover-${elementProps.name}`,
+            disableAutoFocus: true,
+          });
+          let handleMenuItemClick = () => {
+            return;
+          };
+          if (parentPopupState != undefined) {
+            handleMenuItemClick = () => {
+              handleCandidateSelection(candidateJson);
+              parentPopupState.close();
+            };
+          }
+          return (
+            <MenuItem value={candidateJson} onClick={handleMenuItemClick}>
+              <code {...bindHover(popupState)}>{candidateJson}</code>
+              <HoverPopover {...bindPopover(popupState)}>
+                <Card
+                  onClick={stopEventPropagation}
+                  onMouseDown={stopEventPropagation}
+                  sx={{ padding: 1 }}
+                >
+                  <Typography variant="subtitle2" sx={{ marginBottom: 1 }}>
+                    Column Preview
+                  </Typography>
+                  <DataGrid
+                    columns={[{ field: elementProps.name, minWidth: 350 }]}
+                    rows={candidateRows}
+                    sx={{ minHeight: 400 }}
+                  />
+                </Card>
+              </HoverPopover>
+            </MenuItem>
+          );
+        });
+
+      if (hasArrayWhitelist) {
+        arrayValueSelector = (
+          <Box>
+            <FormControl fullWidth>
+              <InputLabel>{labelText}</InputLabel>
+              <Select
+                label={labelText}
+                value={candidateValueSelected}
+                onChange={handleCandidateSelectionEvent}
+                MenuProps={{
+                  disableScrollLock: true,
+                }}
+              >
+                {getMenuItems(arrayValueSelectorCandidates, undefined)}
+              </Select>
+            </FormControl>
+          </Box>
+        );
+      } else {
+        arrayValueSelector = (() => {
+          const popupState = usePopupState({
+            variant: "popover",
+            popupId: "demoMenu",
+          });
+          return (
+            <div>
+              <Button {...bindTrigger(popupState)}>{labelText}</Button>
+              <Menu {...bindMenu(popupState)}>
+                {getMenuItems(arrayValueSelectorCandidates, popupState)}
+              </Menu>
+            </div>
+          );
+        })();
+      }
     }
 
     const isArrayInSheet =
@@ -166,7 +221,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
       arrayValueSelectors.push(arrayValueSelector);
     }
     if (!isArrayInSheet) {
-      if (hasArrayExample) {
+      if (!hasArrayWhitelist) {
         configElements.push(elementContent);
       }
     } else {
@@ -177,6 +232,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
         field: elementProps.name,
         type: gridColType,
         editable: !hasArrayWhitelist,
+        minWidth: 200,
       };
       if (itemType === "integer") {
         newColumn = {
