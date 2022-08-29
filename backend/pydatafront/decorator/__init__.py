@@ -7,7 +7,7 @@ from uuid import uuid4 as uuid
 
 import flask
 
-from pydatafront import app
+from pydatafront.app import app
 
 __supported_basic_types = ["int", "float", "str", "bool"]
 __supported_types = __supported_basic_types + ["dict", "list"]
