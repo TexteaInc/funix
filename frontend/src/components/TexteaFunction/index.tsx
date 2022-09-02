@@ -5,10 +5,23 @@ import Form from "@rjsf/material-ui/v5";
 import { callFunctionRaw, FunctionDetail, FunctionPreview } from "../../shared";
 import useSWR from "swr";
 import { localApiURL } from "../../constants";
-import { Button, Card, CardContent, Stack, Typography } from "@mui/material";
+import {
+  Button,
+  Card,
+  CardContent,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
+  Radio,
+  RadioGroup,
+  Stack,
+  Typography,
+} from "@mui/material";
 import ReactJson from "react-json-view";
 import TextExtendedWidget from "./TextExtendedWidget";
 import ObjectFieldExtendedTemplate from "./ObjectFieldExtendedTemplate";
+import { DataGrid } from "@mui/x-data-grid";
+import { GridRowModel } from "@mui/x-data-grid/models/gridRows";
 
 export type FunctionDetailProps = {
   preview: FunctionPreview;
@@ -67,8 +80,133 @@ const TexteaFunction: React.FC<FunctionDetailProps> = ({ preview }) => {
       );
     } else {
       try {
-        const parsedResponse = JSON.parse(response);
-        return <ReactJson src={parsedResponse ?? {}} />;
+        const parsedResponse: object = JSON.parse(response);
+        const is1dArray = (target: any) => {
+          if (!Array.isArray(target)) return false;
+          else {
+            for (const row of target) if (Array.isArray(row)) return false;
+            return true;
+          }
+        };
+        const [selectedResponseViewType, setSelectedResponseViewType] =
+          useState<string>("json");
+        const handleResponseViewChange = (
+          e: React.ChangeEvent<HTMLInputElement>
+        ) => {
+          setSelectedResponseViewType(e.target.value);
+        };
+        const responseViewRadioGroup = (
+          <FormControl>
+            <FormLabel id="response-view-radio-group">View in</FormLabel>
+            <RadioGroup
+              row
+              aria-labelledby="response-view-radio-group"
+              name="response-view-radio-group"
+              value={selectedResponseViewType}
+              onChange={handleResponseViewChange}
+            >
+              <FormControlLabel value="json" control={<Radio />} label="JSON" />
+              <FormControlLabel
+                value="sheet"
+                control={<Radio />}
+                label="Sheet"
+              />
+            </RadioGroup>
+          </FormControl>
+        );
+        if (Array.isArray(parsedResponse) && is1dArray(parsedResponse)) {
+          const SelectedResponseView = (props: any) => {
+            if (props.selectedResponseViewType === "json")
+              return <ReactJson src={parsedResponse ?? {}} />;
+            else if (props.selectedResponseViewType === "sheet")
+              return (
+                <DataGrid
+                  columns={[{ field: "root" }]}
+                  rows={parsedResponse.map((rowValue, index) => ({
+                    id: index,
+                    root: rowValue,
+                  }))}
+                />
+              );
+            else throw new Error("Unsupported selectedResponseViewType");
+          };
+          return (
+            <div>
+              {responseViewRadioGroup}
+              <SelectedResponseView
+                selectedResponseViewType={selectedResponseViewType}
+              />
+            </div>
+          );
+        } else if (
+          typeof parsedResponse === "object" &&
+          parsedResponse !== null
+        ) {
+          const keysOfArraysInSheet: string[] = [];
+          for (const [k, v] of Object.entries(parsedResponse)) {
+            if (Array.isArray(v) && is1dArray(v)) {
+              keysOfArraysInSheet.push(k);
+            }
+          }
+          if (keysOfArraysInSheet.length === 0)
+            return <ReactJson src={parsedResponse ?? {}} />;
+          else {
+            const SelectedResponseView = (props: any) => {
+              if (props.selectedResponseViewType === "json")
+                return <ReactJson src={parsedResponse ?? {}} />;
+              else if (props.selectedResponseViewType === "sheet") {
+                const rows: GridRowModel[] = [];
+                let newObject: object = {};
+                for (const [k, v] of Object.entries(parsedResponse)) {
+                  if (keysOfArraysInSheet.includes(k)) {
+                    v.map((rowValue: any, index: number) => {
+                      if (index < rows.length) {
+                        rows[index] = {
+                          ...rows[index],
+                          [k]: rowValue,
+                        };
+                      } else {
+                        rows.push({
+                          id: index,
+                          [k]: rowValue,
+                        });
+                      }
+                    });
+                  } else {
+                    newObject = { ...newObject, [k]: v };
+                  }
+                }
+                const grid = (
+                  <DataGrid
+                    columns={keysOfArraysInSheet.map((key) => ({
+                      field: key,
+                    }))}
+                    rows={rows}
+                    sx={{ minHeight: 400 }}
+                  />
+                );
+                if (Object.keys(newObject).length != 0) {
+                  return (
+                    <div>
+                      {grid}
+                      <ReactJson src={newObject} />
+                    </div>
+                  );
+                } else return grid;
+              } else throw new Error("Unsupported selectedResponseViewType");
+            };
+            return (
+              <div>
+                {responseViewRadioGroup}
+                <SelectedResponseView
+                  selectedResponseViewType={selectedResponseViewType}
+                />
+              </div>
+            );
+          }
+        } else {
+          return <ReactJson src={parsedResponse ?? {}} />;
+        }
       } catch (e) {
         return <code>{response ?? ""}</code>;
       }
