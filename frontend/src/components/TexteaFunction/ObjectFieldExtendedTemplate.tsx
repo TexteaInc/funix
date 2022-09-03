@@ -306,7 +306,6 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
           field: elementProps.name,
           type: gridColType,
           editable: !hasArrayWhitelist,
-          minWidth: 200,
         };
         if (itemType === "integer") {
           newColumn = {

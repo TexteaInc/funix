@@ -12,6 +12,7 @@ import {
   FormControl,
   FormControlLabel,
   FormLabel,
+  Grid,
   Radio,
   RadioGroup,
   Stack,
@@ -84,7 +85,13 @@ const TexteaFunction: React.FC<FunctionDetailProps> = ({ preview }) => {
         const is1dArray = (target: any) => {
           if (!Array.isArray(target)) return false;
           else {
-            for (const row of target) if (Array.isArray(row)) return false;
+            for (const row of target)
+              if (
+                Array.isArray(row) ||
+                typeof row === "object" ||
+                typeof row === "function"
+              )
+                return false;
             return true;
           }
         };
@@ -225,20 +232,26 @@ const TexteaFunction: React.FC<FunctionDetailProps> = ({ preview }) => {
 
   return (
     <Stack spacing={2}>
-      <Card>
-        <CardContent>
-          {formElement}
-          <Button variant="contained" onClick={handleSubmit} sx={{ mt: 1 }}>
-            Submit
-          </Button>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent>
-          <Typography variant="h5">Response</Typography>
-          <ResponseView response={response} />
-        </CardContent>
-      </Card>
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              {formElement}
+              <Button variant="contained" onClick={handleSubmit} sx={{ mt: 1 }}>
+                Submit
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h5">Response</Typography>
+              <ResponseView response={response} />
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
       <Card>
         <CardContent>
           <Typography variant="h5">Function Detail</Typography>
