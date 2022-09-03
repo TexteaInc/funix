@@ -1,17 +1,44 @@
 import { storeAtom } from "../store";
-import { Typography } from "@mui/material";
+import {
+  Alert,
+  Card,
+  CardContent,
+  CircularProgress,
+  Stack,
+  Typography,
+} from "@mui/material";
 import React, { Suspense } from "react";
 import { useAtom } from "jotai";
 import TexteaFunction from "./TexteaFunction";
 
-const TexteaFunctionSelected: React.FC = () => {
+export type FunctionSelectedProps = {
+  backend: URL;
+};
+
+const TexteaFunctionSelected: React.FC<FunctionSelectedProps> = ({
+  backend,
+}) => {
   const [{ selectedFunction }] = useAtom(storeAtom);
   if (!selectedFunction) {
-    return <Typography variant="h5">No selected function</Typography>;
+    return <Alert severity="info">Select a function to start</Alert>;
   }
+  const suspenseFallback = (
+    <Card>
+      <CardContent>
+        <Stack direction="row" alignItems="center" spacing={2}>
+          <CircularProgress />
+          <Typography>Loading selected function …</Typography>
+        </Stack>
+      </CardContent>
+    </Card>
+  );
   return (
-    <Suspense fallback="loading function detail">
-      <TexteaFunction preview={selectedFunction} key={selectedFunction.path} />
+    <Suspense fallback={suspenseFallback}>
+      <TexteaFunction
+        preview={selectedFunction}
+        key={selectedFunction.path}
+        backend={backend}
+      />
     </Suspense>
   );
 };

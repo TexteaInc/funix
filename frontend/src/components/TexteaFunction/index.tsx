@@ -4,8 +4,8 @@ import React, { useState } from "react";
 import Form from "@rjsf/material-ui/v5";
 import { callFunctionRaw, FunctionDetail, FunctionPreview } from "../../shared";
 import useSWR from "swr";
-import { localApiURL } from "../../constants";
 import {
+  Alert,
   Button,
   Card,
   CardContent,
@@ -26,11 +26,15 @@ import { GridRowModel } from "@mui/x-data-grid/models/gridRows";
 
 export type FunctionDetailProps = {
   preview: FunctionPreview;
+  backend: URL;
 };
 
-const TexteaFunction: React.FC<FunctionDetailProps> = ({ preview }) => {
+const TexteaFunction: React.FC<FunctionDetailProps> = ({
+  preview,
+  backend,
+}) => {
   const { data: detail } = useSWR<FunctionDetail>(
-    new URL(`/param/${preview.path}`, localApiURL).toString()
+    new URL(`/param/${preview.path}`, backend).toString()
   );
   const [form, setForm] = useState<Record<string, any>>({});
   const [response, setResponse] = useState<string | null>(null);
@@ -51,7 +55,7 @@ const TexteaFunction: React.FC<FunctionDetailProps> = ({ preview }) => {
   const handleSubmit = async () => {
     console.log("Data submitted: ", form);
     const response = await callFunctionRaw(
-      new URL(`/call/${functionDetail.id}`, localApiURL),
+      new URL(`/call/${functionDetail.id}`, backend),
       form
     );
     setResponse(response.toString());
@@ -75,9 +79,9 @@ const TexteaFunction: React.FC<FunctionDetailProps> = ({ preview }) => {
   const ResponseView: React.FC<ResponseViewProps> = ({ response }) => {
     if (response == null) {
       return (
-        <Typography variant="body1">
+        <Alert severity="info">
           Execute the function first to see response here
-        </Typography>
+        </Alert>
       );
     } else {
       try {
@@ -244,20 +248,24 @@ const TexteaFunction: React.FC<FunctionDetailProps> = ({ preview }) => {
           </Card>
         </Grid>
         <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h5">Response</Typography>
-              <ResponseView response={response} />
-            </CardContent>
-          </Card>
+          <Stack spacing={2}>
+            <Card>
+              <CardContent>
+                <Stack spacing={1}>
+                  <Typography variant="h5">Response</Typography>
+                  <ResponseView response={response} />
+                </Stack>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent>
+                <Typography variant="h5">Function Detail</Typography>
+                <ReactJson src={functionDetail} collapsed />
+              </CardContent>
+            </Card>
+          </Stack>
         </Grid>
       </Grid>
-      <Card>
-        <CardContent>
-          <Typography variant="h5">Function Detail</Typography>
-          <ReactJson src={functionDetail} collapsed />
-        </CardContent>
-      </Card>
     </Stack>
   );
 };

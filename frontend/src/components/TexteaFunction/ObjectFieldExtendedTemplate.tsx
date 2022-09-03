@@ -6,7 +6,6 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
-  Divider,
   FormControl,
   InputLabel,
   Menu,
@@ -444,7 +443,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
                 Delete selected row(s)
               </Button>
             </Stack>
-            <Box sx={{ height: 400, mt: 1 }}>
+            <Box sx={{ height: 400, mt: 1, paddingRight: 1 }}>
               <DataGrid
                 columns={columns}
                 rows={rows}
@@ -455,6 +454,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
                 components={{
                   ColumnMenu: GridColumnMenu,
                 }}
+                sx={{ marginRight: 1 }}
               />
             </Box>
           </Box>
@@ -515,12 +515,9 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
   );
 
   return (
-    <div>
+    <Stack spacing={1}>
       <Typography variant="h5">{props.title}</Typography>
-      <Typography variant="body1" sx={{ mt: 1 }}>
-        {props.description}
-      </Typography>
-      <Divider sx={{ mt: 1 }} />
+      <Typography variant="body1">{props.description}</Typography>
       {arraySimpleSelectors.map(renderElement)}
       {configElements.map(renderElement)}
       {getNewDataGridElementIfAvailable()}
@@ -530,7 +527,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
           <MenuList>{dialogMenuListContent}</MenuList>
         </DialogContent>
       </Dialog>
-    </div>
+    </Stack>
   );
 };
 
