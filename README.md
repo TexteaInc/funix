@@ -1,5 +1,7 @@
 # PyDataFront
 
+[![PyPI version](https://badge.fury.io/py/pydatafront.svg)](https://badge.fury.io/py/pydatafront)
+
 Supported Types: `int`, `float`, `str`, `list`, `dict`, `bool`, `typing.List`, `typing.Dict`, `typing.Optional`, `typing.TypedDict`
 
 ## Installation
