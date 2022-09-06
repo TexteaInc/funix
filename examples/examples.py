@@ -249,3 +249,8 @@ def nested_array(a: List[List[int]]):
 def transform_test(a: List[int]):
     return {"column1": [1, 2, 3],
             "column2": [4, 5, 6]}
+
+
+@textea_export()
+def empty():
+    pass

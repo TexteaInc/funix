@@ -123,7 +123,7 @@ def textea_export(path: Optional[str] = None, description: Optional[str] = "",
             if path is None:
                 endpoint = function_name
             else:
-                endpoint = path
+                endpoint = path.strip("/")
 
             __decorated_functions_list.append({
                 "name": function_name,

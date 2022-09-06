@@ -99,6 +99,9 @@ const TexteaFunction: React.FC<FunctionDetailProps> = ({
             return true;
           }
         };
+        if (typeof parsedResponse !== "object" && !is1dArray(parsedResponse)) {
+          return <code>{response ?? ""}</code>;
+        }
         const [selectedResponseViewType, setSelectedResponseViewType] =
           useState<string>("json");
         const handleResponseViewChange = (
