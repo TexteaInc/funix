@@ -73,30 +73,46 @@ def get_type_dict(annotation):
         }
 
 
-def get_type_prop(function_arg_type_name):
+def get_type_widget_prop(function_arg_type_name, index, function_arg_widget):
     # Basic and List only
+    if isinstance(function_arg_widget, str):
+        widget = function_arg_widget
+    elif isinstance(function_arg_widget, list):
+        if index >= len(function_arg_widget):
+            widget = ""
+        else:
+            widget = function_arg_widget[index]
+    else:
+        widget = ""
+    if widget == "sheet" or widget == "simple":
+        widget = [widget]
     if function_arg_type_name in __supported_basic_types:
         if function_arg_type_name == "int":
             return {
-                "type": "integer"
+                "type": "integer",
+                "widget": widget
             }
         elif function_arg_type_name == "bool":
             return {
-                "type": "boolean"
+                "type": "boolean",
+                "widget": widget
             }
         elif function_arg_type_name == "float":
             return {
-                "type": "number"
+                "type": "number",
+                "widget": widget
             }
         elif function_arg_type_name == "str":
             return {
-                "type": "string"
+                "type": "string",
+                "widget": widget
             }
         else:
             raise "Unsupported Basic Type"
     elif function_arg_type_name == "list":
         return {
-            "type": "array"
+            "type": "array",
+            "widget": widget
         }
     else:
         typing_list_search_result = re.search(
@@ -107,7 +123,8 @@ def get_type_prop(function_arg_type_name):
             # (content_type in __supported_basic_types) for textea-sheet only
             return {
                 "type": "array",
-                "items": get_type_prop(content_type)
+                "widget": widget,
+                "items": get_type_widget_prop(content_type, index + 1, function_arg_widget)
             }
         else:
             raise "Unsupported Container Type"
@@ -203,17 +220,17 @@ def textea_export(path: Optional[str] = None, description: Optional[str] = "",
 
                 if function_arg_name not in json_schema_props.keys():
                     json_schema_props[function_arg_name] = dict()
-                json_schema_props[function_arg_name] = get_type_prop(function_arg_type_dict["type"])
+                if "widget" in decorated_params[function_arg_name].keys():
+                    widget = decorated_params[function_arg_name]["widget"]
+                else:
+                    widget = ""
+                json_schema_props[function_arg_name] = get_type_widget_prop(function_arg_type_dict["type"], 0, widget)
                 if "whitelist" in decorated_params[function_arg_name].keys():
-                    json_schema_props[function_arg_name]["whitelist"] = decorated_params[function_arg_name][
-                        "whitelist"]
+                    json_schema_props[function_arg_name]["whitelist"] = decorated_params[function_arg_name]["whitelist"]
                 elif "example" in decorated_params[function_arg_name].keys():
                     json_schema_props[function_arg_name]["example"] = decorated_params[function_arg_name]["example"]
                 if "default" in decorated_params[function_arg_name].keys():
                     json_schema_props[function_arg_name]["default"] = decorated_params[function_arg_name]["default"]
-
-                if "widget" in decorated_params[function_arg_name].keys():
-                    json_schema_props[function_arg_name]["widget"] = decorated_params[function_arg_name]["widget"]
 
             decorated_function = {
                 "id": id,
