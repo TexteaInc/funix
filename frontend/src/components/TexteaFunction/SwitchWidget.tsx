@@ -7,10 +7,11 @@ import {
   Switch,
 } from "@mui/material";
 import React from "react";
-import { JSONSchema7 } from "json-schema";
 
-interface WithWidgetJSONSchema7 extends JSONSchema7 {
-  widget?: string; // fix TS2339: Property 'widget' does not exist on type 'JSONSchema7'
+declare module "json-schema" {
+  interface JSONSchema7 {
+    widget?: string;
+  }
 }
 
 const SwitchWidget = (props: WidgetProps) => {
@@ -23,10 +24,7 @@ const SwitchWidget = (props: WidgetProps) => {
 
   let control = <Checkbox checked={checked} onChange={onChange} />;
 
-  if (
-    "widget" in props.schema &&
-    (props.schema as WithWidgetJSONSchema7).widget === "switch"
-  ) {
+  if ("widget" in props.schema && props.schema.widget === "switch") {
     control = <Switch checked={checked} onChange={onChange} />;
   }
   return (
