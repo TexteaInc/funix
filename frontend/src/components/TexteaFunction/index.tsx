@@ -23,6 +23,7 @@ import TextExtendedWidget from "./TextExtendedWidget";
 import ObjectFieldExtendedTemplate from "./ObjectFieldExtendedTemplate";
 import { DataGrid } from "@mui/x-data-grid";
 import { GridRowModel } from "@mui/x-data-grid/models/gridRows";
+import SwitchWidget from "./SwitchWidget";
 
 export type FunctionDetailProps = {
   preview: FunctionPreview;
@@ -63,6 +64,7 @@ const TexteaFunction: React.FC<FunctionDetailProps> = ({
 
   const widgets = {
     TextWidget: TextExtendedWidget,
+    CheckboxWidget: SwitchWidget,
   };
 
   const uiSchema = {
