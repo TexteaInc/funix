@@ -37,10 +37,14 @@ const TextExtendedWidget = ({
         value = rawValue;
         break;
       case "number":
-        value = Number(rawValue);
+        const parsedFloat = parseFloat(rawValue);
+        if (!isNaN(parsedFloat) && isFinite(parsedFloat)) value = parsedFloat;
+        else value = 0;
         break;
       case "integer":
-        value = Number(rawValue);
+        const parsedInt = parseInt(rawValue);
+        if (!isNaN(parsedInt) && isFinite(parsedInt)) value = parsedInt;
+        else value = 0;
         break;
       case "boolean":
         if (rawValue in ["True", "true"]) value = true;
