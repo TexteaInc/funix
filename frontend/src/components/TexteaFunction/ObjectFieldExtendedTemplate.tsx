@@ -67,8 +67,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
     const isArrayInSheet =
       elementProps.schema.type === "array" &&
       elementProps.schema.hasOwnProperty("widget") &&
-      Array.isArray(elementProps.schema.widget) &&
-      elementProps.schema.widget.includes("sheet");
+      elementProps.schema.widget === "sheet";
     const hasArrayExample =
       isArray &&
       elementProps.schema.hasOwnProperty("example") &&
