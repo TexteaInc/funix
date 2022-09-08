@@ -6,10 +6,30 @@ import { WidgetProps, utils } from "@rjsf/core";
 import {
   Autocomplete,
   AutocompleteRenderInputParams,
+  FormControl,
+  Grid,
+  Input,
+  Slider,
+  SliderValueLabelProps,
   TextField,
+  Tooltip,
+  Typography,
 } from "@mui/material";
 
 const { getDisplayLabel } = utils;
+
+function valueLabel(props: SliderValueLabelProps) {
+  return (
+    <Tooltip
+      enterTouchDelay={0}
+      placement="top"
+      title={props.value}
+      sx={{ zIndex: 1500 }}
+    >
+      {props.children}
+    </Tooltip>
+  );
+}
 
 const TextExtendedWidget = ({
   id,
@@ -30,6 +50,93 @@ const TextExtendedWidget = ({
   rawErrors = [],
   registry,
 }: WidgetProps) => {
+  if (
+    schema.widget?.indexOf("slider") !== -1 &&
+    schema.widget !== undefined &&
+    (schema.type === "number" || schema.type === "integer") // slider only for float and integer
+  ) {
+    const args = JSON.parse(schema.widget.trim().split("slider")[1]);
+    const min = args[0] || 0;
+    const max = args[1] || 100;
+    const defaultStep = schema.type === "integer" ? 1 : 0.1;
+    const step = args[2] || defaultStep;
+
+    const [sliderValue, setSliderValue] = React.useState<
+      number | string | Array<number | string>
+    >(min);
+
+    const customSetSliderValue = (
+      value: number | string | Array<number | string>
+    ) => {
+      setSliderValue(value);
+      onChange(value);
+    };
+
+    const handleSliderChange = (event: Event, newValue: number | number[]) =>
+      customSetSliderValue(newValue);
+
+    const handleSliderInputChange = (
+      event: React.ChangeEvent<HTMLInputElement>
+    ) => {
+      customSetSliderValue(
+        event.target.value === ""
+          ? ""
+          : schema.type === "integer"
+          ? parseInt(event.target.value)
+          : parseFloat(event.target.value)
+      );
+    };
+
+    const handleSliderInputBlur = () => {
+      if (sliderValue < min) {
+        customSetSliderValue(min);
+      } else if (sliderValue > max) {
+        customSetSliderValue(max);
+      }
+    };
+
+    return (
+      <FormControl fullWidth>
+        <Grid container spacing={2} alignItems="center">
+          {!!label ? (
+            <Grid item>
+              <Typography>{label}</Typography>
+            </Grid>
+          ) : (
+            <></>
+          )}
+          <Grid item xs>
+            <Slider
+              value={typeof sliderValue === "number" ? sliderValue : min}
+              min={min}
+              max={max}
+              step={step}
+              onChange={handleSliderChange}
+              valueLabelDisplay="on"
+              components={{
+                ValueLabel: valueLabel,
+              }}
+            />
+          </Grid>
+          <Grid item>
+            <Input
+              value={value}
+              size="small"
+              inputProps={{
+                type: "number",
+                min: min,
+                max: max,
+                step: step,
+              }}
+              onChange={handleSliderInputChange}
+              onBlur={handleSliderInputBlur}
+            />
+          </Grid>
+        </Grid>
+      </FormControl>
+    );
+  }
+
   const _onValueChange = (rawValue: any) => {
     let value;
     switch (inputType) {
