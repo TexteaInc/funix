@@ -99,6 +99,25 @@ def calc(a: List[int], b: List[int], op: str) -> calc_return:
     else:
         raise "invalid parameter op"
 
+@textea_export(
+    path="switch_and_checkbox",
+    description="just switch and checkbox",
+    a={
+        "treat_as": "config",
+        "widget": "switch"
+    },
+    b={
+        "treat_as": "config",
+        "widget": "checkbox"
+    }
+)
+def switch_and_checkbox(a: bool, b: bool):
+    return {
+        "result": {
+            "switch": a,
+            "checkbox": b
+        }
+    }
 
 @textea_export(
     path="calc_literal",
