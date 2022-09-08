@@ -84,8 +84,6 @@ def get_type_widget_prop(function_arg_type_name, index, function_arg_widget):
             widget = function_arg_widget[index]
     else:
         widget = ""
-    if widget == "sheet" or widget == "simple":
-        widget = [widget]
     if function_arg_type_name in __supported_basic_types:
         if function_arg_type_name == "int":
             return {
