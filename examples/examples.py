@@ -99,6 +99,7 @@ def calc(a: List[int], b: List[int], op: str) -> calc_return:
     else:
         raise "invalid parameter op"
 
+
 @textea_export(
     path="switch_and_checkbox",
     description="just switch and checkbox",
@@ -117,6 +118,25 @@ def switch_and_checkbox(a: bool, b: bool):
             "switch": a,
             "checkbox": b
         }
+    }
+
+
+@textea_export(
+    path="slider_test",
+    description="all you need is slider!",
+    a={
+        "treat_as": "column",
+        "widget": ["simple", "slider[0, 100, 5]"]
+    },
+    b={
+        "treat_as": "config",
+        "widget": ["slider[0, 100.0]"]
+    }
+)
+def slider_test(a: List[int], b: float):
+    return {
+        "a": a,
+        "b": b
     }
 
 @textea_export(
