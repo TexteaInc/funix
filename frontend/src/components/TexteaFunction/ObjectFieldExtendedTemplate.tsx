@@ -31,6 +31,7 @@ import {
   HideGridColMenuItem,
   GridFilterMenuItem,
   GridColumnsMenuItem,
+  GridRowId,
 } from "@mui/x-data-grid";
 import {
   bindHover,
@@ -41,6 +42,9 @@ import {
 import HoverPopover from "material-ui-popup-state/HoverPopover";
 import { usePopupState } from "material-ui-popup-state/hooks";
 import { GridColType } from "@mui/x-data-grid/models/colDef/gridColType";
+import SheetSwitch from "../SheetComponents/SheetSwitch";
+import SheetSlider from "../SheetComponents/SheetSlider";
+import SheetCheckBox from "../SheetComponents/SheetCheckBox";
 
 let rowIdCounter = 0;
 
@@ -299,11 +303,27 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
       if (isArrayInSheet) {
         arrayElementsInSheet.push(elementContent);
         const itemType = elementProps.schema.items.type;
+        const itemWidget = elementProps.schema.items.widget;
         const gridColType = itemType === "integer" ? "number" : itemType;
         let newColumn: GridColDef = {
           field: elementProps.name,
           type: gridColType,
           editable: !hasArrayWhitelist,
+        };
+        const handleCustomComponentChange = (
+          rowId: GridRowId,
+          field: string,
+          value: any
+        ) => {
+          setRows((prevRows) => {
+            const newRows = [...prevRows];
+            newRows.map((row) => {
+              if (row.id === rowId) {
+                row[field] = value;
+              }
+            });
+            return newRows;
+          });
         };
         if (itemType === "integer") {
           newColumn = {
@@ -314,6 +334,82 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
             }),
           };
         }
+
+        switch (itemType) {
+          case "number":
+            if (itemWidget.indexOf("slider") !== -1) {
+              newColumn = {
+                ...newColumn,
+                width: 200,
+                editable: false,
+                renderCell: (params) => {
+                  return (
+                    <SheetSlider
+                      widget={itemWidget}
+                      type={itemType}
+                      params={params}
+                      customChange={handleCustomComponentChange}
+                    />
+                  );
+                },
+              };
+            }
+            break;
+          case "integer":
+            if (itemWidget.indexOf("slider") !== -1) {
+              newColumn = {
+                ...newColumn,
+                editable: false,
+                width: 200,
+                renderCell: (params) => {
+                  return (
+                    <SheetSlider
+                      widget={itemWidget}
+                      type={itemType}
+                      params={params}
+                      customChange={handleCustomComponentChange}
+                    />
+                  );
+                },
+              };
+            }
+            break;
+          case "boolean":
+            if (itemWidget === "switch") {
+              newColumn = {
+                ...newColumn,
+                editable: false,
+                renderCell: (params) => {
+                  return (
+                    <SheetSwitch
+                      widget={itemWidget}
+                      type={itemType}
+                      params={params}
+                      customChange={handleCustomComponentChange}
+                    />
+                  );
+                },
+              };
+            }
+            if (itemWidget === "checkbox") {
+              newColumn = {
+                ...newColumn,
+                editable: false,
+                renderCell: (params) => {
+                  return (
+                    <SheetCheckBox
+                      widget={itemWidget}
+                      type={itemType}
+                      params={params}
+                      customChange={handleCustomComponentChange}
+                    />
+                  );
+                },
+              };
+            }
+            break;
+        }
+
         columns.push(newColumn);
       }
     }
@@ -450,6 +546,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
                 selectionModel={selectionModel}
                 onSelectionModelChange={handleSelectionModelChange}
                 onCellEditCommit={handleCellEditCommit}
+                disableSelectionOnClick={true}
                 components={{
                   ColumnMenu: GridColumnMenu,
                 }}

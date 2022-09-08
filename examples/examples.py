@@ -139,6 +139,26 @@ def slider_test(a: List[int], b: float):
         "b": b
     }
 
+
+@textea_export(
+    path="sheet_test",
+    description="sweet sheet",
+    a={
+        "treat_as": "column",
+        "widget": ["sheet", "slider"]
+    },
+    b={
+        "treat_as": "column",
+        "widget": ["sheet", "switch"]
+    }
+)
+def sheet_test(a: List[int], b: List[bool]):
+    return {
+        "a": a,
+        "b": b
+    }
+
+
 @textea_export(
     path="calc_literal",
     description="perform some basic math calculation",
