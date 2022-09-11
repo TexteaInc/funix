@@ -10,26 +10,12 @@ import {
   Grid,
   Input,
   Slider,
-  SliderValueLabelProps,
   TextField,
-  Tooltip,
   Typography,
 } from "@mui/material";
+import SliderValueLabel from "../Common/SliderValueLabel";
 
 const { getDisplayLabel } = utils;
-
-function valueLabel(props: SliderValueLabelProps) {
-  return (
-    <Tooltip
-      enterTouchDelay={0}
-      placement="top"
-      title={props.value}
-      sx={{ zIndex: 1500 }}
-    >
-      {props.children}
-    </Tooltip>
-  );
-}
 
 const TextExtendedWidget = ({
   id,
@@ -55,7 +41,15 @@ const TextExtendedWidget = ({
     schema.widget !== undefined &&
     (schema.type === "number" || schema.type === "integer") // slider only for float and integer
   ) {
-    const args = JSON.parse(schema.widget.trim().split("slider")[1]);
+    let args = [];
+    if (
+      schema.widget.indexOf("[") === -1 ||
+      schema.widget.indexOf("]") === -1
+    ) {
+      console.warn("slider syntax: slider[min, max, range]");
+    } else {
+      args = JSON.parse(schema.widget.trim().split("slider")[1]);
+    }
     const min = args[0] || 0;
     const max = args[1] || 100;
     const defaultStep = schema.type === "integer" ? 1 : 0.1;
@@ -114,7 +108,7 @@ const TextExtendedWidget = ({
               onChange={handleSliderChange}
               valueLabelDisplay="on"
               components={{
-                ValueLabel: valueLabel,
+                ValueLabel: SliderValueLabel,
               }}
             />
           </Grid>
