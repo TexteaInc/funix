@@ -52,7 +52,12 @@ export default function SheetSlider(props: SheetInterface) {
 
   return (
     <FormControl fullWidth>
-      <Grid container spacing={2} alignItems="center">
+      <Grid
+        container
+        spacing={2}
+        alignItems="center"
+        sx={{ paddingX: 2, marginTop: "-5%" }}
+      >
         <Grid item xs>
           <Slider
             value={typeof value === "number" ? value : min}
