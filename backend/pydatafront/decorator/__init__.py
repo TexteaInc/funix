@@ -49,9 +49,9 @@ def get_type_dict(annotation):
                         "optional": True
                     }
                 else:
-                    raise "Unsupported typing"
+                    raise Exception("Unsupported typing")
             else:
-                raise "Support typing only"
+                raise Exception("Support typing only")
         elif annotation_type_class_name == "_LiteralGenericAlias":  # Python 3.10
             if str(getattr(annotation, "__origin__")) == "typing.Literal":
                 literal_first_type = get_type_dict(type(getattr(annotation, "__args__")[0]))["type"]
@@ -60,13 +60,13 @@ def get_type_dict(annotation):
                     "whitelist": getattr(annotation, "__args__")
                 }
             else:
-                raise "Unsupported annotation"
+                raise Exception("Unsupported annotation")
         elif annotation_type_class_name == "type":
             return {
                 "type": getattr(annotation, "__name__")
             }
         else:
-            raise "Unsupported annotation_type_class_name"
+            raise Exception("Unsupported annotation_type_class_name")
     else:
         return {
             "type": str(annotation)
@@ -106,7 +106,7 @@ def get_type_widget_prop(function_arg_type_name, index, function_arg_widget):
                 "widget": widget
             }
         else:
-            raise "Unsupported Basic Type"
+            raise Exception("Unsupported Basic Type")
     elif function_arg_type_name == "list":
         return {
             "type": "array",
@@ -125,7 +125,7 @@ def get_type_widget_prop(function_arg_type_name, index, function_arg_widget):
                 "items": get_type_widget_prop(content_type, index + 1, function_arg_widget)
             }
         else:
-            raise "Unsupported Container Type"
+            raise Exception("Unsupported Container Type")
 
 
 def textea_export(path: Optional[str] = None, description: Optional[str] = "",
@@ -176,7 +176,7 @@ def textea_export(path: Optional[str] = None, description: Optional[str] = "",
                     decorated_params[decorator_arg_name]["treat_as"] = decorator_arg_dict["treat_as"]
                     input_attr = decorator_arg_dict["treat_as"] if input_attr == "" else input_attr
                     if input_attr != decorator_arg_dict["treat_as"]:
-                        raise "Error: input type doesn't match"
+                        raise Exception("Error: input type doesn't match")
 
                 if "widget" in decorator_arg_dict.keys():
                     decorated_params[decorator_arg_name]["widget"] = decorator_arg_dict["widget"]
@@ -194,7 +194,7 @@ def textea_export(path: Optional[str] = None, description: Optional[str] = "",
                 if "treat_as" not in decorated_params[function_arg_name].keys():
                     decorated_params[function_arg_name]["treat_as"] = "config"  # default
                 if decorated_params[function_arg_name]["treat_as"] == "cell":
-                    raise "Don't use cell!"
+                    raise Exception("Don't use cell!")
                 else:
                     function_arg_type_dict = get_type_dict(function_param.annotation)
                 if function_arg_name not in decorated_params.keys():
