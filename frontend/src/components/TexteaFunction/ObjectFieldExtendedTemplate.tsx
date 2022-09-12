@@ -617,7 +617,6 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
     breaks: true,
     linkify: true,
     typographer: true,
-    quotes: "「」『』",
   }).renderInline(props.description);
 
   return (
