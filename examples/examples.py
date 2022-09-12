@@ -15,7 +15,8 @@ class telomere_check_return(TypedDict):
 
 
 @textea_export(path="bioinfo_telomere_check",
-               description="A telomere is a region of repetitive DNA sequences at the end of a chromosome. Find the belongings of a repeat unit.",
+               description="A telomere is a region of repetitive DNA sequences at the end of a chromosome. "
+                           "Find the belongings of a repeat unit.",
                destination="column",
                sRNAs={"treat_as": "column",
                       "example":
@@ -156,6 +157,20 @@ def sheet_test(a: List[int], b: List[bool]):
     return {
         "a": a,
         "b": b
+    }
+
+
+@textea_export(
+    path="markdown_support",
+    description="**This** *thing* `is` ~~cool~~ right?",
+    cool={
+        "treat_as": "config",
+        "widget": "checkbox"
+    }
+)
+def markdown_support(cool: bool):
+    return {
+        "isCool": cool
     }
 
 

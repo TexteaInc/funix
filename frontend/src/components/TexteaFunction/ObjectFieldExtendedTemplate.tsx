@@ -45,6 +45,7 @@ import { GridColType } from "@mui/x-data-grid/models/colDef/gridColType";
 import SheetSwitch from "../SheetComponents/SheetSwitch";
 import SheetSlider from "../SheetComponents/SheetSlider";
 import SheetCheckBox from "../SheetComponents/SheetCheckBox";
+import MarkdownIt from "markdown-it";
 
 let rowIdCounter = 0;
 
@@ -610,10 +611,21 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
     </div>
   );
 
+  const markdownHTML = new MarkdownIt({
+    html: true,
+    xhtmlOut: true,
+    breaks: true,
+    linkify: true,
+    typographer: true,
+    quotes: "「」『』",
+  }).renderInline(props.description);
+
   return (
     <Stack spacing={1}>
       <Typography variant="h5">{props.title}</Typography>
-      <Typography variant="body1">{props.description}</Typography>
+      <Typography variant="body1">
+        <div dangerouslySetInnerHTML={{ __html: markdownHTML }} />
+      </Typography>
       {arraySimpleSelectors.map(renderElement)}
       {configElements.map(renderElement)}
       {getNewDataGridElementIfAvailable()}
