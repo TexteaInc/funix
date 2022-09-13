@@ -46,6 +46,7 @@ import SheetSwitch from "../SheetComponents/SheetSwitch";
 import SheetSlider from "../SheetComponents/SheetSlider";
 import SheetCheckBox from "../SheetComponents/SheetCheckBox";
 import MarkdownIt from "markdown-it";
+import JSONEditorWidget from "./JSONEditorWidget";
 
 let rowIdCounter = 0;
 
@@ -53,6 +54,7 @@ const stopEventPropagation = (e: SyntheticEvent) => e.stopPropagation();
 
 const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
   const configElements: SchemaField[] = [];
+  const simpleElements: JSX.Element[] = [];
   const arrayElementsInSheet: any[] = [];
   const columns: GridColDef[] = [
     {
@@ -92,7 +94,13 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
     }
 
     if (!isArray) {
-      configElements.push(elementContent);
+      if (elementContent.props.schema.widget === "json") {
+        simpleElements.push(
+          <JSONEditorWidget widget={elementContent.props} checkType={""} />
+        );
+      } else {
+        configElements.push(elementContent);
+      }
     } else {
       if (hasArrayExample || hasArrayWhitelist) {
         // Array Selector, Shared Part
@@ -299,7 +307,16 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
       }
 
       if (!isArrayInSheet && !hasArrayWhitelist) {
-        configElements.push(elementContent);
+        if (elementContent.props.schema.widget === "json") {
+          simpleElements.push(
+            <JSONEditorWidget
+              widget={elementContent.props}
+              checkType={elementContent.props.schema.items.type}
+            />
+          );
+        } else {
+          configElements.push(elementContent);
+        }
       }
       if (isArrayInSheet) {
         arrayElementsInSheet.push(elementContent);
@@ -627,6 +644,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
       </Typography>
       {arraySimpleSelectors.map(renderElement)}
       {configElements.map(renderElement)}
+      {simpleElements.map(renderElement)}
       {getNewDataGridElementIfAvailable()}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
         <DialogTitle>{dialogTitle}</DialogTitle>

@@ -61,12 +61,20 @@ def get_type_dict(annotation):
                 }
             else:
                 raise Exception("Unsupported annotation")
+        elif annotation_type_class_name == "_SpecialGenericAlias":
+            if getattr(annotation, "_name") == "Dict":
+                return {
+                    "type": str(annotation)
+                }
         elif annotation_type_class_name == "type":
             return {
                 "type": getattr(annotation, "__name__")
             }
         else:
-            raise Exception("Unsupported annotation_type_class_name")
+            # raise Exception("Unsupported annotation_type_class_name")
+            return {
+                "type": "typing.Dict"
+            }
     else:
         return {
             "type": str(annotation)
@@ -125,7 +133,11 @@ def get_type_widget_prop(function_arg_type_name, index, function_arg_widget):
                 "items": get_type_widget_prop(content_type, index + 1, function_arg_widget)
             }
         else:
-            raise Exception("Unsupported Container Type")
+            # raise Exception("Unsupported Container Type")
+            return {
+                "type": "object",
+                "widget": widget
+            }
 
 
 def textea_export(path: Optional[str] = None, description: Optional[str] = "",

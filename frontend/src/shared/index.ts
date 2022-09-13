@@ -16,6 +16,9 @@ export function matchType(type: BaseType): CellType {
     case "list": {
       return cellTypes.Array;
     }
+    case "dict": {
+      return cellTypes.Json;
+    }
     default: {
       return cellTypes.String;
     }

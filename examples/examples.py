@@ -1,4 +1,4 @@
-from typing import List, TypedDict, Literal
+from typing import List, TypedDict, Literal, Dict
 
 import tel_search
 import vector_strip
@@ -162,7 +162,7 @@ def sheet_test(a: List[int], b: List[bool]):
 
 @textea_export(
     path="markdown_support",
-    description="**This** *thing* `is` ~~cool~~ right?",
+    description="**Markdown** *text* `is` ~~cool~~ right?",
     cool={
         "treat_as": "config",
         "widget": "checkbox"
@@ -171,6 +171,25 @@ def sheet_test(a: List[int], b: List[bool]):
 def markdown_support(cool: bool):
     return {
         "isCool": cool
+    }
+
+
+@textea_export(
+    path="json_editor",
+    description="config only",
+    config_dict={
+        "treat_as": "config",
+        "widget": ["json"]
+    },
+    config_list={
+        "treat_as": "config",
+        "widget": ["json"]
+    }
+)
+def json_editor(config_dict: Dict, config_list: List[str]):
+    return {
+        "dict": config_dict,
+        "list": config_list
     }
 
 
