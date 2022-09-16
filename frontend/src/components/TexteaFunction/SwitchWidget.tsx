@@ -11,6 +11,7 @@ import React from "react";
 declare module "json-schema" {
   interface JSONSchema7 {
     widget?: string;
+    keys?: { [key: string]: string };
   }
 }
 

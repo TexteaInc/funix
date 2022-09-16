@@ -95,9 +95,19 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
 
     if (!isArray) {
       if (elementContent.props.schema.widget === "json") {
-        simpleElements.push(
-          <JSONEditorWidget widget={elementContent.props} checkType={""} />
-        );
+        if (elementContent.props.schema.keys) {
+          simpleElements.push(
+            <JSONEditorWidget
+              widget={elementContent.props}
+              checkType={""}
+              keys={elementContent.props.schema.keys}
+            />
+          );
+        } else {
+          simpleElements.push(
+            <JSONEditorWidget widget={elementContent.props} checkType={""} />
+          );
+        }
       } else {
         configElements.push(elementContent);
       }
@@ -311,7 +321,9 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
           simpleElements.push(
             <JSONEditorWidget
               widget={elementContent.props}
-              checkType={elementContent.props.schema.items.type}
+              checkType={
+                elementContent.props.schema.items?.type || "DO_NOT_CHECK"
+              }
             />
           );
         } else {

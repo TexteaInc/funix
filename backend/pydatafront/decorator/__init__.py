@@ -11,6 +11,12 @@ from pydatafront.app import app
 
 __supported_basic_types = ["int", "float", "str", "bool"]
 __supported_types = __supported_basic_types + ["dict", "list"]
+__supported_basic_types_dict = {
+    "int": "integer",
+    "float": "number",
+    "str": "string",
+    "bool": "boolean"
+}
 __decorated_functions_list = list()
 __wrapper_enabled = False
 
@@ -62,10 +68,22 @@ def get_type_dict(annotation):
             else:
                 raise Exception("Unsupported annotation")
         elif annotation_type_class_name == "_SpecialGenericAlias":
-            if getattr(annotation, "_name") == "Dict":
+            if getattr(annotation, "_name") == "Dict" or getattr(annotation, "_name") == "List":
                 return {
                     "type": str(annotation)
                 }
+        elif annotation_type_class_name == "_TypedDictMeta":
+            key_and_type = {}
+            for key in annotation.__annotations__:
+                key_and_type[key] = \
+                    __supported_basic_types_dict[annotation.__annotations__[key].__name__] \
+                        if annotation.__annotations__[key].__name__ in __supported_basic_types_dict \
+                        else annotation.__annotations__[key].__name__
+            return {
+                "type": "typing.Dict",
+                "keys": key_and_type
+            }
+
         elif annotation_type_class_name == "type":
             return {
                 "type": getattr(annotation, "__name__")
@@ -93,28 +111,10 @@ def get_type_widget_prop(function_arg_type_name, index, function_arg_widget):
     else:
         widget = ""
     if function_arg_type_name in __supported_basic_types:
-        if function_arg_type_name == "int":
-            return {
-                "type": "integer",
-                "widget": widget
-            }
-        elif function_arg_type_name == "bool":
-            return {
-                "type": "boolean",
-                "widget": widget
-            }
-        elif function_arg_type_name == "float":
-            return {
-                "type": "number",
-                "widget": widget
-            }
-        elif function_arg_type_name == "str":
-            return {
-                "type": "string",
-                "widget": widget
-            }
-        else:
-            raise Exception("Unsupported Basic Type")
+        return {
+            "type": __supported_basic_types_dict[function_arg_type_name],
+            "widget": widget
+        }
     elif function_arg_type_name == "list":
         return {
             "type": "array",
@@ -131,6 +131,16 @@ def get_type_widget_prop(function_arg_type_name, index, function_arg_widget):
                 "type": "array",
                 "widget": widget,
                 "items": get_type_widget_prop(content_type, index + 1, function_arg_widget)
+            }
+        elif function_arg_type_name == "typing.Dict":
+            return {
+                "type": "object",
+                "widget": widget
+            }
+        elif function_arg_type_name == "typing.List":
+            return {
+                "type": "array",
+                "widget": widget
             }
         else:
             # raise Exception("Unsupported Container Type")
@@ -239,6 +249,8 @@ def textea_export(path: Optional[str] = None, description: Optional[str] = "",
                     json_schema_props[function_arg_name]["whitelist"] = decorated_params[function_arg_name]["whitelist"]
                 elif "example" in decorated_params[function_arg_name].keys():
                     json_schema_props[function_arg_name]["example"] = decorated_params[function_arg_name]["example"]
+                elif "keys" in decorated_params[function_arg_name].keys():
+                    json_schema_props[function_arg_name]["keys"] = decorated_params[function_arg_name]["keys"]
                 if "default" in decorated_params[function_arg_name].keys():
                     json_schema_props[function_arg_name]["default"] = decorated_params[function_arg_name]["default"]
 

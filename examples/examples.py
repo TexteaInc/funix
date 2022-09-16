@@ -1,8 +1,7 @@
-from typing import List, TypedDict, Literal, Dict
-
 import tel_search
 import vector_strip
 from pydatafront.decorator import textea_export
+from typing import List, TypedDict, Literal, Dict
 
 
 @textea_export()
@@ -189,6 +188,31 @@ def markdown_support(cool: bool):
 def json_editor(config_dict: Dict, config_list: List[str]):
     return {
         "dict": config_dict,
+        "list": config_list
+    }
+
+
+class Person(TypedDict):
+    name: str
+    age: int
+    isAdult: bool
+
+
+@textea_export(
+    path="json_editor_better",
+    description="list and typed_dict",
+    config_typed_dict={
+        "treat_as": "config",
+        "widget": ["json"]
+    },
+    config_list={
+        "treat_as": "config",
+        "widget": ["json"]
+    }
+)
+def json_editor_better(config_typed_dict: Person, config_list: List):
+    return {
+        "typed": config_typed_dict,
         "list": config_list
     }
 
