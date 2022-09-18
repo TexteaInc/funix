@@ -38,7 +38,7 @@ def get_type_dict(annotation):
         annotation_type_class_name = getattr(type(annotation), "__name__")
         if annotation_type_class_name == "_GenericAlias":
             if getattr(annotation, "__module__") == "typing":
-                if getattr(annotation, "_name") == "List":
+                if getattr(annotation, "_name") == "List" or getattr(annotation, "_name") == "Dict":
                     return {
                         "type": str(annotation)
                     }
