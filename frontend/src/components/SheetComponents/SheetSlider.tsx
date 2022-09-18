@@ -22,9 +22,7 @@ export default function SheetSlider(props: SheetInterface) {
 
   const customSetValue = (value: number | string | Array<number | string>) => {
     setValue(value);
-    if (props.customChange instanceof Function) {
-      props.customChange(props.params.row.id, props.params.field, value);
-    }
+    props.customChange(props.params.row.id, props.params.field, value);
   };
 
   const handleSliderChange = (event: Event, newValue: number | number[]) =>

@@ -12,13 +12,11 @@ export default function SheetSwitch(props: SheetInterface) {
 
   const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setChecked(event.target.checked);
-    if (props.customChange instanceof Function) {
-      props.customChange(
-        props.params.row.id,
-        props.params.field,
-        event.target.checked
-      );
-    }
+    props.customChange(
+      props.params.row.id,
+      props.params.field,
+      event.target.checked
+    );
   };
 
   return (
