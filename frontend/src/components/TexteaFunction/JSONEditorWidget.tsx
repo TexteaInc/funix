@@ -1,7 +1,7 @@
 import { WidgetProps } from "@rjsf/core";
 import React from "react";
-import ReactJson, { InteractionProps } from "react-json-view";
 import { Stack, Typography } from "@mui/material";
+import { applyValue, JsonViewer } from "@textea/json-viewer";
 
 interface JSONEditorWidgetInterface {
   widget: WidgetProps;
@@ -61,49 +61,42 @@ const JSONEditorWidget = (props: JSONEditorWidgetInterface) => {
     () => props.widget.value || value
   );
 
-  const handleEdit = React.useCallback((value: InteractionProps) => {
-    if (value.updated_src instanceof Array) {
-      const formatList = value.updated_src.map((item) => {
-        return castValue(item, props.checkType);
-      });
-      setSrc(formatList);
-      props.widget.onChange(formatList);
-    } else if (props.keys) {
-      const formatDict: { [key: string]: JSONType } = {};
-      const JSONTypedUpdatedSource: JSONObjectType = value.updated_src;
-      for (const key in JSONTypedUpdatedSource) {
-        if (key in props.keys) {
-          formatDict[key] = castValue(
-            JSONTypedUpdatedSource[key],
-            props.keys[key]
-          );
+  const handleChange = React.useCallback(
+    (path: (string | number)[], oldValue: any, newValue: any) => {
+      if (props.widget.schema.type === "array") {
+        const newTypedValue = castValue(newValue, props.checkType);
+        const newSrc: (JSONType | any)[] = applyValue(src, path, newTypedValue);
+        setSrc(newSrc);
+      } else if (props.keys) {
+        const formatDict: { [key: string]: JSONType } = {};
+        const JSONTypedUpdatedSource: JSONObjectType = applyValue(
+          src,
+          path,
+          newValue
+        );
+        for (const key in JSONTypedUpdatedSource) {
+          if (key in props.keys) {
+            formatDict[key] = castValue(
+              JSONTypedUpdatedSource[key],
+              props.keys[key]
+            );
+          }
         }
+        setSrc(formatDict);
+        props.widget.onChange(formatDict);
+      } else {
+        const newSrc: object = applyValue(src, path, newValue);
+        setSrc(newSrc);
+        props.widget.onChange(newSrc);
       }
-      setSrc(formatDict);
-      props.widget.onChange(formatDict);
-    } else {
-      setSrc(value.updated_src);
-      props.widget.onChange(value.updated_src);
-    }
-  }, []);
-
-  let reactJSON: JSX.Element = (
-    <ReactJson
-      src={src}
-      onEdit={handleEdit}
-      onDelete={handleEdit}
-      onAdd={handleEdit}
-    />
+    },
+    []
   );
-
-  if (props.keys) {
-    reactJSON = <ReactJson src={src} onEdit={handleEdit} />;
-  }
 
   return (
     <Stack spacing={1}>
       <Typography variant="h5">{props.widget.name}</Typography>
-      {reactJSON}
+      <JsonViewer value={src} onChange={handleChange} />
     </Stack>
   );
 };
