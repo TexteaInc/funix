@@ -2,14 +2,10 @@ import { SheetInterface } from "./SheetInterface";
 import React from "react";
 import { FormControl, Grid, Input, Slider } from "@mui/material";
 import SliderValueLabel from "../Common/SliderValueLabel";
+import { sliderWidgetParser } from "../Common/SliderWidgetParser";
 
 export default function SheetSlider(props: SheetInterface) {
-  let args = [];
-  if (props.widget.indexOf("[") === -1 || props.widget.indexOf("]") === -1) {
-    console.warn("slider syntax: slider[min, max, range]");
-  } else {
-    args = JSON.parse(props.widget.trim().split("slider")[1]);
-  }
+  const args = sliderWidgetParser(props.widget.trim().split("slider")[1]);
 
   const min = args[0] || 0;
   const max = args[1] || 100;
@@ -18,7 +14,7 @@ export default function SheetSlider(props: SheetInterface) {
 
   const [value, setValue] = React.useState<
     number | string | Array<number | string>
-  >(min);
+  >(props.params.value | min);
 
   const customSetValue = (value: number | string | Array<number | string>) => {
     setValue(value);

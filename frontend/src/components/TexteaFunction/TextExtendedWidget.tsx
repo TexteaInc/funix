@@ -14,6 +14,7 @@ import {
   Typography,
 } from "@mui/material";
 import SliderValueLabel from "../Common/SliderValueLabel";
+import { sliderWidgetParser } from "../Common/SliderWidgetParser";
 
 const { getDisplayLabel } = utils;
 
@@ -41,15 +42,7 @@ const TextExtendedWidget = ({
     schema.widget !== undefined &&
     (schema.type === "number" || schema.type === "integer") // slider only for float and integer
   ) {
-    let args = [];
-    if (
-      schema.widget.indexOf("[") === -1 ||
-      schema.widget.indexOf("]") === -1
-    ) {
-      console.warn("slider syntax: slider[min, max, range]");
-    } else {
-      args = JSON.parse(schema.widget.trim().split("slider")[1]);
-    }
+    const args = sliderWidgetParser(schema.widget.trim().split("slider")[1]);
     const min = args[0] || 0;
     const max = args[1] || 100;
     const defaultStep = schema.type === "integer" ? 1 : 0.1;

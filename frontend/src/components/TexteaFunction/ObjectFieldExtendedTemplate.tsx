@@ -41,12 +41,13 @@ import {
 } from "material-ui-popup-state";
 import HoverPopover from "material-ui-popup-state/HoverPopover";
 import { usePopupState } from "material-ui-popup-state/hooks";
-import { GridColType } from "@mui/x-data-grid/models/colDef/gridColType";
 import SheetSwitch from "../SheetComponents/SheetSwitch";
 import SheetSlider from "../SheetComponents/SheetSlider";
 import SheetCheckBox from "../SheetComponents/SheetCheckBox";
 import MarkdownIt from "markdown-it";
 import JSONEditorWidget from "./JSONEditorWidget";
+import { castValue, getInitValue } from "../Common/ValueOperation";
+import { GridRowModel } from "@mui/x-data-grid/models/gridRows";
 
 let rowIdCounter = 0;
 
@@ -154,7 +155,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
                   row[elementProps.name] = targetArray[index];
                 } else {
                   const columnType = possiblySheetColumns[0].type;
-                  row[elementProps.name] = getEmptyValue(columnType);
+                  row[elementProps.name] = getInitValue(columnType);
                 }
               });
               return newRows;
@@ -446,6 +447,12 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
   });
 
   // Sheet Fields and Utils
+  const types: (string | undefined)[] = [];
+  const fields: string[] = [];
+  columns.forEach((column: GridColDef) => {
+    types.push(column.type);
+    fields.push(column.field);
+  });
 
   const [rows, setRows] = React.useState<GridRowsProp>([]);
   useEffect(() => {
@@ -499,25 +506,12 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
     }
   };
 
-  const getEmptyValue = (type: GridColType | undefined) => {
-    switch (type) {
-      case "string":
-        return "";
-      case "number":
-        return 0;
-      case "boolean":
-        return false;
-      default:
-        throw new Error("Unsupported type");
-    }
-  };
-
   const handleAddRow = () => {
     const newRow = (() => {
       let row = { id: rowIdCounter++ };
       columns.map((columnDef) => {
         if (columnDef.field === "id") return;
-        const value = getEmptyValue(columnDef.type);
+        const value = getInitValue(columnDef.type);
         row = {
           ...row,
           [columnDef.field]: value,
@@ -526,6 +520,45 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
       return row;
     })();
     setRows((prevRows) => [...prevRows, newRow]);
+  };
+
+  const handlePaste = () => {
+    navigator.clipboard.readText().then((clipText: string) => {
+      const allLines: string[] = clipText.split("\n");
+      const splitLines: (string[] | undefined)[] = allLines.map(
+        (line: string) => {
+          const result = line
+            .split("\t")
+            .map((element: string) => element.trim());
+          if (result.length === columns.length - 1) return result;
+        }
+      );
+      splitLines.forEach((lineArray: string[] | undefined) => {
+        if (lineArray === undefined) return;
+        const row: { [key: string]: any } = { id: rowIdCounter++ };
+        lineArray.forEach((value: string, index: number) => {
+          row[fields[index + 1]] = castValue(value, types[index + 1]);
+        });
+        setRows((prevRows) => [...prevRows, row]);
+      });
+    });
+  };
+
+  const handleCopy = () => {
+    let copyString = "";
+    const copyRows = rows.filter((row: GridRowModel) =>
+      selectionModel.includes(row.id)
+    );
+    copyRows.forEach((row: GridRowModel) => {
+      fields.forEach((field: string, index: number) => {
+        if (index === 0) return;
+        copyString += `${row[field]}\t`;
+      });
+      copyString = copyString.substring(0, copyString.length - 1) + "\n";
+    });
+    navigator.clipboard.writeText(copyString).then(() => {
+      copyString = "";
+    });
   };
 
   const handleDeleteRows = () => {
@@ -566,6 +599,12 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
               </Button>
               <Button size="small" onClick={handleDeleteRows}>
                 Delete selected row(s)
+              </Button>
+              <Button size="small" onClick={handleCopy}>
+                Copy
+              </Button>
+              <Button size="small" onClick={handlePaste}>
+                Paste
               </Button>
             </Stack>
             <Box sx={{ height: 400, mt: 1, paddingRight: 1 }}>
