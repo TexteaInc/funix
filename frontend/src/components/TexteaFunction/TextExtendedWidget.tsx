@@ -42,7 +42,7 @@ const TextExtendedWidget = ({
     schema.widget !== undefined &&
     (schema.type === "number" || schema.type === "integer") // slider only for float and integer
   ) {
-    const args = sliderWidgetParser(schema.widget.trim().split("slider")[1]);
+    const args = sliderWidgetParser(schema.widget);
     const min = args[0] || 0;
     const max = args[1] || 100;
     const defaultStep = schema.type === "integer" ? 1 : 0.1;

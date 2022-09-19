@@ -5,7 +5,7 @@ import SliderValueLabel from "../Common/SliderValueLabel";
 import { sliderWidgetParser } from "../Common/SliderWidgetParser";
 
 export default function SheetSlider(props: SheetInterface) {
-  const args = sliderWidgetParser(props.widget.trim().split("slider")[1]);
+  const args = sliderWidgetParser(props.widget);
 
   const min = args[0] || 0;
   const max = args[1] || 100;
