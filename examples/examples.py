@@ -160,6 +160,26 @@ def sheet_test(a: List[int], b: List[bool]):
 
 
 @textea_export(
+    path="cell_test",
+    description="painful",
+    a={
+        "treat_as": "cell",
+        "widget": ["sheet"]
+    },
+    b={
+        "treat_as": "cell",
+        "widget": ["sheet"]
+    },
+    isAdd={
+        "treat_as": "config",
+        "widget": ["switch"]
+    }
+)
+def cell_test(a: int, b: int, isAdd: bool):
+    return  a + b if isAdd else a - b
+
+
+@textea_export(
     path="markdown_support",
     description="**Markdown** *text* `is` ~~cool~~ right?",
     cool={

@@ -215,10 +215,7 @@ def textea_export(path: Optional[str] = None, description: Optional[str] = "",
 
                 if "treat_as" not in decorated_params[function_arg_name].keys():
                     decorated_params[function_arg_name]["treat_as"] = "config"  # default
-                if decorated_params[function_arg_name]["treat_as"] == "cell":
-                    raise Exception("Don't use cell!")
-                else:
-                    function_arg_type_dict = get_type_dict(function_param.annotation)
+                function_arg_type_dict = get_type_dict(function_param.annotation)
                 if function_arg_name not in decorated_params.keys():
                     decorated_params[function_arg_name] = dict()
                 decorated_params[function_arg_name].update(function_arg_type_dict)
@@ -253,6 +250,15 @@ def textea_export(path: Optional[str] = None, description: Optional[str] = "",
                     json_schema_props[function_arg_name]["keys"] = decorated_params[function_arg_name]["keys"]
                 if "default" in decorated_params[function_arg_name].keys():
                     json_schema_props[function_arg_name]["default"] = decorated_params[function_arg_name]["default"]
+
+                if decorated_params[function_arg_name]["treat_as"] == "cell":
+                    if function_arg_type_dict["type"] in __supported_basic_types_dict:
+                        cell_type = __supported_basic_types_dict[function_arg_type_dict["type"]]
+                    else:
+                        cell_type = "object"
+                    json_schema_props[function_arg_name]["items"] = \
+                        get_type_widget_prop(function_arg_type_dict["type"], 0, widget[1:])
+                    json_schema_props[function_arg_name]["type"] = "array"
 
             decorated_function = {
                 "id": id,
@@ -295,7 +301,24 @@ def textea_export(path: Optional[str] = None, description: Optional[str] = "",
                                 "error_body": traceback.format_exc()
                             }
 
-                    return wrapped_function(**function_kwargs)
+                    cell_names = []
+                    for key in decorated_params.keys():
+                        if decorated_params[key]["treat_as"] == "cell":
+                            cell_names.append(key)
+                    if len(cell_names) > 0:
+                        length = len(function_kwargs[cell_names[0]])
+                        static_keys = function_kwargs.keys() - cell_names
+                        result = []
+                        for i in range(length):
+                            arg = {}
+                            for cell_name in cell_names:
+                                arg[cell_name] = function_kwargs[cell_name][i]
+                            for static_key in static_keys:
+                                arg[static_key] = function_kwargs[static_key]
+                            result.append(wrapped_function(**arg))
+                        return {"result": result}
+                    else:
+                        return wrapped_function(**function_kwargs)
                 except:
                     return {
                         "error_type": "wrapper",
