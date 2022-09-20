@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import SliderValueLabel from "../Common/SliderValueLabel";
 import { sliderWidgetParser } from "../Common/SliderWidgetParser";
+import { castValue } from "../Common/ValueOperation";
 
 const { getDisplayLabel } = utils;
 
@@ -31,7 +32,6 @@ const TextExtendedWidget = ({
   onBlur,
   onFocus,
   autofocus,
-  options,
   schema,
   uiSchema,
   rawErrors = [],
@@ -50,7 +50,7 @@ const TextExtendedWidget = ({
 
     const [sliderValue, setSliderValue] = React.useState<
       number | string | Array<number | string>
-    >(min);
+    >(value || min);
 
     const customSetSliderValue = (
       value: number | string | Array<number | string>
@@ -124,33 +124,14 @@ const TextExtendedWidget = ({
     );
   }
 
+  const [inputValue, setInputValue] = React.useState<
+    string | number | boolean | object | null | undefined
+  >(value || value === 0 ? value : "");
+
   const _onValueChange = (rawValue: any) => {
-    let value;
-    switch (inputType) {
-      case "text":
-        value = rawValue;
-        break;
-      case "number":
-        const parsedFloat = parseFloat(rawValue);
-        if (!isNaN(parsedFloat) && isFinite(parsedFloat)) value = parsedFloat;
-        else value = 0;
-        break;
-      case "integer":
-        const parsedInt = parseInt(rawValue);
-        if (!isNaN(parsedInt) && isFinite(parsedInt)) value = parsedInt;
-        else value = 0;
-        break;
-      case "boolean":
-        if (rawValue in ["True", "true"]) value = true;
-        else if (rawValue in ["False", "false"]) value = false;
-        value = rawValue;
-        break;
-      default:
-        console.log("Unknown input type, treat as text");
-        value = rawValue;
-        break;
-    }
-    return onChange(value === "" ? options.emptyValue : value);
+    const castedValue = castValue(rawValue, inputType);
+    setInputValue(castValue);
+    return onChange(castedValue);
   };
   const _onBlur = ({ target: { value } }: React.FocusEvent<HTMLInputElement>) =>
     onBlur(id, value);
@@ -184,7 +165,7 @@ const TextExtendedWidget = ({
   return (
     <Autocomplete
       size="small"
-      value={value || value === 0 ? value : ""}
+      value={inputValue}
       getOptionLabel={(option) => option.toString()}
       renderInput={(params: AutocompleteRenderInputParams) => (
         <TextField
@@ -196,7 +177,7 @@ const TextExtendedWidget = ({
           required={required}
           disabled={disabled || readonly}
           type={inputType as string}
-          value={value || value === 0 ? value : ""}
+          value={inputValue}
           error={rawErrors.length > 0}
           onBlur={_onBlur}
           onFocus={_onFocus}

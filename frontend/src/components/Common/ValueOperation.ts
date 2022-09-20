@@ -4,6 +4,8 @@ const getInitValue = (
   switch (type) {
     case "string":
       return "";
+    case "text":
+      return "";
     case "number":
       return 0.0;
     case "boolean":
@@ -22,6 +24,8 @@ const castValue = (
   if (value === null || value == undefined) return value;
   switch (type) {
     case "string":
+      return value.toString();
+    case "text":
       return value.toString();
     case "number":
       const parsedFloat = parseFloat(value);
