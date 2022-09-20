@@ -1,6 +1,6 @@
 [project]
 name = "pydatafront"
-version = "0.0.3"
+version = "0.0.4"
 requires-python = ">=3.8"
 dependencies = [
   "flask",
