@@ -21,17 +21,19 @@ import SchemaField from "@rjsf/core/lib/components/fields/SchemaField";
 import {
   DataGrid,
   GridCellEditCommitParams,
+  GridCellParams,
   GridColDef,
   GridColumnMenuContainer,
   GridColumnMenuProps,
+  GridColumnsMenuItem,
+  GridFilterMenuItem,
   GridPreProcessEditCellProps,
+  GridRowId,
   GridRowsProp,
   GridSelectionModel,
-  SortGridMenuItems,
   HideGridColMenuItem,
-  GridFilterMenuItem,
-  GridColumnsMenuItem,
-  GridRowId,
+  MuiEvent,
+  SortGridMenuItems,
 } from "@mui/x-data-grid";
 import {
   bindHover,
@@ -522,34 +524,60 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
     setRows((prevRows) => [...prevRows, newRow]);
   };
 
-  const handlePaste = () => {
-    navigator.clipboard.readText().then((clipText: string) => {
-      const allLines: string[] = clipText.split("\n");
-      const splitLines: (string[] | undefined)[] = allLines.map(
-        (line: string) => {
-          const result = line
-            .split("\t")
-            .map((element: string) => element.trim());
-          if (result.length === columns.length - 1) return result;
+  const clipSheetTextToArray = (clipText: string): (string[] | undefined)[] => {
+    const allLines: string[] = clipText.split("\n");
+    return allLines.map((line: string) => {
+      const result = line.split("\t").map((element: string) => element.trim());
+      if (result.length === columns.length - 1) return result;
+    });
+  };
+
+  const clipSheetArrayInsertToSheet = (
+    rowId: GridRowId,
+    clipSheetTextArray: (string[] | undefined)[]
+  ) => {
+    clipSheetTextArray.forEach((lineArray: string[] | undefined) => {
+      if (lineArray === undefined) return;
+      const newRows: { [key: string]: any }[] = [];
+      const row: { [key: string]: any } = { id: rowIdCounter++ };
+      lineArray.forEach((value: string, index: number) => {
+        row[fields[index + 1]] = castValue(value, types[index + 1]);
+      });
+      newRows.push(row);
+      setRows((prevRows) => {
+        let rowIndex = 0;
+
+        try {
+          prevRows.forEach((row: GridRowModel, index: number) => {
+            if (row.id === rowId) {
+              rowIndex = index;
+              throw new Error("Done!");
+            }
+          });
+        } catch (ignoredError) {
+          // ignore
         }
-      );
-      splitLines.forEach((lineArray: string[] | undefined) => {
-        if (lineArray === undefined) return;
-        const row: { [key: string]: any } = { id: rowIdCounter++ };
-        lineArray.forEach((value: string, index: number) => {
-          row[fields[index + 1]] = castValue(value, types[index + 1]);
-        });
-        setRows((prevRows) => [...prevRows, row]);
+
+        const left = prevRows.slice(0, rowIndex + 1);
+        const right = prevRows.slice(rowIndex + 1);
+        const summedRows = [...left, ...newRows, ...right];
+        summedRows.forEach(
+          (row: GridRowModel, index: number) => (row.id = index)
+        );
+        return summedRows;
       });
     });
   };
 
-  const handleCopy = () => {
+  const handlePasteRows = () => {
+    navigator.clipboard.readText().then((clipText: string) => {
+      clipSheetArrayInsertToSheet(0, clipSheetTextToArray(clipText));
+    });
+  };
+
+  const copyRows = (rows: GridRowModel[]) => {
     let copyString = "";
-    const copyRows = rows.filter((row: GridRowModel) =>
-      selectionModel.includes(row.id)
-    );
-    copyRows.forEach((row: GridRowModel) => {
+    rows.forEach((row: GridRowModel) => {
       fields.forEach((field: string, index: number) => {
         if (index === 0) return;
         copyString += `${row[field]}\t`;
@@ -561,6 +589,18 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
     });
   };
 
+  const handleCopyRows = () => {
+    const filteredRows = rows.filter((row: GridRowModel) =>
+      selectionModel.includes(row.id)
+    );
+    copyRows(filteredRows);
+  };
+
+  const handleCopyRow = (rowId: GridRowId) => {
+    const row = rows.filter((row: GridRowModel) => row.id === rowId);
+    copyRows(row);
+  };
+
   const handleDeleteRows = () => {
     const newRows = rows.filter(
       (row, index) =>
@@ -570,9 +610,14 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
     setRows(newRows);
   };
 
+  const handleDeleteRow = (rowId: GridRowId) => {
+    const newRows = rows.filter((row: GridRowModel) => row.id !== rowId);
+    setRows(newRows);
+  };
+
   const handleSelectionModelChange = (
     newSelectionModel: GridSelectionModel
-  ) => {
+  ): void => {
     setSelectionModel(newSelectionModel);
   };
 
@@ -588,6 +633,29 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
     });
   };
 
+  const insertRows = (rowId: GridRowId) => {
+    navigator.clipboard.readText().then((clipText: string) => {
+      clipSheetArrayInsertToSheet(rowId, clipSheetTextToArray(clipText));
+    });
+  };
+
+  const handleCellKeyDown = (
+    params: GridCellParams,
+    event: MuiEvent<React.KeyboardEvent>
+  ): void => {
+    if (event.key === "Delete") {
+      if (selectionModel.length === 0) handleDeleteRow(params.id);
+      else handleDeleteRows();
+    }
+    if (event.ctrlKey) {
+      if (event.key === "c") {
+        if (selectionModel.length === 0) handleCopyRow(params.id);
+        else handleCopyRows();
+      }
+      if (event.key === "v") insertRows(params.id);
+    }
+  };
+
   const getNewDataGridElementIfAvailable = () => {
     if (arrayElementsInSheet.length != 0)
       return (
@@ -600,10 +668,10 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
               <Button size="small" onClick={handleDeleteRows}>
                 Delete selected row(s)
               </Button>
-              <Button size="small" onClick={handleCopy}>
+              <Button size="small" onClick={handleCopyRows}>
                 Copy
               </Button>
-              <Button size="small" onClick={handlePaste}>
+              <Button size="small" onClick={handlePasteRows}>
                 Paste
               </Button>
             </Stack>
@@ -620,6 +688,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
                   ColumnMenu: GridColumnMenu,
                 }}
                 sx={{ marginRight: 1 }}
+                onCellKeyDown={handleCellKeyDown}
               />
             </Box>
           </Box>
