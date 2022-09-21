@@ -4,8 +4,11 @@ import traceback
 from functools import wraps
 from typing import Literal, Optional
 from uuid import uuid4 as uuid
+from urllib.parse import urlparse
 
+import yaml
 import flask
+import requests
 
 from pydatafront.app import app
 
@@ -19,6 +22,7 @@ __supported_basic_types_dict = {
 }
 __decorated_functions_list = list()
 __wrapper_enabled = False
+__default_theme = {}
 
 
 def enable_wrapper():
@@ -150,12 +154,36 @@ def get_type_widget_prop(function_arg_type_name, index, function_arg_widget):
             }
 
 
+def is_valid_uri(uri: str) -> bool:
+    try:
+        result = urlparse(uri)
+        return all([result.scheme, result.netloc, result.path])
+    except:
+        return False
+
+
+def get_theme(path: str):
+    if not path:
+        return __default_theme
+    if (is_valid_uri(path)):
+        return yaml.load(requests.get(path).content, yaml.FullLoader)
+    else:
+        with open(path, "r", encoding = "utf-8") as f:
+            return yaml.load(f.read(), yaml.FullLoader)
+
+
+def set_global_theme(path: str) :
+    global __default_theme
+    __default_theme = get_theme(path)
+
 def textea_export(path: Optional[str] = None, description: Optional[str] = "",
-                  destination: Literal["column", "row", "sheet", None] = None, **decorator_kwargs):
+                  destination: Literal["column", "row", "sheet", None] = None, theme: Optional[str] = "",
+                  **decorator_kwargs):
     def decorator(function: callable):
         if __wrapper_enabled:
             id: str = str(uuid())
             function_name = getattr(function, "__name__")  # function name as id to retrieve function info
+            function_theme = get_theme(theme)
 
             if path is None:
                 endpoint = function_name
@@ -264,6 +292,7 @@ def textea_export(path: Optional[str] = None, description: Optional[str] = "",
                 "id": id,
                 "name": function_name,
                 "params": decorated_params,
+                "theme": function_theme,
                 "return_type": return_type_parsed,
                 "description": description,
                 "schema": {

@@ -1,7 +1,9 @@
 import tel_search
 import vector_strip
-from pydatafront.decorator import textea_export
+from pydatafront.decorator import textea_export, set_global_theme
 from typing import List, TypedDict, Literal, Dict
+
+set_global_theme("https://yazawazi.moe/pdf_themes/test.yaml")
 
 
 @textea_export()
@@ -17,6 +19,7 @@ class telomere_check_return(TypedDict):
                description="A telomere is a region of repetitive DNA sequences at the end of a chromosome. "
                            "Find the belongings of a repeat unit.",
                destination="column",
+               theme="https://yazawazi.moe/pdf_themes/test.yaml",
                sRNAs={"treat_as": "column",
                       "example":
                           [
@@ -176,7 +179,7 @@ def sheet_test(a: List[int], b: List[bool]):
     }
 )
 def cell_test(a: int, b: int, isAdd: bool):
-    return  a + b if isAdd else a - b
+    return a + b if isAdd else a - b
 
 
 @textea_export(
