@@ -23,7 +23,7 @@ __supported_basic_types_dict = {
 __decorated_functions_list = list()
 __wrapper_enabled = False
 __default_theme = {}
-__themes = []
+__themes = {}
 
 
 def enable_wrapper():
@@ -166,7 +166,7 @@ def is_valid_uri(uri: str) -> bool:
 def get_theme(path: str):
     if not path:
         return __default_theme
-    if (is_valid_uri(path)):
+    if is_valid_uri(path):
         return yaml.load(requests.get(path).content, yaml.FullLoader)
     else:
         if path in __themes:
