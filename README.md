@@ -16,7 +16,7 @@ python3 -m pip install "git+https://github.com/TexteaInc/PyDataFront.git"
 
 1. Clone the PyDataFront repo
 2. Go to the folder of the PyDataFront 
-3. `python3 -m pip install . -e` (This approach may [not work on Ubuntu 22.04](https://github.com/TexteaInc/PyDataFront/issues/23) using Python 3.10) or add the PyDataFront path into `PYTHONPATH`. 
+3. `python3 -m pip install -e .` (This approach may [not work on Ubuntu 22.04](https://github.com/TexteaInc/PyDataFront/issues/23) using Python 3.10) or add the PyDataFront path into `PYTHONPATH`. 
 
 ## Usage 
 
