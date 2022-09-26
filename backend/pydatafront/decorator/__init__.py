@@ -23,6 +23,7 @@ __supported_basic_types_dict = {
 __decorated_functions_list = list()
 __wrapper_enabled = False
 __default_theme = {}
+__themes = []
 
 
 def enable_wrapper():
@@ -168,6 +169,8 @@ def get_theme(path: str):
     if (is_valid_uri(path)):
         return yaml.load(requests.get(path).content, yaml.FullLoader)
     else:
+        if path in __themes:
+            return __themes[path]
         with open(path, "r", encoding = "utf-8") as f:
             return yaml.load(f.read(), yaml.FullLoader)
 
@@ -175,6 +178,12 @@ def get_theme(path: str):
 def set_global_theme(path: str) :
     global __default_theme
     __default_theme = get_theme(path)
+
+
+def import_theme(path: str, name: str):
+    global __themes
+    __themes[name] = get_theme(path)
+
 
 def textea_export(path: Optional[str] = None, description: Optional[str] = "",
                   destination: Literal["column", "row", "sheet", None] = None, theme: Optional[str] = "",
