@@ -1,13 +1,13 @@
 from typing import List
 from pydatafront.decorator import import_theme, set_global_theme, textea_export
 
-import_theme("https://yazawazi.moe/pdf_themes/sunset.yaml", "sunset")
+import_theme("https://yazawazi.moe/pdf_themes/sunset_v2.yaml", "sunset")
 set_global_theme("sunset")
 
 
 @textea_export(
     path="theme_test",
-    description="Sunset: [config](https://yazawazi.moe/pdf_themes/sunset.yaml)",
+    description="Sunset: [config](https://yazawazi.moe/pdf_themes/sunset_v2.yaml)",
     int_input={
         "treat_as": "config"
     },
@@ -15,14 +15,13 @@ set_global_theme("sunset")
         "treat_as": "config"
     },
     bool_input={
-        "treat_as": "column",
-        "widget": ["simple", "switch"]
+        "treat_as": "config"
     },
     str_input={
         "treat_as": "config"
     }
 )
-def theme_test(int_input: int, float_input: float, bool_input: List[bool], str_input: str):
+def theme_test(int_input: int, float_input: float, bool_input: bool, str_input: str):
     return {
         "int": int_input,
         "float": float_input,

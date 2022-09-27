@@ -24,7 +24,7 @@ __decorated_functions_list = list()
 __wrapper_enabled = False
 __default_theme = {}
 __themes = {}
-
+__parsed_themes = {}
 
 def enable_wrapper():
     global __wrapper_enabled
@@ -37,6 +37,46 @@ def enable_wrapper():
                 "list": __decorated_functions_list,
             }
 
+
+def get_mui_theme(theme, colors):
+    mui_theme = {
+        "components": {}
+    }
+    if colors:
+        mui_theme.update({"palette": {}})
+        for color in colors.keys():
+            if isinstance(colors[color], str):
+                mui_theme["palette"][color] = {"main": colors[color]}
+            else:
+                mui_theme["palette"][color] = colors[color]
+    for widget_name in theme.keys():
+        mui_theme["components"]["Mui" + widget_name[0].upper() + widget_name[1::]] \
+            = {"defaultProps": theme[widget_name]}
+    return mui_theme
+
+def parse_theme(theme):
+    type_names = []
+    type_widget_dict = {}
+    widget_style = {}
+    custom_palette = {}
+    for type_name in theme["types"]:
+        widget_name = theme["types"][type_name]
+        if "," in type_name:
+            common_types_names = [name.strip() for name in type_name.split(",")]
+            type_names += common_types_names
+            for name in common_types_names:
+                type_widget_dict[name] = widget_name
+        else:
+            type_names.append(type_name)
+            type_widget_dict[type_name] = widget_name
+    if "styles" in theme:
+        for widget_name in theme["styles"].keys():
+            widget_style[widget_name] = theme["styles"][widget_name]
+    if "colors" in theme:
+        for color_name in theme["colors"].keys():
+            custom_palette[color_name] = theme["colors"][color_name]
+    mui_theme = get_mui_theme(widget_style, custom_palette)
+    return type_names, type_widget_dict, widget_style, custom_palette, mui_theme
 
 def get_type_dict(annotation):
     if isinstance(annotation, object):  # is class
@@ -104,7 +144,7 @@ def get_type_dict(annotation):
         }
 
 
-def get_type_widget_prop(function_arg_type_name, index, function_arg_widget):
+def get_type_widget_prop(function_arg_type_name, index, function_arg_widget, widget_type):
     # Basic and List only
     if isinstance(function_arg_widget, str):
         widget = function_arg_widget
@@ -115,6 +155,8 @@ def get_type_widget_prop(function_arg_type_name, index, function_arg_widget):
             widget = function_arg_widget[index]
     else:
         widget = ""
+    if function_arg_type_name in widget_type:
+        widget = widget_type[function_arg_type_name]
     if function_arg_type_name in __supported_basic_types:
         return {
             "type": __supported_basic_types_dict[function_arg_type_name],
@@ -176,8 +218,9 @@ def get_theme(path: str):
 
 
 def set_global_theme(path: str) :
-    global __default_theme
+    global __default_theme, __parsed_themes
     __default_theme = get_theme(path)
+    __parsed_themes["__default"] = parse_theme(__default_theme)
 
 
 def import_theme(path: str, name: str):
@@ -188,11 +231,21 @@ def import_theme(path: str, name: str):
 def textea_export(path: Optional[str] = None, description: Optional[str] = "",
                   destination: Literal["column", "row", "sheet", None] = None, theme: Optional[str] = "",
                   **decorator_kwargs):
+    global __parsed_themes
     def decorator(function: callable):
         if __wrapper_enabled:
             id: str = str(uuid())
             function_name = getattr(function, "__name__")  # function name as id to retrieve function info
             function_theme = get_theme(theme)
+
+            if theme == "":
+                parsed_theme = __parsed_themes["__default"]
+            else:
+                if theme in __parsed_themes:
+                    parsed_theme = __parsed_themes[theme]
+                else:
+                    parsed_theme = parse_theme(function_theme)
+                    __parsed_themes[theme] = parsed_theme
 
             if path is None:
                 endpoint = function_name
@@ -278,7 +331,12 @@ def textea_export(path: Optional[str] = None, description: Optional[str] = "",
                     widget = decorated_params[function_arg_name]["widget"]
                 else:
                     widget = ""
-                json_schema_props[function_arg_name] = get_type_widget_prop(function_arg_type_dict["type"], 0, widget)
+                json_schema_props[function_arg_name] = get_type_widget_prop(
+                    function_arg_type_dict["type"],
+                    0,
+                    widget,
+                    parsed_theme[1]
+                )
                 if "whitelist" in decorated_params[function_arg_name].keys():
                     json_schema_props[function_arg_name]["whitelist"] = decorated_params[function_arg_name]["whitelist"]
                 elif "example" in decorated_params[function_arg_name].keys():
@@ -301,7 +359,7 @@ def textea_export(path: Optional[str] = None, description: Optional[str] = "",
                 "id": id,
                 "name": function_name,
                 "params": decorated_params,
-                "theme": function_theme,
+                "theme": parsed_theme[4],
                 "return_type": return_type_parsed,
                 "description": description,
                 "schema": {

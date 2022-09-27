@@ -81,6 +81,10 @@ export type FunctionDetail = {
    * Schema for react-jsonschema-form
    */
   schema: Record<string, any>;
+  /**
+   * Theme for this function
+   */
+  theme: Record<string, any>;
 };
 
 export async function getParam(

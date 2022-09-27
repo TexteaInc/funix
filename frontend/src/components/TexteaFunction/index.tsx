@@ -9,6 +9,7 @@ import {
   Button,
   Card,
   CardContent,
+  createTheme,
   FormControl,
   FormControlLabel,
   FormLabel,
@@ -16,6 +17,7 @@ import {
   Radio,
   RadioGroup,
   Stack,
+  ThemeProvider,
   Typography,
 } from "@mui/material";
 import ReactJson from "react-json-view";
@@ -239,17 +241,26 @@ const TexteaFunction: React.FC<FunctionDetailProps> = ({
     />
   );
 
+  const theme = createTheme(functionDetail.theme);
+  console.log(theme);
+
   return (
     <Stack spacing={2}>
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
           <Card>
-            <CardContent>
-              {formElement}
-              <Button variant="contained" onClick={handleSubmit} sx={{ mt: 1 }}>
-                Submit
-              </Button>
-            </CardContent>
+            <ThemeProvider theme={theme}>
+              <CardContent>
+                {formElement}
+                <Button
+                  variant="contained"
+                  onClick={handleSubmit}
+                  sx={{ mt: 1 }}
+                >
+                  Submit
+                </Button>
+              </CardContent>
+            </ThemeProvider>
           </Card>
         </Grid>
         <Grid item xs={12} md={6}>
