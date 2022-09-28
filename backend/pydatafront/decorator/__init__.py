@@ -241,14 +241,17 @@ def textea_export(path: Optional[str] = None, description: Optional[str] = "",
             function_name = getattr(function, "__name__")  # function name as id to retrieve function info
             function_theme = get_theme(theme)
 
-            if theme == "":
-                parsed_theme = __parsed_themes["__default"]
-            else:
-                if theme in __parsed_themes:
-                    parsed_theme = __parsed_themes[theme]
+            try:
+                if theme == "":
+                    parsed_theme = __parsed_themes["__default"]
                 else:
-                    parsed_theme = parse_theme(function_theme)
-                    __parsed_themes[theme] = parsed_theme
+                    if theme in __parsed_themes:
+                        parsed_theme = __parsed_themes[theme]
+                    else:
+                        parsed_theme = parse_theme(function_theme)
+                        __parsed_themes[theme] = parsed_theme
+            except:
+                parsed_theme = [], {}, {}, {}, {}
 
             if path is None:
                 endpoint = function_name
