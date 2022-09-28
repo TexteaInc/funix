@@ -9,6 +9,7 @@ import {
   Button,
   Card,
   CardContent,
+  createTheme,
   FormControl,
   FormControlLabel,
   FormLabel,
@@ -16,6 +17,7 @@ import {
   Radio,
   RadioGroup,
   Stack,
+  ThemeProvider,
   Typography,
 } from "@mui/material";
 import ReactJson from "react-json-view";
@@ -28,13 +30,11 @@ import SwitchWidget from "./SwitchWidget";
 export type FunctionDetailProps = {
   preview: FunctionPreview;
   backend: URL;
-  setTheme: (theme: Record<string, any>) => void;
 };
 
 const TexteaFunction: React.FC<FunctionDetailProps> = ({
   preview,
   backend,
-  setTheme,
 }) => {
   const { data: detail } = useSWR<FunctionDetail>(
     new URL(`/param/${preview.path}`, backend).toString()
@@ -241,41 +241,45 @@ const TexteaFunction: React.FC<FunctionDetailProps> = ({
     />
   );
 
-  setTheme(functionDetail.theme);
-
   return (
-    <Stack spacing={2}>
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              {formElement}
-              <Button variant="contained" onClick={handleSubmit} sx={{ mt: 1 }}>
-                Submit
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <Stack spacing={2}>
+    <ThemeProvider theme={createTheme(functionDetail.theme)}>
+      <Stack spacing={2}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={6}>
             <Card>
               <CardContent>
-                <Stack spacing={1}>
-                  <Typography variant="h5">Response</Typography>
-                  <ResponseView response={response} />
-                </Stack>
+                {formElement}
+                <Button
+                  variant="contained"
+                  onClick={handleSubmit}
+                  sx={{ mt: 1 }}
+                >
+                  Submit
+                </Button>
               </CardContent>
             </Card>
-            <Card>
-              <CardContent>
-                <Typography variant="h5">Function Detail</Typography>
-                <ReactJson src={functionDetail} collapsed />
-              </CardContent>
-            </Card>
-          </Stack>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Stack spacing={2}>
+              <Card>
+                <CardContent>
+                  <Stack spacing={1}>
+                    <Typography variant="h5">Response</Typography>
+                    <ResponseView response={response} />
+                  </Stack>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent>
+                  <Typography variant="h5">Function Detail</Typography>
+                  <ReactJson src={functionDetail} collapsed />
+                </CardContent>
+              </Card>
+            </Stack>
+          </Grid>
         </Grid>
-      </Grid>
-    </Stack>
+      </Stack>
+    </ThemeProvider>
   );
 };
 
