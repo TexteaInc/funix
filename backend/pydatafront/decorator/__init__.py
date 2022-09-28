@@ -180,7 +180,7 @@ def get_type_widget_prop(function_arg_type_name, index, function_arg_widget, wid
             return {
                 "type": "array",
                 "widget": widget,
-                "items": get_type_widget_prop(content_type, index + 1, function_arg_widget)
+                "items": get_type_widget_prop(content_type, index + 1, function_arg_widget, widget_type)
             }
         elif function_arg_type_name == "typing.Dict":
             return {
@@ -358,7 +358,7 @@ def textea_export(path: Optional[str] = None, description: Optional[str] = "",
                     else:
                         cell_type = "object"
                     json_schema_props[function_arg_name]["items"] = \
-                        get_type_widget_prop(function_arg_type_dict["type"], 0, widget[1:])
+                        get_type_widget_prop(function_arg_type_dict["type"], 0, widget[1:], {})
                     json_schema_props[function_arg_name]["type"] = "array"
 
             decorated_function = {
