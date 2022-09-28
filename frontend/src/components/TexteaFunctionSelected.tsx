@@ -13,10 +13,12 @@ import TexteaFunction from "./TexteaFunction";
 
 export type FunctionSelectedProps = {
   backend: URL;
+  setTheme: (theme: Record<string, any>) => void;
 };
 
 const TexteaFunctionSelected: React.FC<FunctionSelectedProps> = ({
   backend,
+  setTheme,
 }) => {
   const [{ selectedFunction }] = useAtom(storeAtom);
   if (!selectedFunction) {
@@ -38,6 +40,7 @@ const TexteaFunctionSelected: React.FC<FunctionSelectedProps> = ({
         preview={selectedFunction}
         key={selectedFunction.path}
         backend={backend}
+        setTheme={setTheme}
       />
     </Suspense>
   );

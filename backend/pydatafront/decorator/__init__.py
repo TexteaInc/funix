@@ -45,7 +45,9 @@ def get_mui_theme(theme, colors):
     if colors:
         mui_theme.update({"palette": {}})
         for color in colors.keys():
-            if isinstance(colors[color], str):
+            if color == "mode":
+                mui_theme["palette"][color] = colors[color]
+            elif isinstance(colors[color], str):
                 mui_theme["palette"][color] = {"main": colors[color]}
             else:
                 mui_theme["palette"][color] = colors[color]
@@ -59,16 +61,17 @@ def parse_theme(theme):
     type_widget_dict = {}
     widget_style = {}
     custom_palette = {}
-    for type_name in theme["types"]:
-        widget_name = theme["types"][type_name]
-        if "," in type_name:
-            common_types_names = [name.strip() for name in type_name.split(",")]
-            type_names += common_types_names
-            for name in common_types_names:
-                type_widget_dict[name] = widget_name
-        else:
-            type_names.append(type_name)
-            type_widget_dict[type_name] = widget_name
+    if "types" in theme:
+        for type_name in theme["types"]:
+            widget_name = theme["types"][type_name]
+            if "," in type_name:
+                common_types_names = [name.strip() for name in type_name.split(",")]
+                type_names += common_types_names
+                for name in common_types_names:
+                    type_widget_dict[name] = widget_name
+            else:
+                type_names.append(type_name)
+                type_widget_dict[type_name] = widget_name
     if "styles" in theme:
         for widget_name in theme["styles"].keys():
             widget_style[widget_name] = theme["styles"][widget_name]
