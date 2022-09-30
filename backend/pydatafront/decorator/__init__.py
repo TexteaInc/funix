@@ -52,8 +52,15 @@ def get_mui_theme(theme, colors):
             else:
                 mui_theme["palette"][color] = colors[color]
     for widget_name in theme.keys():
-        mui_theme["components"]["Mui" + widget_name[0].upper() + widget_name[1::]] \
-            = {"defaultProps": theme[widget_name]}
+        widget_mui_name = "Mui" + widget_name[0].upper() + widget_name[1::]
+        mui_theme["components"][widget_mui_name] = {
+            "defaultProps": {}
+        }
+        for prop_name in theme[widget_name].keys():
+            if prop_name == "style":
+                mui_theme["components"][widget_mui_name]["styleOverrides"] = theme[widget_name][prop_name]
+            else:
+                mui_theme["components"][widget_mui_name]["defaultProps"][prop_name] = theme[widget_name][prop_name]
     return mui_theme
 
 def parse_theme(theme):

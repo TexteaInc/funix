@@ -1,0 +1,46 @@
+types:
+  float, str: input
+  int: slider
+  bool: switch
+
+colors:
+  sunset: "#ff9e1b"
+
+styles:
+  slider:
+    color: sunset
+    size: normal
+
+  input:
+    color: sunset
+    style:
+      underline:
+        "&:before":
+          borderColor: "#ff9e1b"
+        "&&:hover::before":
+          borderColor: "#ff9e1b"
+
+  textField:
+    color: sunset
+    size: normal
+    style:
+      root:
+        "& fieldset":
+          borderColor: "#ff9e1b"
+        "&&:hover fieldset":
+          border: "2px solid"
+          borderColor: "#ff9e1b"
+
+  switch:
+    color: sunset
+    size: normal
+
+  tooltip:
+    arrow: false
+    enterTouchDelay: 0
+
+  button:
+    color: sunset
+    style:
+      root:
+        color: "#fefefe"
