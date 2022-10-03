@@ -54,13 +54,47 @@ def get_mui_theme(theme, colors):
     for widget_name in theme.keys():
         widget_mui_name = "Mui" + widget_name[0].upper() + widget_name[1::]
         mui_theme["components"][widget_mui_name] = {
-            "defaultProps": {}
+            "defaultProps": {},
+            "styleOverrides": {}
         }
         for prop_name in theme[widget_name].keys():
             if prop_name == "style":
-                mui_theme["components"][widget_mui_name]["styleOverrides"] = theme[widget_name][prop_name]
+                mui_theme["components"][widget_mui_name]["styleOverrides"].update(theme[widget_name][prop_name])
             else:
                 mui_theme["components"][widget_mui_name]["defaultProps"][prop_name] = theme[widget_name][prop_name]
+                if prop_name == "color":
+                    if theme[widget_name][prop_name] in mui_theme["palette"]:
+                        color = mui_theme["palette"][theme[widget_name][prop_name]]["main"]
+                    else:
+                        color = theme[widget_name][prop_name]
+                    styleOverride = {}
+                    if widget_name == "input":
+                        styleOverride = {
+                            "underline": {
+                                "&:before": {
+                                    "borderColor": color
+                                },
+                                "&&:hover::before": {
+                                    "borderColor": color
+                                }
+                            }
+                        }
+                    if widget_name == "textField":
+                        styleOverride = {
+                            "root": {
+                                "& fieldset": {
+                                    "borderColor": color
+                                },
+                                "&&:hover fieldset": {
+                                    "border": "2px solid", # Hmmm
+                                    "borderColor": color
+                                }
+                            }
+                        }
+                    if styleOverride != {}:
+                        mui_theme["components"][widget_mui_name]["styleOverrides"].update(styleOverride)
+
+
     return mui_theme
 
 def parse_theme(theme):

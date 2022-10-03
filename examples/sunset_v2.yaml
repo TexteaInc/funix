@@ -13,23 +13,9 @@ styles:
 
   input:
     color: sunset
-    style:
-      underline:
-        "&:before":
-          borderColor: "#ff9e1b"
-        "&&:hover::before":
-          borderColor: "#ff9e1b"
 
   textField:
     color: sunset
-    size: normal
-    style:
-      root:
-        "& fieldset":
-          borderColor: "#ff9e1b"
-        "&&:hover fieldset":
-          border: "2px solid"
-          borderColor: "#ff9e1b"
 
   switch:
     color: sunset
