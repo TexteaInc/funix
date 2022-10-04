@@ -7,26 +7,14 @@ colors:
   sunset: "#ff9e1b"
 
 styles:
-  slider:
-    color: sunset
-    size: normal
-
-  input:
+  basic:
     color: sunset
 
-  textField:
-    color: sunset
-
-  switch:
-    color: sunset
-    size: normal
+  button:
+    style:
+      root:
+        color: "#fefefe"
 
   tooltip:
     arrow: false
     enterTouchDelay: 0
-
-  button:
-    color: sunset
-    style:
-      root:
-        color: "#fefefe"

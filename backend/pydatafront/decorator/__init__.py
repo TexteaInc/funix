@@ -1,3 +1,4 @@
+import copy
 import inspect
 import re
 import traceback
@@ -25,6 +26,7 @@ __wrapper_enabled = False
 __default_theme = {}
 __themes = {}
 __parsed_themes = {}
+__basic_widgets = ["slider", "input", "textField", "switch", "button"]
 
 def enable_wrapper():
     global __wrapper_enabled
@@ -114,8 +116,15 @@ def parse_theme(theme):
                 type_names.append(type_name)
                 type_widget_dict[type_name] = widget_name
     if "styles" in theme:
+        if "basic" in theme["styles"]:
+            for basic_widget_name in __basic_widgets:
+                widget_style[basic_widget_name] = copy.deepcopy(theme["styles"]["basic"])
+            del theme["styles"]["basic"]
         for widget_name in theme["styles"].keys():
-            widget_style[widget_name] = theme["styles"][widget_name]
+            if widget_name in widget_style:
+                widget_style[widget_name].update(theme["styles"][widget_name])
+            else:
+                widget_style[widget_name] = theme["styles"][widget_name]
     if "colors" in theme:
         for color_name in theme["colors"].keys():
             custom_palette[color_name] = theme["colors"][color_name]

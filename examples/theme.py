@@ -1,6 +1,6 @@
 from pydatafront.decorator import import_theme, set_global_theme, textea_export
 
-import_theme("https://yazawazi.moe/pdf_themes/sunset_v2.yaml", "sunset")
+import_theme("./sunset_v2.yaml", "sunset")
 set_global_theme("sunset")
 
 
