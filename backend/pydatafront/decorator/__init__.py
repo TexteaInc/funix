@@ -1,17 +1,17 @@
-import copy
-import inspect
 import re
-import traceback
-from functools import wraps
-from typing import Literal, Optional
-from uuid import uuid4 as uuid
-from urllib.parse import urlparse
-
+import copy
 import yaml
 import flask
+import random
+import inspect
 import requests
-
+import traceback
+from functools import wraps
+from uuid import uuid4 as uuid
 from pydatafront.app import app
+from urllib.parse import urlparse
+from typing import Literal, Optional
+
 
 __supported_basic_types = ["int", "float", "str", "bool"]
 __supported_types = __supported_basic_types + ["dict", "list"]
@@ -28,6 +28,31 @@ __themes = {}
 __parsed_themes = {}
 __basic_widgets = ["slider", "input", "textField", "switch", "button"]
 
+__theme_style_sugar_dict = {
+    "fontColor": {
+        "root": {
+            "color": "${value}"
+        }
+    }
+}
+
+def dict_replace(original_dict: dict, original: str, new: any):
+    if isinstance(original_dict, dict):
+        return {
+            key: dict_replace(value, original, new)
+                for key, value in original_dict.items()
+        }
+
+    # str
+    if original_dict == original:
+        return new
+    else:
+        return original_dict
+
+def get_full_style_from_sugar(key: str, value: any):
+    sugar_info = __theme_style_sugar_dict[key]
+    return dict_replace(sugar_info, "${value}", value)
+
 def enable_wrapper():
     global __wrapper_enabled
     if not __wrapper_enabled:
@@ -42,10 +67,11 @@ def enable_wrapper():
 
 def get_mui_theme(theme, colors):
     mui_theme = {
-        "components": {}
+        "components": {},
+        "palette": {}
     }
+    temp_colors = {}
     if colors:
-        mui_theme.update({"palette": {}})
         for color in colors.keys():
             if color == "mode":
                 mui_theme["palette"][color] = colors[color]
@@ -62,39 +88,49 @@ def get_mui_theme(theme, colors):
         for prop_name in theme[widget_name].keys():
             if prop_name == "style":
                 mui_theme["components"][widget_mui_name]["styleOverrides"].update(theme[widget_name][prop_name])
+            elif prop_name == "color":
+                if not theme[widget_name][prop_name] in mui_theme["palette"]:
+                    if theme[widget_name][prop_name] in temp_colors.keys():
+                        mui_theme["components"][widget_mui_name]["defaultProps"][prop_name] = \
+                            temp_colors[theme[widget_name][prop_name]]
+                    else:
+                        color_name = "temp_" + "".join(["abcdef0123456789"[random.randint(0, 15)] for _ in range(8)])
+                        mui_theme["palette"][color_name] = {"main": theme[widget_name][prop_name]}
+                        mui_theme["components"][widget_mui_name]["defaultProps"][prop_name] = color_name
+                        temp_colors[theme[widget_name][prop_name]] = color_name
+                true_color = mui_theme["palette"][color_name]["main"]
+                styleOverride = {}
+                if widget_name == "input":
+                    styleOverride = {
+                        "underline": {
+                            "&:before": {
+                                "borderColor": true_color
+                            },
+                            "&&:hover::before": {
+                                "borderColor": true_color
+                            }
+                        }
+                    }
+                if widget_name == "textField":
+                    styleOverride = {
+                        "root": {
+                            "& fieldset": {
+                                "borderColor": true_color
+                            },
+                            "&&:hover fieldset": {
+                                "border": "2px solid", # Hmmm
+                                "borderColor": true_color
+                            }
+                        }
+                    }
+                if styleOverride != {}:
+                    mui_theme["components"][widget_mui_name]["styleOverrides"].update(styleOverride)
+            elif prop_name in __theme_style_sugar_dict.keys():
+                mui_theme["components"][widget_mui_name]["styleOverrides"].update(
+                    get_full_style_from_sugar(prop_name, theme[widget_name][prop_name])
+                )
             else:
                 mui_theme["components"][widget_mui_name]["defaultProps"][prop_name] = theme[widget_name][prop_name]
-                if prop_name == "color":
-                    if theme[widget_name][prop_name] in mui_theme["palette"]:
-                        color = mui_theme["palette"][theme[widget_name][prop_name]]["main"]
-                    else:
-                        color = theme[widget_name][prop_name]
-                    styleOverride = {}
-                    if widget_name == "input":
-                        styleOverride = {
-                            "underline": {
-                                "&:before": {
-                                    "borderColor": color
-                                },
-                                "&&:hover::before": {
-                                    "borderColor": color
-                                }
-                            }
-                        }
-                    if widget_name == "textField":
-                        styleOverride = {
-                            "root": {
-                                "& fieldset": {
-                                    "borderColor": color
-                                },
-                                "&&:hover fieldset": {
-                                    "border": "2px solid", # Hmmm
-                                    "borderColor": color
-                                }
-                            }
-                        }
-                    if styleOverride != {}:
-                        mui_theme["components"][widget_mui_name]["styleOverrides"].update(styleOverride)
 
 
     return mui_theme

@@ -3,17 +3,12 @@ types:
   int: slider
   bool: switch
 
-colors:
-  sunset: "#ff9e1b"
-
 styles:
   basic:
-    color: sunset
+    color: "#ff9e1b"
 
   button:
-    style:
-      root:
-        color: "#fefefe"
+    fontColor: "#fefefe"
 
   tooltip:
     arrow: false
