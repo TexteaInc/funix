@@ -26,7 +26,7 @@ __wrapper_enabled = False
 __default_theme = {}
 __themes = {}
 __parsed_themes = {}
-__basic_widgets = ["slider", "input", "textField", "switch", "button"]
+__basic_widgets = ["slider", "input", "textField", "switch", "button", "checkbox"]
 
 __theme_style_sugar_dict = {
     "fontColor": {
