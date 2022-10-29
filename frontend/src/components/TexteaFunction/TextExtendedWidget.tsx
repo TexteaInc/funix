@@ -165,7 +165,7 @@ const TextExtendedWidget = ({
   return (
     <Autocomplete
       size="small"
-      value={inputValue}
+      value={value || value === 0 ? value : ""}
       getOptionLabel={(option) => option.toString()}
       renderInput={(params: AutocompleteRenderInputParams) => (
         <TextField
