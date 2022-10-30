@@ -1,10 +1,10 @@
 import tel_search
 import vector_strip
-from pydatafront.decorator import textea_export
+from pydatafront.decorator import funix_export
 from typing import List, TypedDict, Literal, Dict
 
 
-@textea_export()
+@funix_export()
 def hello_world(your_name: str) -> str:
     return f"Welcome to PyDataFront, {your_name}!"
 
@@ -13,7 +13,7 @@ class telomere_check_return(TypedDict):
     is_telomere: List[bool]
 
 
-@textea_export(path="bioinfo_telomere_check",
+@funix_export(path="bioinfo_telomere_check",
                description="A telomere is a region of repetitive DNA sequences at the end of a chromosome. "
                            "Find the belongings of a repeat unit.",
                destination="column",
@@ -42,7 +42,7 @@ class remove_3_prime_adapter_return(TypedDict):
     # removal_result_code: List[int]
 
 
-@textea_export(path='bioinfo_remove_3_prime_adapter',
+@funix_export(path='bioinfo_remove_3_prime_adapter',
                description="Remove 3' prime adapter from the end of an RNA-seq",
                sRNAs={'treat_as': 'column',
                       'example': [
@@ -77,7 +77,7 @@ class calc_return(TypedDict):
 
 
 # "whitelist" field is deprecated
-@textea_export(
+@funix_export(
     path="calc",
     description="perform some basic math calculation",
     op={
@@ -100,7 +100,7 @@ def calc(a: List[int], b: List[int], op: str) -> calc_return:
         raise "invalid parameter op"
 
 
-@textea_export(
+@funix_export(
     path="switch_and_checkbox",
     description="just switch and checkbox",
     a={
@@ -121,7 +121,7 @@ def switch_and_checkbox(a: bool, b: bool):
     }
 
 
-@textea_export(
+@funix_export(
     path="slider_test",
     description="all you need is slider!",
     a={
@@ -140,7 +140,7 @@ def slider_test(a: List[int], b: float):
     }
 
 
-@textea_export(
+@funix_export(
     path="sheet_test",
     description="sweet sheet",
     a={
@@ -159,7 +159,7 @@ def sheet_test(a: List[int], b: List[bool]):
     }
 
 
-@textea_export(
+@funix_export(
     path="cell_test",
     description="painful",
     a={
@@ -179,7 +179,7 @@ def cell_test(a: int, b: int, isAdd: bool):
     return a + b if isAdd else a - b
 
 
-@textea_export(
+@funix_export(
     path="markdown_support",
     description="**Markdown** *text* `is` ~~cool~~ right?",
     cool={
@@ -193,7 +193,7 @@ def markdown_support(cool: bool):
     }
 
 
-@textea_export(
+@funix_export(
     path="json_editor",
     description="config only",
     config_dict={
@@ -218,7 +218,7 @@ class Person(TypedDict):
     isAdult: bool
 
 
-@textea_export(
+@funix_export(
     path="json_editor_better",
     description="list and typed_dict",
     config_typed_dict={
@@ -237,7 +237,7 @@ def json_editor_better(config_typed_dict: Person, config_list: List):
     }
 
 
-@textea_export(
+@funix_export(
     path="calc_literal",
     description="perform some basic math calculation",
     op={
@@ -254,7 +254,7 @@ def calc_literal(a: List[int], b: List[int], op: Literal["add", "minus"]) -> cal
     return calc(a, b, op)
 
 
-@textea_export(
+@funix_export(
     path="calc_add",
     description="add two column",
     a={
@@ -270,7 +270,7 @@ def calc_add(a: List[int], b: List[int]) -> calc_return:
     return calc(a, b, "add")
 
 
-@textea_export(
+@funix_export(
     path="calc_default_add",
     description="operate two columns with default add",
     a={
@@ -287,7 +287,7 @@ def calc_default_add(a: List[int], b: List[int], op: str = "add") -> calc_return
     return calc(a, b, op)
 
 
-@textea_export(
+@funix_export(
     path="calc_boolean_add",
     description="operate two columns with boolean add",
     a={
@@ -307,7 +307,7 @@ def calc_boolean_add(a: List[int], b: List[int], add: bool) -> calc_return:
         return calc(a, b, "minus")
 
 
-@textea_export(
+@funix_export(
     description="operate two columns with boolean add with mixed list widgets",
     a={
         "treat_as": "column"
@@ -327,7 +327,7 @@ def calc_boolean_mixed_add(a: List[int], b: List[int], add: bool = True) -> calc
         return calc(a, b, "minus")
 
 
-@textea_export(
+@funix_export(
     description="add two column with example and whitelist",
     a={
         "treat_as": "column",
@@ -349,7 +349,7 @@ class add_with_sub_return(TypedDict):
     sub: List[int]
 
 
-@textea_export(
+@funix_export(
     path="owo",
     a={
         "treat_as": "column"
@@ -366,7 +366,7 @@ def add_with_sub(a: List[int], b: List[int]) -> add_with_sub_return:
 
 
 # only supported by PyDataFront
-@textea_export(
+@funix_export(
     path="nested-array",
     a={
         "treat_as": "column"
@@ -380,7 +380,7 @@ def nested_array(a: List[List[int]]):
 
 # transform test
 # just create a new sheet of two columns of integers, regardless of the input
-@textea_export(
+@funix_export(
     destination="sheet"
 )
 def transform_test(a: List[int]):
@@ -388,6 +388,6 @@ def transform_test(a: List[int]):
             "column2": [4, 5, 6]}
 
 
-@textea_export()
+@funix_export()
 def empty():
     pass

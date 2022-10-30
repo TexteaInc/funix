@@ -318,7 +318,7 @@ def import_theme(path: str, name: str):
     __themes[name] = get_theme(path)
 
 
-def textea_export(path: Optional[str] = None, description: Optional[str] = "",
+def funix_export(path: Optional[str] = None, description: Optional[str] = "",
                   destination: Literal["column", "row", "sheet", None] = None, theme: Optional[str] = "",
                   **decorator_kwargs):
     global __parsed_themes
