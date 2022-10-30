@@ -1,3 +1,4 @@
+import json
 import re
 import copy
 import yaml
@@ -447,6 +448,11 @@ def textea_export(path: Optional[str] = None, description: Optional[str] = "",
                         get_type_widget_prop(function_arg_type_dict["type"], 0, widget[1:], {})
                     json_schema_props[function_arg_name]["type"] = "array"
 
+            keep_ordered_list = list(function_signature.parameters.keys())
+            keep_ordered_dict = {}
+            for key in keep_ordered_list:
+                keep_ordered_dict[key] = json_schema_props[key]
+
             decorated_function = {
                 "id": id,
                 "name": function_name,
@@ -458,7 +464,7 @@ def textea_export(path: Optional[str] = None, description: Optional[str] = "",
                     "title": function_name,
                     "description": description,
                     "type": "object",
-                    "properties": json_schema_props
+                    "properties": keep_ordered_dict
                 },
                 "destination": destination
             }
@@ -466,7 +472,7 @@ def textea_export(path: Optional[str] = None, description: Optional[str] = "",
             get_wrapper = app.get("/param/{}".format(endpoint))
 
             def decorated_function_param_getter():
-                return decorated_function
+                return flask.Response(json.dumps(decorated_function), mimetype="application/json")
 
             decorated_function_param_getter.__setattr__("__name__", "{}_param_getter".format(function_name))
             get_wrapper(decorated_function_param_getter)
