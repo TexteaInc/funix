@@ -11,7 +11,7 @@ from functools import wraps
 from uuid import uuid4 as uuid
 from pydatafront.app import app
 from urllib.parse import urlparse
-from typing import Literal, Optional
+from typing import Dict, List, Literal, Optional
 
 
 __supported_basic_types = ["int", "float", "str", "bool"]
@@ -320,6 +320,10 @@ def import_theme(path: str, name: str):
 
 def funix_export(path: Optional[str] = None, description: Optional[str] = "",
                   destination: Literal["column", "row", "sheet", None] = None, theme: Optional[str] = "",
+                  widgets: Optional[Dict[str, List[str]]] = {},
+                  treat_as: Optional[Dict[str, List[str]]] = {},
+                  whitelist: Optional[Dict[str, List]] = {},
+                  examples: Optional[Dict[str, List]] = {},
                   **decorator_kwargs):
     global __parsed_themes
     def decorator(function: callable):
@@ -370,6 +374,33 @@ def funix_export(path: Optional[str] = None, description: Optional[str] = "",
             else:
                 return_type_parsed = None
 
+            for widget_name in widgets:
+                widget_arg_names = widgets[widget_name]
+                for widget_arg_name in widget_arg_names:
+                    if widget_arg_name not in decorated_params:
+                        decorated_params[widget_arg_name] = {}
+                    decorated_params[widget_arg_name]["widget"] = widget_name
+
+            for treat_as_name in treat_as:
+                treat_as_arg_names = treat_as[treat_as_name]
+                for treat_as_arg_name in treat_as_arg_names:
+                    if treat_as_arg_name not in decorated_params:
+                        decorated_params[treat_as_arg_name] = {}
+                    decorated_params[treat_as_arg_name]["treat_as"] = treat_as_name
+
+            for example_arg_name in examples:
+                if example_arg_name not in decorated_params:
+                    decorated_params[example_arg_name] = {}
+                decorated_params[example_arg_name]["example"] = examples[example_arg_name]
+
+            for whitelist_arg_name in whitelist:
+                if whitelist_arg_name not in decorated_params:
+                    decorated_params[whitelist_arg_name] = {}
+                if "example" not in decorated_params[whitelist_arg_name]:
+                    decorated_params[whitelist_arg_name]["whitelist"] = whitelist[whitelist_arg_name]
+                else:
+                    raise Exception(f"{function_name}: Cannot use whitelist and example together")
+
             input_attr = ""
             for decorator_arg_name, decorator_arg_dict in decorator_kwargs.items():
                 if decorator_arg_name not in decorated_params.keys():
@@ -387,8 +418,12 @@ def funix_export(path: Optional[str] = None, description: Optional[str] = "",
                     decorated_params[decorator_arg_name]["widget"] = decorator_arg_dict["widget"]
 
                 if "whitelist" in decorator_arg_dict.keys():
+                    if "example" in decorated_params[decorator_arg_name]:
+                        raise Exception(f"{function_name}: Cannot use whitelist and example together")
                     decorated_params[decorator_arg_name]["whitelist"] = decorator_arg_dict["whitelist"]
                 elif "example" in decorator_arg_dict.keys():
+                    if "whitelist" in decorated_params[decorator_arg_name]:
+                        raise Exception(f"{function_name}: Cannot use whitelist and example together")
                     decorated_params[decorator_arg_name]["example"] = decorator_arg_dict["example"]
 
             for _, function_param in function_params.items():
