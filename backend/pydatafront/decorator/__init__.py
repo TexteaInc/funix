@@ -324,6 +324,7 @@ def funix_export(path: Optional[str] = None, description: Optional[str] = "",
                   treat_as: Optional[Dict[str, List[str]]] = {},
                   whitelist: Optional[Dict[str, List]] = {},
                   examples: Optional[Dict[str, List]] = {},
+                  labels: Optional[Dict[str, str]] = {},
                   **decorator_kwargs):
     global __parsed_themes
     def decorator(function: callable):
@@ -401,6 +402,11 @@ def funix_export(path: Optional[str] = None, description: Optional[str] = "",
                 else:
                     raise Exception(f"{function_name}: Cannot use whitelist and example together")
 
+            for label_arg_name in labels:
+                if label_arg_name not in decorated_params:
+                    decorated_params[label_arg_name] = {}
+                decorated_params[label_arg_name]["label"] = labels[label_arg_name]
+
             input_attr = ""
             for decorator_arg_name, decorator_arg_dict in decorator_kwargs.items():
                 if decorator_arg_name not in decorated_params.keys():
@@ -416,6 +422,9 @@ def funix_export(path: Optional[str] = None, description: Optional[str] = "",
 
                 if "widget" in decorator_arg_dict.keys():
                     decorated_params[decorator_arg_name]["widget"] = decorator_arg_dict["widget"]
+
+                if "label" in decorator_arg_dict.keys():
+                    decorated_params[decorator_arg_name]["label"] = decorator_arg_dict["label"]
 
                 if "whitelist" in decorator_arg_dict.keys():
                     if "example" in decorated_params[decorator_arg_name]:
@@ -473,6 +482,8 @@ def funix_export(path: Optional[str] = None, description: Optional[str] = "",
                     json_schema_props[function_arg_name]["keys"] = decorated_params[function_arg_name]["keys"]
                 if "default" in decorated_params[function_arg_name].keys():
                     json_schema_props[function_arg_name]["default"] = decorated_params[function_arg_name]["default"]
+                if "label" in decorated_params[function_arg_name].keys():
+                    json_schema_props[function_arg_name]["title"] = decorated_params[function_arg_name]["label"]
 
                 if decorated_params[function_arg_name]["treat_as"] == "cell":
                     if function_arg_type_dict["type"] in __supported_basic_types_dict:
