@@ -24,7 +24,7 @@ const TexteaFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
     async function queryData() {
       const { list } = await getList(new URL("/list", backend));
       setState(list);
-      if (list.length >= 1) {
+      if (list.length === 1) {
         handleFetchFunctionDetail(list[0]);
         setRadioGroupValue(list[0].name);
       }
@@ -59,6 +59,8 @@ const TexteaFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
       setRadioGroupValue(functionName);
     }
   };
+
+  if (state.length === 1) return <></>;
 
   return (
     <Card>
