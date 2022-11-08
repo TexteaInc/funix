@@ -8,13 +8,6 @@ import {
 } from "@mui/material";
 import React from "react";
 
-declare module "json-schema" {
-  interface JSONSchema7 {
-    widget?: string;
-    keys?: { [key: string]: string };
-  }
-}
-
 const SwitchWidget = (props: WidgetProps) => {
   const [checked, setChecked] = React.useState<boolean>(!!props.schema.default);
 

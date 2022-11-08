@@ -1,5 +1,5 @@
-import json
 import re
+import json
 import copy
 import yaml
 import flask
@@ -14,14 +14,14 @@ from urllib.parse import urlparse
 from typing import Dict, List, Literal, Optional
 
 
-__supported_basic_types = ["int", "float", "str", "bool"]
-__supported_types = __supported_basic_types + ["dict", "list"]
 __supported_basic_types_dict = {
     "int": "integer",
     "float": "number",
     "str": "string",
     "bool": "boolean"
 }
+__supported_basic_types = list(__supported_basic_types_dict.keys())
+__supported_types = __supported_basic_types + ["dict", "list"]
 __decorated_functions_list = list()
 __wrapper_enabled = False
 __default_theme = {}
@@ -319,13 +319,14 @@ def import_theme(path: str, name: str):
 
 
 def funix_export(path: Optional[str] = None, description: Optional[str] = "",
-                  destination: Literal["column", "row", "sheet", None] = None, theme: Optional[str] = "",
-                  widgets: Optional[Dict[str, List[str]]] = {},
-                  treat_as: Optional[Dict[str, List[str]]] = {},
-                  whitelist: Optional[Dict[str, List]] = {},
-                  examples: Optional[Dict[str, List]] = {},
-                  labels: Optional[Dict[str, str]] = {},
-                  **decorator_kwargs):
+                destination: Literal["column", "row", "sheet", None] = None, theme: Optional[str] = "",
+                widgets: Optional[Dict[str, List[str]]] = {},
+                treat_as: Optional[Dict[str, List[str]]] = {},
+                whitelist: Optional[Dict[str, List]] = {},
+                examples: Optional[Dict[str, List]] = {},
+                labels: Optional[Dict[str, str]] = {},
+                layout: Optional[List[List[Dict]]] = [],
+                **decorator_kwargs):
     global __parsed_themes
     def decorator(function: callable):
         if __wrapper_enabled:
@@ -374,6 +375,13 @@ def funix_export(path: Optional[str] = None, description: Optional[str] = "",
                     return_type_parsed = get_type_dict(function_signature.return_annotation)["type"]
             else:
                 return_type_parsed = None
+
+            for row in layout:
+                for row_item in row:
+                    if row_item["type"] == "argument":
+                        if row_item["argument"] not in decorated_params:
+                            decorated_params[row_item["argument"]] = {}
+                        decorated_params[row_item["argument"]]["customLayout"] = True
 
             for widget_name in widgets:
                 widget_arg_names = widgets[widget_name]
@@ -484,6 +492,10 @@ def funix_export(path: Optional[str] = None, description: Optional[str] = "",
                     json_schema_props[function_arg_name]["default"] = decorated_params[function_arg_name]["default"]
                 if "label" in decorated_params[function_arg_name].keys():
                     json_schema_props[function_arg_name]["title"] = decorated_params[function_arg_name]["label"]
+                if "customLayout" in decorated_params[function_arg_name].keys():
+                    json_schema_props[function_arg_name]["customLayout"] = decorated_params[function_arg_name]["customLayout"]
+                else:
+                    json_schema_props[function_arg_name]["customLayout"] = False
 
                 if decorated_params[function_arg_name]["treat_as"] == "cell":
                     if function_arg_type_dict["type"] in __supported_basic_types_dict:
@@ -510,7 +522,8 @@ def funix_export(path: Optional[str] = None, description: Optional[str] = "",
                     "title": function_name,
                     "description": description,
                     "type": "object",
-                    "properties": keep_ordered_dict
+                    "properties": keep_ordered_dict,
+                    "layout": layout
                 },
                 "destination": destination
             }

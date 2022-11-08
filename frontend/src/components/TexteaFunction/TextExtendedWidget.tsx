@@ -105,7 +105,7 @@ const TextExtendedWidget = ({
               }}
             />
           </Grid>
-          <Grid item>
+          <Grid item xs={2.5}>
             <Input
               value={value}
               size="small"

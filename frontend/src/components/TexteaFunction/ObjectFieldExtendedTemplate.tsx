@@ -6,6 +6,7 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
+  Divider,
   FormControl,
   InputLabel,
   Menu,
@@ -50,14 +51,15 @@ import MarkdownIt from "markdown-it";
 import JSONEditorWidget from "./JSONEditorWidget";
 import { castValue, getInitValue } from "../Common/ValueOperation";
 import { GridRowModel } from "@mui/x-data-grid/models/gridRows";
+import Grid2 from "@mui/material/Unstable_Grid2";
 
 let rowIdCounter = 0;
 
 const stopEventPropagation = (e: SyntheticEvent) => e.stopPropagation();
 
 const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
-  const configElements: SchemaField[] = [];
-  const simpleElements: JSX.Element[] = [];
+  const configElements: (SchemaField | JSX.Element)[] = [];
+  const rowElements: JSX.Element[] = [];
   const arrayElementsInSheet: any[] = [];
   const columns: GridColDef[] = [
     {
@@ -69,24 +71,30 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
   const arraySimpleSelectors: JSX.Element[] = [];
   let arraySheetSelectors: Record<string, any> = {};
   let lengthLongestWhitelistColumnInSheet = 0;
+  type propElementToJSXElementReturn = {
+    type: "config" | "sheet";
+    element: JSX.Element;
+  };
 
-  props.properties.map((element: any) => {
+  const propElementToJSXElement = (
+    element: any
+  ): propElementToJSXElementReturn => {
     const elementContent = element.content;
     const elementProps = elementContent.props;
     const isArray = elementProps.schema.type === "array";
     const isArrayInSheet =
       elementProps.schema.type === "array" &&
-      elementProps.schema.hasOwnProperty("widget") &&
+      "widget" in elementProps.schema &&
       elementProps.schema.widget === "sheet";
     const hasArrayExample =
       isArray &&
-      elementProps.schema.hasOwnProperty("example") &&
+      "example" in elementProps.schema &&
       Array.isArray(elementProps.schema.example) &&
       elementProps.schema.example.length != 0 &&
       Array.isArray(elementProps.schema.example[0]);
     const hasArrayWhitelist =
       isArray &&
-      elementProps.schema.hasOwnProperty("whitelist") &&
+      "whitelist" in elementProps.schema &&
       Array.isArray(elementProps.schema.whitelist) &&
       elementProps.schema.whitelist.length != 0 &&
       Array.isArray(elementProps.schema.whitelist[0]);
@@ -99,20 +107,29 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
     if (!isArray) {
       if (elementContent.props.schema.widget === "json") {
         if (elementContent.props.schema.keys) {
-          simpleElements.push(
-            <JSONEditorWidget
-              widget={elementContent.props}
-              checkType={""}
-              keys={elementContent.props.schema.keys}
-            />
-          );
+          return {
+            type: "config",
+            element: (
+              <JSONEditorWidget
+                widget={elementContent.props}
+                checkType={""}
+                keys={elementContent.props.schema.keys}
+              />
+            ),
+          };
         } else {
-          simpleElements.push(
-            <JSONEditorWidget widget={elementContent.props} checkType={""} />
-          );
+          return {
+            type: "config",
+            element: (
+              <JSONEditorWidget widget={elementContent.props} checkType={""} />
+            ),
+          };
         }
       } else {
-        configElements.push(elementContent);
+        return {
+          type: "config",
+          element: elementContent,
+        };
       }
     } else {
       if (hasArrayExample || hasArrayWhitelist) {
@@ -143,7 +160,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
           const possiblySheetColumns = columns.filter(
             (column) => column.field == elementProps.name
           );
-          if (possiblySheetColumns.length != 0) {
+          if (possiblySheetColumns.length !== 0) {
             if (rows.length < targetArray.length) {
               const currentRowsLength = rows.length;
               for (let i = 0; i < targetArray.length - currentRowsLength; i++) {
@@ -321,20 +338,25 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
 
       if (!isArrayInSheet && !hasArrayWhitelist) {
         if (elementContent.props.schema.widget === "json") {
-          simpleElements.push(
-            <JSONEditorWidget
-              widget={elementContent.props}
-              checkType={
-                elementContent.props.schema.items?.type || "DO_NOT_CHECK"
-              }
-            />
-          );
+          return {
+            type: "config",
+            element: (
+              <JSONEditorWidget
+                widget={elementContent.props}
+                checkType={
+                  elementContent.props.schema.items?.type || "DO_NOT_CHECK"
+                }
+              />
+            ),
+          };
         } else {
-          configElements.push(elementContent);
+          return {
+            type: "config",
+            element: elementContent,
+          };
         }
       }
       if (isArrayInSheet) {
-        arrayElementsInSheet.push(elementContent);
         const itemType = elementProps.schema.items.type;
         const itemWidget = elementProps.schema.items.widget;
         const gridColType = itemType === "integer" ? "number" : itemType;
@@ -444,9 +466,106 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
         }
 
         columns.push(newColumn);
+        return {
+          type: "sheet",
+          element: elementContent,
+        };
       }
     }
+
+    return {
+      type: "config",
+      element: <></>,
+    };
+  };
+
+  props.schema.layout.forEach((row) => {
+    const rowGrid: JSX.Element[] = [];
+    row.forEach((rowItem) => {
+      let rowElement: JSX.Element = <></>;
+      switch (rowItem.type) {
+        case "markdown":
+          const markdownHTML = new MarkdownIt({
+            html: true,
+            xhtmlOut: true,
+            breaks: true,
+            linkify: true,
+            typographer: true,
+          }).renderInline(rowItem.content !== undefined ? rowItem.content : "");
+          rowElement = (
+            <div dangerouslySetInnerHTML={{ __html: markdownHTML }} />
+          );
+          break;
+        case "html":
+          rowElement = (
+            <div
+              dangerouslySetInnerHTML={{
+                __html: rowItem.content !== undefined ? rowItem.content : "",
+              }}
+            />
+          );
+          break;
+        case "argument":
+          console.log(props.properties);
+          rowElement = (
+            <>
+              {
+                propElementToJSXElement(
+                  props.properties.filter(
+                    (prop: any) => prop.name === rowItem.argument
+                  )[0]
+                ).element
+              }
+            </>
+          );
+          break;
+        case "dividing":
+          rowElement =
+            rowItem.content !== undefined ? (
+              <Divider
+                textAlign={
+                  rowItem.position !== undefined ? "left" : rowItem.position
+                }
+              >
+                {rowItem.content}
+              </Divider>
+            ) : (
+              <Divider />
+            );
+          break;
+      }
+      rowElement = (
+        <Grid2
+          xs={rowItem.width !== undefined ? rowItem.width : true}
+          mdOffset={rowItem.offset}
+        >
+          {rowElement}
+        </Grid2>
+      );
+      rowGrid.push(rowElement);
+    });
+    rowElements.push(
+      <Grid2 container spacing={2}>
+        {rowGrid}
+      </Grid2>
+    );
   });
+
+  props.properties
+    .filter(
+      (element: any) => element.content.props.schema.customLayout === false
+    )
+    .map((element: any) => {
+      const result = propElementToJSXElement(element);
+      switch (result.type) {
+        case "config":
+          configElements.push(result.element);
+          break;
+        case "sheet":
+          arrayElementsInSheet.push(result.element);
+          break;
+      }
+    });
 
   // Sheet Fields and Utils
   const types: (string | undefined)[] = [];
@@ -762,9 +881,9 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
       <Typography variant="body1">
         <div dangerouslySetInnerHTML={{ __html: markdownHTML }} />
       </Typography>
+      {rowElements.map(renderElement)}
       {arraySimpleSelectors.map(renderElement)}
       {configElements.map(renderElement)}
-      {simpleElements.map(renderElement)}
       {getNewDataGridElementIfAvailable()}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
         <DialogTitle>{dialogTitle}</DialogTitle>
