@@ -545,7 +545,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
       rowGrid.push(rowElement);
     });
     rowElements.push(
-      <Grid2 container spacing={2}>
+      <Grid2 container spacing={2} alignItems="center">
         {rowGrid}
       </Grid2>
     );
