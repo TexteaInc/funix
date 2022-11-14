@@ -78,9 +78,10 @@ const TexteaFunction: React.FC<FunctionDetailProps> = ({
 
   type ResponseViewProps = {
     response: string | null;
+    isHTML: boolean;
   };
 
-  const ResponseView: React.FC<ResponseViewProps> = ({ response }) => {
+  const ResponseView: React.FC<ResponseViewProps> = ({ response, isHTML }) => {
     if (response == null) {
       return (
         <Alert severity="info">
@@ -88,6 +89,9 @@ const TexteaFunction: React.FC<FunctionDetailProps> = ({
         </Alert>
       );
     } else {
+      if (isHTML) {
+        return <div dangerouslySetInnerHTML={{ __html: response }} />;
+      }
       try {
         const parsedResponse: object = JSON.parse(response);
         const is1dArray = (target: any) => {
@@ -265,7 +269,10 @@ const TexteaFunction: React.FC<FunctionDetailProps> = ({
                 <CardContent>
                   <Stack spacing={1}>
                     <Typography variant="h5">Response</Typography>
-                    <ResponseView response={response} />
+                    <ResponseView
+                      response={response}
+                      isHTML={functionDetail.returnHTML}
+                    />
                   </Stack>
                 </CardContent>
               </Card>

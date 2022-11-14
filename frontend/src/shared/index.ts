@@ -85,6 +85,10 @@ export type FunctionDetail = {
    * Theme for this function
    */
   theme: Record<string, any>;
+  /**
+   * Return HTML
+   */
+  returnHTML: boolean;
 };
 
 export async function getParam(

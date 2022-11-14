@@ -320,6 +320,7 @@ def import_theme(path: str, name: str):
 
 def funix_export(path: Optional[str] = None, description: Optional[str] = "",
                 destination: Literal["column", "row", "sheet", None] = None, theme: Optional[str] = "",
+                returnHTML: Optional[bool] = False,
                 widgets: Optional[Dict[str, List[str]]] = {},
                 treat_as: Optional[Dict[str, List[str]]] = {},
                 whitelist: Optional[Dict[str, List]] = {},
@@ -516,6 +517,7 @@ def funix_export(path: Optional[str] = None, description: Optional[str] = "",
                 "name": function_name,
                 "params": decorated_params,
                 "theme": parsed_theme[4],
+                "returnHTML": returnHTML,
                 "return_type": return_type_parsed,
                 "description": description,
                 "schema": {
