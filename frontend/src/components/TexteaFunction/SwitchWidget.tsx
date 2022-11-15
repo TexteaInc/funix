@@ -7,6 +7,7 @@ import {
   Switch,
 } from "@mui/material";
 import React from "react";
+import MarkdownDiv from "../Common/MarkdownDiv";
 
 const SwitchWidget = (props: WidgetProps) => {
   const [checked, setChecked] = React.useState<boolean>(!!props.schema.default);
@@ -21,10 +22,14 @@ const SwitchWidget = (props: WidgetProps) => {
   if ("widget" in props.schema && props.schema.widget === "switch") {
     control = <Switch checked={checked} onChange={onChange} />;
   }
+
   return (
     <FormControl fullWidth>
       <FormGroup>
-        <FormControlLabel control={control} label={props.label || ""} />
+        <FormControlLabel
+          control={control}
+          label={<MarkdownDiv markdown={props.label || ""} />}
+        />
       </FormGroup>
     </FormControl>
   );

@@ -11,11 +11,11 @@ import {
   Input,
   Slider,
   TextField,
-  Typography,
 } from "@mui/material";
 import SliderValueLabel from "../Common/SliderValueLabel";
 import { sliderWidgetParser } from "../Common/SliderWidgetParser";
 import { castValue } from "../Common/ValueOperation";
+import MarkdownDiv from "../Common/MarkdownDiv";
 
 const { getDisplayLabel } = utils;
 
@@ -87,7 +87,7 @@ const TextExtendedWidget = ({
         <Grid container spacing={2} alignItems="center">
           {!!label ? (
             <Grid item>
-              <Typography>{label}</Typography>
+              <MarkdownDiv markdown={schema.title || label} />
             </Grid>
           ) : (
             <></>
@@ -172,7 +172,11 @@ const TextExtendedWidget = ({
           {...params}
           id={id}
           placeholder={placeholder}
-          label={displayLabel ? label || schema.title : false}
+          label={
+            displayLabel ? (
+              <MarkdownDiv markdown={schema.title || label} />
+            ) : null
+          }
           autoFocus={autofocus}
           required={required}
           disabled={disabled || readonly}

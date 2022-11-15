@@ -47,11 +47,11 @@ import { usePopupState } from "material-ui-popup-state/hooks";
 import SheetSwitch from "../SheetComponents/SheetSwitch";
 import SheetSlider from "../SheetComponents/SheetSlider";
 import SheetCheckBox from "../SheetComponents/SheetCheckBox";
-import MarkdownIt from "markdown-it";
 import JSONEditorWidget from "./JSONEditorWidget";
 import { castValue, getInitValue } from "../Common/ValueOperation";
 import { GridRowModel } from "@mui/x-data-grid/models/gridRows";
 import Grid2 from "@mui/material/Unstable_Grid2";
+import MarkdownDiv from "../Common/MarkdownDiv";
 
 let rowIdCounter = 0;
 
@@ -485,15 +485,10 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
       let rowElement: JSX.Element = <></>;
       switch (rowItem.type) {
         case "markdown":
-          const markdownHTML = new MarkdownIt({
-            html: true,
-            xhtmlOut: true,
-            breaks: true,
-            linkify: true,
-            typographer: true,
-          }).renderInline(rowItem.content !== undefined ? rowItem.content : "");
           rowElement = (
-            <div dangerouslySetInnerHTML={{ __html: markdownHTML }} />
+            <MarkdownDiv
+              markdown={rowItem.content !== undefined ? rowItem.content : ""}
+            />
           );
           break;
         case "html":
@@ -867,19 +862,11 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
     </div>
   );
 
-  const markdownHTML = new MarkdownIt({
-    html: true,
-    xhtmlOut: true,
-    breaks: true,
-    linkify: true,
-    typographer: true,
-  }).renderInline(props.description);
-
   return (
     <Stack spacing={1}>
       <Typography variant="h5">{props.title}</Typography>
       <Typography variant="body1">
-        <div dangerouslySetInnerHTML={{ __html: markdownHTML }} />
+        <MarkdownDiv markdown={props.description} />
       </Typography>
       {rowElements.map(renderElement)}
       {arraySimpleSelectors.map(renderElement)}
