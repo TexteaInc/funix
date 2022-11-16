@@ -9,13 +9,13 @@ import {
 } from "@mui/material";
 import React, { Suspense } from "react";
 import { useAtom } from "jotai";
-import TexteaFunction from "./TexteaFunction";
+import FunixFunction from "./FunixFunction";
 
 export type FunctionSelectedProps = {
   backend: URL;
 };
 
-const TexteaFunctionSelected: React.FC<FunctionSelectedProps> = ({
+const FunixFunctionSelected: React.FC<FunctionSelectedProps> = ({
   backend,
 }) => {
   const [{ selectedFunction }] = useAtom(storeAtom);
@@ -34,7 +34,7 @@ const TexteaFunctionSelected: React.FC<FunctionSelectedProps> = ({
   );
   return (
     <Suspense fallback={suspenseFallback}>
-      <TexteaFunction
+      <FunixFunction
         preview={selectedFunction}
         key={selectedFunction.path}
         backend={backend}
@@ -43,4 +43,4 @@ const TexteaFunctionSelected: React.FC<FunctionSelectedProps> = ({
   );
 };
 
-export default TexteaFunctionSelected;
+export default FunixFunctionSelected;

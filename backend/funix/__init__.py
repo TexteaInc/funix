@@ -1,8 +1,8 @@
 import importlib
 import typing
 
-import pydatafront.decorator as decorator
-from pydatafront.app import app
+import funix.decorator as decorator
+from funix.app import app
 
 
 def __prep(main_class: typing.Optional[str] = "functions"):

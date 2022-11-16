@@ -7,9 +7,9 @@ import random
 import inspect
 import requests
 import traceback
+from funix.app import app
 from functools import wraps
 from uuid import uuid4 as uuid
-from pydatafront.app import app
 from urllib.parse import urlparse
 from typing import Dict, List, Literal, Optional
 
@@ -60,7 +60,7 @@ def enable_wrapper():
         __wrapper_enabled = True
 
         @app.get("/list")
-        def __textea_export_func_list():
+        def __funix_export_func_list():
             return {
                 "list": __decorated_functions_list,
             }
@@ -263,7 +263,7 @@ def get_type_widget_prop(function_arg_type_name, index, function_arg_widget, wid
             function_arg_type_name)
         if isinstance(typing_list_search_result, re.Match):  # typing.List, typing.Dict
             content_type = typing_list_search_result.group("contentType")
-            # (content_type in __supported_basic_types) for textea-sheet only
+            # (content_type in __supported_basic_types) for yodas only
             return {
                 "type": "array",
                 "widget": widget,
@@ -363,7 +363,7 @@ def funix_export(path: Optional[str] = None, description: Optional[str] = "",
             json_schema_props = dict()
 
             if function_signature.return_annotation is not inspect._empty:
-                # return type dict enforcement for textea-sheet only
+                # return type dict enforcement for yodas only
                 try:
                     return_type_raw = getattr(function_signature.return_annotation, "__annotations__")
                     if getattr(type(return_type_raw), "__name__") == "dict":
@@ -582,7 +582,7 @@ def funix_export(path: Optional[str] = None, description: Optional[str] = "",
 
             post_wrapper = app.post("/call/{}".format(id))
             post_wrapper(wrapper)
-            wrapper._decorator_name_ = "textea_export"
+            wrapper._decorator_name_ = "funix_export"
         return function
 
     return decorator

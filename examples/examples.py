@@ -1,12 +1,12 @@
 import tel_search
 import vector_strip
-from pydatafront.decorator import funix_export
+from funix.decorator import funix_export
 from typing import List, TypedDict, Literal, Dict
 
 
 @funix_export()
 def hello_world(your_name: str) -> str:
-    return f"Welcome to PyDataFront, {your_name}!"
+    return f"Welcome to Funix, {your_name}!"
 
 
 class telomere_check_return(TypedDict):
@@ -365,7 +365,7 @@ def add_with_sub(a: List[int], b: List[int]) -> add_with_sub_return:
     }
 
 
-# only supported by PyDataFront
+# only supported by Funix
 @funix_export(
     path="nested-array",
     a={

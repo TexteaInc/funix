@@ -7,8 +7,8 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import TexteaFunctionList from "./components/TexteaFunctionList";
-import TexteaFunctionSelected from "./components/TexteaFunctionSelected";
+import FunixFunctionList from "./components/FunixFunctionList";
+import FunixFunctionSelected from "./components/FunixFunctionSelected";
 import { Navigate, useLocation } from "react-router-dom";
 import { Path } from "history";
 
@@ -24,7 +24,7 @@ const App = () => {
     if (!toRedirect) {
       return (
         <Container sx={{ paddingY: 2 }}>
-          <Typography variant="h4">PyDataFront</Typography>
+          <Typography variant="h4">Funix</Typography>
           <TextField
             label="Backend URL"
             value={backendStrInput}
@@ -65,8 +65,8 @@ const App = () => {
     return (
       <Container sx={{ paddingY: 2 }}>
         <Stack spacing={2}>
-          <TexteaFunctionList backend={backend} />
-          <TexteaFunctionSelected backend={backend} />
+          <FunixFunctionList backend={backend} />
+          <FunixFunctionSelected backend={backend} />
         </Stack>
       </Container>
     );

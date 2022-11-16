@@ -1,5 +1,5 @@
 import random
-from pydatafront.decorator import funix_export
+from funix.decorator import funix_export
 
 
 @funix_export(

@@ -16,7 +16,7 @@ export type FunctionListProps = {
   backend: URL;
 };
 
-const TexteaFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
+const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
   const [, setStore] = useAtom(storeAtom);
   const onceRef = useRef(true);
   const [state, setState] = useState<FunctionPreview[]>([]);
@@ -88,4 +88,4 @@ const TexteaFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
   );
 };
 
-export default TexteaFunctionList;
+export default FunixFunctionList;

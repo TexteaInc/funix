@@ -1,4 +1,4 @@
-from pydatafront.decorator import import_theme, set_global_theme, funix_export
+from funix.decorator import import_theme, set_global_theme, funix_export
 
 import_theme("./sunset_v2.yaml", "sunset")
 set_global_theme("sunset")

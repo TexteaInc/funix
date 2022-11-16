@@ -32,10 +32,7 @@ export type FunctionDetailProps = {
   backend: URL;
 };
 
-const TexteaFunction: React.FC<FunctionDetailProps> = ({
-  preview,
-  backend,
-}) => {
+const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
   const { data: detail } = useSWR<FunctionDetail>(
     new URL(`/param/${preview.path}`, backend).toString()
   );
@@ -290,4 +287,4 @@ const TexteaFunction: React.FC<FunctionDetailProps> = ({
   );
 };
 
-export default TexteaFunction;
+export default FunixFunction;
