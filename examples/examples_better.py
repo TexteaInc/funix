@@ -1,4 +1,5 @@
 import random
+from typing import List
 from funix.decorator import funix_export
 
 
@@ -94,7 +95,28 @@ def guess(
         }
     }
 )
-def test(test: bool) -> str:
+def argument_config(test: bool) -> str:
     return {
         "test": test
     }
+
+@funix_export(
+    widgets={
+        ("sheet", "slider"): "arg1"
+    }
+)
+def slider_in_sheet(arg1: List[int]):
+    return {
+        "arg1": arg1
+    }
+
+@funix_export(
+    examples={
+        ("test", "test2"): [
+            ["hello", "hi"],
+            ["world", "funix"]
+        ]
+    }
+)
+def greet(test: str, test2: str) -> str:
+    return f"{test} {test2}"

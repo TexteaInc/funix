@@ -11,7 +11,7 @@ from funix.app import app
 from functools import wraps
 from uuid import uuid4 as uuid
 from urllib.parse import urlparse
-from typing import Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional, Tuple
 
 
 __supported_basic_types_dict = {
@@ -318,17 +318,20 @@ def import_theme(path: str, name: str):
     __themes[name] = get_theme(path)
 
 
-def funix_export(path: Optional[str] = None, description: Optional[str] = "",
-                destination: Literal["column", "row", "sheet", None] = None, theme: Optional[str] = "",
-                returnHTML: Optional[bool] = False,
-                widgets: Optional[Dict[str, List[str]]] = {},
-                treat_as: Optional[Dict[str, List[str]]] = {},
-                whitelist: Optional[Dict[str, List]] = {},
-                examples: Optional[Dict[str, List]] = {},
-                labels: Optional[Dict[str, str]] = {},
-                layout: Optional[List[List[Dict]]] = [],
-                argument_config: Optional[Dict[str, Dict[str, any]]] = {}
-                ):
+def funix_export(
+    path: Optional[str] = None,
+    description: Optional[str] = "",
+    destination: Literal["column", "row", "sheet", None] = None,
+    theme: Optional[str] = "",
+    returnHTML: Optional[bool] = False,
+    widgets: Optional[Dict[Tuple[str] | str, List[str] | str]] = {},
+    treat_as: Optional[Dict[str, List[str] | str]] = {},
+    whitelist: Optional[Dict[Tuple[str] | str, List[Any] | List[List[Any]]]] = {},
+    examples: Optional[Dict[Tuple[str] | str, List[Any] | List[List[Any]]]] = {},
+    labels: Optional[Dict[Tuple[str] | str, str]] = {},
+    layout: Optional[List[List[Dict[str, str]]]] = [],
+    argument_config: Optional[Dict[str, Dict[str, Any]]] = {}
+):
     global __parsed_themes
     def decorator(function: callable):
         if __wrapper_enabled:
@@ -387,35 +390,66 @@ def funix_export(path: Optional[str] = None, description: Optional[str] = "",
 
             for widget_name in widgets:
                 widget_arg_names = widgets[widget_name]
+                if isinstance(widget_arg_names, str):
+                    widget_arg_names = [widget_arg_names]
                 for widget_arg_name in widget_arg_names:
                     if widget_arg_name not in decorated_params:
                         decorated_params[widget_arg_name] = {}
-                    decorated_params[widget_arg_name]["widget"] = widget_name
+                    if isinstance(widget_name, str):
+                        decorated_params[widget_arg_name]["widget"] = widget_name
+                    else:
+                        decorated_params[widget_arg_name]["widget"] = list(widget_name)
 
             for treat_as_name in treat_as:
                 treat_as_arg_names = treat_as[treat_as_name]
+                if isinstance(treat_as_arg_names, str):
+                    treat_as_arg_names = [treat_as_arg_names]
                 for treat_as_arg_name in treat_as_arg_names:
                     if treat_as_arg_name not in decorated_params:
                         decorated_params[treat_as_arg_name] = {}
                     decorated_params[treat_as_arg_name]["treat_as"] = treat_as_name
 
             for example_arg_name in examples:
-                if example_arg_name not in decorated_params:
-                    decorated_params[example_arg_name] = {}
-                decorated_params[example_arg_name]["example"] = examples[example_arg_name]
+                if isinstance(example_arg_name, str):
+                    if example_arg_name not in decorated_params:
+                        decorated_params[example_arg_name] = {}
+                    decorated_params[example_arg_name]["example"] = examples[example_arg_name]
+                else:
+                    example_arg_names = example_arg_name
+                    for index, arg_name in enumerate(example_arg_names):
+                        if arg_name not in decorated_params:
+                            decorated_params[arg_name] = {}
+                        decorated_params[arg_name]["example"] = examples[example_arg_name][index]
 
             for whitelist_arg_name in whitelist:
-                if whitelist_arg_name not in decorated_params:
-                    decorated_params[whitelist_arg_name] = {}
-                if "example" not in decorated_params[whitelist_arg_name]:
-                    decorated_params[whitelist_arg_name]["whitelist"] = whitelist[whitelist_arg_name]
+                if isinstance(whitelist_arg_name, str):
+                    if whitelist_arg_name not in decorated_params:
+                        decorated_params[whitelist_arg_name] = {}
+                    if "example" not in decorated_params[whitelist_arg_name]:
+                        decorated_params[whitelist_arg_name]["whitelist"] = whitelist[whitelist_arg_name]
+                    else:
+                        raise Exception(f"{function_name}: Cannot use whitelist and example together")
                 else:
-                    raise Exception(f"{function_name}: Cannot use whitelist and example together")
+                    whitelist_arg_names = whitelist_arg_name
+                    for index, arg_name in enumerate(whitelist_arg_names):
+                        if arg_name not in decorated_params:
+                            decorated_params[arg_name] = {}
+                        if "example" not in decorated_params[arg_name]:
+                            decorated_params[arg_name]["whitelist"] = whitelist[whitelist_arg_name][index]
+                        else:
+                            raise Exception(f"{function_name}: Cannot use whitelist and example together")
 
             for label_arg_name in labels:
-                if label_arg_name not in decorated_params:
-                    decorated_params[label_arg_name] = {}
-                decorated_params[label_arg_name]["label"] = labels[label_arg_name]
+                if isinstance(label_arg_name, str):
+                    if label_arg_name not in decorated_params:
+                        decorated_params[label_arg_name] = {}
+                    decorated_params[label_arg_name]["label"] = labels[label_arg_name]
+                else:
+                    label_arg_names = label_arg_name
+                    for arg_name in label_arg_names:
+                        if arg_name not in decorated_params:
+                            decorated_params[arg_name] = {}
+                        decorated_params[arg_name]["label"] = labels[label_arg_name]
 
             input_attr = ""
             for decorator_arg_name, decorator_arg_dict in argument_config.items():
