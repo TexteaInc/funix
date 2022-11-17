@@ -87,11 +87,9 @@ const TextExtendedWidget = ({
         <Grid container spacing={2} alignItems="center">
           {!!label ? (
             <Grid item>
-              <MarkdownDiv markdown={schema.title || label} />
+              <MarkdownDiv markdown={label || schema.title} />
             </Grid>
-          ) : (
-            <></>
-          )}
+          ) : null}
           <Grid item xs>
             <Slider
               value={typeof sliderValue === "number" ? sliderValue : min}
@@ -174,7 +172,7 @@ const TextExtendedWidget = ({
           placeholder={placeholder}
           label={
             displayLabel ? (
-              <MarkdownDiv markdown={schema.title || label} />
+              <MarkdownDiv markdown={schema.title || label || "input"} />
             ) : null
           }
           autoFocus={autofocus}
@@ -190,6 +188,7 @@ const TextExtendedWidget = ({
           }: React.ChangeEvent<HTMLInputElement>) => {
             if (freeSolo) return _onValueChange(value);
           }}
+          InputLabelProps={{ required: false }}
         />
       )}
       freeSolo={freeSolo}

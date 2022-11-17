@@ -865,9 +865,11 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
   return (
     <Stack spacing={1}>
       <Typography variant="h5">{props.title}</Typography>
-      <Typography variant="body1">
-        <MarkdownDiv markdown={props.description} />
-      </Typography>
+      {props.description !== "" ? (
+        <Typography variant="body1">
+          <MarkdownDiv markdown={props.description} />
+        </Typography>
+      ) : null}
       {rowElements.map(renderElement)}
       {arraySimpleSelectors.map(renderElement)}
       {configElements.map(renderElement)}
