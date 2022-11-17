@@ -64,8 +64,7 @@ randomNumber = (random.randint(0, 100) + random.randint(0, 100)) / 2
             {"type": "argument", "argument": "input2", "width": 6}
         ],
         [{"type": "dividing", "content": "Cheat Option", "position": "left"}],
-        [{"type": "argument", "argument": "show", "width": 12}],
-        [{"type": "html", "content": "<span>Have Fun!</span>"}]
+        [{"type": "argument", "argument": "show", "width": 12}]
     ]
 )
 def guess(

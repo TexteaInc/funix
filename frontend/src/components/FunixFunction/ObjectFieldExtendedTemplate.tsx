@@ -491,15 +491,6 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
             />
           );
           break;
-        case "html":
-          rowElement = (
-            <div
-              dangerouslySetInnerHTML={{
-                __html: rowItem.content !== undefined ? rowItem.content : "",
-              }}
-            />
-          );
-          break;
         case "argument":
           console.log(props.properties);
           rowElement = (
