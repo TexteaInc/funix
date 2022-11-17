@@ -85,3 +85,16 @@ def guess(
                 return "Bigger"
             else:
                 return "Smaller"
+
+@funix_export(
+    argument_config={
+        "test": {
+            "treat_as": "config",
+            "widget": "switch"
+        }
+    }
+)
+def test(test: bool) -> str:
+    return {
+        "test": test
+    }

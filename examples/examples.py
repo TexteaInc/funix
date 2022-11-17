@@ -13,25 +13,30 @@ class telomere_check_return(TypedDict):
     is_telomere: List[bool]
 
 
-@funix_export(path="bioinfo_telomere_check",
-               description="A telomere is a region of repetitive DNA sequences at the end of a chromosome. "
-                           "Find the belongings of a repeat unit.",
-               destination="column",
-               sRNAs={"treat_as": "column",
-                      "example":
-                          [
-                              ["CCCTAAACCCTAAACCCTAT",  # False
-                               "CCCTAAACCCTAAACCCTAA",  # True, 20-nt
-                               "CCCTAAACCCTAAACCC",  # False, too short
-                               "CCCTAAACCCTAAACCCTAAAC",  # True, 22-nt
-                               "CTAAACCCTAAACCCTAAACCCT"  # True, 25-nt
-                               ]
-                          ]
-                      },
-               repeat_unit={"treat_as": "config",
-                            "example": ["CCCTAAA"]
-                            }
-               )
+@funix_export(
+    path = "bioinfo_telomere_check",
+    description = "A telomere is a region of repetitive DNA sequences at the end of a chromosome. "
+                "Find the belongings of a repeat unit.",
+    destination = "column",
+    argument_config = {
+        "sRNAs": {
+            "treat_as": "column",
+            "example": [
+                [
+                    "CCCTAAACCCTAAACCCTAT",  # False
+                    "CCCTAAACCCTAAACCCTAA",  # True, 20-nt
+                    "CCCTAAACCCTAAACCC",  # False, too short
+                    "CCCTAAACCCTAAACCCTAAAC",  # True, 22-nt
+                    "CTAAACCCTAAACCCTAAACCCT"  # True, 25-nt
+                ]
+            ]
+        },
+        "repeat_unit": {
+            "treat_as": "config",
+            "example": ["CCCTAAA"]
+        }
+    }
+)
 def bioinfo_telomere_check(sRNAs: List[str], repeat_unit: str) -> telomere_check_return:
     check_result = tel_search.search_telomeres(sRNAs, repeat_unit)
     return {"is_telomere": check_result}
@@ -42,25 +47,38 @@ class remove_3_prime_adapter_return(TypedDict):
     # removal_result_code: List[int]
 
 
-@funix_export(path='bioinfo_remove_3_prime_adapter',
-               description="Remove 3' prime adapter from the end of an RNA-seq",
-               sRNAs={'treat_as': 'column',
-                      'example': [
-                          ["AAGCTCAGGAGGGATAGCGCCTCGTATGCCGTCTTCTGC",  # shorter than full 3' adapter
-                           "AAGCTCAGGAGGGATAGCGCCTCGTATGCCGTCTTCTGCTT",  # full 3' adapter
-                           "AAGCTCAGGAGGGATAGCGCCTCGTATGCCGTCTTCTGCTTCTGAATTAATT",  # additional seq after 3' adapter,
-                           "AAGCTCAGGAGGGATAGCGCCTCGTATG",  # <8 nt io 3' adapter
-                           "AAGCTCAGGAGGGATAGCGCCGTATG"  # no match at all
-                           ]
-                      ]
-                      },
-               adapter_3_prime={'treat_as': 'config',
-                                'example': ["TCGTATGCCGTCTTCTGCTT"]
-                                },
-               minimal_match_length={'treat_as': 'config', 'example': [6]}
-               )
-def bioinfo_remove_3_prime_adapter(sRNAs: List[str], adapter_3_prime: str,
-                                   minimal_match_length: int) -> remove_3_prime_adapter_return:
+@funix_export(
+    path = "bioinfo_remove_3_prime_adapter",
+    description = "Remove 3' prime adapter from the end of an RNA-seq",
+    argument_config = {
+        "sRNAs": {
+            "treat_as": "column",
+            "example": [
+                [
+                    "AAGCTCAGGAGGGATAGCGCCTCGTATGCCGTCTTCTGC",  # shorter than full 3' adapter
+                    "AAGCTCAGGAGGGATAGCGCCTCGTATGCCGTCTTCTGCTT",  # full 3' adapter
+                    # additional seq after 3' adapter,
+                    "AAGCTCAGGAGGGATAGCGCCTCGTATGCCGTCTTCTGCTTCTGAATTAATT",
+                    "AAGCTCAGGAGGGATAGCGCCTCGTATG",  # <8 nt io 3' adapter
+                    "AAGCTCAGGAGGGATAGCGCCGTATG"  # no match at all
+                ]
+            ]
+        },
+        "adapter_3_prime": {
+            "treat_as": "config",
+            "example": ["TCGTATGCCGTCTTCTGCTT"]
+        },
+        "minimal_match_length": {
+            "treat_as": "config",
+            "example": [6]
+        }
+    }
+)
+def bioinfo_remove_3_prime_adapter(
+    sRNAs: List[str],
+    adapter_3_prime: str,
+    minimal_match_length: int
+) -> remove_3_prime_adapter_return:
     return_codes, return_seqs = vector_strip.remove_3_prime_adapter_vectorized(
         sRNAs=sRNAs,
         adapter_3_prime=adapter_3_prime,
@@ -80,15 +98,17 @@ class calc_return(TypedDict):
 @funix_export(
     path="calc",
     description="perform some basic math calculation",
-    op={
-        "whitelist": ["add", "minus"],
-        "treat_as": "config"
-    },
-    a={
-        "treat_as": "column"
-    },
-    b={
-        "treat_as": "column"
+    argument_config={
+        "op": {
+            "whitelist": ["add", "sub"],
+            "treat_as": "config"
+        },
+        "a": {
+            "treat_as": "column"
+        },
+        "b": {
+            "treat_as": "column"
+        }
     }
 )
 def calc(a: List[int], b: List[int], op: str) -> calc_return:
@@ -103,13 +123,15 @@ def calc(a: List[int], b: List[int], op: str) -> calc_return:
 @funix_export(
     path="switch_and_checkbox",
     description="just switch and checkbox",
-    a={
-        "treat_as": "config",
-        "widget": "switch"
-    },
-    b={
-        "treat_as": "config",
-        "widget": "checkbox"
+    argument_config={
+        "a": {
+            "treat_as": "config",
+            "widget": "switch"
+        },
+        "b": {
+            "treat_as": "config",
+            "widget": "checkbox"
+        }
     }
 )
 def switch_and_checkbox(a: bool, b: bool):
@@ -124,13 +146,15 @@ def switch_and_checkbox(a: bool, b: bool):
 @funix_export(
     path="slider_test",
     description="all you need is slider!",
-    a={
-        "treat_as": "column",
-        "widget": ["simple", "slider[0, 100, 5]"]
-    },
-    b={
-        "treat_as": "config",
-        "widget": ["slider[0, 100.0]"]
+    argument_config={
+        "a": {
+            "treat_as": "column",
+            "widget": ["simple", "slider[0, 100, 5]"]
+        },
+        "b": {
+            "treat_as": "config",
+            "widget": ["slider[0, 100.0]"]
+        }
     }
 )
 def slider_test(a: List[int], b: float):
@@ -143,13 +167,15 @@ def slider_test(a: List[int], b: float):
 @funix_export(
     path="sheet_test",
     description="sweet sheet",
-    a={
-        "treat_as": "column",
-        "widget": ["sheet", "slider"]
-    },
-    b={
-        "treat_as": "column",
-        "widget": ["sheet", "switch"]
+    argument_config={
+        "a": {
+            "treat_as": "column",
+            "widget": ["sheet", "slider"]
+        },
+        "b": {
+            "treat_as": "column",
+            "widget": ["sheet", "switch"]
+        }
     }
 )
 def sheet_test(a: List[int], b: List[bool]):
@@ -162,17 +188,19 @@ def sheet_test(a: List[int], b: List[bool]):
 @funix_export(
     path="cell_test",
     description="painful",
-    a={
-        "treat_as": "cell",
-        "widget": ["sheet"]
-    },
-    b={
-        "treat_as": "cell",
-        "widget": ["sheet"]
-    },
-    isAdd={
-        "treat_as": "config",
-        "widget": ["switch"]
+    argument_config={
+        "a": {
+            "treat_as": "cell",
+            "widget": ["sheet"]
+        },
+        "b": {
+            "treat_as": "cell",
+            "widget": ["sheet"]
+        },
+        "isAdd": {
+            "treat_as": "config",
+            "widget": ["switch"]
+        }
     }
 )
 def cell_test(a: int, b: int, isAdd: bool):
@@ -182,9 +210,11 @@ def cell_test(a: int, b: int, isAdd: bool):
 @funix_export(
     path="markdown_support",
     description="**Markdown** *text* `is` ~~cool~~ right?",
-    cool={
-        "treat_as": "config",
-        "widget": "checkbox"
+    argument_config={
+        "cool": {
+            "treat_as": "config",
+            "widget": "checkbox"
+        }
     }
 )
 def markdown_support(cool: bool):
@@ -196,13 +226,15 @@ def markdown_support(cool: bool):
 @funix_export(
     path="json_editor",
     description="config only",
-    config_dict={
-        "treat_as": "config",
-        "widget": ["json"]
-    },
-    config_list={
-        "treat_as": "config",
-        "widget": ["json"]
+    argument_config={
+        "config_dict": {
+            "treat_as": "config",
+            "widget": ["json"]
+        },
+        "config_list": {
+            "treat_as": "config",
+            "widget": ["json"]
+        }
     }
 )
 def json_editor(config_dict: Dict, config_list: List[str]):
@@ -221,13 +253,15 @@ class Person(TypedDict):
 @funix_export(
     path="json_editor_better",
     description="list and typed_dict",
-    config_typed_dict={
-        "treat_as": "config",
-        "widget": ["json"]
-    },
-    config_list={
-        "treat_as": "config",
-        "widget": ["json"]
+    argument_config={
+        "config_typed_dict": {
+            "treat_as": "config",
+            "widget": ["json"]
+        },
+        "config_list": {
+            "treat_as": "config",
+            "widget": ["json"]
+        }
     }
 )
 def json_editor_better(config_typed_dict: Person, config_list: List):
@@ -240,14 +274,16 @@ def json_editor_better(config_typed_dict: Person, config_list: List):
 @funix_export(
     path="calc_literal",
     description="perform some basic math calculation",
-    op={
-        "treat_as": "config"
-    },
-    a={
-        "treat_as": "column"
-    },
-    b={
-        "treat_as": "column"
+    argument_config={
+        "op": {
+            "treat_as": "config"
+        },
+        "a": {
+            "treat_as": "column"
+        },
+        "b": {
+            "treat_as": "column"
+        }
     }
 )
 def calc_literal(a: List[int], b: List[int], op: Literal["add", "minus"]) -> calc_return:
@@ -257,13 +293,15 @@ def calc_literal(a: List[int], b: List[int], op: Literal["add", "minus"]) -> cal
 @funix_export(
     path="calc_add",
     description="add two column",
-    a={
-        "treat_as": "column",
-        "widget": ["sheet"]
-    },
-    b={
-        "treat_as": "column",
-        "widget": ["sheet"]
+    argument_config={
+        "a": {
+            "treat_as": "column",
+            "widget": ["sheet"]
+        },
+        "b": {
+            "treat_as": "column",
+            "widget": ["sheet"]
+        }
     }
 )
 def calc_add(a: List[int], b: List[int]) -> calc_return:
@@ -273,14 +311,16 @@ def calc_add(a: List[int], b: List[int]) -> calc_return:
 @funix_export(
     path="calc_default_add",
     description="operate two columns with default add",
-    a={
-        "treat_as": "column"
-    },
-    b={
-        "treat_as": "column"
-    },
-    op={
-        "treat_as": "config"
+    argument_config={
+        "a": {
+            "treat_as": "column"
+        },
+        "b": {
+            "treat_as": "column"
+        },
+        "op": {
+            "treat_as": "config"
+        }
     }
 )
 def calc_default_add(a: List[int], b: List[int], op: str = "add") -> calc_return:
@@ -290,14 +330,16 @@ def calc_default_add(a: List[int], b: List[int], op: str = "add") -> calc_return
 @funix_export(
     path="calc_boolean_add",
     description="operate two columns with boolean add",
-    a={
-        "treat_as": "column"
-    },
-    b={
-        "treat_as": "column"
-    },
-    add={
-        "treat_as": "config"
+    argument_config={
+        "a": {
+            "treat_as": "column"
+        },
+        "b": {
+            "treat_as": "column"
+        },
+        "op": {
+            "treat_as": "config"
+        }
     }
 )
 def calc_boolean_add(a: List[int], b: List[int], add: bool) -> calc_return:
@@ -309,15 +351,17 @@ def calc_boolean_add(a: List[int], b: List[int], add: bool) -> calc_return:
 
 @funix_export(
     description="operate two columns with boolean add with mixed list widgets",
-    a={
-        "treat_as": "column"
-    },
-    b={
-        "treat_as": "column",
-        "widget": ["sheet"]
-    },
-    add={
-        "treat_as": "config"
+    argument_config={
+        "a": {
+            "treat_as": "column"
+        },
+        "b": {
+            "treat_as": "column",
+            "widget": ["sheet"]
+        },
+        "add": {
+            "treat_as": "config"
+        }
     }
 )
 def calc_boolean_mixed_add(a: List[int], b: List[int], add: bool = True) -> calc_return:
@@ -329,15 +373,17 @@ def calc_boolean_mixed_add(a: List[int], b: List[int], add: bool = True) -> calc
 
 @funix_export(
     description="add two column with example and whitelist",
-    a={
-        "treat_as": "column",
-        "example": [[1, 2, 3], [4, 5, 6]],
-        "widget": ["sheet"]
-    },
-    b={
-        "treat_as": "column",
-        "whitelist": [[7, 8, 9], [-1, -2, -3]],
-        "widget": ["sheet"]
+    argument_config={
+        "a": {
+            "treat_as": "column",
+            "example": [[1, 2, 3], [4, 5, 6]],
+            "widget": ["sheet"]
+        },
+        "b": {
+            "treat_as": "column",
+            "whitelist": [[7, 8, 9], [-1, -2, -3]],
+            "widget": ["sheet"]
+        }
     }
 )
 def calc_add_example_whitelist(a: List[int], b: List[int]) -> calc_return:
@@ -351,11 +397,13 @@ class add_with_sub_return(TypedDict):
 
 @funix_export(
     path="owo",
-    a={
-        "treat_as": "column"
-    },
-    b={
-        "treat_as": "column"
+    argument_config={
+        "a": {
+            "treat_as": "column"
+        },
+        "b": {
+            "treat_as": "column"
+        }
     }
 )
 def add_with_sub(a: List[int], b: List[int]) -> add_with_sub_return:
@@ -368,8 +416,10 @@ def add_with_sub(a: List[int], b: List[int]) -> add_with_sub_return:
 # only supported by Funix
 @funix_export(
     path="nested-array",
-    a={
-        "treat_as": "column"
+    argument_config={
+        "a": {
+            "treat_as": "column"
+        }
     }
 )
 def nested_array(a: List[List[int]]):

@@ -327,7 +327,8 @@ def funix_export(path: Optional[str] = None, description: Optional[str] = "",
                 examples: Optional[Dict[str, List]] = {},
                 labels: Optional[Dict[str, str]] = {},
                 layout: Optional[List[List[Dict]]] = [],
-                **decorator_kwargs):
+                argument_config: Optional[Dict[str, Dict[str, any]]] = {}
+                ):
     global __parsed_themes
     def decorator(function: callable):
         if __wrapper_enabled:
@@ -417,7 +418,7 @@ def funix_export(path: Optional[str] = None, description: Optional[str] = "",
                 decorated_params[label_arg_name]["label"] = labels[label_arg_name]
 
             input_attr = ""
-            for decorator_arg_name, decorator_arg_dict in decorator_kwargs.items():
+            for decorator_arg_name, decorator_arg_dict in argument_config.items():
                 if decorator_arg_name not in decorated_params.keys():
                     decorated_params[decorator_arg_name] = dict()
 

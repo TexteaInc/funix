@@ -6,19 +6,7 @@ set_global_theme("sunset")
 
 @funix_export(
     path="theme_test",
-    description="Sunset: [config](https://yazawazi.moe/pdf_themes/sunset_v2.yaml)",
-    int_input={
-        "treat_as": "config"
-    },
-    float_input={
-        "treat_as": "config"
-    },
-    bool_input={
-        "treat_as": "config"
-    },
-    str_input={
-        "treat_as": "config"
-    }
+    description="Sunset: [config](https://yazawazi.moe/pdf_themes/sunset_v2.yaml)"
 )
 def theme_test(int_input: int, float_input: float, bool_input: bool, str_input: str):
     return {
