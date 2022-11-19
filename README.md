@@ -1,6 +1,6 @@
 # Funix
 
-[![PyPI version](https://badge.fury.io/py/pydatafront.svg)](https://badge.fury.io/py/pydatafront)
+[![PyPI version](https://badge.fury.io/py/funix.svg)](https://badge.fury.io/py/funix)
 
 Supported Types: `int`, `float`, `str`, `list`, `dict`, `bool`, `typing.List`, `typing.Dict`, `typing.Optional`, `typing.TypedDict`
 
