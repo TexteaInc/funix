@@ -1,6 +1,6 @@
 import random
 from typing import List
-from funix.decorator import funix_export
+from funix.decorator import funix_export, funix_yaml_export
 
 
 @funix_export(
@@ -119,3 +119,15 @@ def slider_in_sheet(arg1: List[int]):
 )
 def greet(test: str, test2: str) -> str:
     return f"{test} {test2}"
+
+@funix_yaml_export("""
+labels:
+    arg1: isGood
+widgets:
+    switch:
+    - arg1
+""")
+def yaml_export(arg1: bool = False) -> str:
+    return {
+        "arg1": arg1
+    }

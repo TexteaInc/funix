@@ -621,3 +621,11 @@ def funix_export(
         return function
 
     return decorator
+
+def funix_yaml_export(config: Optional[str] = ""):
+    def decorator(function: callable):
+        if config == "":
+            return funix_export()(function)
+        yamlConfig = yaml.load(config, Loader = yaml.FullLoader)
+        return funix_export(**yamlConfig)(function)
+    return decorator
