@@ -8,8 +8,8 @@ dependencies = [
   "functions-framework==3.*",
   "pyyaml>5.1",
   "requests",
-  "matplotlib",
-  "mpld3"
+  "matplotlib>=3.6.1",
+  "mpld3>=0.5.8"
 ]
 
 [tool.setuptools.packages.find]
