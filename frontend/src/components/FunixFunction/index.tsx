@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useLayoutEffect, useState } from "react";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import Form from "@rjsf/material-ui/v5";
@@ -76,9 +76,14 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
   type ResponseViewProps = {
     response: string | null;
     isHTML: boolean;
+    isPlot: boolean;
   };
 
-  const ResponseView: React.FC<ResponseViewProps> = ({ response, isHTML }) => {
+  const ResponseView: React.FC<ResponseViewProps> = ({
+    response,
+    isHTML,
+    isPlot,
+  }) => {
     if (response == null) {
       return (
         <Alert severity="info">
@@ -86,6 +91,16 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
         </Alert>
       );
     } else {
+      if (isPlot) {
+        useLayoutEffect(() => {
+          if (document.querySelector("#plot")?.innerHTML == "") {
+            const scriptElement = document.createElement("script");
+            scriptElement.innerHTML = `mpld3.draw_figure("plot", ${response})`;
+            document.body.appendChild(scriptElement);
+          }
+        }, []);
+        return <div id="plot" />;
+      }
       if (isHTML) {
         return <div dangerouslySetInnerHTML={{ __html: response }} />;
       }
@@ -269,6 +284,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
                     <ResponseView
                       response={response}
                       isHTML={functionDetail.returnHTML}
+                      isPlot={functionDetail.returnPlot}
                     />
                   </Stack>
                 </CardContent>

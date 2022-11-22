@@ -89,6 +89,10 @@ export type FunctionDetail = {
    * Return HTML
    */
   returnHTML: boolean;
+  /**
+   * Return plot
+   */
+  returnPlot: boolean;
 };
 
 export async function getParam(

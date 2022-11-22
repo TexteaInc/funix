@@ -11,6 +11,7 @@ from funix.app import app
 from functools import wraps
 from uuid import uuid4 as uuid
 from urllib.parse import urlparse
+import matplotlib.pyplot as plt, mpld3
 from typing import Any, Dict, List, Literal, Optional, Tuple
 
 
@@ -324,6 +325,7 @@ def funix_export(
     destination: Literal["column", "row", "sheet", None] = None,
     theme: Optional[str] = "",
     returnHTML: Optional[bool] = False,
+    returnPlot: Optional[bool] = False,
     widgets: Optional[Dict[Tuple[str] | str, List[str] | str]] = {},
     treat_as: Optional[Dict[str, List[str] | str]] = {},
     whitelist: Optional[Dict[Tuple[str] | str, List[Any] | List[List[Any]]]] = {},
@@ -553,6 +555,7 @@ def funix_export(
                 "params": decorated_params,
                 "theme": parsed_theme[4],
                 "returnHTML": returnHTML,
+                "returnPlot": returnPlot,
                 "return_type": return_type_parsed,
                 "description": description,
                 "schema": {
@@ -581,10 +584,17 @@ def funix_export(
                     @wraps(function)
                     def wrapped_function(**wrapped_function_kwargs):
                         try:
-                            result = function(**wrapped_function_kwargs)
-                            if not isinstance(result, (str, dict, tuple)):
-                                result = str(result)
-                            return result
+                            if returnPlot:
+                                fig = plt.figure()
+                                function(**wrapped_function_kwargs)
+                                fig_dict = mpld3.fig_to_dict(fig)
+                                fig_dict["width"] = 560
+                                return fig_dict
+                            else:
+                                result = function(**wrapped_function_kwargs)
+                                if not isinstance(result, (str, dict, tuple)):
+                                    result = str(result)
+                                return result
                         except:
                             return {
                                 "error_type": "function",

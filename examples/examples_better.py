@@ -1,5 +1,6 @@
 import random
 from typing import List
+import matplotlib.pyplot as plt
 from funix.decorator import funix_export, funix_yaml_export
 
 
@@ -119,6 +120,19 @@ def slider_in_sheet(arg1: List[int]):
 )
 def greet(test: str, test2: str) -> str:
     return f"{test} {test2}"
+
+@funix_export(
+    returnPlot = True,
+    widgets = {
+        "sheet": ["year", "period"]
+    },
+    treat_as={
+        "column": ["year", "period"]
+    }
+)
+def plot_test(year: List[int], period: List[float]):
+    plt.plot(year, period)
+    return plt
 
 @funix_yaml_export("""
 labels:
