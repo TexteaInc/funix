@@ -134,6 +134,27 @@ def plot_test(year: List[int], period: List[float]):
     plt.plot(year, period)
     return plt
 
+@funix_export(
+    widgets = {
+        "switch": ["more_config"]
+    },
+    if_then = [
+        {
+            "if": {"more_config": True},
+            "then": ["arg1", "arg2"]
+        }
+    ]
+)
+def if_then(
+    more_config: bool,
+    arg1: str = "None",
+    arg2: str = "None"
+):
+    return {
+        "arg1": arg1,
+        "arg2": arg2
+    }
+
 @funix_yaml_export("""
 labels:
     arg1: isGood

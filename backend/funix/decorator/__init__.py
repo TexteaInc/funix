@@ -332,6 +332,7 @@ def funix_export(
     examples: Optional[Dict[Tuple[str] | str, List[Any] | List[List[Any]]]] = {},
     labels: Optional[Dict[Tuple[str] | str, str]] = {},
     layout: Optional[List[List[Dict[str, str]]]] = [],
+    if_then: Optional[List[Dict[str, List[str] | Dict[str, Any]]]] = [],
     argument_config: Optional[Dict[str, Dict[str, Any]]] = {}
 ):
     global __parsed_themes
@@ -544,10 +545,36 @@ def funix_export(
                         get_type_widget_prop(function_arg_type_dict["type"], 0, widget[1:], {})
                     json_schema_props[function_arg_name]["type"] = "array"
 
+            all_of = []
+
+            for if_then_item in if_then:
+                config = {
+                    "if": {
+                        "properties": {}
+                    },
+                    "then": {
+                        "properties": {}
+                    },
+                    "required": []
+                }
+                if_items = if_then_item["if"]
+                then_items = if_then_item["then"]
+                for if_item in if_items.keys():
+                    config["if"]["properties"][if_item] = {
+                        "const": if_items[if_item]
+                    }
+                for then_item in then_items:
+                    config["then"]["properties"][then_item] = json_schema_props[then_item]
+                    config["required"].append(then_item)
+                    json_schema_props.pop(then_item)
+                all_of.append(config)
+
+
             keep_ordered_list = list(function_signature.parameters.keys())
             keep_ordered_dict = {}
             for key in keep_ordered_list:
-                keep_ordered_dict[key] = json_schema_props[key]
+                if key in json_schema_props.keys():
+                    keep_ordered_dict[key] = json_schema_props[key]
 
             decorated_function = {
                 "id": id,
@@ -563,6 +590,7 @@ def funix_export(
                     "description": description,
                     "type": "object",
                     "properties": keep_ordered_dict,
+                    "allOf": all_of,
                     "layout": layout
                 },
                 "destination": destination
