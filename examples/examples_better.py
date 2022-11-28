@@ -58,14 +58,14 @@ randomNumber = (random.randint(0, 100) + random.randint(0, 100)) / 2
         "switch": ["show"],
         "slider[0, 100]": ["input1", "input2"]
     },
-    layout=[
-        [{"type": "markdown", "content": "**Guess Number**"}],
+    input_layout=[
+        [{"markdown": "**Guess Number**"}],
         [
-            {"type": "argument", "argument": "input1", "width": 6},
-            {"type": "argument", "argument": "input2", "width": 6}
+            {"argument": "input1", "width": 6},
+            {"argument": "input2", "width": 6}
         ],
-        [{"type": "dividing", "content": "Cheat Option", "position": "left"}],
-        [{"type": "argument", "argument": "show", "width": 12}]
+        [{"dividing": "Cheat Option", "position": "left"}],
+        [{"argument": "show", "width": 12}]
     ]
 )
 def guess(

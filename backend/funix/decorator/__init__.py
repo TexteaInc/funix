@@ -331,7 +331,7 @@ def funix_export(
     whitelist: Optional[Dict[Tuple[str] | str, List[Any] | List[List[Any]]]] = {},
     examples: Optional[Dict[Tuple[str] | str, List[Any] | List[List[Any]]]] = {},
     labels: Optional[Dict[Tuple[str] | str, str]] = {},
-    layout: Optional[List[List[Dict[str, str]]]] = [],
+    input_layout: Optional[List[List[Dict[str, str]]]] = [],
     if_then: Optional[List[Dict[str, List[str] | Dict[str, Any]]]] = [],
     argument_config: Optional[Dict[str, Dict[str, Any]]] = {}
 ):
@@ -384,12 +384,34 @@ def funix_export(
             else:
                 return_type_parsed = None
 
-            for row in layout:
+            return_input_layout = []
+
+            for row in input_layout:
+                row_layout = []
                 for row_item in row:
-                    if row_item["type"] == "argument":
+                    if "markdown" in row_item:
+                        row_item_done = row_item
+                        row_item_done["type"] = "markdown"
+                        row_item_done["content"] = row_item_done["markdown"]
+                        row_item_done.pop("markdown")
+                        row_layout.append(row_item_done)
+                    elif "argument" in row_item:
                         if row_item["argument"] not in decorated_params:
                             decorated_params[row_item["argument"]] = {}
                         decorated_params[row_item["argument"]]["customLayout"] = True
+                        row_item_done = row_item
+                        row_item_done["type"] = "argument"
+                        row_layout.append(row_item_done)
+                    elif "dividing" in row_item:
+                        row_item_done = row_item
+                        row_item_done["type"] = "dividing"
+                        if isinstance(row_item["dividing"], str):
+                            row_item_done["content"] = row_item_done["dividing"]
+                        row_item_done.pop("dividing")
+                        row_layout.append(row_item_done)
+                    else:
+                        raise Exception("Invalid layout item")
+                return_input_layout.append(row_layout)
 
             for widget_name in widgets:
                 widget_arg_names = widgets[widget_name]
@@ -591,7 +613,7 @@ def funix_export(
                     "type": "object",
                     "properties": keep_ordered_dict,
                     "allOf": all_of,
-                    "layout": layout
+                    "layout": return_input_layout
                 },
                 "destination": destination
             }
