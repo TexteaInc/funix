@@ -138,7 +138,7 @@ def plot_test(year: List[int], period: List[float]):
     widgets = {
         "switch": ["more_config"]
     },
-    if_then = [
+    conditional_visible = [
         {
             "if": {"more_config": True},
             "then": ["arg1", "arg2"]

@@ -332,7 +332,7 @@ def funix_export(
     examples: Optional[Dict[Tuple[str] | str, List[Any] | List[List[Any]]]] = {},
     labels: Optional[Dict[Tuple[str] | str, str]] = {},
     input_layout: Optional[List[List[Dict[str, str]]]] = [],
-    if_then: Optional[List[Dict[str, List[str] | Dict[str, Any]]]] = [],
+    conditional_visible: Optional[List[Dict[str, List[str] | Dict[str, Any]]]] = [],
     argument_config: Optional[Dict[str, Dict[str, Any]]] = {}
 ):
     global __parsed_themes
@@ -569,7 +569,7 @@ def funix_export(
 
             all_of = []
 
-            for if_then_item in if_then:
+            for conditional_visible_item in conditional_visible:
                 config = {
                     "if": {
                         "properties": {}
@@ -579,8 +579,8 @@ def funix_export(
                     },
                     "required": []
                 }
-                if_items = if_then_item["if"]
-                then_items = if_then_item["then"]
+                if_items = conditional_visible_item["if"]
+                then_items = conditional_visible_item["then"]
                 for if_item in if_items.keys():
                     config["if"]["properties"][if_item] = {
                         "const": if_items[if_item]
