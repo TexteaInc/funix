@@ -326,7 +326,7 @@ def funix_export(
     theme: Optional[str] = "",
     return_type: Literal["html", "plot"] = "",
     widgets: Optional[Dict[Tuple[str] | str, List[str] | str]] = {},
-    treat_as: Optional[Dict[str, List[str] | str]] = {},
+    treat_as: Optional[Dict[Tuple[str] | str, str]] = {},
     whitelist: Optional[Dict[Tuple[str] | str, List[Any] | List[List[Any]]]] = {},
     examples: Optional[Dict[Tuple[str] | str, List[Any] | List[List[Any]]]] = {},
     labels: Optional[Dict[Tuple[str] | str, str]] = {},
@@ -413,26 +413,27 @@ def funix_export(
                         raise Exception("Invalid layout item")
                 return_input_layout.append(row_layout)
 
-            for widget_name in widgets:
-                widget_arg_names = widgets[widget_name]
-                if isinstance(widget_arg_names, str):
-                    widget_arg_names = [widget_arg_names]
-                for widget_arg_name in widget_arg_names:
+            for widget_arg_name in widgets:
+                if isinstance(widget_arg_name, str):
                     if widget_arg_name not in decorated_params:
                         decorated_params[widget_arg_name] = {}
-                    if isinstance(widget_name, str):
-                        decorated_params[widget_arg_name]["widget"] = widget_name
-                    else:
-                        decorated_params[widget_arg_name]["widget"] = list(widget_name)
+                    decorated_params[widget_arg_name]["widget"] = widgets[widget_arg_name]
+                else:
+                    for widget_arg_name_item in widget_arg_name:
+                        if widget_arg_name_item not in decorated_params:
+                            decorated_params[widget_arg_name_item] = {}
+                        decorated_params[widget_arg_name_item]["widget"] = widgets[widget_arg_name]
 
-            for treat_as_name in treat_as:
-                treat_as_arg_names = treat_as[treat_as_name]
-                if isinstance(treat_as_arg_names, str):
-                    treat_as_arg_names = [treat_as_arg_names]
-                for treat_as_arg_name in treat_as_arg_names:
+            for treat_as_arg_name in treat_as:
+                if isinstance(treat_as_arg_name, str):
                     if treat_as_arg_name not in decorated_params:
                         decorated_params[treat_as_arg_name] = {}
-                    decorated_params[treat_as_arg_name]["treat_as"] = treat_as_name
+                    decorated_params[treat_as_arg_name]["treat_as"] = treat_as[treat_as_arg_name]
+                else:
+                    for treat_as_arg_name_item in treat_as_arg_name:
+                        if treat_as_arg_name_item not in decorated_params:
+                            decorated_params[treat_as_arg_name_item] = {}
+                        decorated_params[treat_as_arg_name_item]["treat_as"] = treat_as[treat_as_arg_name]
 
             for example_arg_name in examples:
                 if isinstance(example_arg_name, str):

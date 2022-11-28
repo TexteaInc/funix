@@ -6,10 +6,10 @@ from funix.decorator import funix_export, funix_yaml_export
 
 @funix_export(
     widgets={
-        "switch": ["arg1"]
+        "arg1": "switch"
     },
     treat_as={
-        "column": ["arg2"],
+        "arg2": "column"
     },
     whitelist={
         "arg2": ["a", "b", "c"]
@@ -33,7 +33,7 @@ def elegant(arg1: bool, arg2: str) -> dict:
         "condition": ["Heating", "High Temperature", "Electrolysis"]
     },
     widgets={
-        "switch": ["extra"]
+        "extra": "switch"
     }
 )
 def chemist(
@@ -55,8 +55,8 @@ randomNumber = (random.randint(0, 100) + random.randint(0, 100)) / 2
         "show": "Show me the number 😭"
     },
     widgets={
-        "switch": ["show"],
-        "slider[0, 100]": ["input1", "input2"]
+        "show": "switch",
+        ("input1", "input2"): "slider[0, 100]"
     },
     input_layout=[
         [{"markdown": "**Guess Number**"}],
@@ -102,7 +102,7 @@ def argument_config(test: bool) -> str:
 
 @funix_export(
     widgets={
-        ("sheet", "slider"): "arg1"
+        "arg1": ["sheet", "slider"]
     }
 )
 def slider_in_sheet(arg1: List[int]):
@@ -124,10 +124,10 @@ def greet(test: str, test2: str) -> str:
 @funix_export(
     return_type = "plot",
     widgets = {
-        "sheet": ["year", "period"]
+        ("year", "period"): "sheet"
     },
     treat_as={
-        "column": ["year", "period"]
+        ("year", "period"): "column"
     }
 )
 def plot_test(year: List[int], period: List[float]):
@@ -136,7 +136,7 @@ def plot_test(year: List[int], period: List[float]):
 
 @funix_export(
     widgets = {
-        "switch": ["more_config"]
+        "more_config": "switch"
     },
     conditional_visible = [
         {
@@ -159,8 +159,7 @@ def if_then(
 labels:
     arg1: isGood
 widgets:
-    switch:
-    - arg1
+    arg1: switch
 """)
 def yaml_export(arg1: bool = False) -> str:
     return {
