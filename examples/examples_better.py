@@ -131,8 +131,9 @@ def greet(test: str, test2: str) -> str:
     }
 )
 def plot_test(year: List[int], period: List[float]):
+    fig = plt.figure()
     plt.plot(year, period)
-    return plt
+    return fig
 
 @funix_export(
     widgets = {

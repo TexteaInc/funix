@@ -635,8 +635,7 @@ def funix_export(
                     def wrapped_function(**wrapped_function_kwargs):
                         try:
                             if return_type == "plot":
-                                fig = plt.figure()
-                                function(**wrapped_function_kwargs)
+                                fig = function(**wrapped_function_kwargs)
                                 fig_dict = mpld3.fig_to_dict(fig)
                                 fig_dict["width"] = 560
                                 return fig_dict
