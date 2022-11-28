@@ -122,7 +122,7 @@ def greet(test: str, test2: str) -> str:
     return f"{test} {test2}"
 
 @funix_export(
-    returnPlot = True,
+    return_type = "plot",
     widgets = {
         "sheet": ["year", "period"]
     },

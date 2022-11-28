@@ -75,15 +75,10 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
 
   type ResponseViewProps = {
     response: string | null;
-    isHTML: boolean;
-    isPlot: boolean;
+    parser: "plot" | "html" | "";
   };
 
-  const ResponseView: React.FC<ResponseViewProps> = ({
-    response,
-    isHTML,
-    isPlot,
-  }) => {
+  const ResponseView: React.FC<ResponseViewProps> = ({ response, parser }) => {
     if (response == null) {
       return (
         <Alert severity="info">
@@ -91,7 +86,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
         </Alert>
       );
     } else {
-      if (isPlot) {
+      if (parser === "plot") {
         useLayoutEffect(() => {
           if (document.querySelector("#plot")?.innerHTML == "") {
             const scriptElement = document.createElement("script");
@@ -101,7 +96,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
         }, []);
         return <div id="plot" />;
       }
-      if (isHTML) {
+      if (parser === "html") {
         return <div dangerouslySetInnerHTML={{ __html: response }} />;
       }
       try {
@@ -283,8 +278,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
                     <Typography variant="h5">Response</Typography>
                     <ResponseView
                       response={response}
-                      isHTML={functionDetail.returnHTML}
-                      isPlot={functionDetail.returnPlot}
+                      parser={functionDetail.parse_type}
                     />
                   </Stack>
                 </CardContent>

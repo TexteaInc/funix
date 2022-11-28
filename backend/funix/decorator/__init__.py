@@ -324,8 +324,7 @@ def funix_export(
     description: Optional[str] = "",
     destination: Literal["column", "row", "sheet", None] = None,
     theme: Optional[str] = "",
-    returnHTML: Optional[bool] = False,
-    returnPlot: Optional[bool] = False,
+    return_type: Literal["html", "plot"] = "",
     widgets: Optional[Dict[Tuple[str] | str, List[str] | str]] = {},
     treat_as: Optional[Dict[str, List[str] | str]] = {},
     whitelist: Optional[Dict[Tuple[str] | str, List[Any] | List[List[Any]]]] = {},
@@ -361,7 +360,8 @@ def funix_export(
 
             __decorated_functions_list.append({
                 "name": function_name,
-                "path": endpoint
+                "path": endpoint,
+                "isHTML": return_type == "html",
             })
 
             function_signature = inspect.signature(function)
@@ -603,8 +603,7 @@ def funix_export(
                 "name": function_name,
                 "params": decorated_params,
                 "theme": parsed_theme[4],
-                "returnHTML": returnHTML,
-                "returnPlot": returnPlot,
+                "parse_type": return_type,
                 "return_type": return_type_parsed,
                 "description": description,
                 "schema": {
@@ -634,7 +633,7 @@ def funix_export(
                     @wraps(function)
                     def wrapped_function(**wrapped_function_kwargs):
                         try:
-                            if returnPlot:
+                            if return_type == "plot":
                                 fig = plt.figure()
                                 function(**wrapped_function_kwargs)
                                 fig_dict = mpld3.fig_to_dict(fig)

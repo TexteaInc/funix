@@ -31,6 +31,10 @@ export type FunctionPreview = {
    * Unique path that won't make conflict
    */
   path: string;
+  /**
+   * Result is HTML format
+   */
+  isHTML: boolean;
 };
 
 export type GetListResponse = {
@@ -86,13 +90,9 @@ export type FunctionDetail = {
    */
   theme: Record<string, any>;
   /**
-   * Return HTML
+   * For return result parser
    */
-  returnHTML: boolean;
-  /**
-   * Return plot
-   */
-  returnPlot: boolean;
+  parse_type: "plot" | "html" | "";
 };
 
 export async function getParam(
