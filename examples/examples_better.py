@@ -1,10 +1,10 @@
 import random
 from typing import List
 import matplotlib.pyplot as plt
-from funix.decorator import funix_export, funix_yaml_export
+from funix.decorator import funix, funix_yaml
 
 
-@funix_export(
+@funix(
     widgets={
         "arg1": "switch"
     },
@@ -21,7 +21,7 @@ def elegant(arg1: bool, arg2: str) -> dict:
         "arg2": arg2
     }
 
-@funix_export(
+@funix(
     labels={
         "input1": "Reactant 1",
         "input2": "Reactant 2",
@@ -47,7 +47,7 @@ def chemist(
 
 randomNumber = (random.randint(0, 100) + random.randint(0, 100)) / 2
 
-@funix_export(
+@funix(
     description="Guess Number: Input two numbers, and the program will calculate the average of them. If the average number is program's guess number, you win! Otherwise, you lose.",
     labels={
         "input1": "Number 1",
@@ -87,7 +87,7 @@ def guess(
             else:
                 return "Smaller"
 
-@funix_export(
+@funix(
     argument_config={
         "test": {
             "treat_as": "config",
@@ -95,12 +95,12 @@ def guess(
         }
     }
 )
-def argument_config(test: bool) -> str:
+def argument_config(test: bool) -> dict:
     return {
         "test": test
     }
 
-@funix_export(
+@funix(
     widgets={
         "arg1": ["sheet", "slider"]
     }
@@ -110,7 +110,7 @@ def slider_in_sheet(arg1: List[int]):
         "arg1": arg1
     }
 
-@funix_export(
+@funix(
     examples={
         ("test", "test2"): [
             ["hello", "hi"],
@@ -121,7 +121,7 @@ def slider_in_sheet(arg1: List[int]):
 def greet(test: str, test2: str) -> str:
     return f"{test} {test2}"
 
-@funix_export(
+@funix(
     return_type = "plot",
     widgets = {
         ("year", "period"): "sheet"
@@ -135,7 +135,7 @@ def plot_test(year: List[int], period: List[float]):
     plt.plot(year, period)
     return fig
 
-@funix_export(
+@funix(
     widgets = {
         "more_config": "switch"
     },
@@ -156,13 +156,13 @@ def if_then(
         "arg2": arg2
     }
 
-@funix_yaml_export("""
+@funix_yaml("""
 labels:
     arg1: isGood
 widgets:
     arg1: switch
 """)
-def yaml_export(arg1: bool = False) -> str:
+def yaml_export(arg1: bool = False) -> dict:
     return {
         "arg1": arg1
     }

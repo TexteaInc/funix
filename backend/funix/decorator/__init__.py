@@ -11,9 +11,8 @@ from funix.app import app
 from functools import wraps
 from uuid import uuid4 as uuid
 from urllib.parse import urlparse
-import matplotlib.pyplot as plt, mpld3
+import matplotlib.pyplot as mpld3
 from typing import Any, Dict, List, Literal, Optional, Tuple
-
 
 __supported_basic_types_dict = {
     "int": "integer",
@@ -38,11 +37,12 @@ __theme_style_sugar_dict = {
     }
 }
 
+
 def dict_replace(original_dict: dict, original: str, new: any):
     if isinstance(original_dict, dict):
         return {
             key: dict_replace(value, original, new)
-                for key, value in original_dict.items()
+            for key, value in original_dict.items()
         }
 
     # str
@@ -51,9 +51,11 @@ def dict_replace(original_dict: dict, original: str, new: any):
     else:
         return original_dict
 
+
 def get_full_style_from_sugar(key: str, value: any):
     sugar_info = __theme_style_sugar_dict[key]
     return dict_replace(sugar_info, "${value}", value)
+
 
 def enable_wrapper():
     global __wrapper_enabled
@@ -120,7 +122,7 @@ def get_mui_theme(theme, colors):
                                 "borderColor": true_color
                             },
                             "&&:hover fieldset": {
-                                "border": "2px solid", # Hmmm
+                                "border": "2px solid",  # Hmmm
                                 "borderColor": true_color
                             }
                         }
@@ -134,8 +136,8 @@ def get_mui_theme(theme, colors):
             else:
                 mui_theme["components"][widget_mui_name]["defaultProps"][prop_name] = theme[widget_name][prop_name]
 
-
     return mui_theme
+
 
 def parse_theme(theme):
     type_names = []
@@ -168,6 +170,7 @@ def parse_theme(theme):
             custom_palette[color_name] = theme["colors"][color_name]
     mui_theme = get_mui_theme(widget_style, custom_palette)
     return type_names, type_widget_dict, widget_style, custom_palette, mui_theme
+
 
 def get_type_dict(annotation):
     if isinstance(annotation, object):  # is class
@@ -304,11 +307,11 @@ def get_theme(path: str):
     else:
         if path in __themes:
             return __themes[path]
-        with open(path, "r", encoding = "utf-8") as f:
+        with open(path, "r", encoding="utf-8") as f:
             return yaml.load(f.read(), yaml.FullLoader)
 
 
-def set_global_theme(path: str) :
+def set_global_theme(path: str):
     global __default_theme, __parsed_themes
     __default_theme = get_theme(path)
     __parsed_themes["__default"] = parse_theme(__default_theme)
@@ -319,22 +322,23 @@ def import_theme(path: str, name: str):
     __themes[name] = get_theme(path)
 
 
-def funix_export(
-    path: Optional[str] = None,
-    description: Optional[str] = "",
-    destination: Literal["column", "row", "sheet", None] = None,
-    theme: Optional[str] = "",
-    return_type: Literal["html", "plot"] = "",
-    widgets: Optional[Dict[Tuple[str] | str, List[str] | str]] = {},
-    treat_as: Optional[Dict[Tuple[str] | str, str]] = {},
-    whitelist: Optional[Dict[Tuple[str] | str, List[Any] | List[List[Any]]]] = {},
-    examples: Optional[Dict[Tuple[str] | str, List[Any] | List[List[Any]]]] = {},
-    labels: Optional[Dict[Tuple[str] | str, str]] = {},
-    input_layout: Optional[List[List[Dict[str, str]]]] = [],
-    conditional_visible: Optional[List[Dict[str, List[str] | Dict[str, Any]]]] = [],
-    argument_config: Optional[Dict[str, Dict[str, Any]]] = {}
+def funix(
+        path: Optional[str] = None,
+        description: Optional[str] = "",
+        destination: Literal["column", "row", "sheet", None] = None,
+        theme: Optional[str] = "",
+        return_type: Literal["html", "plot"] = "",
+        widgets: Optional[Dict[Tuple[str] | str, List[str] | str]] = {},
+        treat_as: Optional[Dict[Tuple[str] | str, str]] = {},
+        whitelist: Optional[Dict[Tuple[str] | str, List[Any] | List[List[Any]]]] = {},
+        examples: Optional[Dict[Tuple[str] | str, List[Any] | List[List[Any]]]] = {},
+        labels: Optional[Dict[Tuple[str] | str, str]] = {},
+        input_layout: Optional[List[List[Dict[str, str]]]] = [],
+        conditional_visible: Optional[List[Dict[str, List[str] | Dict[str, Any]]]] = [],
+        argument_config: Optional[Dict[str, Dict[str, Any]]] = {}
 ):
     global __parsed_themes
+
     def decorator(function: callable):
         if __wrapper_enabled:
             id: str = str(uuid())
@@ -555,7 +559,8 @@ def funix_export(
                 if "label" in decorated_params[function_arg_name].keys():
                     json_schema_props[function_arg_name]["title"] = decorated_params[function_arg_name]["label"]
                 if "customLayout" in decorated_params[function_arg_name].keys():
-                    json_schema_props[function_arg_name]["customLayout"] = decorated_params[function_arg_name]["customLayout"]
+                    json_schema_props[function_arg_name]["customLayout"] = decorated_params[function_arg_name][
+                        "customLayout"]
                 else:
                     json_schema_props[function_arg_name]["customLayout"] = False
 
@@ -591,7 +596,6 @@ def funix_export(
                     config["required"].append(then_item)
                     json_schema_props.pop(then_item)
                 all_of.append(config)
-
 
             keep_ordered_list = list(function_signature.parameters.keys())
             keep_ordered_dict = {}
@@ -681,10 +685,12 @@ def funix_export(
 
     return decorator
 
-def funix_yaml_export(config: Optional[str] = ""):
+
+def funix_yaml(config: Optional[str] = ""):
     def decorator(function: callable):
         if config == "":
-            return funix_export()(function)
-        yamlConfig = yaml.load(config, Loader = yaml.FullLoader)
-        return funix_export(**yamlConfig)(function)
+            return funix()(function)
+        yamlConfig = yaml.load(config, Loader=yaml.FullLoader)
+        return funix(**yamlConfig)(function)
+
     return decorator

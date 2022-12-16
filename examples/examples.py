@@ -1,10 +1,10 @@
 import tel_search
 import vector_strip
-from funix.decorator import funix_export
+from funix.decorator import funix
 from typing import List, TypedDict, Literal, Dict
 
 
-@funix_export()
+@funix()
 def hello_world(your_name: str) -> str:
     return f"Welcome to Funix, {your_name}!"
 
@@ -13,7 +13,7 @@ class telomere_check_return(TypedDict):
     is_telomere: List[bool]
 
 
-@funix_export(
+@funix(
     path = "bioinfo_telomere_check",
     description = "A telomere is a region of repetitive DNA sequences at the end of a chromosome. "
                 "Find the belongings of a repeat unit.",
@@ -47,7 +47,7 @@ class remove_3_prime_adapter_return(TypedDict):
     # removal_result_code: List[int]
 
 
-@funix_export(
+@funix(
     path = "bioinfo_remove_3_prime_adapter",
     description = "Remove 3' prime adapter from the end of an RNA-seq",
     argument_config = {
@@ -95,7 +95,7 @@ class calc_return(TypedDict):
 
 
 # "whitelist" field is deprecated
-@funix_export(
+@funix(
     path="calc",
     description="perform some basic math calculation",
     argument_config={
@@ -120,7 +120,7 @@ def calc(a: List[int], b: List[int], op: str) -> calc_return:
         raise "invalid parameter op"
 
 
-@funix_export(
+@funix(
     path="switch_and_checkbox",
     description="just switch and checkbox",
     argument_config={
@@ -143,7 +143,7 @@ def switch_and_checkbox(a: bool, b: bool):
     }
 
 
-@funix_export(
+@funix(
     path="slider_test",
     description="all you need is slider!",
     argument_config={
@@ -164,7 +164,7 @@ def slider_test(a: List[int], b: float):
     }
 
 
-@funix_export(
+@funix(
     path="sheet_test",
     description="sweet sheet",
     argument_config={
@@ -185,7 +185,7 @@ def sheet_test(a: List[int], b: List[bool]):
     }
 
 
-@funix_export(
+@funix(
     path="cell_test",
     description="painful",
     argument_config={
@@ -207,7 +207,7 @@ def cell_test(a: int, b: int, isAdd: bool):
     return a + b if isAdd else a - b
 
 
-@funix_export(
+@funix(
     path="markdown_support",
     description="**Markdown** *text* `is` ~~cool~~ right?",
     argument_config={
@@ -223,7 +223,7 @@ def markdown_support(cool: bool):
     }
 
 
-@funix_export(
+@funix(
     path="json_editor",
     description="config only",
     argument_config={
@@ -250,7 +250,7 @@ class Person(TypedDict):
     isAdult: bool
 
 
-@funix_export(
+@funix(
     path="json_editor_better",
     description="list and typed_dict",
     argument_config={
@@ -271,7 +271,7 @@ def json_editor_better(config_typed_dict: Person, config_list: List):
     }
 
 
-@funix_export(
+@funix(
     path="calc_literal",
     description="perform some basic math calculation",
     argument_config={
@@ -290,7 +290,7 @@ def calc_literal(a: List[int], b: List[int], op: Literal["add", "minus"]) -> cal
     return calc(a, b, op)
 
 
-@funix_export(
+@funix(
     path="calc_add",
     description="add two column",
     argument_config={
@@ -308,7 +308,7 @@ def calc_add(a: List[int], b: List[int]) -> calc_return:
     return calc(a, b, "add")
 
 
-@funix_export(
+@funix(
     path="calc_default_add",
     description="operate two columns with default add",
     argument_config={
@@ -327,7 +327,7 @@ def calc_default_add(a: List[int], b: List[int], op: str = "add") -> calc_return
     return calc(a, b, op)
 
 
-@funix_export(
+@funix(
     path="calc_boolean_add",
     description="operate two columns with boolean add",
     argument_config={
@@ -349,7 +349,7 @@ def calc_boolean_add(a: List[int], b: List[int], add: bool) -> calc_return:
         return calc(a, b, "minus")
 
 
-@funix_export(
+@funix(
     description="operate two columns with boolean add with mixed list widgets",
     argument_config={
         "a": {
@@ -371,7 +371,7 @@ def calc_boolean_mixed_add(a: List[int], b: List[int], add: bool = True) -> calc
         return calc(a, b, "minus")
 
 
-@funix_export(
+@funix(
     description="add two column with example and whitelist",
     argument_config={
         "a": {
@@ -395,7 +395,7 @@ class add_with_sub_return(TypedDict):
     sub: List[int]
 
 
-@funix_export(
+@funix(
     path="owo",
     argument_config={
         "a": {
@@ -414,7 +414,7 @@ def add_with_sub(a: List[int], b: List[int]) -> add_with_sub_return:
 
 
 # only supported by Funix
-@funix_export(
+@funix(
     path="nested-array",
     argument_config={
         "a": {
@@ -430,7 +430,7 @@ def nested_array(a: List[List[int]]):
 
 # transform test
 # just create a new sheet of two columns of integers, regardless of the input
-@funix_export(
+@funix(
     destination="sheet"
 )
 def transform_test(a: List[int]):
@@ -438,6 +438,6 @@ def transform_test(a: List[int]):
             "column2": [4, 5, 6]}
 
 
-@funix_export()
+@funix()
 def empty():
     pass
