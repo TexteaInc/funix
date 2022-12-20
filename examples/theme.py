@@ -1,12 +1,12 @@
-from funix.decorator import import_theme, set_global_theme, funix_export
+from funix.decorator import import_theme, set_global_theme, funix
 
 import_theme("./sunset_v2.yaml", "sunset")
 set_global_theme("sunset")
 
 
-@funix_export(
+@funix(
     path="theme_test",
-    description="Sunset: [config](https://yazawazi.moe/pdf_themes/sunset_v2.yaml)"
+    description="Sunset, the theme file is in the examples folder",
 )
 def theme_test(int_input: int, float_input: float, bool_input: bool, str_input: str):
     return {
