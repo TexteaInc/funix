@@ -21,7 +21,6 @@ __supported_basic_types_dict = {
     "bool": "boolean"
 }
 __supported_basic_types = list(__supported_basic_types_dict.keys())
-__supported_types = __supported_basic_types + ["dict", "list"]
 __decorated_functions_list = list()
 __wrapper_enabled = False
 __default_theme = {}
@@ -328,12 +327,13 @@ def funix(
         destination: Literal["column", "row", "sheet", None] = None,
         theme: Optional[str] = "",
         return_type: Literal["html", "plot"] = "",
-        widgets: Optional[Dict[Tuple[str] | str, List[str] | str]] = {},
-        treat_as: Optional[Dict[Tuple[str] | str, str]] = {},
-        whitelist: Optional[Dict[Tuple[str] | str, List[Any] | List[List[Any]]]] = {},
-        examples: Optional[Dict[Tuple[str] | str, List[Any] | List[List[Any]]]] = {},
-        labels: Optional[Dict[Tuple[str] | str, str]] = {},
+        widgets: Optional[Dict[Tuple | str, List[str] | str]] = {},
+        treat_as: Optional[Dict[Tuple | str, str]] = {},
+        whitelist: Optional[Dict[Tuple | str, List[Any] | List[List[Any]]]] = {},
+        examples: Optional[Dict[Tuple | str, List[Any] | List[List[Any]]]] = {},
+        labels: Optional[Dict[Tuple | str, str]] = {},
         input_layout: Optional[List[List[Dict[str, str]]]] = [],
+        output_layout: Optional[List[List[Dict[str, str]]]] = [],
         conditional_visible: Optional[List[Dict[str, List[str] | Dict[str, Any]]]] = [],
         argument_config: Optional[Dict[str, Dict[str, Any]]] = {}
 ):
@@ -680,7 +680,9 @@ def funix(
 
             post_wrapper = app.post("/call/{}".format(id))
             post_wrapper(wrapper)
-            wrapper._decorator_name_ = "funix_export"
+            post_wrapper = app.post("/call/{}".format(endpoint))
+            post_wrapper(wrapper)
+            wrapper._decorator_name_ = "funix"
         return function
 
     return decorator
