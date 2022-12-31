@@ -28,7 +28,7 @@ Then the command below will convert your functions to backend APIs:
 python3 -m funix functions
 ```
 
-By default, the server runs at `localhost:4010`. If you want to modify, you can use the `--host` option and `--port` option.
+By default, the server runs at `localhost:8080`. If you want to modify, you can use the `--host` option and `--port` option.
 
 ```shell
 cd examples
@@ -47,7 +47,7 @@ python3 -m funix examples
 We also provide a preview at the frontend. It will visualize all functions converted into web forms.
 
 A (delayed) deployed frontend is at pdf.textea.io
-This frontend assumes that the backend server runs at `localhost:4010`.
+This frontend assumes that the backend server runs at `localhost:8080`.
 
 If you prefer to set up the frontend preview manually, please follow the instruction below.
 
@@ -57,7 +57,7 @@ Then,
 
 ```bash
 cd frontend
-yarn install 
+yarn install
 yarn start
 ```
 
