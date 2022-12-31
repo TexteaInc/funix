@@ -57,8 +57,8 @@ Then,
 
 ```bash
 cd frontend
-npm install react-scripts
+yarn install 
 yarn start
 ```
 
-Finally you can visit `http://localhost:3000`
+Finally you can visit `http://localhost:3000` (default is 3000 but if it is occupied, you will be prompted to open a different one)
