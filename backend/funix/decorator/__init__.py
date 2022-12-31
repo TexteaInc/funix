@@ -2,6 +2,7 @@ import re
 import json
 import copy
 import yaml
+import json5
 import flask
 import random
 import inspect
@@ -35,6 +36,17 @@ __theme_style_sugar_dict = {
         }
     }
 }
+
+DestinationType = Literal["column", "row", "sheet", None]
+ReturnType = Literal["html", "plot", ""]
+WidgetsType = Optional[Dict[Tuple | str, List[str] | str]]
+TreatAsType = Optional[Dict[Tuple | str, str]]
+WhitelistType = Optional[Dict[Tuple | str, List[Any] | List[List[Any]]]]
+ExamplesType = Optional[Dict[Tuple | str, List[Any] | List[List[Any]]]]
+LabelsType = Optional[Dict[Tuple | str, str]]
+LayoutType = Optional[List[List[Dict[str, str]]]]
+ConditionalVisibleType = Optional[List[Dict[str, List[str] | Dict[str, Any]]]]
+ArgumentConfigType = Optional[Dict[str, Dict[str, Any]]]
 
 
 def dict_replace(original_dict: dict, original: str, new: any):
@@ -324,18 +336,17 @@ def import_theme(path: str, name: str):
 def funix(
         path: Optional[str] = None,
         description: Optional[str] = "",
-        destination: Literal["column", "row", "sheet", None] = None,
+        destination: DestinationType = None,
         theme: Optional[str] = "",
-        return_type: Literal["html", "plot"] = "",
-        widgets: Optional[Dict[Tuple | str, List[str] | str]] = {},
-        treat_as: Optional[Dict[Tuple | str, str]] = {},
-        whitelist: Optional[Dict[Tuple | str, List[Any] | List[List[Any]]]] = {},
-        examples: Optional[Dict[Tuple | str, List[Any] | List[List[Any]]]] = {},
-        labels: Optional[Dict[Tuple | str, str]] = {},
-        input_layout: Optional[List[List[Dict[str, str]]]] = [],
-        output_layout: Optional[List[List[Dict[str, str]]]] = [],
-        conditional_visible: Optional[List[Dict[str, List[str] | Dict[str, Any]]]] = [],
-        argument_config: Optional[Dict[str, Dict[str, Any]]] = {}
+        return_type: ReturnType = "",
+        widgets: WidgetsType = {},
+        treat_as: TreatAsType = {},
+        whitelist: WhitelistType = {},
+        examples: ExamplesType = {},
+        argument_labels: LabelsType = {},
+        input_layout: LayoutType = [],
+        conditional_visible: ConditionalVisibleType = [],
+        argument_config: ArgumentConfigType = {}
 ):
     global __parsed_themes
 
@@ -469,17 +480,17 @@ def funix(
                         else:
                             raise Exception(f"{function_name}: Cannot use whitelist and example together")
 
-            for label_arg_name in labels:
+            for label_arg_name in argument_labels:
                 if isinstance(label_arg_name, str):
                     if label_arg_name not in decorated_params:
                         decorated_params[label_arg_name] = {}
-                    decorated_params[label_arg_name]["label"] = labels[label_arg_name]
+                    decorated_params[label_arg_name]["label"] = argument_labels[label_arg_name]
                 else:
                     label_arg_names = label_arg_name
                     for arg_name in label_arg_names:
                         if arg_name not in decorated_params:
                             decorated_params[arg_name] = {}
-                        decorated_params[arg_name]["label"] = labels[label_arg_name]
+                        decorated_params[arg_name]["label"] = argument_labels[label_arg_name]
 
             input_attr = ""
             for decorator_arg_name, decorator_arg_dict in argument_config.items():
@@ -565,10 +576,6 @@ def funix(
                     json_schema_props[function_arg_name]["customLayout"] = False
 
                 if decorated_params[function_arg_name]["treat_as"] == "cell":
-                    if function_arg_type_dict["type"] in __supported_basic_types_dict:
-                        cell_type = __supported_basic_types_dict[function_arg_type_dict["type"]]
-                    else:
-                        cell_type = "object"
                     json_schema_props[function_arg_name]["items"] = \
                         get_type_widget_prop(function_arg_type_dict["type"], 0, widget[1:], {})
                     json_schema_props[function_arg_name]["type"] = "array"
@@ -687,6 +694,14 @@ def funix(
 
     return decorator
 
+def funix_json(config: Optional[str] = ""):
+    def decorator(function: callable):
+        if config == "":
+            return funix()(function)
+        jsonConfig = json5.loads(config)
+        return funix(**jsonConfig)(function)
+
+    return decorator
 
 def funix_yaml(config: Optional[str] = ""):
     def decorator(function: callable):

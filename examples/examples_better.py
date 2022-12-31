@@ -1,7 +1,7 @@
 import random
 from typing import List
 import matplotlib.pyplot as plt
-from funix.decorator import funix, funix_yaml
+from funix.decorator import funix, funix_yaml, funix_json
 
 
 @funix(
@@ -22,7 +22,7 @@ def elegant(arg1: bool, arg2: str) -> dict:
     }
 
 @funix(
-    labels={
+    argument_labels={
         "input1": "Reactant 1",
         "input2": "Reactant 2",
         "output": "Resultant",
@@ -49,7 +49,7 @@ randomNumber = (random.randint(0, 100) + random.randint(0, 100)) / 2
 
 @funix(
     description="Guess Number: Input two numbers, and the program will calculate the average of them. If the average number is program's guess number, you win! Otherwise, you lose.",
-    labels={
+    argument_labels={
         "input1": "Number 1",
         "input2": "Number 2",
         "show": "Show me the number 😭"
@@ -157,12 +157,27 @@ def if_then(
     }
 
 @funix_yaml("""
-labels:
+argument_labels:
     arg1: isGood
 widgets:
     arg1: switch
 """)
 def yaml_export(arg1: bool = False) -> dict:
+    return {
+        "arg1": arg1
+    }
+
+@funix_json("""
+{
+    "argument_labels": {
+        "arg1": "isGood"
+    },
+    "widgets": {
+        "arg1": "switch"
+    }
+}
+""")
+def json_export(arg1: bool = False) -> dict:
     return {
         "arg1": arg1
     }

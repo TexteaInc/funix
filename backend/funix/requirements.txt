@@ -5,3 +5,4 @@ pyyaml>5.1
 requests
 matplotlib>=3.6.1
 mpld3>=0.5.8
+json5>=0.9.10

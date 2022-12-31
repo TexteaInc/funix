@@ -1,6 +1,6 @@
 [project]
 name = "funix"
-version = "0.2.0"
+version = "0.2.1"
 requires-python = ">=3.8"
 dependencies = [
   "flask",
@@ -9,7 +9,8 @@ dependencies = [
   "pyyaml>5.1",
   "requests",
   "matplotlib>=3.6.1",
-  "mpld3>=0.5.8"
+  "mpld3>=0.5.8",
+  "json5>=0.9.10"
 ]
 
 [tool.setuptools.packages.find]
