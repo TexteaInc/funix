@@ -5,6 +5,10 @@ import funix.decorator as decorator
 from funix.app import app
 
 
+funix = decorator.funix
+funix_yaml = decorator.funix_yaml
+funix_json = decorator.funix_json
+
 def __prep(main_class: typing.Optional[str] = "functions"):
     decorator.enable_wrapper()
     importlib.import_module(main_class)

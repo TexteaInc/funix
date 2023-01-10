@@ -1,7 +1,7 @@
 import random
 from typing import List
 import matplotlib.pyplot as plt
-from funix.decorator import funix, funix_yaml, funix_json
+from funix import funix, funix_yaml, funix_json
 
 
 @funix(
