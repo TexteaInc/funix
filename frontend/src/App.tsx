@@ -1,76 +1,100 @@
-import React, { useState } from "react";
 import {
   Alert,
+  AlertTitle,
+  AppBar,
   Button,
   Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  IconButton,
   Stack,
   TextField,
+  Toolbar,
   Typography,
 } from "@mui/material";
 import FunixFunctionList from "./components/FunixFunctionList";
 import FunixFunctionSelected from "./components/FunixFunctionSelected";
-import { Navigate, useLocation } from "react-router-dom";
-import { Path } from "history";
+import { useLocation } from "react-router-dom";
+import { Settings } from "@mui/icons-material";
+import { useState } from "react";
 
 const App = () => {
   const { search } = useLocation();
   const query = new URLSearchParams(search);
   const backendStr = query.get("backend");
-  if (backendStr == null) {
-    const [backendStrInput, setBackendStrInput] = useState<string>(
-      "http://localhost:8080"
-    );
-    const [toRedirect, setToRedirect] = useState<boolean>(false);
-    if (!toRedirect) {
-      return (
-        <Container sx={{ paddingY: 2 }}>
-          <Typography variant="h4">Funix</Typography>
-          <TextField
-            label="Backend URL"
-            value={backendStrInput}
-            onChange={(e) => setBackendStrInput(e.currentTarget.value)}
-            fullWidth
-            sx={{ mt: 2 }}
-          />
-          <Button
-            variant="contained"
-            onClick={() => setToRedirect(true)}
-            sx={{ mt: 1 }}
-          >
-            Submit
-          </Button>
-        </Container>
-      );
-    } else {
-      const newParams = new URLSearchParams({
-        backend: backendStrInput,
-      });
-      const toPath: Partial<Path> = {
-        search: newParams.toString(),
-      };
-      return <Navigate to={toPath} replace={false} />;
-    }
-  } else {
-    let backend: URL | undefined = undefined;
-    try {
-      backend = new URL(backendStr);
-    } catch (e: any) {
-      return (
-        <Container sx={{ paddingY: 2 }}>
-          <Alert severity="error">Unable to encode URL</Alert>
-        </Container>
-      );
-    }
+  const funixBackend: string | undefined = process.env.FUNIX_BACKEND;
+  const [backend, setBackend] = useState(backendStr || funixBackend);
+  const [tempBackend, setTempBackend] = useState(backend);
+  const [open, setOpen] = useState(false);
 
-    return (
+  return (
+    <>
+      <Dialog open={open} onClose={() => setOpen(false)}>
+        <DialogTitle>Settings</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Please enter the URL of the backend server.
+          </DialogContentText>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Backend Server URL"
+            fullWidth
+            variant="standard"
+            onChange={(e) => setTempBackend(e.target.value)}
+            value={tempBackend}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setTempBackend(backend);
+              setOpen(false);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => {
+              setBackend(tempBackend);
+              setOpen(false);
+            }}
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <AppBar sx={{ position: "relative" }}>
+        <Toolbar>
+          <Typography variant="h6" component="div" sx={{ ml: 2, flex: 1 }}>
+            Funix
+          </Typography>
+          <IconButton edge="end" color="inherit" onClick={() => setOpen(true)}>
+            <Settings />
+          </IconButton>
+        </Toolbar>
+      </AppBar>
       <Container sx={{ paddingY: 2 }}>
-        <Stack spacing={2}>
-          <FunixFunctionList backend={backend} />
-          <FunixFunctionSelected backend={backend} />
-        </Stack>
+        {backend ? (
+          <Stack spacing={2}>
+            <FunixFunctionList backend={new URL(backend)} />
+            <FunixFunctionSelected backend={new URL(backend)} />
+          </Stack>
+        ) : (
+          <Alert severity="error">
+            <AlertTitle>No backend server</AlertTitle>
+            <Stack direction="row" alignItems="center" gap={1}>
+              Please use <code>python -m funix [module]</code> to start frontend
+              server or click <Settings /> to set backend server.
+            </Stack>
+          </Alert>
+        )}
       </Container>
-    );
-  }
+    </>
+  );
 };
 
 export default App;

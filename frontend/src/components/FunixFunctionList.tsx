@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -18,9 +18,15 @@ export type FunctionListProps = {
 
 const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
   const [, setStore] = useAtom(storeAtom);
-  const onceRef = useRef(true);
   const [state, setState] = useState<FunctionPreview[]>([]);
+  const [radioGroupValue, setRadioGroupValue] = useState<string | null>(null);
+
   useEffect(() => {
+    setStore((store) => ({
+      ...store,
+      selectedFunction: null,
+    }));
+    setRadioGroupValue(null);
     async function queryData() {
       const { list } = await getList(new URL("/list", backend));
       setState(list);
@@ -29,11 +35,8 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
         setRadioGroupValue(list[0].name);
       }
     }
-    if (onceRef.current) {
-      queryData().then();
-      onceRef.current = false;
-    }
-  }, []);
+    queryData().then();
+  }, [backend]);
 
   const handleFetchFunctionDetail = useCallback(
     (functionPreview: FunctionPreview) => {
@@ -44,8 +47,6 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
     },
     []
   );
-
-  const [radioGroupValue, setRadioGroupValue] = useState<string | null>(null);
 
   const handleRadioGroupChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const functionName: string | null = e.currentTarget.value;
