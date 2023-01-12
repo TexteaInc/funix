@@ -17,18 +17,29 @@ import {
 } from "@mui/material";
 import FunixFunctionList from "./components/FunixFunctionList";
 import FunixFunctionSelected from "./components/FunixFunctionSelected";
-import { useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Settings } from "@mui/icons-material";
 import { useState } from "react";
 
 const App = () => {
   const { search } = useLocation();
+  const navigate = useNavigate();
   const query = new URLSearchParams(search);
   const backendStr = query.get("backend");
   const funixBackend: string | undefined = process.env.REACT_APP_FUNIX_BACKEND;
   const [backend, setBackend] = useState(backendStr || funixBackend);
   const [tempBackend, setTempBackend] = useState(backend);
   const [open, setOpen] = useState(false);
+
+  const checkURL = (url: string | undefined): boolean => {
+    if (!url) return false;
+    try {
+      new URL(url);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
 
   return (
     <>
@@ -41,11 +52,12 @@ const App = () => {
           <TextField
             autoFocus
             margin="dense"
-            label="Backend Server URL"
+            label="Backend URL"
             fullWidth
             variant="standard"
             onChange={(e) => setTempBackend(e.target.value)}
             value={tempBackend}
+            error={!checkURL(tempBackend)}
           />
         </DialogContent>
         <DialogActions>
@@ -59,9 +71,11 @@ const App = () => {
           </Button>
           <Button
             onClick={() => {
+              navigate("/");
               setBackend(tempBackend);
               setOpen(false);
             }}
+            disabled={!checkURL(tempBackend)}
           >
             Confirm
           </Button>

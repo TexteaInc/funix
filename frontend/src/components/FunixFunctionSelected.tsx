@@ -10,6 +10,7 @@ import {
 import React, { Suspense } from "react";
 import { useAtom } from "jotai";
 import FunixFunction from "./FunixFunction";
+import { useLocation } from "react-router-dom";
 
 export type FunctionSelectedProps = {
   backend: URL;
@@ -19,9 +20,18 @@ const FunixFunctionSelected: React.FC<FunctionSelectedProps> = ({
   backend,
 }) => {
   const [{ selectedFunction }] = useAtom(storeAtom);
+  const { pathname } = useLocation();
+
+  const pathParams = pathname.split("/").filter((value) => value !== "");
+
+  if (pathParams.length !== 0 && !selectedFunction) {
+    return <Alert severity="warning">Your function is not found.</Alert>;
+  }
+
   if (!selectedFunction) {
     return <Alert severity="info">Select a function to start</Alert>;
   }
+
   const suspenseFallback = (
     <Card>
       <CardContent>
