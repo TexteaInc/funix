@@ -37,7 +37,8 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint -c .eslintrc.js . --ext .ts,.tsx,.js --cache --fix",
-    "lint:ci": "eslint -c .eslintrc.js . --ext .ts,.tsx,.js --cache"
+    "lint:ci": "eslint -c .eslintrc.js . --ext .ts,.tsx,.js --cache",
+    "funix:test": "env REACT_APP_FUNIX_BACKEND=http://127.0.0.1:8080 react-scripts start"
   },
   "eslintConfig": {
     "extends": [

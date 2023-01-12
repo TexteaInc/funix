@@ -25,7 +25,7 @@ const App = () => {
   const { search } = useLocation();
   const query = new URLSearchParams(search);
   const backendStr = query.get("backend");
-  const funixBackend: string | undefined = process.env.FUNIX_BACKEND;
+  const funixBackend: string | undefined = process.env.REACT_APP_FUNIX_BACKEND;
   const [backend, setBackend] = useState(backendStr || funixBackend);
   const [tempBackend, setTempBackend] = useState(backend);
   const [open, setOpen] = useState(false);
