@@ -1,64 +1,81 @@
 # Funix
 
+> Your will be done, on earth as it is in heaven. — Matthew, 6:10
+> 
+> Your code will be done, on the Cloud as it is locally. — Book of Funix, 3:16
+
 [![PyPI version](https://badge.fury.io/py/funix.svg)](https://badge.fury.io/py/funix)
 
-Supported Types: `int`, `float`, `str`, `list`, `dict`, `bool`, `typing.List`, `typing.Dict`, `typing.Optional`, `typing.TypedDict`
+[简体中文](README.zh-CN.md)
+
+Funix can automatically generate front-end and back-end for your Python functions,
+and can be deployed to the cloud. Almost no modification to your original code,
+just add a simple `@funix` decorator to your function.
 
 ## Installation
 
-### Direct from Github
+### From GitHub
 
-```shell
-python3 -m pip install "git+https://github.com/TexteaInc/funix.git"
+You can install via the following command:
+
+```bash
+pip install "git+https://github.com/TexteaInc/funix.git"
 ```
 
-### Mannual and local
+If you want to install from local:
 
-1. Clone the funix repo
-2. Go to the folder of the funix
-3. `python3 -m pip install -e .` (This approach may [not work on Ubuntu 22.04](https://github.com/TexteaInc/funix/issues/23) using Python 3.10) or add the funix path into `PYTHONPATH`.
+1. `git clone https://github.com/TexteaInc/funix`
+2. `cd funix`
+3. `pip install -e .`
+
+### From PyPI
+
+```bash
+pip install funix
+```
 
 ## Usage
 
-Suppose your functions are in `functions.py`.
+```text
+usage: funix [-h] [--host HOST] [--port PORT] [--front-port FRONT_PORT] [--no-frontend] this_class main_class
 
-Then the command below will convert your functions to backend APIs:
+Funix
 
-```shell
-python3 -m funix functions
+positional arguments:
+  this_class            this class
+  main_class            main class to import
+
+options:
+  -h, --help            show this help message and exit
+  --host HOST           host of frontend & backend
+  --port PORT           port of backend
+  --front-port FRONT_PORT
+                        port of frontend
+  --no-frontend         disable frontend
 ```
 
-By default, the server runs at `localhost:8080`. If you want to modify, you can use the `--host` option and `--port` option.
-
-```shell
-cd examples
-python3 -m funix functions --host localhost --port 4010
-```
-
-We placed some examples under `examples/examples.py`. You may go to that folder, convert the functions, and fire up a backend server.
-
-```shell
-cd examples
-python3 -m funix examples
-```
-
-## Frontend previews
-
-We also provide a preview at the frontend. It will visualize all functions converted into web forms.
-
-A (delayed) deployed frontend is at pdf.textea.io
-This frontend assumes that the backend server runs at `localhost:8080`.
-
-If you prefer to set up the frontend preview manually, please follow the instruction below.
-
-First, install `npm` and `yarn` in whatever way you like. Lots of solutions on the Internet.
-
-Then,
+Usually you can use `python -m funix [module]` to start directly.
+There are some simple examples in the `examples` folder to help you understand Funix.
+You can open the example by the following command:
 
 ```bash
-cd frontend
-yarn install
-yarn start
+cd examples
+python -m funix examples
+python -m funix examples_better # Examples V2 😄
 ```
 
-Finally you can visit `http://localhost:3000` (default is 3000 but if it is occupied, you will be prompted to open a different one)
+## Build Frontend
+
+In Funix, we have packaged a frontend that you can use directly,
+and we also have a frontend page that is deployed on the [public](https://pdf.textea.io/).
+If you want to build the frontend yourself, you can do so with the following command:
+
+```
+# Please clone the repository first and enter the repository directory
+cd frontend
+yarn install # Install dependencies
+yarn build # Build frontend server
+yarn funix:build # Build to Funix Python folder
+yarn funix:test # Start Funix frontend server (automatically set backend server to http://127.0.0.1:8080)
+```
+
