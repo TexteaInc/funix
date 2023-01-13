@@ -56,7 +56,7 @@ export type GetConfigResponse = {
 };
 
 export async function getConfig(): Promise<GetConfigResponse> {
-  return f("/config.json", {
+  return f("/config/backend", {
     method: "GET",
   });
 }

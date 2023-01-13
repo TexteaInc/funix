@@ -22,9 +22,7 @@ def send_js_static(path):
     return send_from_directory(os.path.abspath(os.path.join(folder, "static/js/")), path)
 
 def start(host: str, port: int, backend_port: int):
-    config = {
-        "backend": f"http://{host}:{backend_port}"
-    }
-    with open(os.path.abspath(os.path.join(folder, "./config.json")), "w") as f:
-        f.write(json.dumps(config))
+    @frontend_app.route("/config/backend")
+    def send_backend_config():
+        return json.dumps({"backend": f"http://{host}:{backend_port}"})
     frontend_app.run(host, port)
