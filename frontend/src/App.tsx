@@ -19,7 +19,8 @@ import FunixFunctionList from "./components/FunixFunctionList";
 import FunixFunctionSelected from "./components/FunixFunctionSelected";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Settings } from "@mui/icons-material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getConfig } from "./shared";
 
 const App = () => {
   const { search } = useLocation();
@@ -40,6 +41,18 @@ const App = () => {
       return false;
     }
   };
+
+  useEffect(() => {
+    getConfig()
+      .then((data) => {
+        if (data.backend === "__FLAG__") return;
+        setBackend(data.backend);
+        setTempBackend(data.backend);
+      })
+      .catch(() => {
+        return;
+      });
+  }, []);
 
   return (
     <>

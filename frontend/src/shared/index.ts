@@ -51,6 +51,16 @@ export async function getList(
   });
 }
 
+export type GetConfigResponse = {
+  backend: string;
+};
+
+export async function getConfig(): Promise<GetConfigResponse> {
+  return f("/config.json", {
+    method: "GET",
+  });
+}
+
 export type Param = {
   type: BaseType;
   treat_as: "config" | "column" | "cell";

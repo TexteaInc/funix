@@ -1,16 +1,36 @@
 import argparse
 import sys
 import os
+import socket
 
 from . import *
+
+def check_port_is_used(port: int, host: str):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        sock.connect((host, port))
+        return True
+    except:
+        return False
+
+
+def get_unused_port_from(port: int, host: str):
+    print(f"Checking port {port} is used or not...")
+    nowPort = port
+    while check_port_is_used(nowPort, host):
+        nowPort += 1
+    return nowPort
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Funix')
     parser.add_argument('this_class', type=str, help='this class', action='store')
     parser.add_argument('main_class', type=str, help='main class to import', action='store', default='functions')
-    parser.add_argument('--host', help='host of backend', action='store', default='0.0.0.0')
+    parser.add_argument('--host', help='host of frontend & backend', action='store', default='127.0.0.1')
     parser.add_argument('--port', help='port of backend', action='store', default='8080')
+    parser.add_argument('--front-port', help='port of frontend', action='store', default='80')
     parsed_sys_args = parser.parse_args(sys.argv)
     host: str = os.getenv("HOST", parsed_sys_args.host)
-    port: int = int(os.getenv("PORT", parsed_sys_args.port))
-    run(host=host, port=port, main_class=parsed_sys_args.main_class)
+    port: int = get_unused_port_from(int(os.getenv("PORT", parsed_sys_args.port)), host)
+    front_port: int = get_unused_port_from(int(os.getenv("FRONT_PORT", parsed_sys_args.front_port)), host)
+    run(host=host, port=port, main_class=parsed_sys_args.main_class, front_port=front_port)

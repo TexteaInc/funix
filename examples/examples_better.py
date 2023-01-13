@@ -105,7 +105,7 @@ def argument_config(test: bool) -> dict:
         "arg1": ["sheet", "slider"]
     }
 )
-def slider_in_sheet(arg1: List[int]):
+def slider_in_sheet(arg1: List[int] = [10, 32]):
     return {
         "arg1": arg1
     }
