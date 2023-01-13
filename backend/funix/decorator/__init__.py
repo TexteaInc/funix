@@ -403,19 +403,12 @@ def funix(
 
                 default_example = function_param.default
                 if default_example is not inspect.Parameter.empty:
-                    if "example" in decorated_params[function_arg_name].keys():
-                        decorated_params[function_arg_name].get("example").append(default_example)
-                    else:
-                        decorated_params[function_arg_name]["example"] = [
-                            default_example
-                        ]
                     decorated_params[function_arg_name]["default"] = default_example
                 elif decorated_params[function_arg_name]["type"] == "bool":
                     decorated_params[function_arg_name]["default"] = False
                 elif "optional" in decorated_params[function_arg_name].keys() and \
                         decorated_params[function_arg_name]["optional"]:
                     decorated_params[function_arg_name]["default"] = None
-
                 if function_arg_name not in json_schema_props.keys():
                     json_schema_props[function_arg_name] = dict()
                 if "widget" in decorated_params[function_arg_name].keys():

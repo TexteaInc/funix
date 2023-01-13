@@ -17,7 +17,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import React, { SyntheticEvent, useEffect, useState } from "react";
+import React, { SyntheticEvent, useEffect, useRef, useState } from "react";
 import SchemaField from "@rjsf/core/lib/components/fields/SchemaField";
 import {
   DataGrid,
@@ -492,7 +492,6 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
           );
           break;
         case "argument":
-          console.log(props.properties);
           rowElement = (
             <>
               {
@@ -532,15 +531,13 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
     });
     rowElements.push(
       <Grid2 container spacing={2} alignItems="center">
-        {rowGrid}
+        {rowGrid.map((item) => item)}
       </Grid2>
     );
   });
 
   props.properties
-    .filter(
-      (element: any) => element.content.props.schema.customLayout === false
-    )
+    .filter((element: any) => !element.content.props.schema.customLayout)
     .map((element: any) => {
       const result = propElementToJSXElement(element);
       switch (result.type) {
@@ -761,8 +758,50 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
     }
   };
 
+  type defaultSheetValues = {
+    key: string;
+    default: any[];
+    type: string;
+  };
+
+  const pushDefaultValuesToSheet = (): void => {
+    let maxLength = 0;
+    const defaultValues: defaultSheetValues[] = arrayElementsInSheet.map(
+      (element) => {
+        if ("default" in element.props.schema) {
+          if (element.props.schema.default.length > maxLength) {
+            maxLength = element.props.schema.default.length;
+          }
+          return {
+            key: element.key,
+            default: element.props.schema.default,
+            type: element.props.schema.items.type,
+          };
+        } else {
+          return {
+            key: element.key,
+            default: [],
+            type: element.props.schema.items.type,
+          };
+        }
+      }
+    );
+
+    for (let i = 0; i < maxLength; i++) {
+      const newRow: { [key: string]: any } = { id: rowIdCounter++ };
+      defaultValues.forEach((value) => {
+        if (value.default.length > i) {
+          newRow[value.key] = value.default[i];
+        } else {
+          newRow[value.key] = getInitValue(value.type);
+        }
+      });
+      setRows((prevRows) => [...prevRows, newRow]);
+    }
+  };
+
   const getNewDataGridElementIfAvailable = () => {
-    if (arrayElementsInSheet.length != 0)
+    if (arrayElementsInSheet.length != 0) {
       return (
         <Card className="property-wrapper" sx={{ mt: 1 }}>
           <Box sx={{ width: "100%" }} padding={1}>
@@ -799,7 +838,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
           </Box>
         </Card>
       );
-    else return <></>;
+    } else return <></>;
   };
 
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
@@ -852,6 +891,17 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
       <Box sx={{ mt: 1 }}>{element}</Box>
     </div>
   );
+
+  const pushDone = useRef(false);
+
+  useEffect(() => {
+    if (pushDone.current) return;
+    if (arrayElementsInSheet.length !== 0) {
+      pushDone.current = true;
+      rowIdCounter = 0;
+      pushDefaultValuesToSheet();
+    }
+  }, []);
 
   return (
     <Stack spacing={1}>

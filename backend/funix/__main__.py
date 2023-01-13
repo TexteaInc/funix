@@ -29,8 +29,13 @@ if __name__ == '__main__':
     parser.add_argument('--host', help='host of frontend & backend', action='store', default='127.0.0.1')
     parser.add_argument('--port', help='port of backend', action='store', default='8080')
     parser.add_argument('--front-port', help='port of frontend', action='store', default='80')
+    parser.add_argument('--no-frontend',help='disable frontend', action='store_true', default=False)
     parsed_sys_args = parser.parse_args(sys.argv)
+    no_frontend: bool = parsed_sys_args.no_frontend
     host: str = os.getenv("HOST", parsed_sys_args.host)
     port: int = get_unused_port_from(int(os.getenv("PORT", parsed_sys_args.port)), host)
-    front_port: int = get_unused_port_from(int(os.getenv("FRONT_PORT", parsed_sys_args.front_port)), host)
-    run(host=host, port=port, main_class=parsed_sys_args.main_class, front_port=front_port)
+    if not no_frontend:
+        front_port: int = get_unused_port_from(int(os.getenv("FRONT_PORT", parsed_sys_args.front_port)), host)
+    else:
+        front_port: int = int(os.getenv("FRONT_PORT", parsed_sys_args.front_port))
+    run(host=host, port=port, main_class=parsed_sys_args.main_class, front_port=front_port, no_frontend=no_frontend)

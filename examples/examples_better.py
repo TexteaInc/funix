@@ -102,12 +102,14 @@ def argument_config(test: bool) -> dict:
 
 @funix(
     widgets={
-        "arg1": ["sheet", "slider"]
+        "arg1": ["sheet", "slider"],
+        "arg2": ["sheet", "slider"]
     }
 )
-def slider_in_sheet(arg1: List[int] = [10, 32]):
+def slider_in_sheet(arg1: List[int] = [10, 32], arg2: List[int] = [35]):
     return {
-        "arg1": arg1
+        "arg1": arg1,
+        "arg2": arg2
     }
 
 @funix(
