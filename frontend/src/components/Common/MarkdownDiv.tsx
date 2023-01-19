@@ -2,18 +2,29 @@ import MarkdownIt from "markdown-it";
 
 interface MarkdownDivProps {
   markdown?: string;
+  isRenderInline?: boolean;
 }
 
 export default function MarkdownDiv(props: MarkdownDivProps) {
   if (!props.markdown) return null;
 
-  const markdownHTML = new MarkdownIt({
+  const markdown = new MarkdownIt({
     html: true,
     xhtmlOut: true,
     breaks: true,
     linkify: true,
     typographer: true,
-  }).renderInline(props.markdown);
+  });
 
-  return <div dangerouslySetInnerHTML={{ __html: markdownHTML }} />;
+  return props.isRenderInline ? (
+    <span
+      dangerouslySetInnerHTML={{
+        __html: markdown.renderInline(props.markdown),
+      }}
+    />
+  ) : (
+    <div
+      dangerouslySetInnerHTML={{ __html: markdown.render(props.markdown) }}
+    />
+  );
 }

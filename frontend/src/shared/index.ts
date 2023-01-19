@@ -4,6 +4,26 @@ const f = (...args: Parameters<typeof fetch>) =>
   fetch(...args).then((response) => response.json());
 
 export type BaseType = "int" | "str" | `list[${string}]` | "dict";
+export type FunixType =
+  | "MarkdownType"
+  | "HTMLType"
+  | "ImagesType"
+  | "VideosType"
+  | "AudiosType"
+  | "FilesType"
+  | "CodeType";
+export type ReturnType =
+  | "string"
+  | "text"
+  | "number"
+  | "integer"
+  | "boolean"
+  | "array"
+  | "list"
+  | "object"
+  | "dict"
+  | "figure"
+  | FunixType;
 
 export function matchType(type: BaseType): CellType {
   switch (type) {
@@ -84,9 +104,12 @@ export type FunctionDetail = {
   /**
    * Return data type
    */
-  return_type: {
-    [key: string]: BaseType;
-  };
+  return_type:
+    | {
+        [key: string]: BaseType;
+      }
+    | ReturnType[]
+    | null;
   /**
    * Description of this function
    */

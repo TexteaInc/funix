@@ -28,7 +28,9 @@ const SwitchWidget = (props: WidgetProps) => {
       <FormGroup>
         <FormControlLabel
           control={control}
-          label={<MarkdownDiv markdown={props.label || ""} />}
+          label={
+            <MarkdownDiv markdown={props.label || ""} isRenderInline={true} />
+          }
         />
       </FormGroup>
     </FormControl>

@@ -488,6 +488,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
           rowElement = (
             <MarkdownDiv
               markdown={rowItem.content !== undefined ? rowItem.content : ""}
+              isRenderInline={true}
             />
           );
           break;
@@ -908,7 +909,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
       <Typography variant="h5">{props.title}</Typography>
       {props.description !== "" ? (
         <Typography variant="body1">
-          <MarkdownDiv markdown={props.description} />
+          <MarkdownDiv markdown={props.description} isRenderInline={true} />
         </Typography>
       ) : null}
       {rowElements.map(renderElement)}

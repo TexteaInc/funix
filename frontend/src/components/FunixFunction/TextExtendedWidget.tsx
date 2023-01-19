@@ -87,7 +87,10 @@ const TextExtendedWidget = ({
         <Grid container spacing={2} alignItems="center">
           {!!label ? (
             <Grid item>
-              <MarkdownDiv markdown={label || schema.title} />
+              <MarkdownDiv
+                markdown={label || schema.title}
+                isRenderInline={true}
+              />
             </Grid>
           ) : null}
           <Grid item xs>
@@ -172,7 +175,10 @@ const TextExtendedWidget = ({
           placeholder={placeholder}
           label={
             displayLabel ? (
-              <MarkdownDiv markdown={schema.title || label || "input"} />
+              <MarkdownDiv
+                markdown={schema.title || label || "input"}
+                isRenderInline={true}
+              />
             ) : null
           }
           autoFocus={autofocus}

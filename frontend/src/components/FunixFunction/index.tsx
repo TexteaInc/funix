@@ -1,14 +1,21 @@
-import React, { useLayoutEffect, useState } from "react";
+import React, { useState } from "react";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import Form from "@rjsf/material-ui/v5";
-import { callFunctionRaw, FunctionDetail, FunctionPreview } from "../../shared";
+import {
+  BaseType,
+  callFunctionRaw,
+  FunctionDetail,
+  FunctionPreview,
+  ReturnType,
+} from "../../shared";
 import useSWR from "swr";
 import {
   Alert,
   Button,
   Card,
   CardContent,
+  Checkbox,
   createTheme,
   FormControl,
   FormControlLabel,
@@ -26,6 +33,13 @@ import ObjectFieldExtendedTemplate from "./ObjectFieldExtendedTemplate";
 import { DataGrid } from "@mui/x-data-grid";
 import { GridRowModel } from "@mui/x-data-grid/models/gridRows";
 import SwitchWidget from "./SwitchWidget";
+import OutputPlot from "./OutputComponents/OutputPlot";
+import MarkdownDiv from "../Common/MarkdownDiv";
+import OutputImages from "./OutputComponents/OutputImages";
+import OutputVideos from "./OutputComponents/OutputVideos";
+import OutputAudios from "./OutputComponents/OutputAudios";
+import OutputCode from "./OutputComponents/OutputCode";
+import OutputFiles from "./OutputComponents/OutputFiles";
 
 export type FunctionDetailProps = {
   preview: FunctionPreview;
@@ -76,9 +90,14 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
   type ResponseViewProps = {
     response: string | null;
     parser: "plot" | "html" | "";
+    returnType: { [key: string]: BaseType } | ReturnType[] | null;
   };
 
-  const ResponseView: React.FC<ResponseViewProps> = ({ response, parser }) => {
+  const ResponseView: React.FC<ResponseViewProps> = ({
+    response,
+    parser,
+    returnType,
+  }) => {
     if (response == null) {
       return (
         <Alert severity="info">
@@ -86,15 +105,76 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
         </Alert>
       );
     } else {
-      if (parser === "plot") {
-        useLayoutEffect(() => {
-          if (document.querySelector("#plot")?.innerHTML == "") {
-            const scriptElement = document.createElement("script");
-            scriptElement.innerHTML = `mpld3.draw_figure("plot", ${response})`;
-            document.body.appendChild(scriptElement);
+      if (Array.isArray(returnType)) {
+        const parsedResponse = JSON.parse(response);
+        if (!Array.isArray(parsedResponse))
+          return <ReactJson src={parsedResponse} />;
+        const columns = parsedResponse.map((row) => {
+          const index = parsedResponse.indexOf(row);
+          const singleReturnType = returnType[index];
+
+          switch (singleReturnType) {
+            case "figure":
+              return (
+                <OutputPlot
+                  plotCode={JSON.stringify(row)}
+                  indexId={index.toString()}
+                />
+              );
+            case "string":
+            case "text":
+              return <span>{row}</span>;
+            case "number":
+            case "integer":
+              return <code>{row}</code>;
+            case "boolean":
+              return <Checkbox checked={row} disabled />;
+            case "array":
+            case "list":
+            case "object":
+            case "dict":
+              return (
+                <ResponseView
+                  response={JSON.stringify(row)}
+                  parser=""
+                  returnType={null}
+                />
+              );
+            case "MarkdownType":
+              return <MarkdownDiv markdown={row} isRenderInline={true} />;
+            case "HTMLType":
+              return <div dangerouslySetInnerHTML={{ __html: row }} />;
+            case "ImagesType":
+              return <OutputImages images={row} />;
+            case "VideosType":
+              return <OutputVideos videos={row} />;
+            case "AudiosType":
+              return <OutputAudios audios={row} />;
+            case "CodeType":
+              if (typeof row === "string") {
+                return <OutputCode code={row} />;
+              } else {
+                const outputCodeProp = row as {
+                  content: string;
+                  lang: string;
+                };
+                return (
+                  <OutputCode
+                    code={outputCodeProp.content}
+                    language={outputCodeProp.lang}
+                  />
+                );
+              }
+            case "FilesType":
+              return <OutputFiles files={row} />;
+            default:
+              return <code>{row ?? ""}</code>;
           }
-        }, []);
-        return <div id="plot" />;
+        });
+        return <>{columns}</>;
+      }
+      if (parser === "plot") {
+        return <OutputPlot plotCode={response} indexId={"0"} />;
       }
       if (parser === "html") {
         return <div dangerouslySetInnerHTML={{ __html: response }} />;
@@ -279,6 +359,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
                     <ResponseView
                       response={response}
                       parser={functionDetail.parse_type}
+                      returnType={functionDetail.return_type}
                     />
                   </Stack>
                 </CardContent>

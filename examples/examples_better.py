@@ -1,7 +1,7 @@
 import random
 from typing import List
 import matplotlib.pyplot as plt
-from funix import funix, funix_yaml, funix_json
+from funix import funix, funix_yaml, funix_json, funix_hint
 
 
 @funix(
@@ -45,10 +45,12 @@ def chemist(
 ) -> str:
     return f"{input1} + {input2} --{condition}-> {output}{'↑' if extra else ''}"
 
+
 randomNumber = (random.randint(0, 100) + random.randint(0, 100)) / 2
 
 @funix(
-    description="Guess Number: Input two numbers, and the program will calculate the average of them. If the average number is program's guess number, you win! Otherwise, you lose.",
+    description="Guess Number: Input two numbers, and the program will calculate the average of them. If the average "
+                "number is program's guess number, you win! Otherwise, you lose.",
     argument_labels={
         "input1": "Number 1",
         "input2": "Number 2",
@@ -132,7 +134,7 @@ def greet(test: str, test2: str) -> str:
         ("year", "period"): "column"
     }
 )
-def plot_test(year: List[int], period: List[float]):
+def plot_test(year: List[int], period: List[float]) -> plt.figure:
     fig = plt.figure()
     plt.plot(year, period)
     return fig
@@ -183,3 +185,35 @@ def json_export(arg1: bool = False) -> dict:
     return {
         "arg1": arg1
     }
+
+@funix()
+def more_return() -> (str, int, dict, plt.figure, plt.figure):
+    first_figure = plt.figure()
+    plt.plot([1, 2, 3], [4, 5, 6])
+    second_figure = plt.figure()
+    plt.plot([7, 8, 9], [12, 11, 10])
+    return "hello", 1, {"hello": "world"}, first_figure, second_figure
+
+@funix()
+def more_more_return() -> (funix_hint.MarkdownType, funix_hint.HTMLType):
+    return "**This is ~~Markdown~~**", "<span style='color: blue'>This is HTML</span>"
+
+@funix()
+def media_return() -> (funix_hint.ImagesType, funix_hint.VideosType, funix_hint.AudiosType):
+    return "https://opengraph.githubassets.com/1/TexteaInc/Json-viewer", \
+        "https://mazwai.com/videvo_files/video/free/2016-01/small_watermarked/Forest_15_2_Videvo_preview.webm", \
+        "http://curiosity.shoutca.st:8019/128"
+
+@funix()
+def file_return() -> (funix_hint.FilesType, funix_hint.CodeType):
+    return "https://github.com/TexteaInc/funix/archive/refs/heads/main.zip", \
+        {
+            "lang": "python",
+            "content": """from funix import funix
+
+@funix()
+def hello_world(name: str) -> str:
+    return f"Hello, {name}"
+"""
+        }
+

@@ -6,6 +6,7 @@ import webbrowser
 import funix.decorator as decorator
 from funix.app import app
 from funix.frontend import start
+import funix.decorator.hint as funix_hint
 
 
 funix = decorator.funix

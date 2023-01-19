@@ -8,11 +8,13 @@ import requests
 import traceback
 from funix.app import app
 from functools import wraps
+from typing import Optional
 from uuid import uuid4 as uuid
 from .theme import parse_theme
 from urllib.parse import urlparse
-import matplotlib.pyplot as mpld3
-from typing import Any, Dict, List, Literal, Optional, Tuple
+import matplotlib.pyplot as plt, mpld3
+from .hint import DestinationType, ReturnType, WidgetsType, TreatAsType, WhitelistType, ExamplesType, LabelsType, \
+    LayoutType, ConditionalVisibleType, ArgumentConfigType
 
 __supported_basic_types_dict = {
     "int": "integer",
@@ -26,19 +28,6 @@ __wrapper_enabled = False
 __default_theme = {}
 __themes = {}
 __parsed_themes = {}
-
-
-DestinationType = Literal["column", "row", "sheet", None]
-ReturnType = Literal["html", "plot", ""]
-WidgetsType = Optional[Dict[Tuple | str, List[str] | str]]
-TreatAsType = Optional[Dict[Tuple | str, str]]
-WhitelistType = Optional[Dict[Tuple | str, List[Any] | List[List[Any]]]]
-ExamplesType = Optional[Dict[Tuple | str, List[Any] | List[List[Any]]]]
-LabelsType = Optional[Dict[Tuple | str, str]]
-LayoutType = Optional[List[List[Dict[str, str]]]]
-ConditionalVisibleType = Optional[List[Dict[str, List[str] | Dict[str, Any]]]]
-ArgumentConfigType = Optional[Dict[str, Dict[str, Any]]]
-
 
 def enable_wrapper():
     global __wrapper_enabled
@@ -253,16 +242,30 @@ def funix(
             decorated_params = dict()
             json_schema_props = dict()
 
+            cast_to_list_flag = False
+
             if function_signature.return_annotation is not inspect._empty:
                 # return type dict enforcement for yodas only
                 try:
-                    return_type_raw = getattr(function_signature.return_annotation, "__annotations__")
-                    if getattr(type(return_type_raw), "__name__") == "dict":
-                        return_type_parsed = dict()
-                        for return_type_key, return_type_value in return_type_raw.items():
-                            return_type_parsed[return_type_key] = str(return_type_value)
+                    if function_signature.return_annotation.__class__.__name__ == "tuple":
+                        cast_to_list_flag = True
+                        parsed_return_annotation_list = []
+                        return_annotation = list(function_signature.return_annotation)
+                        for return_annotation_type in return_annotation:
+                            return_annotation_type_name = getattr(return_annotation_type, "__name__")
+                            if return_annotation_type_name in __supported_basic_types:
+                                return_annotation_type_name = __supported_basic_types_dict[return_annotation_type_name]
+                            print(return_annotation_type_name)
+                            parsed_return_annotation_list.append(return_annotation_type_name)
+                        return_type_parsed = parsed_return_annotation_list
                     else:
-                        return_type_parsed = str(return_type_raw)
+                        return_type_raw = getattr(function_signature.return_annotation, "__annotations__")
+                        if getattr(type(return_type_raw), "__name__") == "dict":
+                            return_type_parsed = dict()
+                            for return_type_key, return_type_value in return_type_raw.items():
+                                return_type_parsed[return_type_key] = str(return_type_value)
+                        else:
+                            return_type_parsed = str(return_type_raw)
                 except:
                     return_type_parsed = get_type_dict(function_signature.return_annotation)["type"]
             else:
@@ -516,6 +519,14 @@ def funix(
                                 result = function(**wrapped_function_kwargs)
                                 if not isinstance(result, (str, dict, tuple)):
                                     result = str(result)
+                                if cast_to_list_flag:
+                                    result = list(result)
+                                    for index, single_return_type in enumerate(return_type_parsed):
+                                        if single_return_type == "figure":
+                                            fig_dict = mpld3.fig_to_dict(result[index])
+                                            fig_dict["width"] = 560
+                                            result[index] = fig_dict
+                                    return result
                                 return result
                         except:
                             return {
