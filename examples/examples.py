@@ -134,7 +134,7 @@ def calc(a: List[int], b: List[int], op: str) -> calc_return:
         }
     }
 )
-def switch_and_checkbox(a: bool, b: bool):
+def switch_and_checkbox(a: bool, b: bool) -> dict:
     return {
         "result": {
             "switch": a,
@@ -157,7 +157,7 @@ def switch_and_checkbox(a: bool, b: bool):
         }
     }
 )
-def slider_test(a: List[int], b: float):
+def slider_test(a: List[int], b: float) -> dict:
     return {
         "a": a,
         "b": b
@@ -178,7 +178,7 @@ def slider_test(a: List[int], b: float):
         }
     }
 )
-def sheet_test(a: List[int], b: List[bool]):
+def sheet_test(a: List[int], b: List[bool]) -> dict:
     return {
         "a": a,
         "b": b
@@ -203,7 +203,7 @@ def sheet_test(a: List[int], b: List[bool]):
         }
     }
 )
-def cell_test(a: int, b: int, isAdd: bool):
+def cell_test(a: int, b: int, isAdd: bool) -> int:
     return a + b if isAdd else a - b
 
 
@@ -217,7 +217,7 @@ def cell_test(a: int, b: int, isAdd: bool):
         }
     }
 )
-def markdown_support(cool: bool):
+def markdown_support(cool: bool) -> dict:
     return {
         "isCool": cool
     }
@@ -237,7 +237,7 @@ def markdown_support(cool: bool):
         }
     }
 )
-def json_editor(config_dict: Dict, config_list: List[str]):
+def json_editor(config_dict: Dict, config_list: List[str]) -> dict:
     return {
         "dict": config_dict,
         "list": config_list
@@ -264,7 +264,7 @@ class Person(TypedDict):
         }
     }
 )
-def json_editor_better(config_typed_dict: Person, config_list: List):
+def json_editor_better(config_typed_dict: Person, config_list: List) -> dict:
     return {
         "typed": config_typed_dict,
         "list": config_list

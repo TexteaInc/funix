@@ -51,10 +51,6 @@ export type FunctionPreview = {
    * Unique path that won't make conflict
    */
   path: string;
-  /**
-   * Result is HTML format
-   */
-  isHTML: boolean;
 };
 
 export type GetListResponse = {
@@ -104,12 +100,12 @@ export type FunctionDetail = {
   /**
    * Return data type
    */
-  return_type:
+  return_type?:
     | {
         [key: string]: BaseType;
       }
     | ReturnType[]
-    | null;
+    | ReturnType;
   /**
    * Description of this function
    */
@@ -122,10 +118,6 @@ export type FunctionDetail = {
    * Theme for this function
    */
   theme: Record<string, any>;
-  /**
-   * For return result parser
-   */
-  parse_type: "plot" | "html" | "";
 };
 
 export async function getParam(

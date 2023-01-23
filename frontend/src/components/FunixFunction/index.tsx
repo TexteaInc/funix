@@ -35,11 +35,9 @@ import { GridRowModel } from "@mui/x-data-grid/models/gridRows";
 import SwitchWidget from "./SwitchWidget";
 import OutputPlot from "./OutputComponents/OutputPlot";
 import MarkdownDiv from "../Common/MarkdownDiv";
-import OutputImages from "./OutputComponents/OutputImages";
-import OutputVideos from "./OutputComponents/OutputVideos";
-import OutputAudios from "./OutputComponents/OutputAudios";
 import OutputCode from "./OutputComponents/OutputCode";
 import OutputFiles from "./OutputComponents/OutputFiles";
+import OutputMedias from "./OutputComponents/OutputMedias";
 
 export type FunctionDetailProps = {
   preview: FunctionPreview;
@@ -89,13 +87,19 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
 
   type ResponseViewProps = {
     response: string | null;
-    parser: "plot" | "html" | "";
-    returnType: { [key: string]: BaseType } | ReturnType[] | null;
+    returnType?: { [key: string]: BaseType } | ReturnType[] | ReturnType;
+  };
+
+  const getSingleResponse = (response: string): any => {
+    try {
+      return [JSON.parse(response)];
+    } catch (unusedError) {
+      return [response];
+    }
   };
 
   const ResponseView: React.FC<ResponseViewProps> = ({
     response,
-    parser,
     returnType,
   }) => {
     if (response == null) {
@@ -105,13 +109,22 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
         </Alert>
       );
     } else {
-      if (Array.isArray(returnType)) {
-        const parsedResponse = JSON.parse(response);
+      if (
+        typeof returnType !== undefined &&
+        (Array.isArray(returnType) || typeof returnType === "string")
+      ) {
+        const listReturnType =
+          typeof returnType === "string" ? [returnType] : returnType;
+        const parsedResponse =
+          typeof returnType === "string"
+            ? getSingleResponse(response)
+            : JSON.parse(response);
         if (!Array.isArray(parsedResponse))
+          // but never
           return <ReactJson src={parsedResponse} />;
         const columns = parsedResponse.map((row) => {
           const index = parsedResponse.indexOf(row);
-          const singleReturnType = returnType[index];
+          const singleReturnType = listReturnType[index];
 
           switch (singleReturnType) {
             case "figure":
@@ -133,23 +146,26 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
             case "list":
             case "object":
             case "dict":
-              return (
-                <ResponseView
-                  response={JSON.stringify(row)}
-                  parser=""
-                  returnType={null}
-                />
-              );
+              return <ResponseView response={JSON.stringify(row)} />;
             case "MarkdownType":
               return <MarkdownDiv markdown={row} isRenderInline={true} />;
             case "HTMLType":
               return <div dangerouslySetInnerHTML={{ __html: row }} />;
             case "ImagesType":
-              return <OutputImages images={row} />;
             case "VideosType":
-              return <OutputVideos videos={row} />;
             case "AudiosType":
-              return <OutputAudios audios={row} />;
+              return (
+                <Card
+                  sx={{
+                    width: "100%",
+                    height: "auto",
+                    maxWidth: "100%",
+                    maxHeight: "100%",
+                  }}
+                >
+                  <OutputMedias medias={row} type={singleReturnType} />
+                </Card>
+              );
             case "CodeType":
               if (typeof row === "string") {
                 return <OutputCode code={row} />;
@@ -172,12 +188,6 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
           }
         });
         return <>{columns}</>;
-      }
-      if (parser === "plot") {
-        return <OutputPlot plotCode={response} indexId={"0"} />;
-      }
-      if (parser === "html") {
-        return <div dangerouslySetInnerHTML={{ __html: response }} />;
       }
       try {
         const parsedResponse: object = JSON.parse(response);
@@ -358,7 +368,6 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
                     <Typography variant="h5">Response</Typography>
                     <ResponseView
                       response={response}
-                      parser={functionDetail.parse_type}
                       returnType={functionDetail.return_type}
                     />
                   </Stack>

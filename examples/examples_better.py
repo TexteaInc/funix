@@ -108,7 +108,7 @@ def argument_config(test: bool) -> dict:
         "arg2": ["sheet", "slider"]
     }
 )
-def slider_in_sheet(arg1: List[int] = [10, 32], arg2: List[int] = [35]):
+def slider_in_sheet(arg1: List[int] = [10, 32], arg2: List[int] = [35]) -> dict:
     return {
         "arg1": arg1,
         "arg2": arg2
@@ -126,7 +126,6 @@ def greet(test: str, test2: str) -> str:
     return f"{test} {test2}"
 
 @funix(
-    return_type = "plot",
     widgets = {
         ("year", "period"): "sheet"
     },
@@ -154,7 +153,7 @@ def if_then(
     more_config: bool,
     arg1: str = "None",
     arg2: str = "None"
-):
+) -> dict:
     return {
         "arg1": arg1,
         "arg2": arg2

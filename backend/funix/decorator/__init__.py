@@ -13,8 +13,8 @@ from uuid import uuid4 as uuid
 from .theme import parse_theme
 from urllib.parse import urlparse
 import matplotlib.pyplot as plt, mpld3
-from .hint import DestinationType, ReturnType, WidgetsType, TreatAsType, WhitelistType, ExamplesType, LabelsType, \
-    LayoutType, ConditionalVisibleType, ArgumentConfigType
+from .hint import DestinationType, WidgetsType, TreatAsType, WhitelistType, ExamplesType, LabelsType, LayoutType, \
+    ConditionalVisibleType, ArgumentConfigType
 
 __supported_basic_types_dict = {
     "int": "integer",
@@ -196,7 +196,6 @@ def funix(
         description: Optional[str] = "",
         destination: DestinationType = None,
         theme: Optional[str] = "",
-        return_type: ReturnType = "",
         widgets: WidgetsType = {},
         treat_as: TreatAsType = {},
         whitelist: WhitelistType = {},
@@ -233,8 +232,7 @@ def funix(
 
             __decorated_functions_list.append({
                 "name": function_name,
-                "path": endpoint,
-                "isHTML": return_type == "html",
+                "path": endpoint
             })
 
             function_signature = inspect.signature(function)
@@ -255,17 +253,24 @@ def funix(
                             return_annotation_type_name = getattr(return_annotation_type, "__name__")
                             if return_annotation_type_name in __supported_basic_types:
                                 return_annotation_type_name = __supported_basic_types_dict[return_annotation_type_name]
-                            print(return_annotation_type_name)
                             parsed_return_annotation_list.append(return_annotation_type_name)
                         return_type_parsed = parsed_return_annotation_list
                     else:
-                        return_type_raw = getattr(function_signature.return_annotation, "__annotations__")
-                        if getattr(type(return_type_raw), "__name__") == "dict":
-                            return_type_parsed = dict()
-                            for return_type_key, return_type_value in return_type_raw.items():
-                                return_type_parsed[return_type_key] = str(return_type_value)
+                        if hasattr(function_signature.return_annotation, "__annotations__"):
+                            return_type_raw = getattr(function_signature.return_annotation, "__annotations__")
+                            if getattr(type(return_type_raw), "__name__") == "dict":
+                                if getattr(function_signature.return_annotation, "__name__") == "figure":
+                                    return_type_parsed = "figure"
+                                else:
+                                    return_type_parsed = dict()
+                                    for return_type_key, return_type_value in return_type_raw.items():
+                                        return_type_parsed[return_type_key] = str(return_type_value)
+                            else:
+                                return_type_parsed = str(return_type_raw)
                         else:
-                            return_type_parsed = str(return_type_raw)
+                            return_type_parsed = getattr(function_signature.return_annotation, "__name__")
+                            if return_type_parsed in __supported_basic_types:
+                                return_type_parsed = __supported_basic_types_dict[return_type_parsed]
                 except:
                     return_type_parsed = get_type_dict(function_signature.return_annotation)["type"]
             else:
@@ -441,6 +446,7 @@ def funix(
                     json_schema_props[function_arg_name]["customLayout"] = False
 
                 if decorated_params[function_arg_name]["treat_as"] == "cell":
+                    return_type_parsed = "array"
                     json_schema_props[function_arg_name]["items"] = \
                         get_type_widget_prop(function_arg_type_dict["type"], 0, widget[1:], {})
                     json_schema_props[function_arg_name]["type"] = "array"
@@ -480,7 +486,6 @@ def funix(
                 "name": function_name,
                 "params": decorated_params,
                 "theme": parsed_theme[4],
-                "parse_type": return_type,
                 "return_type": return_type_parsed,
                 "description": description,
                 "schema": {
@@ -510,7 +515,7 @@ def funix(
                     @wraps(function)
                     def wrapped_function(**wrapped_function_kwargs):
                         try:
-                            if return_type == "plot":
+                            if return_type_parsed == "figure":
                                 fig = function(**wrapped_function_kwargs)
                                 fig_dict = mpld3.fig_to_dict(fig)
                                 fig_dict["width"] = 560

@@ -2,7 +2,6 @@ from typing import Any, Dict, List, Literal, Optional, Tuple, NewType, TypedDict
 
 # See Document in Notion
 DestinationType = Literal["column", "row", "sheet", None]
-ReturnType = Literal["html", "plot", ""]
 WidgetsType = Optional[Dict[Tuple | str, List[str] | str]]
 TreatAsType = Optional[Dict[Tuple | str, str]]
 WhitelistType = Optional[Dict[Tuple | str, List[Any] | List[List[Any]]]]
