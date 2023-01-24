@@ -154,18 +154,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
             case "ImagesType":
             case "VideosType":
             case "AudiosType":
-              return (
-                <Card
-                  sx={{
-                    width: "100%",
-                    height: "auto",
-                    maxWidth: "100%",
-                    maxHeight: "100%",
-                  }}
-                >
-                  <OutputMedias medias={row} type={singleReturnType} />
-                </Card>
-              );
+              return <OutputMedias medias={row} type={singleReturnType} />;
             case "CodeType":
               if (typeof row === "string") {
                 return <OutputCode code={row} />;

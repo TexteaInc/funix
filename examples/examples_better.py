@@ -200,7 +200,7 @@ def more_more_return() -> (funix_hint.MarkdownType, funix_hint.HTMLType):
 @funix()
 def media_return() -> (funix_hint.ImagesType, funix_hint.VideosType, funix_hint.AudiosType):
     return "https://opengraph.githubassets.com/1/TexteaInc/Json-viewer", \
-        "https://mazwai.com/videvo_files/video/free/2016-01/small_watermarked/Forest_15_2_Videvo_preview.webm", \
+        ["http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4", "https://www.w3schools.com/html/movie.mp4"], \
         "http://curiosity.shoutca.st:8019/128"
 
 @funix()
