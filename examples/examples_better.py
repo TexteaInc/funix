@@ -216,3 +216,8 @@ def hello_world(name: str) -> str:
 """
         }
 
+
+@funix()
+def local_return() -> (funix_hint.ImagesType, funix_hint.FilesType):
+    return "./files/test.png", "./files/test.txt"
+

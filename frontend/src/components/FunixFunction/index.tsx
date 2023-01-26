@@ -92,7 +92,9 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
 
   const getSingleResponse = (response: string): any => {
     try {
-      return [JSON.parse(response)];
+      const result = JSON.parse(response);
+      if ("error_body" in result && "error_type" in result) return result;
+      else return [result];
     } catch (unusedError) {
       return [response];
     }
@@ -120,7 +122,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
             ? getSingleResponse(response)
             : JSON.parse(response);
         if (!Array.isArray(parsedResponse))
-          // but never
+          // but never, error lol
           return <ReactJson src={parsedResponse} />;
         const columns = parsedResponse.map((row) => {
           const index = parsedResponse.indexOf(row);
@@ -154,7 +156,13 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
             case "ImagesType":
             case "VideosType":
             case "AudiosType":
-              return <OutputMedias medias={row} type={singleReturnType} />;
+              return (
+                <OutputMedias
+                  medias={row}
+                  type={singleReturnType}
+                  backend={backend.toString()}
+                />
+              );
             case "CodeType":
               if (typeof row === "string") {
                 return <OutputCode code={row} />;
@@ -171,7 +179,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
                 );
               }
             case "FilesType":
-              return <OutputFiles files={row} />;
+              return <OutputFiles files={row} backend={backend.toString()} />;
             default:
               return <code>{row ?? ""}</code>;
           }

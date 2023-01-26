@@ -1,5 +1,6 @@
 import copy
 import random
+from uuid import uuid4 as uuid
 
 
 __theme_style_sugar_dict = {
@@ -58,7 +59,7 @@ def get_mui_theme(theme, colors):
                         mui_theme["components"][widget_mui_name]["defaultProps"][prop_name] = \
                             temp_colors[theme[widget_name][prop_name]]
                     else:
-                        color_name = "temp_" + "".join(["abcdef0123456789"[random.randint(0, 15)] for _ in range(8)])
+                        color_name = f"temp_{uuid().hex}"
                         mui_theme["palette"][color_name] = {"main": theme[widget_name][prop_name]}
                         mui_theme["components"][widget_mui_name]["defaultProps"][prop_name] = color_name
                         temp_colors[theme[widget_name][prop_name]] = color_name

@@ -8,7 +8,6 @@ from funix.app import app
 from funix.frontend import start
 import funix.decorator.hint as funix_hint
 
-
 funix = decorator.funix
 funix_yaml = decorator.funix_yaml
 funix_json = decorator.funix_json

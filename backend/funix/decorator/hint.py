@@ -19,11 +19,11 @@ class CodeConfig(TypedDict):
 BasicFileType = Optional[List[str] | str]
 """
 List[str]:
-    For multiple URLs
+    For multiple URLs, paths
     For example: ["https://example.org/imgs/1.png", "https://example.org/imgs/2.png"]
 
 str:
-    For URL
+    For URL, path
     For example: "https://example.org/imgs/1.png"
 """
 

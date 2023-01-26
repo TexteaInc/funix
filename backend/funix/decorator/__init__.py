@@ -1,3 +1,4 @@
+import os
 import re
 import json
 import yaml
@@ -22,15 +23,17 @@ __supported_basic_types_dict = {
     "str": "string",
     "bool": "boolean"
 }
+__supported_basic_file_types = ["ImagesType", "VideosType", "AudiosType", "FilesType"]
 __supported_basic_types = list(__supported_basic_types_dict.keys())
 __decorated_functions_list = list()
+__files_dict = {}
 __wrapper_enabled = False
 __default_theme = {}
 __themes = {}
 __parsed_themes = {}
 
 def enable_wrapper():
-    global __wrapper_enabled
+    global __wrapper_enabled, __files_dict, __decorated_functions_list
     if not __wrapper_enabled:
         __wrapper_enabled = True
 
@@ -40,6 +43,13 @@ def enable_wrapper():
                 "list": __decorated_functions_list,
             }
 
+        @app.get("/files/<string:fid>")
+        def __funix_export_file(fid: str):
+            if fid in __files_dict:
+                return flask.send_file(__files_dict[fid])
+            else:
+                print(__files_dict)
+                return flask.abort(404)
 
 def get_type_dict(annotation):
     if isinstance(annotation, object):  # is class
@@ -167,6 +177,17 @@ def is_valid_uri(uri: str) -> bool:
     except:
         return False
 
+def get_static_uri(path: str) -> str:
+    global __files_dict
+    if not is_valid_uri(path):
+        fid = uuid().hex
+        result = f"/files/{fid}"
+        abs_path = os.path.abspath(path)
+        if not abs_path in (__files_dict.values()):
+            __files_dict[fid] = abs_path
+        return result
+    else:
+        return path
 
 def get_theme(path: str):
     if not path:
@@ -245,8 +266,7 @@ def funix(
             if function_signature.return_annotation is not inspect._empty:
                 # return type dict enforcement for yodas only
                 try:
-                    if function_signature.return_annotation.__class__.__name__ == "tuple":
-                        cast_to_list_flag = True
+                    if cast_to_list_flag := function_signature.return_annotation.__class__.__name__ == "tuple":
                         parsed_return_annotation_list = []
                         return_annotation = list(function_signature.return_annotation)
                         for return_annotation_type in return_annotation:
@@ -271,6 +291,8 @@ def funix(
                             return_type_parsed = getattr(function_signature.return_annotation, "__name__")
                             if return_type_parsed in __supported_basic_types:
                                 return_type_parsed = __supported_basic_types_dict[return_type_parsed]
+                            return_url_not_path_flag = True \
+                                if return_type_parsed in __supported_basic_file_types else False
                 except:
                     return_type_parsed = get_type_dict(function_signature.return_annotation)["type"]
             else:
@@ -531,7 +553,14 @@ def funix(
                                             fig_dict = mpld3.fig_to_dict(result[index])
                                             fig_dict["width"] = 560
                                             result[index] = fig_dict
+                                        if single_return_type in __supported_basic_file_types:
+                                            if type(result[index]) == "list":
+                                                result[index] = [get_static_uri(each) for each in result[index]]
+                                            else:
+                                                result[index] = get_static_uri(result[index])
                                     return result
+                                if return_url_not_path_flag:
+                                    result[index] = get_static_uri(result[index])
                                 return result
                         except:
                             return {
