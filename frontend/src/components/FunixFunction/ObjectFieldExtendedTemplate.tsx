@@ -479,7 +479,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
     };
   };
 
-  props.schema.layout.forEach((row) => {
+  props.schema.input_layout.forEach((row) => {
     const rowGrid: JSX.Element[] = [];
     row.forEach((rowItem) => {
       let rowElement: JSX.Element = <></>;
@@ -489,6 +489,15 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
             <MarkdownDiv
               markdown={rowItem.content !== undefined ? rowItem.content : ""}
               isRenderInline={true}
+            />
+          );
+          break;
+        case "html":
+          rowElement = (
+            <div
+              dangerouslySetInnerHTML={{
+                __html: rowItem.content !== undefined ? rowItem.content : "",
+              }}
             />
           );
           break;

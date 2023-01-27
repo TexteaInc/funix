@@ -17,6 +17,7 @@ import {
   CardContent,
   Checkbox,
   createTheme,
+  Divider,
   FormControl,
   FormControlLabel,
   FormLabel,
@@ -38,6 +39,8 @@ import MarkdownDiv from "../Common/MarkdownDiv";
 import OutputCode from "./OutputComponents/OutputCode";
 import OutputFiles from "./OutputComponents/OutputFiles";
 import OutputMedias from "./OutputComponents/OutputMedias";
+import { outputRow } from "json-schema";
+import Grid2 from "@mui/material/Unstable_Grid2";
 
 export type FunctionDetailProps = {
   preview: FunctionPreview;
@@ -100,92 +103,10 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
     }
   };
 
-  const ResponseView: React.FC<ResponseViewProps> = ({
-    response,
-    returnType,
-  }) => {
-    if (response == null) {
-      return (
-        <Alert severity="info">
-          Execute the function first to see response here
-        </Alert>
-      );
+  const GuessingDataView: React.FC<ResponseViewProps> = ({ response }) => {
+    if (response === null) {
+      return <></>;
     } else {
-      if (
-        typeof returnType !== undefined &&
-        (Array.isArray(returnType) || typeof returnType === "string")
-      ) {
-        const listReturnType =
-          typeof returnType === "string" ? [returnType] : returnType;
-        const parsedResponse =
-          typeof returnType === "string"
-            ? getSingleResponse(response)
-            : JSON.parse(response);
-        if (!Array.isArray(parsedResponse))
-          // but never, error lol
-          return <ReactJson src={parsedResponse} />;
-        const columns = parsedResponse.map((row) => {
-          const index = parsedResponse.indexOf(row);
-          const singleReturnType = listReturnType[index];
-
-          switch (singleReturnType) {
-            case "figure":
-              return (
-                <OutputPlot
-                  plotCode={JSON.stringify(row)}
-                  indexId={index.toString()}
-                />
-              );
-            case "string":
-            case "text":
-              return <span>{row}</span>;
-            case "number":
-            case "integer":
-              return <code>{row}</code>;
-            case "boolean":
-              return <Checkbox checked={row} disabled />;
-            case "array":
-            case "list":
-            case "object":
-            case "dict":
-              return <ResponseView response={JSON.stringify(row)} />;
-            case "MarkdownType":
-              return <MarkdownDiv markdown={row} isRenderInline={true} />;
-            case "HTMLType":
-              return <div dangerouslySetInnerHTML={{ __html: row }} />;
-            case "ImagesType":
-            case "VideosType":
-            case "AudiosType":
-              return (
-                <OutputMedias
-                  medias={row}
-                  type={singleReturnType}
-                  backend={backend.toString()}
-                />
-              );
-            case "CodeType":
-              if (typeof row === "string") {
-                return <OutputCode code={row} />;
-              } else {
-                const outputCodeProp = row as {
-                  content: string;
-                  lang: string;
-                };
-                return (
-                  <OutputCode
-                    code={outputCodeProp.content}
-                    language={outputCodeProp.lang}
-                  />
-                );
-              }
-            case "FilesType":
-              return <OutputFiles files={row} backend={backend.toString()} />;
-            default:
-              return <code>{row ?? ""}</code>;
-          }
-        });
-        return <>{columns}</>;
-      }
       try {
         const parsedResponse: object = JSON.parse(response);
         const is1dArray = (target: any) => {
@@ -325,6 +246,203 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
         }
       } catch (e) {
         return <code>{response ?? ""}</code>;
+      }
+    }
+  };
+
+  const getTypedElement = (
+    elementType: ReturnType,
+    response: any,
+    index: number
+  ): JSX.Element => {
+    switch (elementType) {
+      case "figure":
+        return (
+          <OutputPlot
+            plotCode={JSON.stringify(response)}
+            indexId={index.toString()}
+          />
+        );
+      case "string":
+      case "text":
+        return <span>{response}</span>;
+      case "number":
+      case "integer":
+        return <code>{response}</code>;
+      case "boolean":
+        return <Checkbox checked={response} disabled />;
+      case "array":
+      case "list":
+      case "object":
+      case "dict":
+        return <GuessingDataView response={JSON.stringify(response)} />;
+      case "MarkdownType":
+        return <MarkdownDiv markdown={response} isRenderInline={true} />;
+      case "HTMLType":
+        return <div dangerouslySetInnerHTML={{ __html: response }} />;
+      case "ImagesType":
+      case "VideosType":
+      case "AudiosType":
+        return (
+          <OutputMedias
+            medias={response}
+            type={elementType}
+            backend={backend.toString()}
+          />
+        );
+      case "CodeType":
+        if (typeof response === "string") {
+          return <OutputCode code={response} />;
+        } else {
+          const outputCodeProp = response as {
+            content: string;
+            lang?: string;
+          };
+          return (
+            <OutputCode
+              code={outputCodeProp.content}
+              language={outputCodeProp.lang}
+            />
+          );
+        }
+      case "FilesType":
+        return <OutputFiles files={response} backend={backend.toString()} />;
+      default:
+        return <code>{response ?? ""}</code>;
+    }
+  };
+
+  const ResponseView: React.FC<ResponseViewProps> = ({
+    response,
+    returnType,
+  }) => {
+    if (response == null) {
+      return (
+        <Alert severity="info">
+          Execute the function first to see response here
+        </Alert>
+      );
+    } else {
+      if (
+        typeof returnType !== undefined &&
+        (Array.isArray(returnType) || typeof returnType === "string")
+      ) {
+        const listReturnType =
+          typeof returnType === "string" ? [returnType] : returnType;
+        const parsedResponse =
+          typeof returnType === "string"
+            ? getSingleResponse(response)
+            : JSON.parse(response);
+        if (!Array.isArray(parsedResponse))
+          // but never, error lol
+          return <ReactJson src={parsedResponse} />;
+        const output: outputRow[] = functionDetail.schema.output_layout;
+        const layout: JSX.Element[] = [];
+        output.forEach((row) => {
+          const rowElements: JSX.Element[] = [];
+          row.forEach((item) => {
+            let itemElement: JSX.Element;
+            switch (item.type) {
+              case "markdown":
+                itemElement = (
+                  <MarkdownDiv
+                    markdown={
+                      (Array.isArray(item.content)
+                        ? item.content[0]
+                        : item.content) || ""
+                    }
+                    isRenderInline={true}
+                  />
+                );
+                break;
+              case "html":
+                itemElement = (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        (Array.isArray(item.content)
+                          ? item.content[0]
+                          : item.content) || "",
+                    }}
+                  />
+                );
+                break;
+              case "dividing":
+                itemElement =
+                  item.content !== undefined ? (
+                    <Divider textAlign={item.position || "left"}>
+                      {item.content}
+                    </Divider>
+                  ) : (
+                    <Divider />
+                  );
+                break;
+              case "images":
+              case "videos":
+              case "audios":
+                itemElement = (
+                  <OutputMedias
+                    medias={item.content || ""}
+                    type={item.type}
+                    backend={backend.toString()}
+                  />
+                );
+                break;
+              case "code":
+                itemElement = (
+                  <OutputCode
+                    code={
+                      (Array.isArray(item.content)
+                        ? item.content[0]
+                        : item.content) || ""
+                    }
+                    language={item.lang}
+                  />
+                );
+                break;
+              case "return":
+                itemElement = getTypedElement(
+                  listReturnType[item.return || 0],
+                  parsedResponse[item.return || 0],
+                  item.return || 0
+                );
+                break;
+              default:
+                itemElement = <code>{item.content ?? ""}</code>;
+            }
+            rowElements.push(
+              <Grid2 xs={item.width || true} mdOffset={item.offset}>
+                {itemElement}
+              </Grid2>
+            );
+          });
+          layout.push(
+            <Grid2 container spacing={2} alignItems="center">
+              {rowElements}
+            </Grid2>
+          );
+        });
+        const columns = parsedResponse
+          .filter((_, index) => {
+            if (Array.isArray(functionDetail.schema.output_indexs)) {
+              return functionDetail.schema.output_indexs.indexOf(index) === -1;
+            } else {
+              return true;
+            }
+          })
+          .map((row, index) => {
+            const singleReturnType: ReturnType = listReturnType[index];
+
+            return getTypedElement(singleReturnType, row, index);
+          });
+        return (
+          <>
+            {layout}
+            {columns}
+          </>
+        );
+      } else {
+        return <GuessingDataView response={response} />;
       }
     }
   };

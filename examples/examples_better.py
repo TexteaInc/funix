@@ -90,6 +90,24 @@ def guess(
                 return "Smaller"
 
 @funix(
+    description="Input github repo url, get the banner and zip download link.",
+    argument_labels={
+      "url": "GitHub Repo URL"
+    },
+    output_layout=[
+        [{"markdown": "**Banner**"}],
+        [{"return": 0}],
+        [{"dividing": True}],
+        [{"markdown": "**Download Link**"}],
+        [{"return": 1}],
+    ]
+)
+def github_banner(url: str) -> (funix_hint.ImagesType, funix_hint.FilesType):
+    author = url.split("/")[3]
+    name = url.split("/")[4]
+    return f"https://opengraph.githubassets.com/1/{author}/{name}", f"{url}/archive/refs/heads/main.zip"
+
+@funix(
     argument_config={
         "test": {
             "treat_as": "config",
@@ -220,4 +238,3 @@ def hello_world(name: str) -> str:
 @funix()
 def local_return() -> (funix_hint.ImagesType, funix_hint.FilesType):
     return "./files/test.png", "./files/test.txt"
-

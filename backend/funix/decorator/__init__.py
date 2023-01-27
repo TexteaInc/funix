@@ -48,7 +48,6 @@ def enable_wrapper():
             if fid in __files_dict:
                 return flask.send_file(__files_dict[fid])
             else:
-                print(__files_dict)
                 return flask.abort(404)
 
 def get_type_dict(annotation):
@@ -177,17 +176,23 @@ def is_valid_uri(uri: str) -> bool:
     except:
         return False
 
-def get_static_uri(path: str) -> str:
+def get_static_uri(path: str | list[str]) -> str | list[str]:
     global __files_dict
-    if not is_valid_uri(path):
-        fid = uuid().hex
-        result = f"/files/{fid}"
-        abs_path = os.path.abspath(path)
-        if not abs_path in (__files_dict.values()):
-            __files_dict[fid] = abs_path
-        return result
+    if isinstance(path, str):
+        if not is_valid_uri(path):
+            fid = uuid().hex
+            result = f"/files/{fid}"
+            abs_path = os.path.abspath(path)
+            if not abs_path in list(__files_dict.values()):
+                __files_dict[fid] = abs_path
+            else:
+                return f"/files/{list(__files_dict.keys())[list(__files_dict.values()).index(abs_path)]}"
+            return result
+        else:
+            return path
     else:
-        return path
+        uris = [get_static_uri(uri) for uri in path]
+        return uris
 
 def get_theme(path: str):
     if not path:
@@ -211,6 +216,12 @@ def import_theme(path: str, name: str):
     global __themes
     __themes[name] = get_theme(path)
 
+def conv_row_item(row_item: dict, item_type: str):
+    conved_item = row_item
+    conved_item["type"] = item_type
+    conved_item["content"] = row_item[item_type]
+    conved_item.pop(item_type)
+    return conved_item
 
 def funix(
         path: Optional[str] = None,
@@ -223,6 +234,7 @@ def funix(
         examples: ExamplesType = {},
         argument_labels: LabelsType = {},
         input_layout: LayoutType = [],
+        output_layout: LayoutType = [],
         conditional_visible: ConditionalVisibleType = [],
         argument_config: ArgumentConfigType = {}
 ):
@@ -303,29 +315,58 @@ def funix(
             for row in input_layout:
                 row_layout = []
                 for row_item in row:
+                    row_item_done = row_item
                     if "markdown" in row_item:
-                        row_item_done = row_item
-                        row_item_done["type"] = "markdown"
-                        row_item_done["content"] = row_item_done["markdown"]
-                        row_item_done.pop("markdown")
-                        row_layout.append(row_item_done)
+                        row_item_done = conv_row_item(row_item, "markdown")
+                    elif "html" in row_item:
+                        row_item_done = conv_row_item(row_item, "html")
                     elif "argument" in row_item:
                         if row_item["argument"] not in decorated_params:
                             decorated_params[row_item["argument"]] = {}
                         decorated_params[row_item["argument"]]["customLayout"] = True
-                        row_item_done = row_item
                         row_item_done["type"] = "argument"
-                        row_layout.append(row_item_done)
                     elif "dividing" in row_item:
-                        row_item_done = row_item
                         row_item_done["type"] = "dividing"
                         if isinstance(row_item["dividing"], str):
                             row_item_done["content"] = row_item_done["dividing"]
                         row_item_done.pop("dividing")
-                        row_layout.append(row_item_done)
                     else:
-                        raise Exception("Invalid layout item")
+                        raise Exception("Invalid input layout item")
+                    row_layout.append(row_item_done)
                 return_input_layout.append(row_layout)
+
+            return_output_layout = []
+            return_output_indexs = []
+
+            for row in output_layout:
+                row_layout = []
+                for row_item in row:
+                    row_item_done = row_item
+                    if "markdown" in row_item:
+                        row_item_done = conv_row_item(row_item, "markdown")
+                    elif "html" in row_item:
+                        row_item_done = conv_row_item(row_item, "html")
+                    elif "dividing" in row_item:
+                        row_item_done["type"] = "dividing"
+                        if isinstance(row_item["dividing"], str):
+                            row_item_done["content"] = row_item_done["dividing"]
+                        row_item_done.pop("dividing")
+                    elif "images" in row_item:
+                        row_item_done = conv_row_item(row_item, "images")
+                    elif "videos" in row_item:
+                        row_item_done = conv_row_item(row_item, "videos")
+                    elif "audios" in row_item:
+                        row_item_done = conv_row_item(row_item, "audios")
+                    elif "code" in row_item:
+                        row_item_done = conv_row_item(row_item, "code")
+                    elif "return" in row_item:
+                        row_item_done["type"] = "return"
+                        return_output_indexs.append(row_item_done["return"])
+                    else:
+                        raise Exception("Invalid output layout item")
+                    row_layout.append(row_item_done)
+                return_output_layout.append(row_layout)
+
 
             for widget_arg_name in widgets:
                 if isinstance(widget_arg_name, str):
@@ -516,7 +557,9 @@ def funix(
                     "type": "object",
                     "properties": keep_ordered_dict,
                     "allOf": all_of,
-                    "layout": return_input_layout
+                    "input_layout": return_input_layout,
+                    "output_layout": return_output_layout,
+                    "output_indexs": return_output_indexs
                 },
                 "destination": destination
             }

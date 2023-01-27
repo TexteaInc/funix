@@ -83,9 +83,6 @@ def bioinfo_remove_3_prime_adapter(
         sRNAs=sRNAs,
         adapter_3_prime=adapter_3_prime,
         minimal_match_length=minimal_match_length)
-
-    print("hello, world")
-
     return {"removal_result_sequence": return_seqs}
     # return {"removal_result_code": return_codes, "removal_result_sequence":return_seqs}
 

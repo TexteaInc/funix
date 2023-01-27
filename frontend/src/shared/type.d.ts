@@ -1,5 +1,5 @@
 export declare module "json-schema" {
-  type rowItem = {
+  type inputRowItem = {
     type: "markdown" | "argument" | "dividing" | "html";
     content?: string;
     argument?: string;
@@ -8,12 +8,34 @@ export declare module "json-schema" {
     position?: "left" | "center" | "right";
   };
 
-  type row = rowItem[];
+  type outputRowItem = {
+    type:
+      | "markdown"
+      | "html"
+      | "dividing"
+      | "images"
+      | "videos"
+      | "audios"
+      | "code"
+      | "return";
+    content?: string | string[];
+    return?: number;
+    argument?: string;
+    width?: number;
+    offset?: number;
+    position?: "left" | "center" | "right";
+    lang?: string;
+  };
+
+  type inputRow = inputRowItem[];
+  type outputRow = outputRowItem[];
 
   interface JSONSchema7 {
     widget?: string;
     keys?: { [key: string]: string };
     customLayout: boolean;
-    layout: row[];
+    input_layout: inputRow[];
+    output_layout: outputRow[];
+    output_indexs: number[];
   }
 }
