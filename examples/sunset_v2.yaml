@@ -5,7 +5,7 @@ types:
 
 styles:
   basic:
-    color: "#0000ff"
+    color: "#e2974a"
 
   button:
     fontColor: "#fefefe"

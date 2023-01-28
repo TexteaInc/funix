@@ -274,6 +274,7 @@ def funix(
             json_schema_props = dict()
 
             cast_to_list_flag = False
+            return_url_not_path_flag = False
 
             if function_signature.return_annotation is not inspect._empty:
                 # return type dict enforcement for yodas only
