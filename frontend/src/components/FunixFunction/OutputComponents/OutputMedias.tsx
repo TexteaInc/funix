@@ -6,13 +6,11 @@ export default function OutputMedias(props: {
   backend: string;
 }) {
   const medias = Array.isArray(props.medias) ? props.medias : [props.medias];
-  const imagesType = ["ImagesType", "images"];
-  const videosType = ["VideosType", "videos"];
 
   const component =
-    imagesType.indexOf(props.type) !== -1
+    props.type.toLowerCase() === "images"
       ? "img"
-      : videosType.indexOf(props.type) !== -1
+      : props.type.toLowerCase() === "videos"
       ? "video"
       : "audio";
 

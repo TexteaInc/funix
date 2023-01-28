@@ -276,13 +276,13 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
       case "object":
       case "dict":
         return <GuessingDataView response={JSON.stringify(response)} />;
-      case "MarkdownType":
+      case "Markdown":
         return <MarkdownDiv markdown={response} isRenderInline={true} />;
-      case "HTMLType":
+      case "HTML":
         return <div dangerouslySetInnerHTML={{ __html: response }} />;
-      case "ImagesType":
-      case "VideosType":
-      case "AudiosType":
+      case "Images":
+      case "Videos":
+      case "Audios":
         return (
           <OutputMedias
             medias={response}
@@ -290,7 +290,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
             backend={backend.toString()}
           />
         );
-      case "CodeType":
+      case "Code":
         if (typeof response === "string") {
           return <OutputCode code={response} />;
         } else {
@@ -305,7 +305,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
             />
           );
         }
-      case "FilesType":
+      case "Files":
         return <OutputFiles files={response} backend={backend.toString()} />;
       default:
         return <code>{response ?? ""}</code>;

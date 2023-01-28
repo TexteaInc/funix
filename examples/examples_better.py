@@ -102,7 +102,7 @@ def guess(
         [{"return": 1}],
     ]
 )
-def github_banner(url: str) -> (funix_hint.ImagesType, funix_hint.FilesType):
+def github_banner(url: str) -> (funix_hint.Images, funix_hint.Files):
     author = url.split("/")[3]
     name = url.split("/")[4]
     return f"https://opengraph.githubassets.com/1/{author}/{name}", f"{url}/archive/refs/heads/main.zip"
@@ -212,17 +212,17 @@ def more_return() -> (str, int, dict, plt.figure, plt.figure):
     return "hello", 1, {"hello": "world"}, first_figure, second_figure
 
 @funix()
-def more_more_return() -> (funix_hint.MarkdownType, funix_hint.HTMLType):
+def more_more_return() -> (funix_hint.Markdown, funix_hint.HTML):
     return "**This is ~~Markdown~~**", "<span style='color: blue'>This is HTML</span>"
 
 @funix()
-def media_return() -> (funix_hint.ImagesType, funix_hint.VideosType, funix_hint.AudiosType):
+def media_return() -> (funix_hint.Images, funix_hint.Videos, funix_hint.Audios):
     return "https://opengraph.githubassets.com/1/TexteaInc/Json-viewer", \
         ["http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4", "https://www.w3schools.com/html/movie.mp4"], \
         "http://curiosity.shoutca.st:8019/128"
 
 @funix()
-def file_return() -> (funix_hint.FilesType, funix_hint.CodeType):
+def file_return() -> (funix_hint.Files, funix_hint.Code):
     return "https://github.com/TexteaInc/funix/archive/refs/heads/main.zip", \
         {
             "lang": "python",
@@ -236,5 +236,5 @@ def hello_world(name: str) -> str:
 
 
 @funix()
-def local_return() -> (funix_hint.ImagesType, funix_hint.FilesType):
+def local_return() -> (funix_hint.Images, funix_hint.Files):
     return "./files/test.png", "./files/test.txt"

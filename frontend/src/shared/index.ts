@@ -5,13 +5,13 @@ const f = (...args: Parameters<typeof fetch>) =>
 
 export type BaseType = "int" | "str" | `list[${string}]` | "dict";
 export type FunixType =
-  | "MarkdownType"
-  | "HTMLType"
-  | "ImagesType"
-  | "VideosType"
-  | "AudiosType"
-  | "FilesType"
-  | "CodeType";
+  | "Markdown"
+  | "HTML"
+  | "Images"
+  | "Videos"
+  | "Audios"
+  | "Files"
+  | "Code";
 export type ReturnType =
   | "string"
   | "text"

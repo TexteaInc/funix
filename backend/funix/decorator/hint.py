@@ -27,22 +27,22 @@ str:
     For example: "https://example.org/imgs/1.png"
 """
 
-MarkdownType = NewType("MarkdownType", Optional[str])
+Markdown = NewType("Markdown", Optional[str])
 """
 Support Markdown like "**bold**" and "*italic*"
 """
 
-HTMLType = NewType("HTMLType", Optional[str])
+HTML = NewType("HTML", Optional[str])
 """
 Support HTML like "<span style='color: red'>red</span>"
 """
 
-ImagesType = NewType("ImagesType", BasicFileType)
-VideosType = NewType("VideosType", BasicFileType)
-AudiosType = NewType("AudiosType", BasicFileType)
-FilesType = NewType("FilesType", BasicFileType)
+Images = NewType("Images", BasicFileType)
+Videos = NewType("Videos", BasicFileType)
+Audios = NewType("Audios", BasicFileType)
+Files = NewType("Files", BasicFileType)
 
-CodeType = NewType("CodeType", Optional[CodeConfig | str])
+Code = NewType("Code", Optional[CodeConfig | str])
 """
 Support Code like:
 

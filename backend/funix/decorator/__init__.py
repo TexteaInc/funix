@@ -23,7 +23,7 @@ __supported_basic_types_dict = {
     "str": "string",
     "bool": "boolean"
 }
-__supported_basic_file_types = ["ImagesType", "VideosType", "AudiosType", "FilesType"]
+__supported_basic_file_types = ["Images", "Videos", "Audios", "Files"]
 __supported_basic_types = list(__supported_basic_types_dict.keys())
 __decorated_functions_list = list()
 __files_dict = {}
