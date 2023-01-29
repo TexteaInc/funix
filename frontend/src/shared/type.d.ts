@@ -16,6 +16,7 @@ export declare module "json-schema" {
       | "images"
       | "videos"
       | "audios"
+      | "files"
       | "code"
       | "return";
     content?: string | string[];

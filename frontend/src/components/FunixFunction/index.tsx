@@ -388,6 +388,14 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
                   />
                 );
                 break;
+              case "files":
+                itemElement = (
+                  <OutputFiles
+                    files={item.content || ""}
+                    backend={backend.toString()}
+                  />
+                );
+                break;
               case "code":
                 itemElement = (
                   <OutputCode

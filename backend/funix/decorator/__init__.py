@@ -358,6 +358,8 @@ def funix(
                         row_item_done = conv_row_item(row_item, "videos")
                     elif "audios" in row_item:
                         row_item_done = conv_row_item(row_item, "audios")
+                    elif "files" in row_item:
+                        row_item_done = conv_row_item(row_item, "files")
                     elif "code" in row_item:
                         row_item_done = conv_row_item(row_item, "code")
                     elif "return" in row_item:
