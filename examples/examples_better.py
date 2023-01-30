@@ -1,7 +1,8 @@
 import random
 from typing import List
 import matplotlib.pyplot as plt
-from funix import funix, funix_yaml, funix_json, funix_hint
+from funix import funix, funix_yaml, funix_json
+from funix.hint import Images, Files, Markdown, HTML, Code, Videos, Audios
 
 
 @funix(
@@ -102,7 +103,7 @@ def guess(
         [{"return": 1}],
     ]
 )
-def github_banner(url: str) -> (funix_hint.Images, funix_hint.Files):
+def github_banner(url: str) -> (Images, Files):
     author = url.split("/")[3]
     name = url.split("/")[4]
     return f"https://opengraph.githubassets.com/1/{author}/{name}", f"{url}/archive/refs/heads/main.zip"
@@ -212,17 +213,17 @@ def more_return() -> (str, int, dict, plt.figure, plt.figure):
     return "hello", 1, {"hello": "world"}, first_figure, second_figure
 
 @funix()
-def more_more_return() -> (funix_hint.Markdown, funix_hint.HTML):
+def more_more_return() -> (Markdown, HTML):
     return "**This is ~~Markdown~~**", "<span style='color: blue'>This is HTML</span>"
 
 @funix()
-def media_return() -> (funix_hint.Images, funix_hint.Videos, funix_hint.Audios):
+def media_return() -> (Images, Videos, Audios):
     return "https://opengraph.githubassets.com/1/TexteaInc/Json-viewer", \
         ["http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4", "https://www.w3schools.com/html/movie.mp4"], \
         "http://curiosity.shoutca.st:8019/128"
 
 @funix()
-def file_return() -> (funix_hint.Files, funix_hint.Code):
+def file_return() -> (Files, Code):
     return "https://github.com/TexteaInc/funix/archive/refs/heads/main.zip", \
         {
             "lang": "python",
@@ -236,5 +237,5 @@ def hello_world(name: str) -> str:
 
 
 @funix()
-def local_return() -> (funix_hint.Images, funix_hint.Files):
+def local_return() -> (Images, Files):
     return "./files/test.png", "./files/test.txt"

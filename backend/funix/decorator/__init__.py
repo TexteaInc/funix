@@ -14,7 +14,7 @@ from uuid import uuid4 as uuid
 from .theme import parse_theme
 from urllib.parse import urlparse
 import matplotlib.pyplot as plt, mpld3
-from .hint import DestinationType, WidgetsType, TreatAsType, WhitelistType, ExamplesType, LabelsType, LayoutType, \
+from ..hint import DestinationType, WidgetsType, TreatAsType, WhitelistType, ExamplesType, LabelsType, LayoutType, \
     ConditionalVisibleType, ArgumentConfigType
 
 __supported_basic_types_dict = {
