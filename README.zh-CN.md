@@ -14,6 +14,12 @@ Funix 还支持复杂的数据类型和部件，如多列数据表或者 Matplot
 
 ## 安装
 
+### 从 PyPI 安装
+
+```bash
+pip install funix
+```
+
 ### 从 GitHub 安装
 
 你可以直接透过以下命令直接安装：
@@ -22,19 +28,19 @@ Funix 还支持复杂的数据类型和部件，如多列数据表或者 Matplot
 pip install "git+https://github.com/TexteaInc/funix.git"
 ```
 
+### 本地安装
+
 如果你想手动从本地安装：
 
 1. `git clone https://github.com/TexteaInc/funix`
 2. `cd funix`
-3. `pip install -e .`
+3. `pip install -e .` (如果 pip 坚持要安装到全局环境中，请带上 `--prefix=/.local` 参数。 参见 [#24](https://github.com/TexteaInc/funix/issues/24) 和 [#23](https://github.com/TexteaInc/funix/issues/23))
 
-### 从 PyPI 安装
-
-```bash
-pip install funix
-```
 
 ## 使用
+
+> **Note**
+> 默认前端服务将开放 80 端口。如果前端页面不可用，你可能需要以 root 权限运行 Funix，或修改前端端口号。
 
 ```text
 usage: funix [-h] [--host HOST] [--port PORT] [--front-port FRONT_PORT] [--no-frontend] [--no-browser]
