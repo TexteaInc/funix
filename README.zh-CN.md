@@ -1,14 +1,16 @@
-# Funix
+# Funix —— 无需手动创建部件，即可构建 Web 程序
 
 > 你的旨意行在地上，如同行在天上。 —— 马太福音，6:10
-> 
+>
 > 你的代码跑在云端，如同跑在本机。 —— 凤凰经，3:16
 
 [![PyPI version](https://badge.fury.io/py/funix.svg)](https://badge.fury.io/py/funix)
 
 [English](README.md)
 
-Funix 可自动将你的 Python 函数生成前后端，可部署到云端对外提供服务。你几乎不需要修改原有的代码，只需要为你的函数加上简单的 `@funix` 装饰器即可。
+Funix 可自动将一个普通的 Python 函数转换为一个可用的 Web 程序，而无需你手动创建部件。仅仅只需在你的函数上添加 `@funix` 装饰器，它就会成为 Web 应用供任何人使用，他们无需任何编程支持。
+
+Funix 还支持复杂的数据类型和部件，如多列数据表或者 Matplotlib 图表。Funix 是同时也是非侵入式的，你仍然可以像往常一样在本地运行或调试你的 Python 代码。Funix 还有一个后端，用于自己的前端以及那些想将 Python 函数转换为 RESTful API 的人。
 
 ## 安装
 
@@ -35,7 +37,8 @@ pip install funix
 ## 使用
 
 ```text
-usage: funix [-h] [--host HOST] [--port PORT] [--front-port FRONT_PORT] [--no-frontend] this_class main_class
+usage: funix [-h] [--host HOST] [--port PORT] [--front-port FRONT_PORT] [--no-frontend] [--no-browser]
+             this_class main_class
 
 Funix
 
@@ -45,11 +48,12 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
-  --host HOST           host of frontend & backend
-  --port PORT           port of backend
-  --front-port FRONT_PORT
+  --host HOST, -H HOST  host of frontend & backend
+  --port PORT, -p PORT  port of backend
+  --front-port FRONT_PORT, -P FRONT_PORT
                         port of frontend
-  --no-frontend         disable frontend
+  --no-frontend, -F     disable frontend
+  --no-browser, -B      disable auto open browser
 ```
 
 通常你可以使用 `python -m funix [module]` 直接启动，在 `examples` 文件夹里有一些简单的例子带你了解 Funix，你可以通过以下命令打开示例：
