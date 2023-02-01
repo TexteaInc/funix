@@ -34,7 +34,7 @@ pip install "git+https://github.com/TexteaInc/funix.git"
 
 1. `git clone https://github.com/TexteaInc/funix`
 2. `cd funix`
-3. `pip install -e .` (如果 pip 坚持要安装到全局环境中，请带上 `--prefix=/.local` 参数。 参见 [#24](https://github.com/TexteaInc/funix/issues/24) 和 [#23](https://github.com/TexteaInc/funix/issues/23))
+3. `pip install -e .` (如果 pip 坚持要安装到全局环境中，请带上 `--prefix=~/.local` 参数。 参见 [#24](https://github.com/TexteaInc/funix/issues/24) 和 [#23](https://github.com/TexteaInc/funix/issues/23))
 
 
 ## 使用

@@ -36,7 +36,7 @@ If you want to install Funix from a local clone:
 
 1. `git clone https://github.com/TexteaInc/funix`
 2. `cd funix`
-3. `pip install -e .` (add `--prefix=/.local` if pip insists to install to system paths. See [#24](https://github.com/TexteaInc/funix/issues/24) and [#23](https://github.com/TexteaInc/funix/issues/23))
+3. `pip install -e .` (add `--prefix=~/.local` if pip insists to install to system paths. See [#24](https://github.com/TexteaInc/funix/issues/24) and [#23](https://github.com/TexteaInc/funix/issues/23))
 
 
 
