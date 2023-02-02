@@ -4,6 +4,7 @@ import {
   AppBar,
   Button,
   Container,
+  createTheme,
   Dialog,
   DialogActions,
   DialogContent,
@@ -12,6 +13,7 @@ import {
   IconButton,
   Stack,
   TextField,
+  ThemeProvider,
   Toolbar,
   Typography,
 } from "@mui/material";
@@ -21,6 +23,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Settings } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import { getConfig } from "./shared";
+import { storeAtom } from "./store";
+import { useAtom } from "jotai";
 
 const App = () => {
   const { search } = useLocation();
@@ -31,6 +35,7 @@ const App = () => {
   const [backend, setBackend] = useState(backendStr || funixBackend);
   const [tempBackend, setTempBackend] = useState(backend);
   const [open, setOpen] = useState(false);
+  const [{ theme }] = useAtom(storeAtom);
 
   const checkURL = (url: string | undefined): boolean => {
     if (!url) return false;
@@ -55,7 +60,7 @@ const App = () => {
   }, []);
 
   return (
-    <>
+    <ThemeProvider theme={createTheme(theme || undefined)}>
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle>Settings</DialogTitle>
         <DialogContent>
@@ -120,7 +125,7 @@ const App = () => {
           </Alert>
         )}
       </Container>
-    </>
+    </ThemeProvider>
   );
 };
 

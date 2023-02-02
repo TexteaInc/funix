@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import Form from "@rjsf/material-ui/v5";
@@ -16,7 +16,6 @@ import {
   Card,
   CardContent,
   Checkbox,
-  createTheme,
   Divider,
   FormControl,
   FormControlLabel,
@@ -25,7 +24,6 @@ import {
   Radio,
   RadioGroup,
   Stack,
-  ThemeProvider,
   Typography,
 } from "@mui/material";
 import ReactJson from "react-json-view";
@@ -41,6 +39,8 @@ import OutputFiles from "./OutputComponents/OutputFiles";
 import OutputMedias from "./OutputComponents/OutputMedias";
 import { outputRow } from "json-schema";
 import Grid2 from "@mui/material/Unstable_Grid2";
+import { useAtom } from "jotai";
+import { storeAtom } from "../../store";
 
 export type FunctionDetailProps = {
   preview: FunctionPreview;
@@ -53,10 +53,18 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
   );
   const [form, setForm] = useState<Record<string, any>>({});
   const [response, setResponse] = useState<string | null>(null);
+  const [, setStore] = useAtom(storeAtom);
 
   if (detail == null) {
     console.log("Failed to display function detail");
     return <div />;
+  } else {
+    useEffect(() => {
+      setStore((store) => ({
+        ...store,
+        theme: functionDetail.theme,
+      }));
+    }, []);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -466,47 +474,41 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
   );
 
   return (
-    <ThemeProvider theme={createTheme(functionDetail.theme)}>
-      <Stack spacing={2}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
+    <Stack spacing={2}>
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              {formElement}
+              <Button variant="contained" onClick={handleSubmit} sx={{ mt: 1 }}>
+                Submit
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Stack spacing={2}>
             <Card>
               <CardContent>
-                {formElement}
-                <Button
-                  variant="contained"
-                  onClick={handleSubmit}
-                  sx={{ mt: 1 }}
-                >
-                  Submit
-                </Button>
+                <Stack spacing={1}>
+                  <Typography variant="h5">Response</Typography>
+                  <ResponseView
+                    response={response}
+                    returnType={functionDetail.return_type}
+                  />
+                </Stack>
               </CardContent>
             </Card>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Stack spacing={2}>
-              <Card>
-                <CardContent>
-                  <Stack spacing={1}>
-                    <Typography variant="h5">Response</Typography>
-                    <ResponseView
-                      response={response}
-                      returnType={functionDetail.return_type}
-                    />
-                  </Stack>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent>
-                  <Typography variant="h5">Function Detail</Typography>
-                  <ReactJson src={functionDetail} collapsed />
-                </CardContent>
-              </Card>
-            </Stack>
-          </Grid>
+            <Card>
+              <CardContent>
+                <Typography variant="h5">Function Detail</Typography>
+                <ReactJson src={functionDetail} collapsed />
+              </CardContent>
+            </Card>
+          </Stack>
         </Grid>
-      </Stack>
-    </ThemeProvider>
+      </Grid>
+    </Stack>
   );
 };
 

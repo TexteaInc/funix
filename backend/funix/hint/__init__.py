@@ -16,6 +16,7 @@ class CodeConfig(TypedDict):
     lang: str
     content: str
 
+
 BasicFileType = Optional[List[str] | str]
 """
 List[str]:

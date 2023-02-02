@@ -202,8 +202,17 @@ def get_theme(path: str):
     else:
         if path in __themes:
             return __themes[path]
-        with open(path, "r", encoding="utf-8") as f:
-            return yaml.load(f.read(), yaml.FullLoader)
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
+                return yaml.load(f.read(), yaml.FullLoader)
+        else:
+            home_themes_path = os.path.join(os.path.expanduser("~"), os.path.join("./.funix/themes/", path))
+            print(home_themes_path)
+            if os.path.exists(home_themes_path):
+                with open(home_themes_path, "r", encoding="utf-8") as f:
+                    return yaml.load(f.read(), yaml.FullLoader)
+            else:
+                raise Exception(f"Theme {path} not found")
 
 
 def set_global_theme(path: str):
@@ -567,12 +576,12 @@ def funix(
                 "destination": destination
             }
 
-            get_wrapper = app.get("/param/{}".format(endpoint))
+            get_wrapper = app.get(f"/param/{endpoint}")
 
             def decorated_function_param_getter():
                 return flask.Response(json.dumps(decorated_function), mimetype="application/json")
 
-            decorated_function_param_getter.__setattr__("__name__", "{}_param_getter".format(function_name))
+            decorated_function_param_getter.__setattr__("__name__", f"{function_name}_param_getter")
             get_wrapper(decorated_function_param_getter)
 
             @wraps(function)
@@ -638,9 +647,9 @@ def funix(
                         "error_body": traceback.format_exc()
                     }
 
-            post_wrapper = app.post("/call/{}".format(id))
+            post_wrapper = app.post(f"/call/{id}")
             post_wrapper(wrapper)
-            post_wrapper = app.post("/call/{}".format(endpoint))
+            post_wrapper = app.post(f"/call/{endpoint}")
             post_wrapper(wrapper)
             wrapper._decorator_name_ = "funix"
         return function
