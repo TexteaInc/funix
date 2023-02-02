@@ -165,6 +165,7 @@ const TextExtendedWidget = ({
 
   return (
     <Autocomplete
+      disableClearable={inputType === "number" || inputType === "integer"}
       size="small"
       value={value || value === 0 ? value : ""}
       getOptionLabel={(option) => option.toString()}
