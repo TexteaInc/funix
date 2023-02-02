@@ -10,6 +10,8 @@ from funix.frontend import start
 funix = decorator.funix
 funix_yaml = decorator.funix_yaml
 funix_json = decorator.funix_json
+import_theme = decorator.import_theme
+set_global_theme = decorator.set_global_theme
 
 def __prep(main_class: typing.Optional[str] = "functions"):
     decorator.enable_wrapper()
