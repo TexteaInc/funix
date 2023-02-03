@@ -137,6 +137,10 @@ def get_type_widget_prop(function_arg_type_name, index, function_arg_widget, wid
     elif function_arg_type_name == "list":
         return {
             "type": "array",
+            "items": {
+              "type": "any",
+              "widget": ""
+            },
             "widget": widget
         }
     else:
@@ -485,7 +489,7 @@ def funix(
                 decorated_params[function_arg_name].update(function_arg_type_dict)
 
                 default_example = function_param.default
-                if default_example is not inspect.Parameter.empty:
+                if not default_example is inspect._empty:
                     decorated_params[function_arg_name]["default"] = default_example
                 elif decorated_params[function_arg_name]["type"] == "bool":
                     decorated_params[function_arg_name]["default"] = False
@@ -497,7 +501,10 @@ def funix(
                 if "widget" in decorated_params[function_arg_name].keys():
                     widget = decorated_params[function_arg_name]["widget"]
                 else:
-                    widget = ""
+                    if function_arg_type_dict["type"] in ["list", "dict", "typing.Dict"]:
+                        widget = "json"
+                    else:
+                        widget = ""
                 json_schema_props[function_arg_name] = get_type_widget_prop(
                     function_arg_type_dict["type"],
                     0,
