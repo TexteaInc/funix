@@ -316,7 +316,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
       case "Files":
         return <OutputFiles files={response} backend={backend.toString()} />;
       default:
-        return <code>{response ?? ""}</code>;
+        return <GuessingDataView response={JSON.stringify(response)} />;
     }
   };
 

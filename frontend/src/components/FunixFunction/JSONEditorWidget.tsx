@@ -23,7 +23,7 @@ const JSONEditorWidget = (props: JSONEditorWidgetInterface) => {
     }
   }
   const [src, setSrc] = React.useState<object>(
-    () => props.widget.value || value
+    () => props.widget.value || props.widget.schema.default || value
   );
 
   const handleEdit = React.useCallback((value: InteractionProps) => {
