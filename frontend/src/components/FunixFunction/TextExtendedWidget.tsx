@@ -171,6 +171,8 @@ const TextExtendedWidget = ({
       getOptionLabel={(option) => option.toString()}
       renderInput={(params: AutocompleteRenderInputParams) => (
         <TextField
+          multiline={schema.widget === "textarea"}
+          maxRows={schema.widget === "textarea" ? 5 : 1}
           {...params}
           id={id}
           placeholder={placeholder}
