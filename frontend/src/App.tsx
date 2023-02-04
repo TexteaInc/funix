@@ -8,10 +8,11 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogContentText,
   DialogTitle,
+  FormControlLabel,
   IconButton,
   Stack,
+  Switch,
   TextField,
   ThemeProvider,
   Toolbar,
@@ -35,7 +36,7 @@ const App = () => {
   const [backend, setBackend] = useState(backendStr || funixBackend);
   const [tempBackend, setTempBackend] = useState(backend);
   const [open, setOpen] = useState(false);
-  const [{ theme }] = useAtom(storeAtom);
+  const [{ theme, showFunctionDetail }, setStore] = useAtom(storeAtom);
 
   const checkURL = (url: string | undefined): boolean => {
     if (!url) return false;
@@ -64,9 +65,6 @@ const App = () => {
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle>Settings</DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            Please enter the URL of the backend server.
-          </DialogContentText>
           <TextField
             autoFocus
             margin="dense"
@@ -76,6 +74,20 @@ const App = () => {
             onChange={(e) => setTempBackend(e.target.value)}
             value={tempBackend}
             error={!checkURL(tempBackend)}
+          />
+          <FormControlLabel
+            control={
+              <Switch
+                value={showFunctionDetail}
+                onChange={(event) => {
+                  setStore((store) => ({
+                    ...store,
+                    showFunctionDetail: event.target.checked,
+                  }));
+                }}
+              />
+            }
+            label="Show function detail"
           />
         </DialogContent>
         <DialogActions>

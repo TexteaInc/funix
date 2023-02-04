@@ -15,7 +15,6 @@ import {
   Button,
   Card,
   CardContent,
-  Checkbox,
   Divider,
   FormControl,
   FormControlLabel,
@@ -41,6 +40,7 @@ import { outputRow } from "json-schema";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import { useAtom } from "jotai";
 import { storeAtom } from "../../store";
+import Switch from "@mui/material/Switch";
 
 export type FunctionDetailProps = {
   preview: FunctionPreview;
@@ -53,7 +53,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
   );
   const [form, setForm] = useState<Record<string, any>>({});
   const [response, setResponse] = useState<string | null>(null);
-  const [, setStore] = useAtom(storeAtom);
+  const [{ showFunctionDetail }, setStore] = useAtom(storeAtom);
 
   if (detail == null) {
     console.log("Failed to display function detail");
@@ -278,7 +278,15 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
       case "integer":
         return <code>{response}</code>;
       case "boolean":
-        return <Checkbox checked={response} disabled />;
+        return (
+          <Switch
+            checked={response}
+            value={response}
+            onChange={() => {
+              /* oh */
+            }}
+          />
+        );
       case "array":
       case "list":
       case "object":
@@ -499,12 +507,16 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
                 </Stack>
               </CardContent>
             </Card>
-            <Card>
-              <CardContent>
-                <Typography variant="h5">Function Detail</Typography>
-                <ReactJson src={functionDetail} collapsed />
-              </CardContent>
-            </Card>
+            {showFunctionDetail ? (
+              <Card>
+                <CardContent>
+                  <Typography variant="h5">Function Detail</Typography>
+                  <ReactJson src={functionDetail} collapsed />
+                </CardContent>
+              </Card>
+            ) : (
+              <></>
+            )}
           </Stack>
         </Grid>
       </Grid>

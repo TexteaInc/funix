@@ -8,6 +8,8 @@
 
 [简体中文](README.zh-CN.md)
 
+> **WIP**: Funix is still under development, if you have any questions, please feel free to [open an issue](https://github.com/TexteaInc/funix/issues/new).
+
 Funix automatically turns an ordinary Python function into a web app without needing you to specify any widgets.
 Simply add a `@funix` decorator above your function and then it becomes an app in the browser for anyone, without coding skills, to use.
 

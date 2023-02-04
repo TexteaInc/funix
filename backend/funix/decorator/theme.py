@@ -117,6 +117,18 @@ def parse_theme(theme):
                 type_widget_dict[type_name] = widget_name
     if "styles" in theme:
         if "basic" in theme["styles"]:
+            if "color" in theme["styles"]["basic"]:
+                if "primary" in custom_palette:
+                    custom_palette["primary"]["main"] = theme["styles"]["basic"]["color"]
+                else:
+                    custom_palette["primary"] = {"main": theme["styles"]["basic"]["color"]}
+                del theme["styles"]["basic"]["color"]
+            if "contrastText" in theme["styles"]["basic"]:
+                if "primary" in custom_palette:
+                    custom_palette["primary"]["contrastText"] = theme["styles"]["basic"]["contrastText"]
+                else:
+                    custom_palette["primary"] = {"contrastText": theme["styles"]["basic"]["contrastText"]}
+                del theme["styles"]["basic"]["contrastText"]
             for basic_widget_name in __basic_widgets:
                 widget_style[basic_widget_name] = copy.deepcopy(theme["styles"]["basic"])
             del theme["styles"]["basic"]

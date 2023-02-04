@@ -6,9 +6,7 @@ types:
 styles:
   basic:
     color: "#e2974a"
-
-  button:
-    fontColor: "#fefefe"
+    contrastText: "#fefefe"
 
   tooltip:
     arrow: false

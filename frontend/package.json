@@ -1,9 +1,8 @@
 {
   "name": "@textea/funix",
   "repository": "https://github.com/TexteaInc/funix",
-  "author": "Ruixuan Tu <turx@textea.co>",
-  "license": "proprietary",
-  "private": true,
+  "author": "Textea Inc.",
+  "license": "MIT",
   "dependencies": {
     "@emotion/react": "^11.9.3",
     "@emotion/styled": "^11.9.3",
