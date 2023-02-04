@@ -31,7 +31,7 @@ dependencies = [
 ]
 
 [project.urls]
-homepage = "https://github.com/Textea/funix"
+homepage = "https://github.com/TexteaInc/funix"
 
 [tool.setuptools.packages.find]
 where = ["backend"]
