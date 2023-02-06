@@ -27,9 +27,6 @@ def run(
 ):
     __prep(main_class=main_class)
     print(f"Backend server running on http://{host}:{port}")
-    backend_start = Thread(target=app.run, kwargs={"host": host, "port": port})
-    backend_start.daemon = True
-    backend_start.start()
     if not no_frontend:
         print(f"Frontend server running on http://{host}:{front_port}")
         frontend_start = Thread(target=start, kwargs={"host": host, "port": front_port, "backend_port": port})
@@ -37,3 +34,4 @@ def run(
         frontend_start.start()
         if not no_browser:
             webbrowser.open(f"http://{host}:{front_port}")
+    app.run(host=host, port=port)
