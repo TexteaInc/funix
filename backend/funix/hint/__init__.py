@@ -1,15 +1,15 @@
-from typing import Any, Dict, List, Literal, Optional, Tuple, NewType, TypedDict
+from typing import Any, Dict, List, Literal, Optional, Tuple, NewType, TypedDict, Text
 
 # See Document in Notion
 DestinationType = Literal["column", "row", "sheet", None]
-WidgetsType = Optional[Dict[Tuple | str, List[str] | str]]
-TreatAsType = Optional[Dict[Tuple | str, str]]
-WhitelistType = Optional[Dict[Tuple | str, List[Any] | List[List[Any]]]]
-ExamplesType = Optional[Dict[Tuple | str, List[Any] | List[List[Any]]]]
-LabelsType = Optional[Dict[Tuple | str, str]]
-LayoutType = Optional[List[List[Dict[str, str]]]]
-ConditionalVisibleType = Optional[List[Dict[str, List[str] | Dict[str, Any]]]]
-ArgumentConfigType = Optional[Dict[str, Dict[str, Any]]]
+WidgetsType = Optional[Dict[Tuple or Text, List[Text] or Text]]
+TreatAsType = Optional[Dict[Tuple or Text, Text]]
+WhitelistType = Optional[Dict[Tuple or Text, List[Any] or List[List[Any]]]]
+ExamplesType = Optional[Dict[Tuple or Text, List[Any] or List[List[Any]]]]
+LabelsType = Optional[Dict[Tuple or Text, Text]]
+LayoutType = Optional[List[List[Dict[Text, Text]]]]
+ConditionalVisibleType = Optional[List[Dict[Text, List[Text] or Dict[Text, Any]]]]
+ArgumentConfigType = Optional[Dict[Text, Dict[Text, Any]]]
 
 
 class CodeConfig(TypedDict):
@@ -17,7 +17,7 @@ class CodeConfig(TypedDict):
     content: str
 
 
-BasicFileType = Optional[List[str] | str]
+BasicFileType = Optional[List[Text] or Text]
 """
 List[str]:
     For multiple URLs, paths
@@ -28,12 +28,12 @@ str:
     For example: "https://example.org/imgs/1.png"
 """
 
-Markdown = NewType("Markdown", Optional[str])
+Markdown = NewType("Markdown", Optional[Text])
 """
 Support Markdown like "**bold**" and "*italic*"
 """
 
-HTML = NewType("HTML", Optional[str])
+HTML = NewType("HTML", Optional[Text])
 """
 Support HTML like "<span style='color: red'>red</span>"
 """
@@ -43,7 +43,7 @@ Videos = NewType("Videos", BasicFileType)
 Audios = NewType("Audios", BasicFileType)
 Files = NewType("Files", BasicFileType)
 
-Code = NewType("Code", Optional[CodeConfig | str])
+Code = NewType("Code", Optional[CodeConfig or Text])
 """
 Support Code like:
 

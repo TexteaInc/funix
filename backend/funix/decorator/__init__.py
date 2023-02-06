@@ -180,7 +180,7 @@ def is_valid_uri(uri: str) -> bool:
     except:
         return False
 
-def get_static_uri(path: str | list[str]) -> str | list[str]:
+def get_static_uri(path: str or list[str]) -> str or list[str]:
     global __files_dict
     if isinstance(path, str):
         if not is_valid_uri(path):
