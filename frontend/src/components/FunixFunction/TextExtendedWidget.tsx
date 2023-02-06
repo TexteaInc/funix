@@ -187,7 +187,11 @@ const TextExtendedWidget = ({
           autoFocus={autofocus}
           required={required}
           disabled={disabled || readonly}
-          type={inputType as string}
+          type={
+            inputType === "number" || inputType === "integer"
+              ? "number"
+              : "text"
+          }
           value={inputValue}
           error={rawErrors.length > 0}
           onBlur={_onBlur}
