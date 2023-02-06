@@ -52,6 +52,7 @@ import { castValue, getInitValue } from "../Common/ValueOperation";
 import { GridRowModel } from "@mui/x-data-grid/models/gridRows";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import MarkdownDiv from "../Common/MarkdownDiv";
+import { sliderWidgetParser } from "../Common/SliderWidgetParser";
 
 let rowIdCounter = 0;
 
@@ -392,30 +393,21 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
 
         switch (itemType) {
           case "number":
-            if (itemWidget.indexOf("slider") !== -1) {
-              newColumn = {
-                ...newColumn,
-                width: 200,
-                editable: false,
-                renderCell: (params) => {
-                  return (
-                    <SheetSlider
-                      widget={itemWidget}
-                      type={itemType}
-                      params={params}
-                      customChange={handleCustomComponentChange}
-                    />
-                  );
-                },
-              };
-            }
-            break;
           case "integer":
             if (itemWidget.indexOf("slider") !== -1) {
+              const parsedArguments = sliderWidgetParser(itemWidget);
+
+              const min = parsedArguments[0] || 0;
+              const max = parsedArguments[1] || 100;
+              const defaultStep = itemType === "integer" ? 1 : 0.1;
+              const step = parsedArguments[2] || defaultStep;
+
+              const width = 220 + max.toString().length * 16;
+
               newColumn = {
                 ...newColumn,
+                width,
                 editable: false,
-                width: 200,
                 renderCell: (params) => {
                   return (
                     <SheetSlider
@@ -423,6 +415,9 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
                       type={itemType}
                       params={params}
                       customChange={handleCustomComponentChange}
+                      min={min}
+                      max={max}
+                      step={step}
                     />
                   );
                 },

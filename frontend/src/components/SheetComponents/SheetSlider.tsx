@@ -2,19 +2,17 @@ import { SheetInterface } from "./SheetInterface";
 import React from "react";
 import { FormControl, Grid, Input, Slider } from "@mui/material";
 import SliderValueLabel from "../Common/SliderValueLabel";
-import { sliderWidgetParser } from "../Common/SliderWidgetParser";
 
-export default function SheetSlider(props: SheetInterface) {
-  const args = sliderWidgetParser(props.widget);
-
-  const min = args[0] || 0;
-  const max = args[1] || 100;
-  const defaultStep = props.type === "integer" ? 1 : 0.1;
-  const step = args[2] || defaultStep;
-
+export default function SheetSlider(
+  props: SheetInterface & {
+    min: number;
+    max: number;
+    step: number;
+  }
+) {
   const [value, setValue] = React.useState<
     number | string | Array<number | string>
-  >(props.params.value | min);
+  >(props.params.value | props.min);
 
   const customSetValue = (value: number | string | Array<number | string>) => {
     setValue(value);
@@ -37,10 +35,10 @@ export default function SheetSlider(props: SheetInterface) {
   };
 
   const handleSliderInputBlur = () => {
-    if (value < min) {
-      customSetValue(min);
-    } else if (value > max) {
-      customSetValue(max);
+    if (value < props.min) {
+      customSetValue(props.min);
+    } else if (value > props.max) {
+      customSetValue(props.max);
     }
   };
 
@@ -54,10 +52,10 @@ export default function SheetSlider(props: SheetInterface) {
       >
         <Grid item xs>
           <Slider
-            value={typeof value === "number" ? value : min}
-            min={min}
-            max={max}
-            step={step}
+            value={typeof value === "number" ? value : props.min}
+            min={props.min}
+            max={props.max}
+            step={props.step}
             onChange={handleSliderChange}
             valueLabelDisplay="on"
             components={{
@@ -65,15 +63,15 @@ export default function SheetSlider(props: SheetInterface) {
             }}
           />
         </Grid>
-        <Grid item sx={{ maxWidth: "35%" }}>
+        <Grid item sx={{ maxWidth: "40%" }}>
           <Input
             value={value}
             size="small"
             inputProps={{
               type: "number",
-              min: min,
-              max: max,
-              step: step,
+              min: props.min,
+              max: props.max,
+              step: props.step,
             }}
             onChange={handleSliderInputChange}
             onBlur={handleSliderInputBlur}
