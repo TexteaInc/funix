@@ -1,7 +1,7 @@
 import random
 from typing import List
 import matplotlib.pyplot as plt
-from funix import funix, funix_yaml, funix_json
+from funix import funix, funix_yaml, funix_json5
 from funix.hint import Images, Files, Markdown, HTML, Code, Videos, Audios
 
 
@@ -189,7 +189,7 @@ def yaml_export(arg1: bool = False) -> dict:
         "arg1": arg1
     }
 
-@funix_json("""
+@funix_json5("""
 {
     "argument_labels": {
         "arg1": "isGood"

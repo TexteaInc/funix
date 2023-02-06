@@ -663,7 +663,7 @@ def funix(
 
     return decorator
 
-def funix_json(config: Optional[str] = ""):
+def funix_json5(config: Optional[str] = ""):
     def decorator(function: callable):
         if config == "":
             return funix()(function)
