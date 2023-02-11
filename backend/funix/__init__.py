@@ -1,4 +1,5 @@
 import importlib
+import socket
 import typing
 from threading import Thread
 import webbrowser
@@ -12,6 +13,26 @@ funix_yaml = decorator.funix_yaml
 funix_json5 = decorator.funix_json5
 import_theme = decorator.import_theme
 set_global_theme = decorator.set_global_theme
+
+class OpenFrontend(Thread):
+    def __init__(self, host: str, front_port: int, backend_port: int):
+        super(OpenFrontend, self).__init__()
+        self.host = host
+        self.front_port = front_port
+        self.backend_port = backend_port
+
+    def isServerOnline(self) -> bool:
+        try:
+            socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((self.host, self.backend_port))
+            socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((self.host, self.front_port))
+            return True
+        except:
+            return False
+
+    def run(self) -> None:
+        while not self.isServerOnline():
+            pass
+        webbrowser.open(f"http://{self.host}:{self.front_port}")
 
 def __prep(main_class: typing.Optional[str] = "functions"):
     decorator.enable_wrapper()
@@ -33,5 +54,7 @@ def run(
         frontend_start.daemon = True
         frontend_start.start()
         if not no_browser:
-            webbrowser.open(f"http://{host}:{front_port}")
+            web_browser_start = OpenFrontend(host=host, front_port=front_port, backend_port=port)
+            web_browser_start.daemon = True
+            web_browser_start.start()
     app.run(host=host, port=port)
