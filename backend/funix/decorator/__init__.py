@@ -292,9 +292,14 @@ def funix(
             if function_signature.return_annotation is not inspect._empty:
                 # return type dict enforcement for yodas only
                 try:
-                    if cast_to_list_flag := function_signature.return_annotation.__class__.__name__ == "tuple":
+                    if cast_to_list_flag := function_signature.return_annotation.__class__.__name__ == "tuple" or \
+                         function_signature.return_annotation.__name__ == "Tuple":
                         parsed_return_annotation_list = []
-                        return_annotation = list(function_signature.return_annotation)
+                        return_annotation = list(
+                            function_signature.return_annotation
+                            if function_signature.return_annotation.__class__.__name__ == "tuple" else
+                            function_signature.return_annotation.__args__
+                        )
                         for return_annotation_type in return_annotation:
                             return_annotation_type_name = getattr(return_annotation_type, "__name__")
                             if return_annotation_type_name in __supported_basic_types:
