@@ -163,7 +163,8 @@ def greet(test: str, test2: str) -> str:
 
 @funix(
     widgets = {
-        ("year", "period"): "sheet"
+        "year": ["sheet"],
+        "period": ["sheet", "slider[0, 1, 0.01]"]
     },
     treat_as={
         ("year", "period"): "column"

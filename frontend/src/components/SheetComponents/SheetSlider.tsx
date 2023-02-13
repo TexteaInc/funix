@@ -12,7 +12,7 @@ export default function SheetSlider(
 ) {
   const [value, setValue] = React.useState<
     number | string | Array<number | string>
-  >(props.params.value | props.min);
+  >(props.params.value === undefined ? props.min : props.params.value);
 
   const customSetValue = (value: number | string | Array<number | string>) => {
     setValue(value);
@@ -52,7 +52,15 @@ export default function SheetSlider(
       >
         <Grid item xs>
           <Slider
-            value={typeof value === "number" ? value : props.min}
+            value={
+              typeof value === "number"
+                ? value
+                : typeof value === "string"
+                ? props.type === "integer"
+                  ? parseInt(value)
+                  : parseFloat(value)
+                : props.min
+            }
             min={props.min}
             max={props.max}
             step={props.step}

@@ -55,7 +55,7 @@ const TextExtendedWidget = ({
 
     const [sliderValue, setSliderValue] = React.useState<
       number | string | Array<number | string>
-    >(value || min);
+    >(value === undefined ? min : value);
 
     const customSetSliderValue = (
       value: number | string | Array<number | string>
@@ -100,7 +100,15 @@ const TextExtendedWidget = ({
           ) : null}
           <Grid item xs>
             <Slider
-              value={typeof sliderValue === "number" ? sliderValue : min}
+              value={
+                typeof sliderValue === "number"
+                  ? sliderValue
+                  : typeof sliderValue === "string"
+                  ? schema.type === "integer"
+                    ? parseInt(sliderValue)
+                    : parseFloat(sliderValue)
+                  : min
+              }
               min={min}
               max={max}
               step={step}
