@@ -632,47 +632,60 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
   };
 
   const clipSheetTextToArray = (clipText: string): (string[] | undefined)[] => {
-    const allLines: string[] = clipText.split("\n");
-    return allLines.map((line: string) => {
-      const result = line.split("\t").map((element: string) => element.trim());
-      if (result.length === columns.length - 1) return result;
-    });
+    const allLines: string[] = clipText.trim().split(/\r?\n/);
+    return allLines.map((line: string) =>
+      line
+        .trim()
+        .split(/\s+|\t+/)
+        .map((element: string) => element.trim())
+    );
   };
 
   const clipSheetArrayInsertToSheet = (
     rowId: GridRowId,
     clipSheetTextArray: (string[] | undefined)[]
   ) => {
+    const newRows: { [key: string]: any }[] = [];
     clipSheetTextArray.forEach((lineArray: string[] | undefined) => {
       if (lineArray === undefined) return;
-      const newRows: { [key: string]: any }[] = [];
       const row: { [key: string]: any } = { id: rowIdCounter++ };
       lineArray.forEach((value: string, index: number) => {
         row[fields[index + 1]] = castValue(value, types[index + 1]);
       });
       newRows.push(row);
-      setRows((prevRows) => {
-        let rowIndex = 0;
+    });
 
-        try {
-          prevRows.forEach((row: GridRowModel, index: number) => {
-            if (row.id === rowId) {
-              rowIndex = index;
-              throw new Error("Done!");
-            }
-          });
-        } catch (ignoredError) {
-          // ignore
-        }
+    if (rows.length === 0) {
+      setRows(newRows);
+      return;
+    }
 
-        const left = prevRows.slice(0, rowIndex + 1);
-        const right = prevRows.slice(rowIndex + 1);
-        const summedRows = [...left, ...newRows, ...right];
-        summedRows.forEach(
-          (row: GridRowModel, index: number) => (row.id = index)
-        );
-        return summedRows;
+    if (rows.length > 0 && rowId !== 0) {
+      const beforeRowIdRows = rows.filter((row) => row.id < rowId);
+      const afterRowIdRows = rows.filter((row) => row.id > rowId);
+
+      const changedNewRows = newRows.map((row, index) => {
+        return { ...row, id: index + (rowId as number) };
       });
+
+      const changedAfterRowIdRows = afterRowIdRows.map((row, index) => {
+        return {
+          ...row,
+          id: (rowId as number) + clipSheetTextArray.length + index,
+        };
+      });
+
+      setRows([
+        ...beforeRowIdRows,
+        ...changedNewRows,
+        ...changedAfterRowIdRows,
+      ]);
+
+      return;
+    }
+
+    setRows((prevRows) => {
+      return [...prevRows, ...newRows];
     });
   };
 
