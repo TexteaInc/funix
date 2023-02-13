@@ -23,6 +23,23 @@ def elegant(arg1: bool, arg2: str) -> dict:
     }
 
 @funix(
+    widgets={
+        "location": "radio"
+    },
+    whitelist={
+        "location": [
+            "Ibaraki", "Tochigi", "Saitama", "Chiba",
+            "Tokyo", "Kanagawa", "Yamanashi"
+        ]
+    },
+    argument_labels={
+        "location": "Location",
+    }
+)
+def shuto_ken(location: str) -> str:
+    return location
+
+@funix(
     argument_labels={
         "input1": "Reactant 1",
         "input2": "Reactant 2",

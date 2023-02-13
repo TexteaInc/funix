@@ -7,8 +7,12 @@ import {
   Autocomplete,
   AutocompleteRenderInputParams,
   FormControl,
+  FormControlLabel,
+  FormLabel,
   Grid,
   Input,
+  Radio,
+  RadioGroup,
   Slider,
   TextField,
 } from "@mui/material";
@@ -37,6 +41,7 @@ const TextExtendedWidget = ({
   rawErrors = [],
   registry,
 }: WidgetProps) => {
+  const rawSchema: any = schema;
   if (
     schema.widget?.indexOf("slider") !== -1 &&
     schema.widget !== undefined &&
@@ -125,6 +130,37 @@ const TextExtendedWidget = ({
     );
   }
 
+  if (schema.widget === "radio" && "whitelist" in rawSchema) {
+    const [value, setValue] = React.useState<string>(
+      schema.default ? `${schema.default}` : ""
+    );
+
+    const _onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      setValue(event.target.value);
+      onChange(event.target.value);
+    };
+
+    return (
+      <FormControl>
+        <FormLabel>
+          <MarkdownDiv markdown={label || schema.title} isRenderInline={true} />
+        </FormLabel>
+        <RadioGroup value={value} onChange={_onChange} row>
+          {(rawSchema.whitelist as string[]).map(
+            (item: string, index: number) => (
+              <FormControlLabel
+                key={index}
+                value={item}
+                label={item}
+                control={<Radio />}
+              />
+            )
+          )}
+        </RadioGroup>
+      </FormControl>
+    );
+  }
+
   const [inputValue, setInputValue] = React.useState<
     string | number | boolean | object | null | undefined
   >(value || value === 0 ? value : "");
@@ -149,7 +185,6 @@ const TextExtendedWidget = ({
     Example,
     Whitelist,
   }
-  const rawSchema: any = schema;
   const contentPolicy: ContentPolicy = rawSchema["whitelist"]
     ? ContentPolicy.Whitelist
     : rawSchema["example"]
