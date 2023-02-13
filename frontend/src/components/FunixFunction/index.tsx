@@ -293,7 +293,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
       case "dict":
         return <GuessingDataView response={JSON.stringify(response)} />;
       case "Markdown":
-        return <MarkdownDiv markdown={response} isRenderInline={true} />;
+        return <MarkdownDiv markdown={response} isRenderInline={false} />;
       case "HTML":
         return <div dangerouslySetInnerHTML={{ __html: response }} />;
       case "Images":
@@ -367,7 +367,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
                         ? item.content[0]
                         : item.content) || ""
                     }
-                    isRenderInline={true}
+                    isRenderInline={false}
                   />
                 );
                 break;
