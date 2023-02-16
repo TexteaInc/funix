@@ -322,8 +322,6 @@ def funix(
                             return_type_parsed = getattr(function_signature.return_annotation, "__name__")
                             if return_type_parsed in __supported_basic_types:
                                 return_type_parsed = __supported_basic_types_dict[return_type_parsed]
-                            return_url_not_path_flag = True \
-                                if return_type_parsed in __supported_basic_file_types else False
                 except:
                     return_type_parsed = get_type_dict(function_signature.return_annotation)["type"]
             else:
@@ -615,6 +613,10 @@ def funix(
                                     result = str(result)
                                 if cast_to_list_flag:
                                     result = list(result)
+                                else:
+                                    if isinstance(result, str):
+                                        result = [result]
+                                if result:
                                     for index, single_return_type in enumerate(return_type_parsed):
                                         if single_return_type == "figure":
                                             fig_dict = mpld3.fig_to_dict(result[index])
@@ -626,8 +628,6 @@ def funix(
                                             else:
                                                 result[index] = get_static_uri(result[index])
                                     return result
-                                if return_url_not_path_flag:
-                                    result[index] = get_static_uri(result[index])
                                 return result
                         except:
                             return {
