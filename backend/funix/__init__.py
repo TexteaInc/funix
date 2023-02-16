@@ -44,7 +44,7 @@ def __prep(main_class: typing.Optional[str]):
 def run(
     host: typing.Optional[str] = "localhost",
     port: typing.Optional[int] = 8080,
-    front_port: typing.Optional[int] = 80,
+    front_port: typing.Optional[int] = 3000,
     main_class: typing.Optional[str] = "functions",
     no_frontend: typing.Optional[bool] = False,
     no_browser: typing.Optional[bool] = False
@@ -55,7 +55,7 @@ def run(
     if port is None:
         port = 8080
     if front_port is None:
-        front_port = 80
+        front_port = 3000
     if main_class is None:
         main_class = "functions"
     if no_frontend is None:

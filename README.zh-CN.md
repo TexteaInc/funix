@@ -41,9 +41,6 @@ pip install "git+https://github.com/TexteaInc/funix.git"
 
 ## 使用
 
-> **Note**
-> 默认前端服务将开放 80 端口。如果前端页面不可用，你可能需要以 root 权限运行 Funix，或修改前端端口号。
-
 ```text
 usage: funix [-h] [--host HOST] [--port PORT] [--front-port FRONT_PORT] [--no-frontend] [--no-browser]
              this_class main_class

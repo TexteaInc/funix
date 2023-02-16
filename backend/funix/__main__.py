@@ -28,7 +28,7 @@ if __name__ == '__main__':
     parser.add_argument('main_class', type=str, help='main class to import', action='store', default='functions')
     parser.add_argument('--host', '-H', help='host of frontend & backend', action='store', default='127.0.0.1')
     parser.add_argument('--port', '-p', help='port of backend', action='store', default='8080')
-    parser.add_argument('--front-port', '-P', help='port of frontend', action='store', default='80')
+    parser.add_argument('--front-port', '-P', help='port of frontend', action='store', default='3000')
     parser.add_argument('--no-frontend', '-F', help='disable frontend', action='store_true', default=False)
     parser.add_argument('--no-browser', '-B', help='disable auto open browser', action='store_true', default=False)
     parsed_sys_args = parser.parse_args(sys.argv)

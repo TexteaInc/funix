@@ -44,9 +44,6 @@ If you want to install Funix from a local clone:
 
 ## Usage
 
-> **Note**
-> The default frontend port number is 80. If the frontend page is unavailable, you may need root privileges to run Funix or to change the frontend port number.
-
 ```text
 usage: funix [-h] [--host HOST] [--port PORT] [--front-port FRONT_PORT] [--no-frontend] [--no-browser]
              this_class main_class
