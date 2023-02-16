@@ -1,22 +1,20 @@
-# Funix -- Building web apps without manually creating widgets
-
-> Your will be done, on earth as it is in heaven. — Matthew, 6:10
->
-> Your code be run, on the Cloud as it is locally. — Book of Funix, 3:16
+# Funix -- The laziest way to build web apps from Python
 
 [![PyPI version](https://badge.fury.io/py/funix.svg)](https://badge.fury.io/py/funix)
+
+* Read the Quick Start guide](https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md) 
+* [Watch the demo video](https://www.youtube.com/watch?v=UGp5gbR8f3c) 
 
 [简体中文](README.zh-CN.md)
 
 > **WIP**: Funix is still under development, if you have any questions, please feel free to [open an issue](https://github.com/TexteaInc/funix/issues/new).
 
-Funix automatically turns an ordinary Python function into a web app without needing you to specify any widgets.
+Funix automatically turns an ordinary Python function into a web app without needing you to specify any widgets. (See quick examples)
 Simply add a `@funix` decorator above your function and then it becomes an app in the browser for anyone, without coding skills, to use.
 
-
 Funix supports complex data types/widgets, such as multi-column data tables or Matplotlib chats.
+If you need to customize the UI, do it declaratively.
 Funix is non-intrusive. You can still run or debug your Python code locally as usual.
-Funix also has a backend, for its own frontend as well as those who wants to turn Python functions into RESTful APIs.
 
 ## Installation
 
