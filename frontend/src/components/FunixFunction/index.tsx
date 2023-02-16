@@ -264,7 +264,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
     index: number
   ): JSX.Element => {
     switch (elementType) {
-      case "figure":
+      case "Figure":
         return (
           <OutputPlot
             plotCode={JSON.stringify(response)}
@@ -448,8 +448,8 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
         });
         const columns = parsedResponse
           .filter((_, index) => {
-            if (Array.isArray(functionDetail.schema.output_indexs)) {
-              return functionDetail.schema.output_indexs.indexOf(index) === -1;
+            if (Array.isArray(functionDetail.schema.output_indexes)) {
+              return functionDetail.schema.output_indexes.indexOf(index) === -1;
             } else {
               return true;
             }

@@ -1,5 +1,6 @@
 import copy
 import random
+from typing import Any
 from uuid import uuid4 as uuid
 
 
@@ -12,7 +13,7 @@ __theme_style_sugar_dict = {
 }
 __basic_widgets = ["slider", "input", "textField", "switch", "button", "checkbox"]
 
-def dict_replace(original_dict: dict, original: str, new: any):
+def dict_replace(original_dict: dict, original: str, new: Any):
     if isinstance(original_dict, dict):
         return {
             key: dict_replace(value, original, new)
@@ -26,7 +27,7 @@ def dict_replace(original_dict: dict, original: str, new: any):
         return original_dict
 
 
-def get_full_style_from_sugar(key: str, value: any):
+def get_full_style_from_sugar(key: str, value: Any):
     sugar_info = __theme_style_sugar_dict[key]
     return dict_replace(sugar_info, "${value}", value)
 
@@ -54,12 +55,12 @@ def get_mui_theme(theme, colors):
             if prop_name == "style":
                 mui_theme["components"][widget_mui_name]["styleOverrides"].update(theme[widget_name][prop_name])
             elif prop_name == "color":
+                color_name = f"temp_{uuid().hex}"
                 if not theme[widget_name][prop_name] in mui_theme["palette"]:
                     if theme[widget_name][prop_name] in temp_colors.keys():
                         mui_theme["components"][widget_mui_name]["defaultProps"][prop_name] = \
                             temp_colors[theme[widget_name][prop_name]]
                     else:
-                        color_name = f"temp_{uuid().hex}"
                         mui_theme["palette"][color_name] = {"main": theme[widget_name][prop_name]}
                         mui_theme["components"][widget_mui_name]["defaultProps"][prop_name] = color_name
                         temp_colors[theme[widget_name][prop_name]] = color_name
@@ -96,7 +97,6 @@ def get_mui_theme(theme, colors):
                 )
             else:
                 mui_theme["components"][widget_mui_name]["defaultProps"][prop_name] = theme[widget_name][prop_name]
-
     return mui_theme
 
 def parse_theme(theme):

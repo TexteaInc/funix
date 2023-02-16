@@ -37,6 +37,6 @@ export declare module "json-schema" {
     customLayout: boolean;
     input_layout: inputRow[];
     output_layout: outputRow[];
-    output_indexs: number[];
+    output_indexes: number[];
   }
 }

@@ -1,5 +1,6 @@
 import random
 from typing import List, Tuple
+from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 from funix import funix, funix_yaml, funix_json5
 from funix.hint import Images, Files, Markdown, HTML, Code, Videos, Audios
@@ -170,7 +171,7 @@ def greet(test: str, test2: str) -> str:
         ("year", "period"): "column"
     }
 )
-def plot_test(year: List[int], period: List[float]) -> plt.figure:
+def plot_test(year: List[int], period: List[float]) -> Figure:
     fig = plt.figure()
     plt.plot(year, period)
     return fig
@@ -223,7 +224,7 @@ def json_export(arg1: bool = False) -> dict:
     }
 
 @funix()
-def more_return() -> Tuple[str, int, dict, plt.figure, plt.figure]:
+def more_return() -> Tuple[str, int, dict, Figure, Figure]:
     first_figure = plt.figure()
     plt.plot([1, 2, 3], [4, 5, 6])
     second_figure = plt.figure()

@@ -114,7 +114,7 @@ def calc(a: List[int], b: List[int], op: str) -> calc_return:
     elif op == "minus":
         return {"output": [a[i] - b[i] for i in range(min(len(a), len(b)))]}
     else:
-        raise "invalid parameter op"
+        raise Exception("invalid parameter op")
 
 
 @funix(

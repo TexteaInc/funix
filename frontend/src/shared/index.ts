@@ -22,7 +22,7 @@ export type ReturnType =
   | "list"
   | "object"
   | "dict"
-  | "figure"
+  | "Figure"
   | FunixType;
 
 export function matchType(type: BaseType): CellType {

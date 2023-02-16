@@ -34,9 +34,12 @@ class OpenFrontend(Thread):
             pass
         webbrowser.open(f"http://{self.host}:{self.front_port}")
 
-def __prep(main_class: typing.Optional[str] = "functions"):
+def __prep(main_class: typing.Optional[str]):
     decorator.enable_wrapper()
-    importlib.import_module(main_class)
+    if main_class:
+        importlib.import_module(main_class)
+    else:
+        importlib.import_module("functions")
 
 def run(
     host: typing.Optional[str] = "localhost",
@@ -47,6 +50,18 @@ def run(
     no_browser: typing.Optional[bool] = False
 ):
     __prep(main_class=main_class)
+    if host is None:
+        host = "localhost"
+    if port is None:
+        port = 8080
+    if front_port is None:
+        front_port = 80
+    if main_class is None:
+        main_class = "functions"
+    if no_frontend is None:
+        no_frontend = False
+    if no_browser is None:
+        no_browser = False
     print(f"Backend server running on http://{host}:{port}")
     if not no_frontend:
         print(f"Frontend server running on http://{host}:{front_port}")
