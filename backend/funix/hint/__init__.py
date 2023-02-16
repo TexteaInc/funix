@@ -1,5 +1,5 @@
 import sys
-from typing import Any, Dict, List, Literal, NewType, Optional, Tuple, TypedDict, Text
+from typing import Any, Dict, List, Literal, NewType, Optional, Tuple, TypedDict, Text, TypeAlias
 
 
 DestinationType = Literal["column", "row", "sheet", None]
