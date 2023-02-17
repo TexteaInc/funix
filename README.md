@@ -2,8 +2,8 @@
 
 [![PyPI version](https://badge.fury.io/py/funix.svg)](https://badge.fury.io/py/funix)
 
-* Read the Quick Start guide](https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md) 
-* [Watch the demo video](https://www.youtube.com/watch?v=UGp5gbR8f3c) 
+* [Read the Quick Start guide](https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md)
+* [Watch the demo video](https://www.youtube.com/watch?v=UGp5gbR8f3c)
 
 [简体中文](README.zh-CN.md)
 

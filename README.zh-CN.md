@@ -10,7 +10,7 @@
 
 > **WIP**: Funix 仍在开发中, 如果你有任何问题，不必拘束，请[开启一个 issue](https://github.com/TexteaInc/funix/issues/new)。
 
-Funix 可自动将一个普通的 Python 函数转换为一个可用的 Web 程序，而无需你手动创建部件。仅仅只需在你的函数上添加 `@funix` 装饰器，它就会成为 Web 应用供任何人使用，他们无需任何编程支持。
+Funix 可自动将一个普通的 Python 函数转换为一个可用的 Web 程序，而无需你手动创建部件。仅仅只需在你的函数上添加 `@funix` 装饰器，它就会成为 Web 应用供任何人使用，他们无需任何编程知识。
 
 Funix 还支持复杂的数据类型和部件，如多列数据表或者 Matplotlib 图表。Funix 是同时也是非侵入式的，你仍然可以像往常一样在本地运行或调试你的 Python 代码。Funix 还有一个后端，用于自己的前端以及那些想将 Python 函数转换为 RESTful API 的人。
 
