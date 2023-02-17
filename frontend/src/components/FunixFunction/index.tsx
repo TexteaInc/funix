@@ -15,6 +15,7 @@ import {
   Button,
   Card,
   CardContent,
+  CircularProgress,
   Divider,
   FormControl,
   FormControlLabel,
@@ -52,8 +53,15 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
     new URL(`/param/${preview.path}`, backend).toString()
   );
   const [form, setForm] = useState<Record<string, any>>({});
+  const [waiting, setWaiting] = useState(false);
+  const [asyncWaiting, setAsyncWaiting] = useState(false);
+  const [requestDone, setRequestDone] = useState(true);
   const [response, setResponse] = useState<string | null>(null);
   const [{ showFunctionDetail }, setStore] = useAtom(storeAtom);
+
+  useEffect(() => {
+    setWaiting(() => !requestDone);
+  }, [asyncWaiting]);
 
   if (detail == null) {
     console.log("Failed to display function detail");
@@ -75,13 +83,31 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
     setForm(formData);
   };
 
+  const checkResponse = async () => {
+    setTimeout(() => {
+      setAsyncWaiting((asyncWaiting) => !asyncWaiting);
+    }, 1000);
+  };
+
   const handleSubmit = async () => {
     console.log("Data submitted: ", form);
+
+    setStore((store) => ({
+      ...store,
+    }));
+
+    setRequestDone(() => false);
+
+    checkResponse().then();
+
     const response = await callFunctionRaw(
       new URL(`/call/${functionDetail.id}`, backend),
       form
     );
-    setResponse(response.toString());
+
+    setResponse(() => response.toString());
+    setWaiting(() => false);
+    setRequestDone(() => true);
   };
 
   const widgets = {
@@ -488,7 +514,15 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
           <Card>
             <CardContent>
               {formElement}
-              <Button variant="contained" onClick={handleSubmit} sx={{ mt: 1 }}>
+              <Button
+                variant="contained"
+                onClick={handleSubmit}
+                sx={{ mt: 1 }}
+                disabled={waiting}
+                startIcon={
+                  waiting && <CircularProgress size={20} color="inherit" />
+                }
+              >
                 Submit
               </Button>
             </CardContent>
