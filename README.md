@@ -1,11 +1,16 @@
-# Funix -- The laziest way to build web apps from Python
+# Funix -- The laziest way to build web apps in Python
+<div align="center">
 
 [![PyPI version](https://badge.fury.io/py/funix.svg)](https://badge.fury.io/py/funix)
 
-* [Read the Quick Start guide](https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md)
-* [Watch the demo video](https://www.youtube.com/watch?v=UGp5gbR8f3c)
+<h3><a href="https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md">QuickStart Guide and showcase</a> | <a href="https://www.youtube.com/watch?v=UGp5gbR8f3c">Intro video on YouTube</a> </h3>
 
 [简体中文](README.zh-CN.md)
+
+https://user-images.githubusercontent.com/438579/219586150-7ff491dd-dfea-41ea-bfad-4610abf1fe20.mp4
+
+</div>
+
 
 > **WIP**: Funix is still under development, if you have any questions, please feel free to [open an issue](https://github.com/TexteaInc/funix/issues/new).
 
