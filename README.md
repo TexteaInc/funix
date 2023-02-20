@@ -16,7 +16,8 @@ Funix is non-intrusive. You can still run or debug your Python code locally as u
 
 [简体中文](README.zh-CN.md)
 
-https://user-images.githubusercontent.com/438579/219586150-7ff491dd-dfea-41ea-bfad-4610abf1fe20.mp4 <br>
+https://user-images.githubusercontent.com/438579/219586150-7ff491dd-dfea-41ea-bfad-4610abf1fe20.mp4
+
 <a href="https://www.youtube.com/watch?v=UGp5gbR8f3c">Watch on YouTube</a>
 
 <br /><br />
