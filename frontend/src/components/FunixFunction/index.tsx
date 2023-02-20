@@ -541,15 +541,26 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
                 </Stack>
               </CardContent>
             </Card>
-            {showFunctionDetail ? (
-              <Card>
-                <CardContent>
-                  <Typography variant="h5">Function Detail</Typography>
-                  <ReactJson src={functionDetail} collapsed />
-                </CardContent>
-              </Card>
-            ) : (
-              <></>
+            {showFunctionDetail && (
+              <>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h5">Function Detail</Typography>
+                    <ReactJson src={functionDetail} collapsed />
+                  </CardContent>
+                </Card>
+                {functionDetail.source !== "" && (
+                  <Card>
+                    <CardContent>
+                      <Typography variant="h5">Function Source</Typography>
+                      <OutputCode
+                        code={functionDetail.source}
+                        language="python"
+                      />
+                    </CardContent>
+                  </Card>
+                )}
+              </>
             )}
           </Stack>
         </Grid>

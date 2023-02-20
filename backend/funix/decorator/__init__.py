@@ -248,6 +248,7 @@ def funix(
         path: Optional[str] = None,
         description: Optional[str] = "",
         destination: DestinationType = None,
+        show_source_code: bool = False,
         theme: Optional[str] = None,
         widgets: WidgetsType = {},
         treat_as: TreatAsType = {},
@@ -288,6 +289,11 @@ def funix(
                 "name": function_name,
                 "path": endpoint
             })
+
+            if show_source_code:
+                source_code = inspect.getsource(function)
+            else:
+                source_code = ""
 
             function_signature = inspect.signature(function)
             function_params = function_signature.parameters
@@ -618,7 +624,8 @@ def funix(
                     "output_layout": return_output_layout,
                     "output_indexes": return_output_indexes
                 },
-                "destination": destination
+                "destination": destination,
+                "source": source_code,
             }
 
             get_wrapper = app.get(f"/param/{endpoint}")

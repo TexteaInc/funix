@@ -258,3 +258,10 @@ def hello_world(name: str) -> str:
 @funix()
 def local_return() -> Tuple[Images, Files]:
     return "./files/test.png", "./files/test.txt"
+
+
+@funix(
+    show_source_code = True
+)
+def show_source_code() -> str:
+    return "Hello World"

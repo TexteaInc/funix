@@ -1,4 +1,6 @@
+import { Card } from "@mui/material";
 import { Prism } from "react-syntax-highlighter";
+import { coy } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 interface OutputCodeProps {
   code: string;
@@ -6,5 +8,20 @@ interface OutputCodeProps {
 }
 
 export default function OutputCode(props: OutputCodeProps) {
-  return <Prism language={props.language}>{props.code}</Prism>;
+  return (
+    <Card
+      sx={{
+        width: "100%",
+      }}
+    >
+      <Prism
+        language={props.language}
+        showLineNumbers
+        wrapLongLines
+        style={coy}
+      >
+        {props.code}
+      </Prism>
+    </Card>
+  );
 }
