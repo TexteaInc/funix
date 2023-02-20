@@ -86,7 +86,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
   const checkResponse = async () => {
     setTimeout(() => {
       setAsyncWaiting((asyncWaiting) => !asyncWaiting);
-    }, 1000);
+    }, 300);
   };
 
   const handleSubmit = async () => {
