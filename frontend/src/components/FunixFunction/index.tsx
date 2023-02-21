@@ -127,16 +127,6 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
     returnType?: { [key: string]: BaseType } | ReturnType[] | ReturnType;
   };
 
-  const getSingleResponse = (response: string): any => {
-    try {
-      const result = JSON.parse(response);
-      if ("error_body" in result && "error_type" in result) return result;
-      else return [result];
-    } catch (unusedError) {
-      return [response];
-    }
-  };
-
   const GuessingDataView: React.FC<ResponseViewProps> = ({ response }) => {
     if (response === null) {
       return <></>;
@@ -371,10 +361,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
       ) {
         const listReturnType =
           typeof returnType === "string" ? [returnType] : returnType;
-        const parsedResponse =
-          typeof returnType === "string"
-            ? getSingleResponse(response)
-            : JSON.parse(response);
+        const parsedResponse = JSON.parse(response);
         if (!Array.isArray(parsedResponse))
           // but never, error lol
           return <ReactJson src={parsedResponse} />;
