@@ -42,6 +42,7 @@ import Grid2 from "@mui/material/Unstable_Grid2";
 import { useAtom } from "jotai";
 import { storeAtom } from "../../store";
 import Switch from "@mui/material/Switch";
+import OutputError from "./OutputComponents/OutputError";
 
 export type FunctionDetailProps = {
   preview: FunctionPreview;
@@ -133,6 +134,11 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
     } else {
       try {
         const parsedResponse: object = JSON.parse(response);
+        if ("error_body" in parsedResponse) {
+          return (
+            <OutputError error={parsedResponse as { error_body: string }} />
+          );
+        }
         const is1dArray = (target: any) => {
           if (!Array.isArray(target)) return false;
           else {
@@ -363,8 +369,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
           typeof returnType === "string" ? [returnType] : returnType;
         const parsedResponse = JSON.parse(response);
         if (!Array.isArray(parsedResponse))
-          // but never, error lol
-          return <ReactJson src={parsedResponse} />;
+          return <GuessingDataView response={response} />;
         const output: outputRow[] = functionDetail.schema.output_layout;
         const layout: JSX.Element[] = [];
         output.forEach((row) => {
