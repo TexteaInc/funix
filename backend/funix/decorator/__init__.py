@@ -397,7 +397,10 @@ def funix(
                     elif "files" in row_item:
                         row_item_done = conv_row_item(row_item, "files")
                     elif "code" in row_item:
-                        row_item_done = conv_row_item(row_item, "code")
+                        row_item_done = row_item
+                        row_item_done["type"] = "code"
+                        row_item_done["content"] = row_item_done["code"]
+                        row_item_done.pop("code")
                     elif "return" in row_item:
                         row_item_done["type"] = "return"
                         return_output_indexes.append(row_item_done["return"])

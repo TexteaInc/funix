@@ -38,7 +38,7 @@ ArgumentConfigType = Optional[
 
 class CodeConfig(TypedDict):
     lang: Optional[str | Text]
-    content: Optional[str | Text]
+    code: Optional[str | Text]
 
 
 BasicFileType = Optional[List[Text] | Text | list[str] | str]
@@ -80,7 +80,7 @@ Support Code like:
 
 {
     "lang": "python",
-    "content": "print('hello world')"
+    "code": "print('hello world')"
 }
 
 or just a string like "print('hello world')"

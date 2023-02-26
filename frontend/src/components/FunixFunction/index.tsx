@@ -333,12 +333,12 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
           return <OutputCode code={response} />;
         } else {
           const outputCodeProp = response as {
-            content: string;
+            code: string;
             lang?: string;
           };
           return (
             <OutputCode
-              code={outputCodeProp.content}
+              code={outputCodeProp.code}
               language={outputCodeProp.lang}
             />
           );

@@ -246,7 +246,7 @@ def file_return() -> Tuple[Files, Code]:
     return "https://github.com/TexteaInc/funix/archive/refs/heads/main.zip", \
         {
             "lang": "python",
-            "content": """from funix import funix
+            "code": """from funix import funix
 
 @funix()
 def hello_world(name: str) -> str:
@@ -259,6 +259,15 @@ def hello_world(name: str) -> str:
 def local_return() -> Tuple[Images, Files]:
     return "./files/test.png", "./files/test.txt"
 
+
+@funix(
+    output_layout=[
+        [{"code": "return 'Hello'"}],
+        [{"code": "const fn = () => 'Hello'"}],
+    ]
+)
+def code_return() -> str:
+    return "Test"
 
 @funix(
     show_source_code = True
