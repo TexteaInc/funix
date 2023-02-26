@@ -108,10 +108,10 @@ def get_type_dict(annotation):
                 "type": getattr(annotation, "__name__")
             }
         elif annotation_type_class_name in ["UnionType", "_UnionGenericAlias"]:
-            if len(annotation.__args__) != 2 or annotation.__args__[0].__name__ == "NoneType" or \
-                annotation.__args__[1].__name__ != "NoneType":
+            if len(getattr(annotation, "__args__")) != 2 or getattr(annotation, "__args__")[0].__name__ == "NoneType" or \
+                getattr(annotation, "__args__")[1].__name__ != "NoneType":
                 raise Exception("Must be X | None, Optional[X] or Union[X, None]")
-            return get_type_dict(annotation.__args__[0])
+            return get_type_dict(getattr(annotation, "__args__")[0])
         else:
             # raise Exception("Unsupported annotation_type_class_name")
             return {
