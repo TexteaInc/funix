@@ -103,11 +103,15 @@ def get_type_dict(annotation):
                 "type": "typing.Dict",
                 "keys": key_and_type
             }
-
         elif annotation_type_class_name == "type":
             return {
                 "type": getattr(annotation, "__name__")
             }
+        elif annotation_type_class_name in ["UnionType", "_UnionGenericAlias"]:
+            if len(annotation.__args__) != 2 or annotation.__args__[0].__name__ == "NoneType" or \
+                annotation.__args__[1].__name__ != "NoneType":
+                raise Exception("Must be X | None, Optional[X] or Union[X, None]")
+            return get_type_dict(annotation.__args__[0])
         else:
             # raise Exception("Unsupported annotation_type_class_name")
             return {

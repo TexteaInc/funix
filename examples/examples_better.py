@@ -1,5 +1,5 @@
 import random
-from typing import List, Tuple
+from typing import List, Optional, Tuple, Literal, Union
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 from funix import funix, funix_yaml, funix_json5
@@ -27,17 +27,11 @@ def elegant(arg1: bool, arg2: str) -> dict:
     widgets={
         "location": "radio"
     },
-    whitelist={
-        "location": [
-            "Ibaraki", "Tochigi", "Saitama", "Chiba",
-            "Tokyo", "Kanagawa", "Yamanashi"
-        ]
-    },
     argument_labels={
         "location": "Location",
     }
 )
-def shuto_ken(location: str) -> str:
+def shuto_ken(location: Literal["Ibaraki", "Tochigi", "Saitama", "Chiba", "Tokyo", "Kanagawa", "Yamanashi"]) -> str:
     return location
 
 @funix(
@@ -274,3 +268,14 @@ def code_return() -> str:
 )
 def show_source_code() -> str:
     return "Hello World"
+
+@funix()
+def optional_test(arg1: str | None = None, arg2: Optional[str] = None, arg3: Union[str, None] = None) -> str:
+    string = ""
+    for i in [arg1, arg2, arg3]:
+        if i is None:
+            string += f"None, "
+        else:
+            string += f"{i}, "
+    string = string[:-2]
+    return string
