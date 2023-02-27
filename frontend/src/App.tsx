@@ -124,7 +124,7 @@ const App = () => {
           </IconButton>
         </Toolbar>
       </AppBar>
-      <Container sx={{ paddingY: 2 }}>
+      <Container sx={{ paddingTop: 2, paddingBottom: 8 }}>
         {backend ? (
           <Stack spacing={2}>
             <FunixFunctionList backend={new URL(backend)} />
@@ -144,7 +144,8 @@ const App = () => {
         sx={{
           position: "fixed",
           bottom: 0,
-          width: "100%",
+          left: 0,
+          right: 0,
           padding: ".5rem",
         }}
         component="footer"

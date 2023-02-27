@@ -41,15 +41,10 @@ class CodeConfig(TypedDict):
     code: Optional[str | Text]
 
 
-BasicFileType = Optional[List[Text] | Text | list[str] | str]
+BasicFileType = Optional[Text | str]
 """
-List[str]:
-    For multiple URLs, paths
-    For example: ["https://example.org/imgs/1.png", "https://example.org/imgs/2.png"]
-
-str:
-    For URL, path
-    For example: "https://example.org/imgs/1.png"
+For URL, path
+For example: "https://example.org/imgs/1.png"
 """
 
 _Markdown = NewType("Markdown", type(Optional[str | Text]))
@@ -64,14 +59,14 @@ HTML: TypeAlias = _HTML
 Support HTML like "<span style='color: red'>red</span>"
 """
 
-_Images = NewType("Images", type(BasicFileType))
-Images: TypeAlias = _Images
-_Videos = NewType("Videos", type(BasicFileType))
-Videos: TypeAlias = _Videos
-_Audios = NewType("Audios", type(BasicFileType))
-Audios: TypeAlias = _Audios
-_Files = NewType("Files", type(BasicFileType))
-Files: TypeAlias = _Files
+_Image = NewType("Images", type(BasicFileType))
+Image: TypeAlias = _Image
+_Video = NewType("Videos", type(BasicFileType))
+Video: TypeAlias = _Video
+_Audio = NewType("Audios", type(BasicFileType))
+Audio: TypeAlias = _Audio
+_File = NewType("Files", type(BasicFileType))
+File: TypeAlias = _File
 
 _Code = NewType("Code", type(Optional[str | Text | CodeConfig]))
 Code: TypeAlias = _Code

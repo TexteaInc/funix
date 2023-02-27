@@ -322,6 +322,10 @@ def funix(
                             return_annotation_type_name = getattr(return_annotation_type, "__name__")
                             if return_annotation_type_name in __supported_basic_types:
                                 return_annotation_type_name = __supported_basic_types_dict[return_annotation_type_name]
+                            elif return_annotation_type_name == "List":
+                                list_type_name = getattr(getattr(return_annotation_type, "__args__")[0], "__name__")
+                                if list_type_name in __supported_basic_file_types:
+                                    return_annotation_type_name = list_type_name
                             parsed_return_annotation_list.append(return_annotation_type_name)
                         return_type_parsed = parsed_return_annotation_list
                     else:
@@ -340,6 +344,10 @@ def funix(
                             return_type_parsed = getattr(function_signature.return_annotation, "__name__")
                             if return_type_parsed in __supported_basic_types:
                                 return_type_parsed = __supported_basic_types_dict[return_type_parsed]
+                            elif return_type_parsed == "List":
+                                list_type_name = getattr(getattr(function_signature.return_annotation, "__args__")[0], "__name__")
+                                if list_type_name in __supported_basic_file_types:
+                                    return_type_parsed = list_type_name
                 except:
                     return_type_parsed = get_type_dict(function_signature.return_annotation)
                     if not return_type_parsed is None:

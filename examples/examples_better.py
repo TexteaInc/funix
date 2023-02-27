@@ -3,7 +3,7 @@ from typing import List, Optional, Tuple, Literal, Union
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 from funix import funix, funix_yaml, funix_json5
-from funix.hint import Images, Files, Markdown, HTML, Code, Videos, Audios
+from funix.hint import Image, File, Markdown, HTML, Code, Video, Audio
 
 
 @funix(
@@ -115,7 +115,7 @@ def guess(
         [{"return": 1}],
     ]
 )
-def github_banner(url: str) -> Tuple[Images, Files]:
+def github_banner(url: str) -> Tuple[Image, File]:
     author = url.split("/")[3]
     name = url.split("/")[4]
     return f"https://opengraph.githubassets.com/1/{author}/{name}", f"{url}/archive/refs/heads/main.zip"
@@ -230,13 +230,13 @@ def more_more_return() -> Tuple[Markdown, HTML]:
     return "**This is ~~Markdown~~**", "<span style='color: blue'>This is HTML</span>"
 
 @funix()
-def media_return() -> Tuple[Images, Videos, Audios]:
+def media_return() -> Tuple[Image, List[Video], Audio]:
     return "https://opengraph.githubassets.com/1/TexteaInc/Json-viewer", \
         ["http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4", "https://www.w3schools.com/html/movie.mp4"], \
         "http://curiosity.shoutca.st:8019/128"
 
 @funix()
-def file_return() -> Tuple[Files, Code]:
+def file_return() -> Tuple[File, Code]:
     return "https://github.com/TexteaInc/funix/archive/refs/heads/main.zip", \
         {
             "lang": "python",
@@ -250,7 +250,7 @@ def hello_world(name: str) -> str:
 
 
 @funix()
-def local_return() -> Tuple[Images, Files]:
+def local_return() -> Tuple[Image, File]:
     return "./files/test.png", "./files/test.txt"
 
 
