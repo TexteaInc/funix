@@ -1,3 +1,4 @@
+import copy
 import os
 import re
 import json
@@ -584,6 +585,7 @@ def funix(
                     json_schema_props[function_arg_name]["type"] = "array"
 
             all_of = []
+            delete_keys = set()
             safe_conditional_visible = {} if conditional_visible is None else conditional_visible
 
             for conditional_visible_item in safe_conditional_visible:
@@ -605,8 +607,11 @@ def funix(
                 for then_item in then_items:
                     config["then"]["properties"][then_item] = json_schema_props[then_item]
                     config["required"].append(then_item)
-                    json_schema_props.pop(then_item)
+                    delete_keys.add(then_item)
                 all_of.append(config)
+
+            for key in delete_keys:
+                json_schema_props.pop(key)
 
             keep_ordered_list = list(function_signature.parameters.keys())
             keep_ordered_dict = {}
