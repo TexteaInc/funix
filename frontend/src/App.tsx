@@ -24,7 +24,7 @@ import {
 import FunixFunctionList from "./components/FunixFunctionList";
 import FunixFunctionSelected from "./components/FunixFunctionSelected";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Settings } from "@mui/icons-material";
+import { GitHub, Settings, Twitter } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import { getConfig } from "./shared";
 import { storeAtom } from "./store";
@@ -145,22 +145,33 @@ const App = () => {
           position: "fixed",
           bottom: 0,
           width: "100%",
-          paddingY: ".5rem",
+          padding: ".5rem",
         }}
         component="footer"
       >
         <Container maxWidth="lg">
-          <Box
-            sx={{
-              flexGrow: 1,
-              justifyContent: "center",
-              display: "flex",
-            }}
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+            spacing={2}
           >
-            <Typography variant="h6" color="initial">
-              Power by <Link href="http://funix.io">Funix</Link>
+            <Typography variant="body2">
+              Powered by <Link href="http://funix.io">Funix</Link>
             </Typography>
-          </Box>
+            <Box>
+              <Link href="https://github.com/TexteaInc/funix">
+                <IconButton>
+                  <GitHub />
+                </IconButton>
+              </Link>
+              <Link href="https://twitter.com/texteaInc">
+                <IconButton>
+                  <Twitter />
+                </IconButton>
+              </Link>
+            </Box>
+          </Stack>
         </Container>
       </Paper>
     </ThemeProvider>
