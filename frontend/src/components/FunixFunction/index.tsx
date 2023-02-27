@@ -11,6 +11,9 @@ import {
 } from "../../shared";
 import useSWR from "swr";
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Alert,
   Button,
   Card,
@@ -43,6 +46,7 @@ import { useAtom } from "jotai";
 import { storeAtom } from "../../store";
 import Switch from "@mui/material/Switch";
 import OutputError from "./OutputComponents/OutputError";
+import { ExpandMore } from "@mui/icons-material";
 
 export type FunctionDetailProps = {
   preview: FunctionPreview;
@@ -534,25 +538,22 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
               </CardContent>
             </Card>
             {showFunctionDetail && (
-              <>
-                <Card>
-                  <CardContent>
-                    <Typography variant="h5">Function Detail</Typography>
-                    <ReactJson src={functionDetail} collapsed />
-                  </CardContent>
-                </Card>
-                {functionDetail.source !== "" && (
-                  <Card>
-                    <CardContent>
-                      <Typography variant="h5">Function Source</Typography>
-                      <OutputCode
-                        code={functionDetail.source}
-                        language="python"
-                      />
-                    </CardContent>
-                  </Card>
-                )}
-              </>
+              <Card>
+                <CardContent>
+                  <Typography variant="h5">Function Detail</Typography>
+                  <ReactJson src={functionDetail} collapsed />
+                </CardContent>
+              </Card>
+            )}
+            {functionDetail.source !== "" && (
+              <Accordion>
+                <AccordionSummary expandIcon={<ExpandMore />}>
+                  <Typography variant="h5">Source Code</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <OutputCode code={functionDetail.source} language="python" />
+                </AccordionDetails>
+              </Accordion>
             )}
           </Stack>
         </Grid>

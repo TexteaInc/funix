@@ -90,7 +90,7 @@ const App = () => {
                 }}
               />
             }
-            label="Show function detail and source code"
+            label="Show function detail"
           />
         </DialogContent>
         <DialogActions>
