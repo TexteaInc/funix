@@ -2,6 +2,7 @@ import {
   Alert,
   AlertTitle,
   AppBar,
+  Box,
   Button,
   Container,
   createTheme,
@@ -11,6 +12,8 @@ import {
   DialogTitle,
   FormControlLabel,
   IconButton,
+  Link,
+  Paper,
   Stack,
   Switch,
   TextField,
@@ -137,6 +140,29 @@ const App = () => {
           </Alert>
         )}
       </Container>
+      <Paper
+        sx={{
+          position: "fixed",
+          bottom: 0,
+          width: "100%",
+          paddingY: ".5rem",
+        }}
+        component="footer"
+      >
+        <Container maxWidth="lg">
+          <Box
+            sx={{
+              flexGrow: 1,
+              justifyContent: "center",
+              display: "flex",
+            }}
+          >
+            <Typography variant="h6" color="initial">
+              Power by <Link href="http://funix.io">Funix</Link>
+            </Typography>
+          </Box>
+        </Container>
+      </Paper>
     </ThemeProvider>
   );
 };
