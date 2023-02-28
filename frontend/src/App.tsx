@@ -126,7 +126,11 @@ const App = () => {
       </AppBar>
       <Container sx={{ paddingTop: 2, paddingBottom: 8 }} maxWidth={false}>
         {backend ? (
-          <Stack spacing={2} sx={{ width: "100%", margin: "0 auto" }}>
+          <Stack
+            spacing={2}
+            sx={{ width: "100%", margin: "0 auto" }}
+            id="funix-stack"
+          >
             <FunixFunctionList backend={new URL(backend)} />
             <FunixFunctionSelected backend={new URL(backend)} />
           </Stack>

@@ -101,13 +101,12 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
 
   const handleResize = (event: PointerEvent) => {
     event.preventDefault();
-    const newLeftWidth = (event.clientX + 16) / document.body.clientWidth;
+    const newLeftWidth = event.clientX / document.body.clientWidth;
     const newRightWidth = 1 - newLeftWidth;
-    const newWidth = [
+    setWidth([
       `${(newLeftWidth * 100).toFixed(3)}%`,
       `${(newRightWidth * 100).toFixed(3)}%`,
-    ];
-    setWidth(newWidth);
+    ]);
   };
 
   const resetWidth = () => {
@@ -564,9 +563,6 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
           sx={{
             width: "16px",
           }}
-          onContextMenu={(event) => {
-            event.preventDefault();
-          }}
         >
           <Box
             id="resize-line"
@@ -582,12 +578,10 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
             }}
             onContextMenu={(event) => {
               event.preventDefault();
+              resetWidth();
             }}
             onPointerDown={(event) => {
               event.preventDefault();
-              if (event.button === 2) {
-                resetWidth();
-              }
               setOnResizing(true);
               document.body.style.cursor = "col-resize";
               document.body.addEventListener("pointermove", handleResize);
@@ -602,7 +596,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
         <Grid
           item
           sx={{
-            width: `${width[1]}`,
+            width: `calc(${width[1]})`,
           }}
         >
           <Stack spacing={2}>
