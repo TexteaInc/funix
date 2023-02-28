@@ -15,6 +15,7 @@ import {
   AccordionDetails,
   AccordionSummary,
   Alert,
+  Box,
   Button,
   Card,
   CardContent,
@@ -62,11 +63,21 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
   const [asyncWaiting, setAsyncWaiting] = useState(false);
   const [requestDone, setRequestDone] = useState(true);
   const [response, setResponse] = useState<string | null>(null);
-  const [{ showFunctionDetail }, setStore] = useAtom(storeAtom);
+  const [{ showFunctionDetail, inputOutputWidth }, setStore] =
+    useAtom(storeAtom);
+  const [width, setWidth] = useState(inputOutputWidth);
+  const [onResizing, setOnResizing] = useState(false);
 
   useEffect(() => {
     setWaiting(() => !requestDone);
   }, [asyncWaiting]);
+
+  useEffect(() => {
+    setStore((store) => ({
+      ...store,
+      inputOutputWidth: width,
+    }));
+  }, [onResizing]);
 
   if (detail == null) {
     console.log("Failed to display function detail");
@@ -86,6 +97,25 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
   const handleChange = ({ formData }: Record<string, any>) => {
     // console.log("Data changed: ", formData);
     setForm(formData);
+  };
+
+  const handleResize = (event: PointerEvent) => {
+    event.preventDefault();
+    const newLeftWidth = (event.clientX + 16) / document.body.clientWidth;
+    const newRightWidth = 1 - newLeftWidth;
+    const newWidth = [
+      `${(newLeftWidth * 100).toFixed(3)}%`,
+      `${(newRightWidth * 100).toFixed(3)}%`,
+    ];
+    setWidth(newWidth);
+  };
+
+  const resetWidth = () => {
+    setWidth(["50%", "50%"]);
+    setStore((store) => ({
+      ...store,
+      inputOutputWidth: ["50%", "50%"],
+    }));
   };
 
   const checkResponse = async () => {
@@ -505,8 +535,13 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
 
   return (
     <Stack spacing={2}>
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
+      <Grid container>
+        <Grid
+          item
+          sx={{
+            width: `calc(${width[0]} - 16px)`,
+          }}
+        >
           <Card>
             <CardContent>
               {formElement}
@@ -524,7 +559,52 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid
+          item
+          sx={{
+            width: "16px",
+          }}
+          onContextMenu={(event) => {
+            event.preventDefault();
+          }}
+        >
+          <Box
+            id="resize-line"
+            sx={{
+              height: "100%",
+              width: "65%",
+              margin: "0 auto",
+              backgroundColor: `${onResizing ? "grey.100" : ""}`,
+              "&:hover": {
+                backgroundColor: "grey.100",
+                cursor: "col-resize",
+              },
+            }}
+            onContextMenu={(event) => {
+              event.preventDefault();
+            }}
+            onPointerDown={(event) => {
+              event.preventDefault();
+              if (event.button === 2) {
+                resetWidth();
+              }
+              setOnResizing(true);
+              document.body.style.cursor = "col-resize";
+              document.body.addEventListener("pointermove", handleResize);
+              document.body.addEventListener("pointerup", () => {
+                document.body.style.cursor = "default";
+                setOnResizing(false);
+                document.body.removeEventListener("pointermove", handleResize);
+              });
+            }}
+          />
+        </Grid>
+        <Grid
+          item
+          sx={{
+            width: `${width[1]}`,
+          }}
+        >
           <Stack spacing={2}>
             <Card>
               <CardContent>
