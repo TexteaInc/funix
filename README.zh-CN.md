@@ -42,8 +42,7 @@ pip install "git+https://github.com/TexteaInc/funix.git"
 ## 使用
 
 ```text
-usage: funix [-h] [--host HOST] [--port PORT] [--front-port FRONT_PORT] [--no-frontend] [--no-browser]
-             this_class main_class
+usage: funix [-h] [--host HOST] [--port PORT] [--no-frontend] [--no-browser] this_class main_class
 
 Funix
 
@@ -54,9 +53,7 @@ positional arguments:
 options:
   -h, --help            show this help message and exit
   --host HOST, -H HOST  host of frontend & backend
-  --port PORT, -p PORT  port of backend
-  --front-port FRONT_PORT, -P FRONT_PORT
-                        port of frontend
+  --port PORT, -p PORT  port of frontend & backend
   --no-frontend, -F     disable frontend
   --no-browser, -B      disable auto open browser
 ```

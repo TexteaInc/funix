@@ -28,14 +28,14 @@ https://user-images.githubusercontent.com/438579/219586150-7ff491dd-dfea-41ea-bf
 > **WIP**: Funix is still under development, if you have any questions, please feel free to [open an issue](https://github.com/TexteaInc/funix/issues/new).
 
 
-## Usage 
+## Usage
 
-Add as few as two lines of code above your function and then the function is vitialized into a web app. 
+Add as few as two lines of code above your function and then the function is vitialized into a web app.
 
 ```python
 from funix import funix # add line one
 
-@funix()                # add line two 
+@funix()                # add line two
 def hello(your_name: str) -> str:
     return f"Hello, {your_name}."
 ```
@@ -47,7 +47,7 @@ Then run this at the terminal:
 python3 -m funix hello
 ```
 
-A web app will be launched at `http://localhost:80` (use ``-P {PORT Number}` if you are not root or sudo) and automatically opened in a browser window.
+A web app will be launched at `http://localhost:3000` and automatically opened in a browser window.
 
 ![screenshots/hello.png](https://github.com/TexteaInc/funix-doc/raw/main/screenshots/hello.png)
 
@@ -57,14 +57,14 @@ A web app will be launched at `http://localhost:80` (use ``-P {PORT Number}` if 
 ### Shortest Dall-E web app in Python
 
 ```python
-from funix import funix                      # add line one 
+from funix import funix                      # add line one
 from funix.hint import Images                # add line two
 import openai  # pip install openai
 
 openai.api_key = os.environ.get("OPENAI_KEY")
 
-@funix()                                     # add line three 
-def dalle(prompt: str = "a cat") -> Images:  
+@funix()                                     # add line three
+def dalle(prompt: str = "a cat") -> Images:
     response = openai.Image.create(prompt=prompt, n=1, size="1024x1024")
     return response["data"][0]["url"]
 ```
@@ -73,8 +73,8 @@ def dalle(prompt: str = "a cat") -> Images:
 
 ### Compound UIs
 
-```python 
-from typing import List 
+```python
+from typing import List
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
@@ -85,7 +85,7 @@ from matplotlib.figure import Figure
         }
 )
 
-# below is a simple matplotlib function 
+# below is a simple matplotlib function
 def table_plot(a: List[int], b: List[float]) -> Figure:
     fig = plt.figure()
     plt.plot(a, b)
@@ -94,9 +94,9 @@ def table_plot(a: List[int], b: List[float]) -> Figure:
 
 ![table plot demo static](https://github.com/TexteaInc/funix-doc/raw/main/screenshots/table_plot.png)
 
-### Declarative UI configuration 
+### Declarative UI configuration
 
-In Funix, your UI configurations are not intermingled with the functions under UI components. They can be put into configuration files or in themes. 
+In Funix, your UI configurations are not intermingled with the functions under UI components. They can be put into configuration files or in themes.
 
 ```python
 from funix import funix_yaml
@@ -106,7 +106,7 @@ from funix import funix_yaml
         x: slider[0,10,1]
         op: radio
     whitelist:
-        op: 
+        op:
             - square
             - cube
 """)
@@ -152,8 +152,7 @@ If you want to install Funix from a local clone:
 ## Usage
 
 ```text
-usage: funix [-h] [--host HOST] [--port PORT] [--front-port FRONT_PORT] [--no-frontend] [--no-browser]
-             this_class main_class
+usage: funix [-h] [--host HOST] [--port PORT] [--no-frontend] [--no-browser] this_class main_class
 
 Funix
 
@@ -164,9 +163,7 @@ positional arguments:
 options:
   -h, --help            show this help message and exit
   --host HOST, -H HOST  host of frontend & backend
-  --port PORT, -p PORT  port of backend
-  --front-port FRONT_PORT, -P FRONT_PORT
-                        port of frontend
+  --port PORT, -p PORT  port of frontend & backend
   --no-frontend, -F     disable frontend
   --no-browser, -B      disable auto open browser
 ```
@@ -196,7 +193,7 @@ yarn funix:build # Build to Funix Python folder
 yarn funix:test # Start Funix frontend server (automatically set backend server to http://127.0.0.1:8080)
 ```
 
-## How to contribute 
+## How to contribute
 
 Funix is open-sourced under the MIT License. Community contribution is not only welcomed but desired. Feel free to fork and make a pull request when you are ready. You can also report bugs, suggest new features, etc. via the [issue tracker](https://github.com/TexteaInc/funix/issues/new).
 
