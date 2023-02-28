@@ -81,7 +81,9 @@ randomNumber = (random.randint(0, 100) + random.randint(0, 100)) / 2
         ],
         [{"dividing": "Cheat Option", "position": "left"}],
         [{"argument": "show", "width": 12}]
-    ]
+    ],
+    rename="Guess Number",
+    path="guess"
 )
 def guess(
     input1: int = 0,

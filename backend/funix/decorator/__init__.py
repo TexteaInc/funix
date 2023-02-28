@@ -1,4 +1,3 @@
-import copy
 import os
 import re
 import json
@@ -25,6 +24,7 @@ __supported_basic_types_dict = {
     "bool": "boolean"
 }
 __supported_basic_file_types = ["Images", "Videos", "Audios", "Files"]
+__banned_function_name_and_path = ["list", "file", "static", "config", "param", "call"]
 __supported_basic_types = list(__supported_basic_types_dict.keys())
 __decorated_functions_list = list()
 __files_dict = {}
@@ -44,7 +44,7 @@ def enable_wrapper():
                 "list": __decorated_functions_list,
             }
 
-        @app.get("/files/<string:fid>")
+        @app.get("/file/<string:fid>")
         def __funix_export_file(fid: str):
             if fid in __files_dict:
                 return flask.send_file(__files_dict[fid])
@@ -109,7 +109,8 @@ def get_type_dict(annotation):
                 "type": getattr(annotation, "__name__")
             }
         elif annotation_type_class_name in ["UnionType", "_UnionGenericAlias"]:
-            if len(getattr(annotation, "__args__")) != 2 or getattr(annotation, "__args__")[0].__name__ == "NoneType" or \
+            if len(getattr(annotation, "__args__")) != 2 or \
+                getattr(annotation, "__args__")[0].__name__ == "NoneType" or \
                 getattr(annotation, "__args__")[1].__name__ != "NoneType":
                 raise Exception("Must be X | None, Optional[X] or Union[X, None]")
             return get_type_dict(getattr(annotation, "__args__")[0])
@@ -191,12 +192,12 @@ def is_valid_uri(uri: str) -> bool:
 def get_real_uri(path: str) -> str:
     if not is_valid_uri(path):
         fid = uuid().hex
-        result = f"/files/{fid}"
+        result = f"/file/{fid}"
         abs_path = os.path.abspath(path)
         if not abs_path in list(__files_dict.values()):
             __files_dict[fid] = abs_path
         else:
-            return f"/files/{list(__files_dict.keys())[list(__files_dict.values()).index(abs_path)]}"
+            return f"/file/{list(__files_dict.keys())[list(__files_dict.values()).index(abs_path)]}"
         return result
     else:
         return path
@@ -251,6 +252,7 @@ def conv_row_item(row_item: dict, item_type: str):
 
 def funix(
         path: Optional[str] = None,
+        rename: Optional[str] = None,
         description: Optional[str] = "",
         destination: DestinationType = None,
         show_source_code: bool = False,
@@ -270,7 +272,22 @@ def funix(
     def decorator(function: Callable):
         if __wrapper_enabled:
             id: str = str(uuid())
-            function_name = getattr(function, "__name__")  # function name as id to retrieve function info
+            raw_function_name = getattr(function, "__name__")  # function name as id to retrieve function info
+            function_name = raw_function_name  # function name as id to retrieve function info
+            if function_name in __banned_function_name_and_path:
+                if rename is None:
+                    raise Exception(f"{function_name} is not allowed")
+                else:
+                    if rename in __banned_function_name_and_path:
+                        raise Exception(f"{function_name}'s rename: {rename} is not allowed")
+                    else:
+                        function_name = rename
+            else:
+                if rename is not None:
+                    if rename in __banned_function_name_and_path:
+                        raise Exception(f"{function_name}'s rename: {rename} is not allowed")
+                    else:
+                        function_name = rename
             function_theme = get_theme(theme)
 
             try:
@@ -288,6 +305,8 @@ def funix(
             if path is None:
                 endpoint = function_name
             else:
+                if path in __banned_function_name_and_path:
+                    raise Exception(f"{function_name}'s path: {path} is not allowed")
                 endpoint = path.strip("/")
 
             __decorated_functions_list.append({
@@ -355,7 +374,6 @@ def funix(
             else:
                 return_type_parsed = None
 
-
             return_input_layout = []
 
             safe_input_layout = [] if input_layout is None else input_layout
@@ -379,7 +397,7 @@ def funix(
                             row_item_done["content"] = row_item_done["dividing"]
                         row_item_done.pop("dividing")
                     else:
-                        raise Exception("Invalid input layout item")
+                        raise Exception(f"{raw_function_name}: Invalid input layout item {row} ")
                     row_layout.append(row_item_done)
                 return_input_layout.append(row_layout)
 
@@ -418,7 +436,7 @@ def funix(
                         row_item_done["type"] = "return"
                         return_output_indexes.append(row_item_done["return"])
                     else:
-                        raise Exception("Invalid output layout item")
+                        raise Exception(f"{raw_function_name}: Invalid output layout item {row}")
                     row_layout.append(row_item_done)
                 return_output_layout.append(row_layout)
 
@@ -471,7 +489,7 @@ def funix(
                     if "example" not in decorated_params[whitelist_arg_name]:
                         decorated_params[whitelist_arg_name]["whitelist"] = safe_whitelist[whitelist_arg_name]
                     else:
-                        raise Exception(f"{function_name}: Cannot use whitelist and example together")
+                        raise Exception(f"{raw_function_name}: Cannot use whitelist and example together")
                 else:
                     whitelist_arg_names = whitelist_arg_name
                     for index, arg_name in enumerate(whitelist_arg_names):
@@ -480,7 +498,7 @@ def funix(
                         if "example" not in decorated_params[arg_name]:
                             decorated_params[arg_name]["whitelist"] = safe_whitelist[whitelist_arg_name][index]
                         else:
-                            raise Exception(f"{function_name}: Cannot use whitelist and example together")
+                            raise Exception(f"{raw_function_name}: Cannot use whitelist and example together")
 
             safe_argument_labels = {} if argument_labels is None else argument_labels
 
@@ -510,7 +528,7 @@ def funix(
                     decorated_params[decorator_arg_name]["treat_as"] = decorator_arg_dict["treat_as"]
                     input_attr = decorator_arg_dict["treat_as"] if input_attr == "" else input_attr
                     if input_attr != decorator_arg_dict["treat_as"]:
-                        raise Exception("Error: input type doesn't match")
+                        raise Exception(f"{raw_function_name} input type doesn't match")
 
                 if "widget" in decorator_arg_dict.keys():
                     decorated_params[decorator_arg_name]["widget"] = decorator_arg_dict["widget"]
@@ -520,11 +538,11 @@ def funix(
 
                 if "whitelist" in decorator_arg_dict.keys():
                     if "example" in decorated_params[decorator_arg_name]:
-                        raise Exception(f"{function_name}: Cannot use whitelist and example together")
+                        raise Exception(f"{raw_function_name}: Cannot use whitelist and example together")
                     decorated_params[decorator_arg_name]["whitelist"] = decorator_arg_dict["whitelist"]
                 elif "example" in decorator_arg_dict.keys():
                     if "whitelist" in decorated_params[decorator_arg_name]:
-                        raise Exception(f"{function_name}: Cannot use whitelist and example together")
+                        raise Exception(f"{raw_function_name}: Cannot use whitelist and example together")
                     decorated_params[decorator_arg_name]["example"] = decorator_arg_dict["example"]
 
             for _, function_param in function_params.items():
