@@ -16,8 +16,9 @@ export default function OutputCode(props: OutputCodeProps) {
     >
       <Prism
         language={props.language}
-        showLineNumbers
         wrapLongLines
+        showLineNumbers
+        lineProps={{ style: { flexWrap: "wrap" } }}
         style={coy}
       >
         {props.code}

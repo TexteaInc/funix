@@ -36,7 +36,8 @@ def dalle(prompt: str = "a cat") -> Image:
     description="Ask some question to GPT-3",
     argument_labels={
         "question": "Question"
-    }
+    },
+    show_source=True
 )
 def chatgpt(question: str = "Who is Cauchy?") -> str:
     response = openai.Completion.create(
