@@ -1,5 +1,5 @@
 from funix import funix
-from funix.hint import Images
+from funix.hint import Image
 from funix import run
 import openai  # pip install openai
 import os
@@ -27,7 +27,7 @@ def set(api_key: str) -> str:
         "prompt": "Prompt"
     }
 )
-def dalle(prompt: str = "a cat") -> Images:
+def dalle(prompt: str = "a cat") -> Image:
     response = openai.Image.create(prompt=prompt, n=1, size="1024x1024")
     return response["data"][0]["url"]
 
@@ -52,4 +52,4 @@ def chatgpt(question: str = "Who is Cauchy?") -> str:
 
 
 if __name__ == "__main__":
-    run(front_port=3000, main_class="ai")
+    run(port=3000, main_class="ai")

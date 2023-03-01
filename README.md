@@ -28,7 +28,7 @@ https://user-images.githubusercontent.com/438579/219586150-7ff491dd-dfea-41ea-bf
 > **WIP**: Funix is still under development, if you have any questions, please feel free to [open an issue](https://github.com/TexteaInc/funix/issues/new).
 
 
-## Usage
+## Quick View
 
 Add as few as two lines of code above your function and then the function is vitialized into a web app.
 
@@ -44,7 +44,7 @@ Save the code above as `hello.py`.
 Then run this at the terminal:
 
 ```bash
-python3 -m funix hello
+funix hello
 ```
 
 A web app will be launched at `http://localhost:3000` and automatically opened in a browser window.
@@ -64,7 +64,7 @@ import openai  # pip install openai
 openai.api_key = os.environ.get("OPENAI_KEY")
 
 @funix()                                     # add line three
-def dalle(prompt: str = "a cat") -> Images:
+def dalle(prompt: str = "a cat") -> Image:
     response = openai.Image.create(prompt=prompt, n=1, size="1024x1024")
     return response["data"][0]["url"]
 ```
@@ -152,20 +152,20 @@ If you want to install Funix from a local clone:
 ## Usage
 
 ```text
-usage: funix [-h] [--host HOST] [--port PORT] [--no-frontend] [--no-browser] this_class main_class
+usage: funix [-h] [-H 127.0.0.1] [-p 3000] [-F] [-B] [main_class]
 
-Funix
+Funix: Building web apps without manually creating widgets
 
 positional arguments:
-  this_class            this class
-  main_class            main class to import
+  main_class            Main class to import
 
 options:
   -h, --help            show this help message and exit
-  --host HOST, -H HOST  host of frontend & backend
-  --port PORT, -p PORT  port of frontend & backend
-  --no-frontend, -F     disable frontend
-  --no-browser, -B      disable auto open browser
+  -H 127.0.0.1, --host 127.0.0.1
+                        Host of frontend and backend
+  -p 3000, --port 3000  Port of frontend and backend
+  -F, --no-frontend     Disable frontend server
+  -B, --no-browser      Disable auto open browser
 ```
 
 Usually you can use `python -m funix [module]` to start directly.
@@ -178,10 +178,12 @@ python -m funix examples
 python -m funix examples_better # Examples V2 😄
 ```
 
+Install the latest code on GitHub, you can just use `funix [module]` to start.
+
 ## Build Frontend
 
 In Funix, we have packaged a frontend that you can use directly,
-and we also have a frontend page that is deployed on the [public](https://pdf.textea.io/).
+and we also have a frontend page that is deployed on the [public](https://funix.vercel.app/).
 If you want to build the frontend yourself, you can do so with the following command:
 
 ```
@@ -198,10 +200,13 @@ yarn funix:test # Start Funix frontend server (automatically set backend server 
 Funix is open-sourced under the MIT License. Community contribution is not only welcomed but desired. Feel free to fork and make a pull request when you are ready. You can also report bugs, suggest new features, etc. via the [issue tracker](https://github.com/TexteaInc/funix/issues/new).
 
 ## Acknowledgement
+
 We were inspired by FastAPI's approach of using type hints to build apps. We also want to thank Streamlit, Gradio, PyWebIO, and Pynecone for their influence on the development of Funix. Our backend is implemented using Flask, and the front-end primarily using Material UI. Lastly, Funix was made possible with the generous investment from Miracle Plus (formerly Y Combinator China) to Textea Inc. tel
 
 ## Team
+
 The Funix team at Textea consists of:
+
 * [Ruixuan Tu](https://github.com/Turx)
 * [Yazawazi](https://github.com/Yazawazi)
 * [Forrest Sheng Bao](https://forrestbao.github.io/)
