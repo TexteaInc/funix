@@ -674,7 +674,7 @@ def funix(
                                 fig = function(**wrapped_function_kwargs)
                                 fig_dict = mpld3.fig_to_dict(fig)
                                 fig_dict["width"] = 560
-                                return fig_dict
+                                return [fig_dict]
                             else:
                                 result = function(**wrapped_function_kwargs)
                                 if not isinstance(result, (str, dict, tuple)):
@@ -682,8 +682,10 @@ def funix(
                                 if cast_to_list_flag:
                                     result = list(result)
                                 else:
-                                    if isinstance(result, str):
+                                    if isinstance(result, (str, dict)):
                                         result = [result]
+                                    if isinstance(result, tuple):
+                                        result = list(result)
                                 if result and isinstance(result, list):
                                     if isinstance(return_type_parsed, list):
                                         for index, single_return_type in enumerate(return_type_parsed):
