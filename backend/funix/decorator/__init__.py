@@ -252,7 +252,7 @@ def conv_row_item(row_item: dict, item_type: str):
 
 def funix(
         path: Optional[str] = None,
-        rename: Optional[str] = None,
+        title: Optional[str] = None,
         description: Optional[str] = "",
         destination: DestinationType = None,
         show_source: bool = False,
@@ -272,23 +272,11 @@ def funix(
     def decorator(function: Callable):
         if __wrapper_enabled:
             id: str = str(uuid())
-            raw_function_name = getattr(function, "__name__")  # function name as id to retrieve function info
-            function_name = raw_function_name  # function name as id to retrieve function info
+            function_name = getattr(function, "__name__")  # function name as id to retrieve function info
             if function_name in __banned_function_name_and_path:
-                if rename is None:
-                    raise Exception(f"{function_name} is not allowed")
-                else:
-                    if rename in __banned_function_name_and_path:
-                        raise Exception(f"{function_name}'s rename: {rename} is not allowed")
-                    else:
-                        function_name = rename
-            else:
-                if rename is not None:
-                    if rename in __banned_function_name_and_path:
-                        raise Exception(f"{function_name}'s rename: {rename} is not allowed")
-                    else:
-                        function_name = rename
+                raise Exception(f"{function_name} is not allowed")
             function_theme = get_theme(theme)
+            function_title = title if title is not None else function_name
 
             try:
                 if theme is None or theme == "":
@@ -310,7 +298,7 @@ def funix(
                 endpoint = path.strip("/")
 
             __decorated_functions_list.append({
-                "name": function_name,
+                "name": function_title,
                 "path": endpoint
             })
 
@@ -397,7 +385,7 @@ def funix(
                             row_item_done["content"] = row_item_done["dividing"]
                         row_item_done.pop("dividing")
                     else:
-                        raise Exception(f"{raw_function_name}: Invalid input layout item {row} ")
+                        raise Exception(f"{function_name}: Invalid input layout item {row} ")
                     row_layout.append(row_item_done)
                 return_input_layout.append(row_layout)
 
@@ -436,7 +424,7 @@ def funix(
                         row_item_done["type"] = "return"
                         return_output_indexes.append(row_item_done["return"])
                     else:
-                        raise Exception(f"{raw_function_name}: Invalid output layout item {row}")
+                        raise Exception(f"{function_name}: Invalid output layout item {row}")
                     row_layout.append(row_item_done)
                 return_output_layout.append(row_layout)
 
@@ -489,7 +477,7 @@ def funix(
                     if "example" not in decorated_params[whitelist_arg_name]:
                         decorated_params[whitelist_arg_name]["whitelist"] = safe_whitelist[whitelist_arg_name]
                     else:
-                        raise Exception(f"{raw_function_name}: Cannot use whitelist and example together")
+                        raise Exception(f"{function_name}: Cannot use whitelist and example together")
                 else:
                     whitelist_arg_names = whitelist_arg_name
                     for index, arg_name in enumerate(whitelist_arg_names):
@@ -528,7 +516,7 @@ def funix(
                     decorated_params[decorator_arg_name]["treat_as"] = decorator_arg_dict["treat_as"]
                     input_attr = decorator_arg_dict["treat_as"] if input_attr == "" else input_attr
                     if input_attr != decorator_arg_dict["treat_as"]:
-                        raise Exception(f"{raw_function_name} input type doesn't match")
+                        raise Exception(f"{function_name} input type doesn't match")
 
                 if "widget" in decorator_arg_dict.keys():
                     decorated_params[decorator_arg_name]["widget"] = decorator_arg_dict["widget"]
@@ -538,11 +526,11 @@ def funix(
 
                 if "whitelist" in decorator_arg_dict.keys():
                     if "example" in decorated_params[decorator_arg_name]:
-                        raise Exception(f"{raw_function_name}: Cannot use whitelist and example together")
+                        raise Exception(f"{function_name}: Cannot use whitelist and example together")
                     decorated_params[decorator_arg_name]["whitelist"] = decorator_arg_dict["whitelist"]
                 elif "example" in decorator_arg_dict.keys():
                     if "whitelist" in decorated_params[decorator_arg_name]:
-                        raise Exception(f"{raw_function_name}: Cannot use whitelist and example together")
+                        raise Exception(f"{function_name}: Cannot use whitelist and example together")
                     decorated_params[decorator_arg_name]["example"] = decorator_arg_dict["example"]
 
             for _, function_param in function_params.items():
@@ -653,7 +641,7 @@ def funix(
                 "return_type": return_type_parsed,
                 "description": description,
                 "schema": {
-                    "title": function_name,
+                    "title": function_title,
                     "description": description,
                     "type": "object",
                     "properties": keep_ordered_dict,
