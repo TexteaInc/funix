@@ -255,7 +255,7 @@ def funix(
         rename: Optional[str] = None,
         description: Optional[str] = "",
         destination: DestinationType = None,
-        show_source_code: bool = False,
+        show_source: bool = False,
         theme: Optional[str] = None,
         widgets: WidgetsType = {},
         treat_as: TreatAsType = {},
@@ -314,7 +314,7 @@ def funix(
                 "path": endpoint
             })
 
-            if show_source_code:
+            if show_source:
                 source_code = inspect.getsource(function)
             else:
                 source_code = ""

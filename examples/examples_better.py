@@ -266,9 +266,9 @@ def code_return() -> str:
     return "Test"
 
 @funix(
-    show_source_code = True
+    show_source = True
 )
-def show_source_code() -> str:
+def show_source() -> str:
     return "Hello World"
 
 @funix()
