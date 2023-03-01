@@ -25,7 +25,7 @@ export default function OutputFiles(props: {
       >
         <TableBody>
           {files.map((file, index) => {
-            const relativeFile = file.startsWith("/files/")
+            const relativeFile = file.startsWith("/file/")
               ? new URL(file, props.backend).toString()
               : file;
             return (
