@@ -486,7 +486,7 @@ def funix(
                         if "example" not in decorated_params[arg_name]:
                             decorated_params[arg_name]["whitelist"] = safe_whitelist[whitelist_arg_name][index]
                         else:
-                            raise Exception(f"{raw_function_name}: Cannot use whitelist and example together")
+                            raise Exception(f"{function_name}: Cannot use whitelist and example together")
 
             safe_argument_labels = {} if argument_labels is None else argument_labels
 
