@@ -1,5 +1,5 @@
-import argparse
 import os
+import plac
 import socket
 import sys
 
@@ -23,26 +23,28 @@ def get_unused_port_from(port: int, host: str):
         nowPort += 1
     return nowPort
 
-def main():
+@plac.pos("main_class", "Main class to import")
+@plac.opt("host", "Host of frontend and backend", abbrev = "H")
+@plac.opt("port", "Port of frontend and backend", abbrev = "p")
+@plac.flg("no_frontend", "Disable frontend server", abbrev = "F")
+@plac.flg("no_browser", "Disable auto open browser", abbrev = "B")
+def main(main_class = "functions", host = "127.0.0.1", port = 3000, no_frontend = False, no_browser = False):
+    """Funix: Building web apps without manually creating widgets"""
     sys.path.append(os.getcwd())
-    parser = argparse.ArgumentParser(description='Funix: Building web apps without manually creating widgets')
-    parser.add_argument('main_class', type=str, help='main class to import', action='store', default='functions')
-    parser.add_argument('--host', '-H', help='host of frontend & backend', action='store', default='127.0.0.1')
-    parser.add_argument('--port', '-p', help='port of frontend & backend', action='store', default='3000')
-    parser.add_argument('--no-frontend', '-F', help='disable frontend', action='store_true', default=False)
-    parser.add_argument('--no-browser', '-B', help='disable auto open browser', action='store_true', default=False)
-    parsed_sys_args = parser.parse_args()
-    no_frontend: bool = parsed_sys_args.no_frontend
-    no_browser: bool = parsed_sys_args.no_browser
-    host: str = os.getenv("HOST", parsed_sys_args.host)
-    port: int = get_unused_port_from(int(os.getenv("PORT", parsed_sys_args.port)), host)
+    parsed_host: str = os.getenv("FUNIX_HOST", host)
+    parsed_port: int = get_unused_port_from(int(os.getenv("FUNIX_PORT", port)), parsed_host)
+    parsed_no_frontend: bool = os.getenv("FUNIX_NO_FRONTEND", no_frontend)
+    parsed_no_browser: bool = os.getenv("FUNIX_NO_BROWSER", no_browser)
     run(
-        host=host,
-        port=port,
-        main_class=parsed_sys_args.main_class,
-        no_frontend=no_frontend,
-        no_browser=no_browser
+        host=parsed_host,
+        port=parsed_port,
+        main_class=main_class,
+        no_frontend=parsed_no_frontend,
+        no_browser=parsed_no_browser
     )
 
+def cli_main():
+    plac.call(main)
+
 if __name__ == '__main__':
-    main()
+    cli_main()
