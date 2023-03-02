@@ -1,6 +1,11 @@
-# Funix -- The laziest way to build web apps in Python
+<h1 align="center">
+    <b>
+        Funix.IO<br>
+    </b>
+    ⭐️  The laziest way to build web apps in Python.  ⭐️ <br>
+</h1>
 
-Funix automatically turns an ordinary Python function into a web app without needing you to specify any widgets. (See quick examples)
+Funix automatically turns an ordinary Python function into a web app without needing you to specify any widgets. 
 Simply add a `@funix` decorator above your function and then it becomes an app in the browser for anyone, without coding skills, to use.
 
 Funix supports complex data types/widgets, such as multi-column data tables or Matplotlib chats.
@@ -16,7 +21,7 @@ Funix is non-intrusive. You can still run or debug your Python code locally as u
 
 [简体中文](README.zh-CN.md)
 
-https://user-images.githubusercontent.com/438579/219586150-7ff491dd-dfea-41ea-bfad-4610abf1fe20.mp4
+![Introduction video]( https://github.com/TexteaInc/funix-doc/raw/main/videos/ppt_out.gif)
 
 <a href="https://www.youtube.com/watch?v=UGp5gbR8f3c">Watch on YouTube</a>
 
@@ -25,12 +30,12 @@ https://user-images.githubusercontent.com/438579/219586150-7ff491dd-dfea-41ea-bf
 </div>
 
 
-> **WIP**: Funix is still under development, if you have any questions, please feel free to [open an issue](https://github.com/TexteaInc/funix/issues/new).
+> **WIP**: Funix is still under development. If you have any questions, please feel free to [open an issue](https://github.com/TexteaInc/funix/issues/new).
 
 
-## Quick View
+## Hello-world in Funix 
 
-Add as few as two lines of code above your function and then the function is vitialized into a web app.
+Add as few as two lines of code above your function to vitialize it into a web app.
 
 ```python
 from funix import funix # add line one
@@ -105,10 +110,6 @@ from funix import funix_yaml
     widgets:
         x: slider[0,10,1]
         op: radio
-    whitelist:
-        op:
-            - square
-            - cube
 """)
 
 def power(x: int, op: str) -> Markdown:
@@ -125,16 +126,19 @@ def power(x: int, op: str) -> Markdown:
 
 ![power slider radio](https://github.com/TexteaInc/funix-doc/raw/main/screenshots/power_slider_radio.png)
 
+## More examples
+1. [QuickStart Guide](https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md)
+2. The [`examples` folder in this repo](./examples/)
 
 ## Installation
 
-### From PyPI
+### From PyPI (stable)
 
 ```bash
 pip install funix
 ```
 
-### From GitHub
+### From GitHub (latest)
 
 ```bash
 pip install "git+https://github.com/TexteaInc/funix.git"
@@ -152,12 +156,13 @@ If you want to install Funix from a local clone:
 ## Usage
 
 ```text
-usage: funix [-h] [-H 127.0.0.1] [-p 3000] [-F] [-B] [main_class]
+usage: funix [-h] [-H 127.0.0.1] [-p 3000] [-F] [-B] main_class
 
 Funix: Building web apps without manually creating widgets
 
 positional arguments:
-  main_class            Main class to import
+  main_class            The Python module containing functions 
+                        to be turned into web apps by Funix 
 
 options:
   -h, --help            show this help message and exit
@@ -168,9 +173,9 @@ options:
   -B, --no-browser      Disable auto open browser
 ```
 
-Usually you can use `python -m funix [module]` to start directly.
-There are some simple examples in the [`examples`](./examples/) folder to help you understand Funix.
-You can open the example by the following command:
+The command `funix` above is equivalent to `python -m funix` if you have installed Funix from PyPI. If you installed Funix via local clone, please use the full command `python -m funix` instead.
+
+For example, to launch exmaples in the [`examples`](./examples/) folder, run the following command:
 
 ```bash
 cd examples
@@ -178,22 +183,8 @@ python -m funix examples
 python -m funix examples_better # Examples V2 😄
 ```
 
-Install the latest code on GitHub, you can just use `funix [module]` to start.
-
-## Build Frontend
-
-In Funix, we have packaged a frontend that you can use directly,
-and we also have a frontend page that is deployed on the [public](https://funix.vercel.app/).
-If you want to build the frontend yourself, you can do so with the following command:
-
-```
-# Please clone the repository first and enter the repository directory
-cd frontend
-yarn install # Install dependencies
-yarn build # Build frontend server
-yarn funix:build # Build to Funix Python folder
-yarn funix:test # Start Funix frontend server (automatically set backend server to http://127.0.0.1:8080)
-```
+## Stay up-to-date
+![Borrowed from AppFlowy](https://github.com/AppFlowy-IO/AppFlowy/raw/main/doc/imgs/howtostar.gif)
 
 ## How to contribute
 
@@ -201,7 +192,7 @@ Funix is open-sourced under the MIT License. Community contribution is not only 
 
 ## Acknowledgement
 
-We were inspired by FastAPI's approach of using type hints to build apps. We also want to thank Streamlit, Gradio, PyWebIO, and Pynecone for their influence on the development of Funix. Our backend is implemented using Flask, and the front-end primarily using Material UI. Lastly, Funix was made possible with the generous investment from Miracle Plus (formerly Y Combinator China) to Textea Inc. tel
+Funix draws inspiration from FastAPI and Google’s Python-Fire: building apps by interring from type hints. We port this idea from the backend (FastAPI) or the terminal (Python-Fire) to the frontend. We also wanna thank Streamlit, Gradio, PyWebIO, and Pynecone. They inspired us. We are just too lazy to manually define widgets imperatively. Funix’s backend is implemented in Flask and the frontend in Material UI. Lastly, Funix was made possible with the generous investment from Miracle Plus (formerly Y Combinator China) to Textea Inc. 
 
 ## Team
 
