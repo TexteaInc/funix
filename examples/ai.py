@@ -7,17 +7,13 @@ from funix import funix
 from funix.hint import Image
 from funix import run
 
-@funix(
+@funix( # Funix.io, the laziest way to build web apps in Python
   title="Set OpenAI API key",
   argument_labels={
     "api_key": "Enter your API key", 
     "sys_env_var": "Use system environment variable"
   }, 
-  conditional_visible=[
-    {
-      "if": {"sys_env_var": False},
-      "then": ["api_key"],
-    } ],
+  conditional_visible=[ { "if": {"sys_env_var": False}, "then": ["api_key"],  } ],
     show_source=True
 )
 def set(api_key: str="", sys_env_var:bool=True) -> str:
@@ -31,21 +27,17 @@ def set(api_key: str="", sys_env_var:bool=True) -> str:
             return "OpenAI API key has been set via the web form! If it was set via an environment variable, it's been overwritten."
 
 
-@funix(
+@funix( # Funix.io, the laziest way to build web apps in Python
     title="Dall-E",
     description="Generate an image by prompt with DALL-E",
-    widgets={'Prompt': 'textarea'},
-    examples={'Prompt':["a cat on a red Tesla", 
-                        "a cat flying Boeing 747", 
-                        "a cat riding Saturn V rocket"]},
     show_source=True
 )
-def dalle(Prompt: str = "a cat flying boeing 747") -> Image:
+def dalle(Prompt: str = "a cat on a red jeep") -> Image:
     response = openai.Image.create(prompt=Prompt, n=1, size="1024x1024")
     return response["data"][0]["url"]
 
 
-@funix(
+@funix(  # Funix.io, the laziest way to build web apps in Python
     description="Ask a question to GPT-3",
     widgets={'Question': 'textarea',
              'temp':       'slider[0,1,0.1]', 
