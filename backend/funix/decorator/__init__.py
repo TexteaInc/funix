@@ -565,12 +565,17 @@ def funix(
                             widget = "json"
                         else:
                             widget = ""
+
                 json_schema_props[function_arg_name] = get_type_widget_prop(
                     "object" if function_arg_type_dict is None else function_arg_type_dict["type"],
                     0,
                     widget,
                     parsed_theme[1]
-                )
+                 )
+
+                if "widget" in decorated_params[function_arg_name].keys():
+                    json_schema_props[function_arg_name]["widget"] = decorated_params[function_arg_name]["widget"]
+
                 if "whitelist" in decorated_params[function_arg_name].keys():
                     json_schema_props[function_arg_name]["whitelist"] = decorated_params[function_arg_name]["whitelist"]
                 elif "example" in decorated_params[function_arg_name].keys():
