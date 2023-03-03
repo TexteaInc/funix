@@ -37,30 +37,21 @@ def __prep(main_class: typing.Optional[str]):
     if main_class:
         importlib.import_module(main_class)
     else:
-        importlib.import_module("functions")
+        print ("Error: No Python module provided. \n How to fix: Please provide a module and try again. If your functions are in a file called hello.py, you should pass hello here. \n Example: funix hello")
+        exit()
 
 def run(
+    main_class: str,
     host: typing.Optional[str] = "localhost",
     port: typing.Optional[int] = 3000,
-    main_class: typing.Optional[str] = "functions",
     no_frontend: typing.Optional[bool] = False,
     no_browser: typing.Optional[bool] = False
 ):
     __prep(main_class=main_class)
-    if host is None:
-        host = "localhost"
-    if port is None:
-        port = 3000
-    if main_class is None:
-        main_class = "functions"
-    if no_frontend is None:
-        no_frontend = False
-    if no_browser is None:
-        no_browser = False
     if not no_frontend:
-        print(f"Backend and frontend server running on http://{host}:{port}")
+        print(f"Starting Funix at http://{host}:{port}")
     else:
-        print(f"Backend server running on http://{host}:{port}")
+        print(f"Starting Funix backend only at http://{host}:{port}")
     if not no_frontend and not no_browser:
         start(host, port)
         if not no_browser:

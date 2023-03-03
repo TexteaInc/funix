@@ -23,13 +23,27 @@ def get_unused_port_from(port: int, host: str):
         nowPort += 1
     return nowPort
 
-@plac.pos("main_class", "Main class to import")
-@plac.opt("host", "Host of frontend and backend", abbrev = "H")
-@plac.opt("port", "Port of frontend and backend", abbrev = "p")
+@plac.pos("module_name", "The Python module containing functions to be turned into web apps by Funix. For example, if your functions are in the file hello.py, you should pass `hello` here.")
+@plac.opt("host", "Host of Funix", abbrev = "H")
+@plac.opt("port", "Port of Funix", abbrev = "p")
 @plac.flg("no_frontend", "Disable frontend server", abbrev = "F")
 @plac.flg("no_browser", "Disable auto open browser", abbrev = "B")
-def main(main_class = "functions", host = "127.0.0.1", port = 3000, no_frontend = False, no_browser = False):
-    """Funix: Building web apps without manually creating widgets"""
+def main(module_name, host = "127.0.0.1", port = 3000, no_frontend = False, no_browser = False):
+    """Funix: Building web apps without manually creating widgets
+
+    Funix turns your Python function into a web app 
+    by building the UI from the function's signature,
+    based on the mapping from variable types to UI widgets,
+    customizable per-widget or kept consistent across apps via themes.
+    
+    Just write your core logic and leave the rest to Funix.
+    Visit us at http://funix.io
+    """
+
+    #FIXME The message below does not show up when module_name is not provided
+    if not module_name:
+        yield ('no module name provided. Run "funix --help" for more information.')
+            
     sys.path.append(os.getcwd())
     parsed_host: str = os.getenv("FUNIX_HOST", host)
     parsed_port: int = get_unused_port_from(int(os.getenv("FUNIX_PORT", port)), parsed_host)
@@ -38,7 +52,7 @@ def main(main_class = "functions", host = "127.0.0.1", port = 3000, no_frontend 
     run(
         host=parsed_host,
         port=parsed_port,
-        main_class=main_class,
+        main_class=module_name,
         no_frontend=parsed_no_frontend,
         no_browser=parsed_no_browser
     )
