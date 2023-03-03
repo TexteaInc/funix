@@ -636,7 +636,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
     return allLines.map((line: string) =>
       line
         .trim()
-        .split(/\s+|\t+/)
+        .split(/\t+/)
         .map((element: string) => element.trim())
     );
   };

@@ -281,3 +281,13 @@ def optional_test(arg1: str | None = None, arg2: Optional[str] = None, arg3: Uni
             string += f"{i}, "
     string = string[:-2]
     return string
+
+@funix(
+    widgets={
+        ("phrase", "year", "freq", "test"): "sheet"
+    }
+)
+def sheet_trim(phrase: List[str], year: List[int], freq: List[int], test: List[str]) -> Figure:
+    fig = plt.figure()
+    plt.plot(year, freq)
+    return fig
