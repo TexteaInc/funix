@@ -5,13 +5,8 @@ from typing import List, TypedDict, Literal, Dict
 
 
 @funix()
-def hello_world(your_name: str) -> str:
-    return f"Welcome to Funix, {your_name}!"
-
-
-class telomere_check_return(TypedDict):
-    is_telomere: List[bool]
-
+def hello(your_name: str) -> str:
+	return f"Hello, {your_name}."
 
 @funix(
     path = "bioinfo_telomere_check",
@@ -39,7 +34,7 @@ class telomere_check_return(TypedDict):
 )
 def bioinfo_telomere_check(sRNAs: List[str], repeat_unit: str) -> telomere_check_return:
     check_result = tel_search.search_telomeres(sRNAs, repeat_unit)
-    return {"is_telomere": check_result}
+    return check_result
 
 
 class remove_3_prime_adapter_return(TypedDict):

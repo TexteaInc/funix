@@ -5,21 +5,14 @@
     ⭐️  The laziest way to build web apps in Python.  ⭐️ <br>
 </h1>
 
-Funix automatically turns an ordinary Python function into a web app without needing you to specify any widgets. 
-Simply add a `@funix` decorator above your function and then it becomes an app in the browser for anyone, without coding skills, to use.
-
-Funix supports complex data types/widgets, such as multi-column data tables or Matplotlib chats.
-If you need to customize the UI, do it declaratively.
-Funix is non-intrusive. You can still run or debug your Python code locally as usual.
 
 
 <div align="center">
 
 [![PyPI version](https://badge.fury.io/py/funix.svg)](https://badge.fury.io/py/funix)
 
-<h3><a href="https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md">QuickStart Guide and showcase</a>  </h3>
-
-[简体中文](README.zh-CN.md)
+<h4><a href="https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md">QuickStart Guide</a>  | <a href="[README.zh-CN.md](https://github.com/TexteaInc/funix/blob/main/README.zh-CN.md)">简体中文</a>
+ </h4>
 
 ![Introduction video]( https://github.com/TexteaInc/funix-doc/raw/main/videos/ppt_out.gif)
 
@@ -28,6 +21,13 @@ Funix is non-intrusive. You can still run or debug your Python code locally as u
 <br /><br />
 
 </div>
+
+Funix automatically turns an ordinary Python function into a web app without needing you to specify any widgets. 
+Simply add a `@funix` decorator above your function and then it becomes an app in the browser for anyone, without coding skills, to use.
+
+Funix supports complex data types/widgets, such as multi-column data tables or Matplotlib chats.
+If you need to customize the UI, do it declaratively.
+Funix is non-intrusive. You can still run or debug your Python code locally as usual.
 
 
 > **WIP**: Funix is still under development. If you have any questions, please feel free to [open an issue](https://github.com/TexteaInc/funix/issues/new).

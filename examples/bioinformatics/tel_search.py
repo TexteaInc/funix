@@ -11,6 +11,8 @@ import typing
 import functools
 import multiprocessing
 
+import funix
+
 #%%
 
 def reverse_complement(s:str):
@@ -87,7 +89,7 @@ def search_string_hash(pattern:str, telomere_hash_dict) -> bool:
     return False
 
 # %%
-def search_telomeres(sRNAs:typing.List[str], repeat:str, include_reverse:bool=True):
+def search_telomeres(sRNAs:typing.List[str], repeat:str, include_reverse:bool=True) -> typing.List[bool]:
     """Determine whether a list of strings are telomers of the given repeat 
     """
 
@@ -112,6 +114,33 @@ def test():
 
     return search_telomeres(sRNAs, repeat)
 # %%
+
+@funix(
+    description = "A telomere is a region of repetitive DNA sequences at the end of a chromosome. "
+                "Find the belongings of a repeat unit.",
+    # destination = "column",
+    argument_config = {
+        "sRNAs": {
+            # "treat_as": "column",
+            "example": [
+                [
+                    "CCCTAAACCCTAAACCCTAT",  # False
+                    "CCCTAAACCCTAAACCCTAA",  # True, 20-nt
+                    "CCCTAAACCCTAAACCC",  # False, too short
+                    "CCCTAAACCCTAAACCCTAAAC",  # True, 22-nt
+                    "CTAAACCCTAAACCCTAAACCCT"  # True, 25-nt
+                ]
+            ]
+        },
+        "repeat_unit": {
+            # "treat_as": "config",
+            "examples": ["CCCTAAA"]
+        }
+    }
+)
+def bioinfo_telomere_check(sRNAs: List[str], repeat_unit: str) -> typing.List[bool]:
+    check_result = search_telomeres(sRNAs, repeat_unit)
+    return check_result
 
 
 if __name__ == '__main__':
