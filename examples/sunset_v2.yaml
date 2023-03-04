@@ -1,11 +1,12 @@
 types:
-  float, str: input
+  float: inputbox
+  str: textarea
   int: slider
   bool: switch
 
 styles:
   basic:
-    color: "#e2974a"
+    color: "#ff9e1b"
     contrastText: "#fefefe"
 
   tooltip:

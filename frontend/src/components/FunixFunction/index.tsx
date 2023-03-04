@@ -197,7 +197,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
         };
         const responseViewRadioGroup = (
           <FormControl>
-            <FormLabel id="response-view-radio-group">View in</FormLabel>
+            <FormLabel id="response-view-radio-group">View in: </FormLabel>
             <RadioGroup
               row
               aria-labelledby="response-view-radio-group"
@@ -546,6 +546,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
               {formElement}
               <Button
                 variant="contained"
+                size="large"
                 onClick={handleSubmit}
                 sx={{ mt: 1 }}
                 disabled={waiting}
@@ -553,7 +554,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
                   waiting && <CircularProgress size={20} color="inherit" />
                 }
               >
-                Submit
+                Run
               </Button>
             </CardContent>
           </Card>

@@ -510,10 +510,12 @@ def funix(
                 if decorator_arg_name not in decorated_params.keys():
                     decorated_params[decorator_arg_name] = dict()
 
-                if decorator_arg_dict["treat_as"] == "config":
-                    decorated_params[decorator_arg_name]["treat_as"] = "config"
-                else:
-                    decorated_params[decorator_arg_name]["treat_as"] = decorator_arg_dict["treat_as"]
+                # FIXME: use this to shorten the code 
+                # decorator_arg_dict.get("treat_as", "config")
+
+                treat_as_config = decorator_arg_dict.get("treat_as", "config")
+                decorated_params[decorator_arg_name]["treat_as"] = treat_as_config
+                if treat_as_config != "config":
                     input_attr = decorator_arg_dict["treat_as"] if input_attr == "" else input_attr
                     if input_attr != decorator_arg_dict["treat_as"]:
                         raise Exception(f"{function_name} input type doesn't match")
@@ -521,8 +523,8 @@ def funix(
                 if "widget" in decorator_arg_dict.keys():
                     decorated_params[decorator_arg_name]["widget"] = decorator_arg_dict["widget"]
 
-                if "label" in decorator_arg_dict.keys():
-                    decorated_params[decorator_arg_name]["label"] = decorator_arg_dict["label"]
+                if "argument_label" in decorator_arg_dict.keys():
+                    decorated_params[decorator_arg_name]["label"] = decorator_arg_dict["argument_label"]
 
                 if "whitelist" in decorator_arg_dict.keys():
                     if "example" in decorated_params[decorator_arg_name]:

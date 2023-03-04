@@ -67,6 +67,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
       field: "id",
       headerName: "ID",
       type: "number",
+      hide: true, // hide the ID column by default
     },
   ];
   const arraySimpleSelectors: JSX.Element[] = [];
@@ -824,16 +825,24 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
         <Card className="property-wrapper" sx={{ mt: 1 }}>
           <Box sx={{ width: "100%" }} padding={1}>
             <Stack direction="row" spacing={1}>
-              <Button size="small" onClick={handleAddRow}>
+              <Button variant="contained" size="small" onClick={handleAddRow}>
                 Add a row
               </Button>
-              <Button size="small" onClick={handleDeleteRows}>
+              <Button
+                variant="contained"
+                size="small"
+                onClick={handleDeleteRows}
+              >
                 Delete selected row(s)
               </Button>
-              <Button size="small" onClick={handleCopyRows}>
+              <Button variant="contained" size="small" onClick={handleCopyRows}>
                 Copy
               </Button>
-              <Button size="small" onClick={handlePasteRows}>
+              <Button
+                variant="contained"
+                size="small"
+                onClick={handlePasteRows}
+              >
                 Paste
               </Button>
             </Stack>

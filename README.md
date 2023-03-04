@@ -155,8 +155,10 @@ If you want to install Funix from a local clone:
 
 ## Usage
 
+### Command line 
+
 ```text
-usage: funix [-h] [-H 127.0.0.1] [-p 3000] [-F] [-B] main_class
+funix [-h] [-H 127.0.0.1] [-p 3000] [-F] [-B] 
 
 Funix: Building web apps without manually creating widgets
 
@@ -173,14 +175,23 @@ options:
   -B, --no-browser      Disable auto open browser
 ```
 
-The command `funix` above is equivalent to `python -m funix` if you have installed Funix from PyPI. If you installed Funix via local clone, please use the full command `python -m funix` instead.
+The command `funix` above is equivalent to `python -m funix` if you have installed Funix. 
 
-For example, to launch exmaples in the [`examples`](./examples/) folder, run the following command:
+For example, to launch examples in the [`examples`](./examples/) folder, run the following command:
 
 ```bash
 cd examples
-python -m funix examples
-python -m funix examples_better # Examples V2 😄
+funix examples # same as `python -m funix examples`
+funix examples_better # same as `python -m funix examples_better`
+```
+
+### Call `funix` in Python
+
+Besides starting Funix servers from the command line, you can also start Funix from Python: 
+
+```python
+import funix 
+funix.run("localhost", 4010, "examples")
 ```
 
 ## Stay up-to-date
@@ -192,7 +203,7 @@ Funix is open-sourced under the MIT License. Community contribution is not only 
 
 ## Acknowledgement
 
-Funix draws inspiration from FastAPI and Google’s Python-Fire: building apps by interring from type hints. We port this idea from the backend (FastAPI) or the terminal (Python-Fire) to the frontend. We also wanna thank Streamlit, Gradio, PyWebIO, and Pynecone. They inspired us. We are just too lazy to manually define widgets imperatively. Funix’s backend is implemented in Flask and the frontend in Material UI. Lastly, Funix was made possible with the generous investment from Miracle Plus (formerly Y Combinator China) to Textea Inc. 
+Funix draws inspiration from FastAPI and Plac: building software interfaces by inferring from function signartures containing type hints. We port this idea from the backend (FastAPI) or the terminal (Python-Fire) to the frontend. We also wanna thank Streamlit, Gradio, PyWebIO, and Pynecone. They inspired us. We are just too lazy to manually define widgets imperatively. Funix’s backend is implemented in Flask and the frontend in Material UI. Lastly, Funix was made possible with the generous investment from Miracle Plus (formerly Y Combinator China) to Textea Inc. 
 
 ## Team
 

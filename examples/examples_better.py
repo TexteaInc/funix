@@ -12,38 +12,51 @@ from funix.hint import Image, File, Markdown, HTML, Code, Video, Audio
 def hello(name: str) -> str:
 	return f"Hello, {name}."
 
-# map 
+#TODO: Bao to add a column of sliders.
 @funix(
-    path="calc",
-    description="Perform some basic math calculation. Note that this example uses the `argument_config` parameter where configurations are aggregated per-argument. This example also shows off theming. Unroll `Source code` to see how theme is picked.",
-    theme = "https://raw.githubusercontent.com/TexteaInc/funix-doc/main/examples/sunset_v2.yaml", 
+    title="Table, theme, and argument_config",
+    description="""
+### This example shows off multiple features of Funix. 
+* Per-argument customizations are aggregated in the `argument_config` parameter. 
+* Arugments (a and b here) of same configurations are configured jointly as a tuple in `argument_config`.
+* The `theme` parameter is used to customize the look and widget selection of the app.
+* The resulting sheet's header is set in the return `dict`. The header is _Total_ if the operator is _add_, and _Difference_ if the operator is _minus_.
+
+### Usage of this demo
+1. Select an opeartor
+2. Enter two lists of numbers in the two columns of the table. Some values are prefilled. 
+3. Click Submit to see the result.
+4. In the Output panel, click the `Sheet` radio button to view the result as a headed table. 
+    """,
+    # theme = "https://raw.githubusercontent.com/TexteaInc/funix-doc/main/examples/sunset_v2.yaml", 
+    theme = "./sunset_v2.yaml",
+    # FIXME: this themes makes the menu over the table dissapear. 
+    # Current workaround is to change the button to contained variant. 
+    # A proper fix should use an outlined button with a new prop in theme file to change the color in the text and the outline/border.
     argument_config={
         "op": {
-	        "argument_labels": "Select an operation",
-            # FIXME: argument_label has no effect. 
-            "treat_as": "config",
-            # FIXME: treat_as is not by default config. 
-            # If the line above is missing, then error. 
+	        "argument_label": "Select an operation",
         }, 
-        # TODO can do change the key to ("a", "b")
+        #FIXME: in argument_config, the key cannot be a tuple, like ("a", "b"): {"widget":"sheet", "treat_as":"column"}.
         "a": {
-            "widget": "sheet",
-            "treat_as": "column"
+            "widget": "sheet"
         },
         "b": {
-            "widget": "sheet",
-            "treat_as": "column"
+            "widget": "sheet"
         }
     }, 
     show_source=True
 )
-def calc_and_theme(op: Literal["add", "minus"], a: List[int]=[10,20], b: List[int]=[50,72]) -> dict:
+def calc(op: Literal["add", "minus"]="add", a: List[int]=[10,20], b: List[int]=[50,72]) -> dict:
     if op == "add":
-        return {"output": [a[i] + b[i] for i in range(min(len(a), len(b)))]}
+        return {"Total": [a[i] + b[i] for i in range(min(len(a), len(b)))]}
     elif op == "minus":
-        return {"output": [a[i] - b[i] for i in range(min(len(a), len(b)))]}
+        return {"Difference": [a[i] - b[i] for i in range(min(len(a), len(b)))]}
     else:
         raise Exception("invalid parameter op")
+
+
+# map via cell 
 
 
 # Show all widgets
@@ -169,22 +182,22 @@ def guess(
 # Plot and paste 
 @funix(
     widgets = {
-        "year": ["sheet"],
-        "period": ["sheet", "slider[0, 1, 0.01]"]
-    },
-    treat_as={
-        ("year", "period"): "column"
-        # does this kinds of syntax still work? 
+        ("X", "Z"): ["sheet"],
+        "Y": ["sheet", "slider[0, 1, 0.01]"]
     }
 )
-def plot_test(year: List[int], period: List[float]) -> Figure:
+def plot_test(X: List[int], Y: List[float], Z: List[bool]) -> Figure:
     fig = plt.figure()
-    plt.plot(year, period)
+    plt.plot(X, Y)
     return fig
 
 # conditional visibility
 
 # layout 
+
+# multi-page, a non-AI simple one 
+
+# AI 
 
 
 @funix(
