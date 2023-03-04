@@ -16,27 +16,27 @@ def hello(name: str) -> str:
 @funix(
     title="Table, theme, and argument_config",
     description="""
-### This example shows off multiple features of Funix. 
-* Per-argument customizations are aggregated in the `argument_config` parameter. 
+### This example shows off multiple features of Funix.
+* Per-argument customizations are aggregated in the `argument_config` parameter.
 * Arugments (a and b here) of same configurations are configured jointly as a tuple in `argument_config`.
 * The `theme` parameter is used to customize the look and widget selection of the app.
 * The resulting sheet's header is set in the return `dict`. The header is _Total_ if the operator is _add_, and _Difference_ if the operator is _minus_.
 
 ### Usage of this demo
 1. Select an opeartor
-2. Enter two lists of numbers in the two columns of the table. Some values are prefilled. 
+2. Enter two lists of numbers in the two columns of the table. Some values are prefilled.
 3. Click Submit to see the result.
-4. In the Output panel, click the `Sheet` radio button to view the result as a headed table. 
+4. In the Output panel, click the `Sheet` radio button to view the result as a headed table.
     """,
-    # theme = "https://raw.githubusercontent.com/TexteaInc/funix-doc/main/examples/sunset_v2.yaml", 
+    # theme = "https://raw.githubusercontent.com/TexteaInc/funix-doc/main/examples/sunset_v2.yaml",
     theme = "./sunset_v2.yaml",
-    # FIXME: this themes makes the menu over the table dissapear. 
-    # Current workaround is to change the button to contained variant. 
+    # FIXME: this themes makes the menu over the table dissapear.
+    # Current workaround is to change the button to contained variant.
     # A proper fix should use an outlined button with a new prop in theme file to change the color in the text and the outline/border.
     argument_config={
         "op": {
 	        "argument_label": "Select an operation",
-        }, 
+        },
         #FIXME: in argument_config, the key cannot be a tuple, like ("a", "b"): {"widget":"sheet", "treat_as":"column"}.
         "a": {
             "widget": "sheet"
@@ -44,7 +44,7 @@ def hello(name: str) -> str:
         "b": {
             "widget": "sheet"
         }
-    }, 
+    },
     show_source=True
 )
 def calc(op: Literal["add", "minus"]="add", a: List[int]=[10,20], b: List[int]=[50,72]) -> dict:
@@ -56,7 +56,7 @@ def calc(op: Literal["add", "minus"]="add", a: List[int]=[10,20], b: List[int]=[
         raise Exception("invalid parameter op")
 
 
-# map via cell 
+# map via cell
 
 
 # Show all widgets
@@ -65,25 +65,25 @@ def calc(op: Literal["add", "minus"]="add", a: List[int]=[10,20], b: List[int]=[
     description="Showing off all widgets supported by Funix. Be sure to click Submit to reveal the output widgets as well. More examples at [QuickStart](https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md)",
 
     # we only need to customized non-default/theme widgets
-    widgets={'int_input_slider': 'slider', 
-             'float_input_slider': 'slider[0,10,0.1]', 
-             'bool_input_switch': 'switch', 
-             'literal_input_radio': 'radio', 
+    widgets={'int_input_slider': 'slider',
+             'float_input_slider': 'slider[0,10,0.1]',
+             'bool_input_switch': 'switch',
+             'literal_input_radio': 'radio',
              'literal_input_select': 'select',
-             'str_input_textarea': 'textarea', 
+             'str_input_textarea': 'textarea',
              'X': 'sheet', 'Z': 'sheet',
              'Y': 'sheet', }
 )
 def widget_showoff(
-    int_input_slider: int=32, 
-    float_input_slider: float=411, 
-    int_input_default: int=123, 
-    float_input_default: float=78.92, 
-    bool_input_default: bool=True, 
+    int_input_slider: int=32,
+    float_input_slider: float=411,
+    int_input_default: int=123,
+    float_input_default: float=78.92,
+    bool_input_default: bool=True,
     bool_input_switch: bool=True,
     literal_input_radio: typing.Literal["add", "minus"]='add',
     literal_input_select: typing.Literal["a", "b", "c"]='c',
-    str_input_default: str = "All animals are equal, but some animals are more equal than others. All animals are equal, but some animals are more equal than others. All animals are equal, but some animals are more equal than others.", 
+    str_input_default: str = "All animals are equal, but some animals are more equal than others. All animals are equal, but some animals are more equal than others. All animals are equal, but some animals are more equal than others.",
     str_input_textarea: str="This request may not be serviced in the Roman Province\
             of Judea due to the Lex Julia Majestatis, which disallows\
             access to resources hosted on servers deemed to be\
@@ -91,7 +91,7 @@ def widget_showoff(
     X: typing.List[int]=[1919, 1949, 1979, 2019],
     Y: typing.List[float]=[3.141, 2.718, 6.626, 2.997],
     Z: typing.List[str]=["Pi", "e", "Planck", "Speed of light"]
-    ) -> Tuple[Markdown, str, HTML, dict, Markdown,  dict, Image, Markdown, Audio, File, List[Video] , Markdown, Figure, Code]: 
+    ) -> Tuple[Markdown, str, HTML, dict, Markdown,  dict, Image, Markdown, Audio, File, List[Video] , Markdown, Figure, Code]:
 
     matplotlib_figure = plt.figure()
     plt.plot(X, Y)
@@ -108,14 +108,14 @@ def hello_world(name: str) -> str:
 """
     }
 
-    my_dict= {"name": "Funix", 
+    my_dict= {"name": "Funix",
               "Features": [
                     {"The laziest way to build apps in Python": ["Automatic UI generation from Python function signatures", "No UI code needed"]},
-                    {"Partitioned": ["UI and logic are separated", "just like CSS for HTML", "or .sty in LaTeX"]}, 
-                    "Scalable: Define one theme and then all variables of the same type will be in the same widget", 
+                    {"Partitioned": ["UI and logic are separated", "just like CSS for HTML", "or .sty in LaTeX"]},
+                    "Scalable: Define one theme and then all variables of the same type will be in the same widget",
                     "Declarative: You can use JSON5 and YAML to configure your widgets",
                     "Non-intrusive",
-              ], 
+              ],
               "version": 0.3}
 
     return """## [Funix.io](http://Funix.io) _supports_ ~~Markdown~~! <br> Basic return types like integers or strings are not displaye here because they are obviously easy to support. We will display complex ones. """, \
@@ -132,7 +132,7 @@ def hello_world(name: str) -> str:
         """### You can also return matplotlib plots and code blocks! The plot below is generated from data in the sheet at the bottom of the input (left) panel. """, \
         matplotlib_figure, \
         code
-        
+
 
 randomNumber = (random.randint(0, 100) + random.randint(0, 100)) / 2
 
@@ -179,7 +179,7 @@ def guess(
             else:
                 return "Smaller"
 
-# Plot and paste 
+# Plot and paste
 @funix(
     widgets = {
         ("X", "Z"): ["sheet"],
@@ -193,11 +193,11 @@ def plot_test(X: List[int], Y: List[float], Z: List[bool]) -> Figure:
 
 # conditional visibility
 
-# layout 
+# layout
 
-# multi-page, a non-AI simple one 
+# multi-page, a non-AI simple one
 
-# AI 
+# AI
 
 
 @funix(

@@ -9,7 +9,7 @@ import requests
 import traceback
 from funix.app import app
 from functools import wraps
-from typing import Optional, Callable, Any
+from typing import Literal, Optional, Callable, Any
 from uuid import uuid4 as uuid
 from .theme import parse_theme
 from urllib.parse import urlparse
@@ -26,7 +26,7 @@ __supported_basic_types_dict = {
 __supported_basic_file_types = ["Images", "Videos", "Audios", "Files"]
 __banned_function_name_and_path = ["list", "file", "static", "config", "param", "call"]
 __supported_basic_types = list(__supported_basic_types_dict.keys())
-__decorated_functions_list = list()
+__decorated_functions_list = []
 __files_dict = {}
 __wrapper_enabled = False
 __default_theme = {}
@@ -274,7 +274,7 @@ def funix(
             id: str = str(uuid())
             function_name = getattr(function, "__name__")  # function name as id to retrieve function info
             if function_name in __banned_function_name_and_path:
-                raise Exception(f"{function_name} is not allowed")
+                raise Exception(f"{function_name} is not allowed, banned names: {__banned_function_name_and_path}")
             function_theme = get_theme(theme)
             function_title = title if title is not None else function_name
 
@@ -309,8 +309,8 @@ def funix(
 
             function_signature = inspect.signature(function)
             function_params = function_signature.parameters
-            decorated_params = dict()
-            json_schema_props = dict()
+            decorated_params = {}
+            json_schema_props = {}
 
             cast_to_list_flag = False
 
@@ -342,7 +342,7 @@ def funix(
                                 if function_signature.return_annotation.__name__ == "Figure":
                                     return_type_parsed = "Figure"
                                 else:
-                                    return_type_parsed = dict()
+                                    return_type_parsed = {}
                                     for return_type_key, return_type_value in return_type_raw.items():
                                         return_type_parsed[return_type_key] = str(return_type_value)
                             else:
@@ -370,11 +370,10 @@ def funix(
                 row_layout = []
                 for row_item in row:
                     row_item_done = row_item
-                    if "markdown" in row_item:
-                        row_item_done = conv_row_item(row_item, "markdown")
-                    elif "html" in row_item:
-                        row_item_done = conv_row_item(row_item, "html")
-                    elif "argument" in row_item:
+                    for common_row_item_key in ["markdown", "html"]:
+                        if common_row_item_key in row_item:
+                            row_item_done = conv_row_item(row_item, common_row_item_key)
+                    if "argument" in row_item:
                         if row_item["argument"] not in decorated_params:
                             decorated_params[row_item["argument"]] = {}
                         decorated_params[row_item["argument"]]["customLayout"] = True
@@ -384,8 +383,6 @@ def funix(
                         if isinstance(row_item["dividing"], str):
                             row_item_done["content"] = row_item_done["dividing"]
                         row_item_done.pop("dividing")
-                    else:
-                        raise Exception(f"{function_name}: Invalid input layout item {row} ")
                     row_layout.append(row_item_done)
                 return_input_layout.append(row_layout)
 
@@ -398,23 +395,14 @@ def funix(
                 row_layout = []
                 for row_item in row:
                     row_item_done = row_item
-                    if "markdown" in row_item:
-                        row_item_done = conv_row_item(row_item, "markdown")
-                    elif "html" in row_item:
-                        row_item_done = conv_row_item(row_item, "html")
-                    elif "dividing" in row_item:
+                    for common_row_item_key in ["markdown", "html", "images", "videos", "audios", "files"]:
+                        if common_row_item_key in row_item:
+                            row_item_done = conv_row_item(row_item, common_row_item_key)
+                    if "dividing" in row_item:
                         row_item_done["type"] = "dividing"
                         if isinstance(row_item["dividing"], str):
                             row_item_done["content"] = row_item_done["dividing"]
                         row_item_done.pop("dividing")
-                    elif "images" in row_item:
-                        row_item_done = conv_row_item(row_item, "images")
-                    elif "videos" in row_item:
-                        row_item_done = conv_row_item(row_item, "videos")
-                    elif "audios" in row_item:
-                        row_item_done = conv_row_item(row_item, "audios")
-                    elif "files" in row_item:
-                        row_item_done = conv_row_item(row_item, "files")
                     elif "code" in row_item:
                         row_item_done = row_item
                         row_item_done["type"] = "code"
@@ -423,95 +411,56 @@ def funix(
                     elif "return" in row_item:
                         row_item_done["type"] = "return"
                         return_output_indexes.append(row_item_done["return"])
-                    else:
-                        raise Exception(f"{function_name}: Invalid output layout item {row}")
                     row_layout.append(row_item_done)
                 return_output_layout.append(row_layout)
 
+
+            def create_decorated_params(arg_name: str):
+                if arg_name not in decorated_params:
+                    decorated_params[arg_name] = {}
+
+            def put_props_in_params(arg_name: str, prop_name: str, prop_value: any):
+                create_decorated_params(arg_name)
+                decorated_params[arg_name][prop_name] = prop_value
+
+            def check_example_whitelist(arg_name: str):
+                if arg_name in decorated_params:
+                    if "example" in decorated_params[arg_name] and "whitelist" in decorated_params[arg_name]:
+                        raise Exception(f"{function_name}: {arg_name} has both an example and a whitelist")
+
             safe_widgets = {} if widgets is None else widgets
-
-            for widget_arg_name in safe_widgets:
-                if isinstance(widget_arg_name, str):
-                    if widget_arg_name not in decorated_params:
-                        decorated_params[widget_arg_name] = {}
-                    decorated_params[widget_arg_name]["widget"] = safe_widgets[widget_arg_name]
-                else:
-                    for widget_arg_name_item in widget_arg_name:
-                        if widget_arg_name_item not in decorated_params:
-                            decorated_params[widget_arg_name_item] = {}
-                        decorated_params[widget_arg_name_item]["widget"] = safe_widgets[widget_arg_name]
-
             safe_treat_as = {} if treat_as is None else treat_as
-
-            for treat_as_arg_name in safe_treat_as:
-                if isinstance(treat_as_arg_name, str):
-                    if treat_as_arg_name not in decorated_params:
-                        decorated_params[treat_as_arg_name] = {}
-                    decorated_params[treat_as_arg_name]["treat_as"] = safe_treat_as[treat_as_arg_name]
-                else:
-                    for treat_as_arg_name_item in treat_as_arg_name:
-                        if treat_as_arg_name_item not in decorated_params:
-                            decorated_params[treat_as_arg_name_item] = {}
-                        decorated_params[treat_as_arg_name_item]["treat_as"] = safe_treat_as[treat_as_arg_name]
-
             safe_examples = {} if examples is None else examples
-
-            for example_arg_name in safe_examples:
-                if isinstance(example_arg_name, str):
-                    if example_arg_name not in decorated_params:
-                        decorated_params[example_arg_name] = {}
-                    decorated_params[example_arg_name]["example"] = safe_examples[example_arg_name]
-                else:
-                    example_arg_names = example_arg_name
-                    for index, arg_name in enumerate(example_arg_names):
-                        if arg_name not in decorated_params:
-                            decorated_params[arg_name] = {}
-                        decorated_params[arg_name]["example"] = safe_examples[example_arg_name][index]
-
             safe_whitelist = {} if whitelist is None else whitelist
-
-            for whitelist_arg_name in safe_whitelist:
-                if isinstance(whitelist_arg_name, str):
-                    if whitelist_arg_name not in decorated_params:
-                        decorated_params[whitelist_arg_name] = {}
-                    if "example" not in decorated_params[whitelist_arg_name]:
-                        decorated_params[whitelist_arg_name]["whitelist"] = safe_whitelist[whitelist_arg_name]
-                    else:
-                        raise Exception(f"{function_name}: Cannot use whitelist and example together")
-                else:
-                    whitelist_arg_names = whitelist_arg_name
-                    for index, arg_name in enumerate(whitelist_arg_names):
-                        if arg_name not in decorated_params:
-                            decorated_params[arg_name] = {}
-                        if "example" not in decorated_params[arg_name]:
-                            decorated_params[arg_name]["whitelist"] = safe_whitelist[whitelist_arg_name][index]
-                        else:
-                            raise Exception(f"{function_name}: Cannot use whitelist and example together")
-
             safe_argument_labels = {} if argument_labels is None else argument_labels
 
-            for label_arg_name in safe_argument_labels:
-                if isinstance(label_arg_name, str):
-                    if label_arg_name not in decorated_params:
-                        decorated_params[label_arg_name] = {}
-                    decorated_params[label_arg_name]["label"] = safe_argument_labels[label_arg_name]
-                else:
-                    label_arg_names = label_arg_name
-                    for arg_name in label_arg_names:
-                        if arg_name not in decorated_params:
-                            decorated_params[arg_name] = {}
-                        decorated_params[arg_name]["label"] = safe_argument_labels[label_arg_name]
-
+            for prop in [
+                (safe_widgets, "widget"),
+                (safe_treat_as, "treat_as"),
+                (safe_argument_labels, "label"),
+                (safe_examples, "example"),
+                (safe_whitelist, "whitelist")
+            ]:
+                for prop_arg_name in prop[0]:
+                    if isinstance(prop_arg_name, str):
+                        put_props_in_params(prop_arg_name, prop[1], prop[0][prop_arg_name])
+                        if prop[1] in ["example", "whitelist"]:
+                            check_example_whitelist(prop_arg_name)
+                    else:
+                        if prop[1] in ["example", "whitelist"]:
+                            for index, prop_arg_name in enumerate(prop_arg_name):
+                                put_props_in_params(prop_arg_name, prop[1], prop[0][prop_arg_name][index])
+                                check_example_whitelist(prop_arg_name)
+                        else:
+                            for prop_arg_name_item in prop_arg_name:
+                                put_props_in_params(prop_arg_name_item, prop[1], prop[0][prop_arg_name])
             input_attr = ""
 
             safe_argument_config = {} if argument_config is None else argument_config
 
             for decorator_arg_name, decorator_arg_dict in safe_argument_config.items():
-                if decorator_arg_name not in decorated_params.keys():
-                    decorated_params[decorator_arg_name] = dict()
-
-                # FIXME: use this to shorten the code
-                # decorator_arg_dict.get("treat_as", "config")
+                if decorator_arg_name not in decorated_params:
+                    decorated_params[decorator_arg_name] = {}
 
                 treat_as_config = decorator_arg_dict.get("treat_as", "config")
                 decorated_params[decorator_arg_name]["treat_as"] = treat_as_config
@@ -520,31 +469,19 @@ def funix(
                     if input_attr != decorator_arg_dict["treat_as"]:
                         raise Exception(f"{function_name} input type doesn't match")
 
-                if "widget" in decorator_arg_dict.keys():
-                    decorated_params[decorator_arg_name]["widget"] = decorator_arg_dict["widget"]
+                for prop_key in ["widget", "argument_label", "whitelist", "example"]:
+                    if prop_key in decorator_arg_dict:
+                        decorated_params[decorator_arg_name][prop_key] = decorator_arg_dict[prop_key]
 
-                if "argument_label" in decorator_arg_dict.keys():
-                    decorated_params[decorator_arg_name]["label"] = decorator_arg_dict["argument_label"]
-
-                if "whitelist" in decorator_arg_dict.keys():
-                    if "example" in decorated_params[decorator_arg_name]:
-                        raise Exception(f"{function_name}: Cannot use whitelist and example together")
-                    decorated_params[decorator_arg_name]["whitelist"] = decorator_arg_dict["whitelist"]
-                elif "example" in decorator_arg_dict.keys():
-                    if "whitelist" in decorated_params[decorator_arg_name]:
-                        raise Exception(f"{function_name}: Cannot use whitelist and example together")
-                    decorated_params[decorator_arg_name]["example"] = decorator_arg_dict["example"]
+                if "whitelist" in decorated_params[decorator_arg_name] and "example" in decorated_params[decorator_arg_name]:
+                    raise Exception(f"{function_name}: {decorator_arg_name} has both an example and a whitelist")
 
             for _, function_param in function_params.items():
                 function_arg_name = function_param.name
-                if function_arg_name not in decorated_params.keys():
-                    decorated_params[function_arg_name] = dict()  # default
+                decorated_params[function_arg_name] = decorated_params.get(function_arg_name, {})
+                decorated_params[function_arg_name]["treat_as"] = decorated_params[function_arg_name].get("treat_as", "config")
 
-                if "treat_as" not in decorated_params[function_arg_name].keys():
-                    decorated_params[function_arg_name]["treat_as"] = "config"  # default
                 function_arg_type_dict = get_type_dict(function_param.annotation)
-                if function_arg_name not in decorated_params.keys():
-                    decorated_params[function_arg_name] = dict()
                 decorated_params[function_arg_name].update(function_arg_type_dict)
 
                 default_example = function_param.default
@@ -573,26 +510,16 @@ def funix(
                     0,
                     widget,
                     parsed_theme[1]
-                 )
+                )
 
-                if "widget" in decorated_params[function_arg_name].keys():
-                    json_schema_props[function_arg_name]["widget"] = decorated_params[function_arg_name]["widget"]
+                for prop_key in ["widget", "whitelist", "example", "keys", "default", "label"]:
+                    if prop_key in decorated_params[function_arg_name]:
+                        json_schema_props[function_arg_name][prop_key] = decorated_params[function_arg_name][prop_key]
 
-                if "whitelist" in decorated_params[function_arg_name].keys():
-                    json_schema_props[function_arg_name]["whitelist"] = decorated_params[function_arg_name]["whitelist"]
-                elif "example" in decorated_params[function_arg_name].keys():
-                    json_schema_props[function_arg_name]["example"] = decorated_params[function_arg_name]["example"]
-                elif "keys" in decorated_params[function_arg_name].keys():
-                    json_schema_props[function_arg_name]["keys"] = decorated_params[function_arg_name]["keys"]
-                if "default" in decorated_params[function_arg_name].keys():
-                    json_schema_props[function_arg_name]["default"] = decorated_params[function_arg_name]["default"]
-                if "label" in decorated_params[function_arg_name].keys():
-                    json_schema_props[function_arg_name]["title"] = decorated_params[function_arg_name]["label"]
-                if "customLayout" in decorated_params[function_arg_name].keys():
-                    json_schema_props[function_arg_name]["customLayout"] = decorated_params[function_arg_name][
-                        "customLayout"]
-                else:
-                    json_schema_props[function_arg_name]["customLayout"] = False
+                if "whitelist" in json_schema_props[function_arg_name] and "example" in json_schema_props[function_arg_name]:
+                    raise Exception(f"{function_name}: {function_arg_name} has both an example and a whitelist")
+
+                json_schema_props[function_arg_name]["customLayout"] = decorated_params[function_arg_name].get("customLayout", False)
 
                 if decorated_params[function_arg_name]["treat_as"] == "cell":
                     return_type_parsed = "array"
@@ -674,14 +601,17 @@ def funix(
                 try:
                     function_kwargs = flask.request.get_json()
 
+                    def change_fig_width(figure):
+                        fig = mpld3.fig_to_dict(figure)
+                        fig["width"] = 560
+                        return fig
+
                     @wraps(function)
                     def wrapped_function(**wrapped_function_kwargs):
                         try:
                             if return_type_parsed == "Figure":
                                 fig = function(**wrapped_function_kwargs)
-                                fig_dict = mpld3.fig_to_dict(fig)
-                                fig_dict["width"] = 560
-                                return [fig_dict]
+                                return [change_fig_width(fig)]
                             else:
                                 result = function(**wrapped_function_kwargs)
                                 if not isinstance(result, (str, dict, tuple)):
@@ -697,9 +627,7 @@ def funix(
                                     if isinstance(return_type_parsed, list):
                                         for index, single_return_type in enumerate(return_type_parsed):
                                             if single_return_type == "Figure":
-                                                fig_dict = mpld3.fig_to_dict(result[index])
-                                                fig_dict["width"] = 560
-                                                result[index] = fig_dict
+                                                result[index] = change_fig_width(result[index])
                                             if single_return_type in __supported_basic_file_types:
                                                 if type(result[index]) == "list":
                                                     result[index] = [get_static_uri(each) for each in result[index]] # type: ignore
@@ -708,9 +636,7 @@ def funix(
                                         return result
                                     else:
                                         if return_type_parsed == "Figure":
-                                            fig_dict = mpld3.fig_to_dict(result[0])
-                                            fig_dict["width"] = 560
-                                            result = [fig_dict]
+                                            result = [change_fig_width(result[0])]
                                         if return_type_parsed in __supported_basic_file_types:
                                             if type(result[0]) == "list":
                                                 result = [[get_static_uri(each) for each in result[0]]]
@@ -763,20 +689,22 @@ def funix(
 
     return decorator
 
-def funix_json5(config: Optional[str] = None):
+def funix_parser_backend(config: Optional[str] = None, parser: Literal["json5", "yaml"] = "json5"):
     def decorator(function: Callable):
         if config is None:
             return funix()(function)
         else:
-            jsonConfig: Any = json5.loads(config)
+            if parser == "json5":
+                jsonConfig: Any = json5.loads(config)
+            elif parser == "yaml":
+                jsonConfig = yaml.load(config, Loader=yaml.FullLoader)
+            else:
+                raise ValueError(f"Unknown parser: {parser}")
             return funix(**jsonConfig)(function)
     return decorator
 
+def funix_json5(config: Optional[str] = None):
+    return funix_parser_backend(config, "json5")
+
 def funix_yaml(config: Optional[str] = None):
-    def decorator(function: Callable):
-        if config is None:
-            return funix()(function)
-        else:
-            yamlConfig = yaml.load(config, Loader=yaml.FullLoader)
-            return funix(**yamlConfig)(function)
-    return decorator
+    return funix_parser_backend(config, "yaml")
