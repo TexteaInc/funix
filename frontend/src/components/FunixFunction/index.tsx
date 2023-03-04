@@ -19,6 +19,7 @@ import {
   Button,
   Card,
   CardContent,
+  Checkbox,
   CircularProgress,
   Divider,
   FormControl,
@@ -544,18 +545,34 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
           <Card>
             <CardContent>
               {formElement}
-              <Button
-                variant="contained"
-                size="large"
-                onClick={handleSubmit}
-                sx={{ mt: 1 }}
-                disabled={waiting}
-                startIcon={
-                  waiting && <CircularProgress size={20} color="inherit" />
-                }
+              <Grid
+                container
+                spacing={2}
+                direction="row"
+                justifyContent="center"
+                alignItems="center"
               >
-                Run
-              </Button>
+                <Grid item xs>
+                  <Button
+                    variant="contained"
+                    size="large"
+                    onClick={handleSubmit}
+                    sx={{ mt: 1 }}
+                    disabled={waiting}
+                    startIcon={
+                      waiting && <CircularProgress size={20} color="inherit" />
+                    }
+                  >
+                    Run
+                  </Button>{" "}
+                </Grid>
+                <Grid item>
+                  <FormControlLabel
+                    control={<Checkbox defaultChecked={false} disabled />}
+                    label="Continuous run (not implemented yet)"
+                  />{" "}
+                </Grid>
+              </Grid>
             </CardContent>
           </Card>
         </Grid>
@@ -604,7 +621,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
             <Card>
               <CardContent>
                 <Stack spacing={1}>
-                  <Typography variant="h5">Response</Typography>
+                  <Typography variant="h5">Output</Typography>
                   <ResponseView
                     response={response}
                     returnType={functionDetail.return_type}
