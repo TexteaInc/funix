@@ -510,7 +510,7 @@ def funix(
                 if decorator_arg_name not in decorated_params.keys():
                     decorated_params[decorator_arg_name] = dict()
 
-                # FIXME: use this to shorten the code 
+                # FIXME: use this to shorten the code
                 # decorator_arg_dict.get("treat_as", "config")
 
                 treat_as_config = decorator_arg_dict.get("treat_as", "config")
@@ -740,8 +740,12 @@ def funix(
                                 arg[cell_name] = function_kwargs[cell_name][i]
                             for static_key in static_keys:
                                 arg[static_key] = function_kwargs[static_key]
-                            result.append(wrapped_function(**arg))
-                        return {"result": result}
+                            temp_result = wrapped_function(**arg)
+                            if isinstance(temp_result, list):
+                                result.extend(temp_result)
+                            else:
+                                result.append(temp_result)
+                        return [{"result": result}]
                     else:
                         return wrapped_function(**function_kwargs)
                 except:
