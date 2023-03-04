@@ -28,22 +28,22 @@ def get_unused_port_from(port: int, host: str):
 @plac.opt("port", "Port of Funix", abbrev = "p")
 @plac.flg("no_frontend", "Disable frontend server", abbrev = "F")
 @plac.flg("no_browser", "Disable auto open browser", abbrev = "B")
-def main(module_name, host = "127.0.0.1", port = 3000, no_frontend = False, no_browser = False):
+def main(module_name = None, host = "127.0.0.1", port = 3000, no_frontend = False, no_browser = False):
     """Funix: Building web apps without manually creating widgets
 
-    Funix turns your Python function into a web app 
+    Funix turns your Python function into a web app
     by building the UI from the function's signature,
     based on the mapping from variable types to UI widgets,
     customizable per-widget or kept consistent across apps via themes.
-    
+
     Just write your core logic and leave the rest to Funix.
     Visit us at http://funix.io
     """
 
-    #FIXME The message below does not show up when module_name is not provided
     if not module_name:
-        yield ('no module name provided. Run "funix --help" for more information.')
-            
+        print("Error: No Python module provided.\nPlease run \"funix --help\" for more information.")
+        sys.exit(1)
+
     sys.path.append(os.getcwd())
     parsed_host: str = os.getenv("FUNIX_HOST", host)
     parsed_port: int = get_unused_port_from(int(os.getenv("FUNIX_PORT", port)), parsed_host)
@@ -58,7 +58,7 @@ def main(module_name, host = "127.0.0.1", port = 3000, no_frontend = False, no_b
     )
 
 def cli_main():
-    plac.call(main)
+    plac.call(main, version="Funix 0.3.6")
 
 if __name__ == '__main__':
     cli_main()
