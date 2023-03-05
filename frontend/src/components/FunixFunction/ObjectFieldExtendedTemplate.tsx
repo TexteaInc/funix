@@ -825,24 +825,16 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
         <Card className="property-wrapper" sx={{ mt: 1 }}>
           <Box sx={{ width: "100%" }} padding={1}>
             <Stack direction="row" spacing={1}>
-              <Button variant="contained" size="small" onClick={handleAddRow}>
+              <Button size="small" onClick={handleAddRow}>
                 Add a row
               </Button>
-              <Button
-                variant="contained"
-                size="small"
-                onClick={handleDeleteRows}
-              >
+              <Button size="small" onClick={handleDeleteRows}>
                 Delete selected row(s)
               </Button>
-              <Button variant="contained" size="small" onClick={handleCopyRows}>
+              <Button size="small" onClick={handleCopyRows}>
                 Copy
               </Button>
-              <Button
-                variant="contained"
-                size="small"
-                onClick={handlePasteRows}
-              >
+              <Button size="small" onClick={handlePasteRows}>
                 Paste
               </Button>
             </Stack>

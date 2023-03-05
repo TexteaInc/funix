@@ -28,7 +28,7 @@ def get_unused_port_from(port: int, host: str):
 @plac.opt("port", "Port of Funix", abbrev = "p")
 @plac.flg("no_frontend", "Disable frontend server", abbrev = "F")
 @plac.flg("no_browser", "Disable auto open browser", abbrev = "B")
-def main(module_name = None, host = "127.0.0.1", port = 3000, no_frontend = False, no_browser = False):
+def main(module_name = None, host = "0.0.0.0", port = 3000, no_frontend = False, no_browser = False):
     """Funix: Building web apps without manually creating widgets
 
     Funix turns your Python function into a web app

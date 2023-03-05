@@ -24,11 +24,11 @@ import {
 import FunixFunctionList from "./components/FunixFunctionList";
 import FunixFunctionSelected from "./components/FunixFunctionSelected";
 import { useNavigate, useLocation } from "react-router-dom";
-import { GitHub, Settings, Twitter } from "@mui/icons-material";
+import { GitHub, Settings } from "@mui/icons-material";
 import { useEffect, useState } from "react";
-import { getConfig } from "./shared";
 import { storeAtom } from "./store";
 import { useAtom } from "jotai";
+import { getList } from "./shared";
 
 const App = () => {
   const { search } = useLocation();
@@ -52,14 +52,13 @@ const App = () => {
   };
 
   useEffect(() => {
-    getConfig()
-      .then((data) => {
-        if (data.backend === "__FLAG__") return;
-        setBackend(data.backend);
-        setTempBackend(data.backend);
+    getList(new URL("/list", window.location.origin))
+      .then(() => {
+        setBackend(window.location.origin);
+        setTempBackend(window.location.origin);
       })
       .catch(() => {
-        return;
+        console.warn("No backend server on the same port!");
       });
   }, []);
 

@@ -17,7 +17,10 @@ set_global_theme = decorator.set_global_theme
 class OpenFrontend(Thread):
     def __init__(self, host: str, port: int):
         super(OpenFrontend, self).__init__()
-        self.host = host
+        if host == "0.0.0.0" or host == "::":
+            self.host = "localhost"
+        else:
+            self.host = host
         self.port = port
 
     def isServerOnline(self) -> bool:
@@ -42,7 +45,7 @@ def __prep(main_class: typing.Optional[str]):
 
 def run(
     main_class: str,
-    host: typing.Optional[str] = "localhost",
+    host: typing.Optional[str] = "0.0.0.0",
     port: typing.Optional[int] = 3000,
     no_frontend: typing.Optional[bool] = False,
     no_browser: typing.Optional[bool] = False
@@ -53,7 +56,7 @@ def run(
     else:
         print(f"Starting Funix backend only at http://{host}:{port}")
     if not no_frontend and not no_browser:
-        start(host, port)
+        start()
         if not no_browser:
             web_browser_start = OpenFrontend(host=host, port=port)
             web_browser_start.daemon = True
