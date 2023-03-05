@@ -8,7 +8,7 @@ from funix.hint import Image
 from funix import run
 
 @funix( # Funix.io, the laziest way to build web apps in Python
-  title="Set OpenAI API key",
+  title="Set OpenAI key",
   argument_labels={
     "api_key": "Enter your API key", 
     "sys_env_var": "Use system environment variable"
@@ -29,7 +29,10 @@ def set(api_key: str="", sys_env_var:bool=True) -> str:
 
 @funix( # Funix.io, the laziest way to build web apps in Python
     title="Dall-E",
-    description="Generate an image by prompt with DALL-E",
+    description="""
+Generate an image by prompt with DALL-E
+
+You need to set your OpenAI API key first. To do so, click on the "Set OpenAI key" button above. Then come back here by clicking on the "Dall-E" button again.""",
     show_source=True
 )
 def dalle(Prompt: str = "a cat on a red jeep") -> Image:
@@ -38,7 +41,10 @@ def dalle(Prompt: str = "a cat on a red jeep") -> Image:
 
 
 @funix(  # Funix.io, the laziest way to build web apps in Python
-    description="Ask a question to GPT-3",
+    description="""
+Ask a question to GPT-3
+
+You need to set your OpenAI API key first. To do so, click on the "Set OpenAI key" button above. Then come back here by clicking on the "Dall-E" button again.""",
     widgets={'Question': 'textarea',
              'temp':       'slider[0,1,0.1]', 
              'max_tokens': 'slider[20,100,20]', 

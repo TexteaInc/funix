@@ -1,21 +1,22 @@
-import random
+import random, os, typing
 from typing import List, Optional, Tuple, Literal, Union
-import typing
+
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
+
 from funix import funix, funix_yaml, funix_json5
 from funix.hint import Image, File, Markdown, HTML, Code, Video, Audio
 
 @funix(
         show_source=True
 )
-def hello(name: str) -> str:
+def hello(name: str="NCC-1701") -> str:
 	return f"Hello, {name}."
 
-#TODO: Bao to add a column of sliders.
 @funix(
     title="Table, theme, and argument_config",
     description="""
+<<<<<<< HEAD
 ### This example shows off multiple features of Funix.
 * Per-argument customizations are aggregated in the `argument_config` parameter.
 * Arugments (a and b here) of same configurations are configured jointly as a tuple in `argument_config`.
@@ -27,17 +28,35 @@ def hello(name: str) -> str:
 2. Enter two lists of numbers in the two columns of the table. Some values are prefilled.
 3. Click Submit to see the result.
 4. In the Output panel, click the `Sheet` radio button to view the result as a headed table.
+=======
+### This example shows off multiple features of Funix. Click `Show source` to see the code.
+* Per-argument customizations are aggregated in the `argument_config` parameter. 
+* Parameter keys are tuples to configure multiple arguments altogether in a batch.
+* This demo uses the [sunset](https://github.com/TexteaInc/funix/blob/main/examples/sunset_v2.yaml) theme.  For example, the widgets for integers are by default sliders, instead of input boxes.
+* The resulting sheet's header is set in the return `dict`. The header is _Total_ if the operator is _add_, and _Difference_ if the operator is _minus_.
+
+### Enjoy this demo
+1. Select an opeartor, add or minus. 
+2. Use the sliders to adjust the numbers in any cell. 
+3. To add rows, click the `Add a Row` button. 
+4. Click Submit to see the result.
+5. In the Output panel, click the `Sheet` radio button to view the result as a headed table. 
+>>>>>>> caf9770 (update examples and minor change to frontend)
     """,
     # theme = "https://raw.githubusercontent.com/TexteaInc/funix-doc/main/examples/sunset_v2.yaml",
     theme = "./sunset_v2.yaml",
     # FIXME: this themes makes the menu over the table dissapear.
     # Current workaround is to change the button to contained variant.
     # A proper fix should use an outlined button with a new prop in theme file to change the color in the text and the outline/border.
+    widgets  = {
+      ("a", "b", "c"): "sheet",
+    },
     argument_config={
         "op": {
 	        "argument_label": "Select an operation",
         },
         #FIXME: in argument_config, the key cannot be a tuple, like ("a", "b"): {"widget":"sheet", "treat_as":"column"}.
+<<<<<<< HEAD
         "a": {
             "widget": "sheet"
         },
@@ -45,9 +64,12 @@ def hello(name: str) -> str:
             "widget": "sheet"
         }
     },
+=======
+    }, 
+>>>>>>> caf9770 (update examples and minor change to frontend)
     show_source=True
 )
-def calc(op: Literal["add", "minus"]="add", a: List[int]=[10,20], b: List[int]=[50,72]) -> dict:
+def calc(op: Literal["add", "minus"]="add", a: List[int]=[10,20], b: List[int]=[50,72], c: List[bool]=[True, False]) -> dict:
     if op == "add":
         return {"Total": [a[i] + b[i] for i in range(min(len(a), len(b)))]}
     elif op == "minus":
@@ -55,9 +77,26 @@ def calc(op: Literal["add", "minus"]="add", a: List[int]=[10,20], b: List[int]=[
     else:
         raise Exception("invalid parameter op")
 
-
 # map via cell
 
+<<<<<<< HEAD
+# map via cell
+
+=======
+@funix(
+    title="""Automatic `map` in tables""",
+    description="""Funix automatically maps a scalar function to rows in a sheet, just like `map` in Python. See the source code for details.**Usage:** Simply click 'Add a row' button to create new rows and then click cells to add numeric values. Finally, Run! """ ,
+    widgets={
+        ("a", "b"): "sheet",
+    },
+    treat_as={
+        ("a", "b"): "cell"
+    },
+    show_source=True
+)
+def cell_test(a: int, b: int) -> int:
+    return a + b 
+>>>>>>> caf9770 (update examples and minor change to frontend)
 
 # Show all widgets
 @funix(
@@ -70,9 +109,14 @@ def calc(op: Literal["add", "minus"]="add", a: List[int]=[10,20], b: List[int]=[
              'bool_input_switch': 'switch',
              'literal_input_radio': 'radio',
              'literal_input_select': 'select',
+<<<<<<< HEAD
              'str_input_textarea': 'textarea',
              'X': 'sheet', 'Z': 'sheet',
              'Y': 'sheet', }
+=======
+             'str_input_textarea': 'textarea', 
+             ('X', 'Y', 'Z'): 'sheet'}
+>>>>>>> caf9770 (update examples and minor change to frontend)
 )
 def widget_showoff(
     int_input_slider: int=32,
@@ -91,10 +135,23 @@ def widget_showoff(
     X: typing.List[int]=[1919, 1949, 1979, 2019],
     Y: typing.List[float]=[3.141, 2.718, 6.626, 2.997],
     Z: typing.List[str]=["Pi", "e", "Planck", "Speed of light"]
+<<<<<<< HEAD
     ) -> Tuple[Markdown, str, HTML, dict, Markdown,  dict, Image, Markdown, Audio, File, List[Video] , Markdown, Figure, Code]:
+=======
+    ) -> Tuple[Markdown, str, Markdown, Audio, File, List[Video] ,  HTML, dict, Image, Markdown,  dict, Markdown, Figure, Code]: 
+>>>>>>> caf9770 (update examples and minor change to frontend)
 
     matplotlib_figure = plt.figure()
-    plt.plot(X, Y)
+    plt.plot(
+        range(1,50), 
+        [random.random() for i in range(1,50)],
+        'r-'
+        )
+    plt.plot(
+        range(1,50), 
+        [random.random() for i in range(1,50)],
+        'k--'
+        )
 
     sum_ = calc(op=literal_input_radio, a=X, b=Y)
 
@@ -118,18 +175,21 @@ def hello_world(name: str) -> str:
               ],
               "version": 0.3}
 
-    return """## [Funix.io](http://Funix.io) _supports_ ~~Markdown~~! <br> Basic return types like integers or strings are not displaye here because they are obviously easy to support. We will display complex ones. """, \
+    return """
+## Output widgets supported by [Funix.io](http://Funix.io)
+Basic types like _int_ or _str_ are for sure. **Markdown** or `HTML` strings are automatically rendered. But it does more, including tables, video players, Matplotlib plots, and the tree views of JSON strings.
+""", \
         f"The sum of the first two numbers in the input panels is {int_input_slider + float_input_slider}", \
-        "<span style='color: blue'>JSON or dict returns can be rendered using our our sister project <a href='https://github.com/TexteaInc/json-viewer'>JSON-viewer!</a>. See the rendering results below </span>", \
-        my_dict, \
-        "### The sum of the X and Y columns in the input table is below. Be sure to use check the `Sheet` radio to view the result in a single-column sheet.", \
-        sum_, \
-        "https://opengraph.githubassets.com/1/TexteaInc/Json-viewer", \
-        "### Your function can return **video, image, audio, and binary files** and Funix will add a player/downloader for you.", \
+        "### Your function can return **video, image, audio, and binary files** and Funix will add a player/downloader for you. You can return multiple multimedia objects in a list and each of them will get a player.", \
         "http://curiosity.shoutca.st:8019/128", \
         "https://github.com/TexteaInc/funix-doc/blob/main/illustrations/workflow.png?raw=true",\
         ["http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4", "https://user-images.githubusercontent.com/438579/219586150-7ff491dd-dfea-41ea-bfad-4610abf1fe20.mp4"], \
-        """### You can also return matplotlib plots and code blocks! The plot below is generated from data in the sheet at the bottom of the input (left) panel. """, \
+        "<span style='color: blue'>JSON or dict returns can be rendered using our our sister project <a href='https://github.com/TexteaInc/json-viewer'>JSON-viewer!</a>. See the rendering results below </span>", \
+        my_dict, \
+        "https://opengraph.githubassets.com/1/TexteaInc/Json-viewer",\
+        "### Results from table operations can be rendered as tables or JSON. The sum of the X and Y columns in the input table is below. Be sure to check the `Sheet` radio to view the result in a single-column sheet.", \
+        sum_, \
+        """### You can also return matplotlib plots and code blocks! """, \
         matplotlib_figure, \
         code
 
@@ -137,6 +197,7 @@ def hello_world(name: str) -> str:
 randomNumber = (random.randint(0, 100) + random.randint(0, 100)) / 2
 
 @funix(
+    title="Guess Number",
     description="Guess Number: Input two numbers, and the program will calculate the average of them. If the average "
                 "number is program's guess number, you win! Otherwise, you lose.",
     argument_labels={
@@ -157,8 +218,7 @@ randomNumber = (random.randint(0, 100) + random.randint(0, 100)) / 2
         [{"dividing": "Cheat Option", "position": "left"}],
         [{"argument": "show", "width": 12}]
     ],
-    title="Guess Number",
-    path="guess"
+    show_source=True,
 )
 def guess(
     input1: int = 0,
@@ -179,33 +239,129 @@ def guess(
             else:
                 return "Smaller"
 
-# Plot and paste
+# Default, choices, and example values 
+
 @funix(
-    widgets = {
-        ("X", "Z"): ["sheet"],
-        "Y": ["sheet", "slider[0, 1, 0.01]"]
-    }
+        title="Let users select",
+        description="This example shows how to provide argument/input values that users can select from in the UI. Simpliy taking advantage of Python's default values for keyword arguments, Literal type in type hints, and the `example` parameter in Funix. ", 
+        examples={"arg1": [1, 5, 7]}, 
+        widgets={"arg2": "radio"}
 )
-def plot_test(X: List[int], Y: List[float], Z: List[bool]) -> Figure:
+def argument_selection(
+        arg1: int, 
+        arg2: typing.Literal["is", "is not"], 
+        arg3: str="prime",
+        ) -> str:
+    return f"The number {arg1} {arg2} {arg3}."
+
+# Plot and paste 
+@funix(
+        description="Visualize two columns of a table, where the two columns use different input UIs",
+        widgets={
+           "a": "sheet",
+           "b": "sheet", "slider[0,1,0.01]"
+        }
+)
+
+def slider_table_plot(
+    a: List[int]=list(range(10)), 
+    b: List[float] = [random.random() for _ in range(10)] 
+    ) -> Figure:
     fig = plt.figure()
-    plt.plot(X, Y)
+    plt.plot(a, b)
     return fig
+
 
 # conditional visibility
 
 # layout
 
-# multi-page, a non-AI simple one
+# multi-page, a non-AI simple one 
+haha="hello"
+@funix(
+        title="Multipage: Page 1",
+        description= """
+This demo shows how to pass data between pages. 
+
+It's very simple. Each page is a Funix-decorated function. So just use a global variable to pass data between pages. 
+
+Another example is OpenAI demos where OpenAI key is set in one page while DallE and GPT3 demos use the key in other pages. Check them out using the function selector above""", 
+        argument_labels = {"x": "New value for `haha`"}, 
+        show_source = True
+)
+def set_value_here(x: str) -> Markdown:
+    global haha
+    haha = x
+    return f"The value of `haha` has been set to **{haha}**. Now check its value in 'Multipage: Page 2'. It should have already been changed."
+
+@funix(
+       title="Multipage: Page 2", 
+       description = """
+**Run 'Multiplage: Page 1' first**. 
+
+Click the Run button to get the value of the variable `haha` set in 'Multipage: Page 1'. Default value of `haha` is 'hello'. """, 
+        show_source = True 
+)
+def get_value_here() -> Markdown:
+    return f"the value of `haha` is **{haha}**."
+
 
 # AI
 
+import openai  # pip install openai
+openai.api_key = os.environ.get("OPENAI_KEY")
 
-@funix(
-    widgets={
-        ("phrase", "year", "freq", "test"): "sheet"
-    }
+
+@funix( # Funix.io, the laziest way to build web apps in Python
+  title="OpenAI: set key",
+  argument_labels={
+    "api_key": "Enter your API key", 
+    "sys_env_var": "Use system environment variable"
+  }, 
+  conditional_visible=[ { "if": {"sys_env_var": False}, "then": ["api_key"],  } ],
+    show_source=True
 )
-def sheet_trim(phrase: List[str], year: List[int], freq: List[int], test: List[str]) -> Figure:
-    fig = plt.figure()
-    plt.plot(year, freq)
-    return fig
+def set(api_key: str="", sys_env_var:bool=True) -> str:
+    if sys_env_var:
+        return "OpenAI API key is set in your environment variable. Nothing changes."
+    else:
+        if api_key == "":
+            return "You entered an empty string. Try again."
+        else:
+            openai.api_key = api_key
+            return "OpenAI API key has been set via the web form! If it was set via an environment variable, it's been overwritten."
+
+
+@funix( # Funix.io, the laziest way to build web apps in Python
+    title="OpenAI: Dall-E",
+    description="""
+Generate an image by prompt with DALL-E
+
+You need to set your OpenAI API key first. To do so, click on the "Set OpenAI key" button above. Then come back here by clicking on the "Dall-E" button again.""",
+    show_source=True
+)
+def dalle(Prompt: str = "a cat on a red jeep") -> Image:
+    response = openai.Image.create(prompt=Prompt, n=1, size="1024x1024")
+    return response["data"][0]["url"]
+
+
+@funix(  # Funix.io, the laziest way to build web apps in Python
+    title="OpenAI: GPT-3",
+    description="""
+Ask a question to GPT-3
+
+You need to set your OpenAI API key first. To do so, click on the "Set OpenAI key" button above. Then come back here by clicking on the "Dall-E" button again.""",
+    widgets={'Question': 'textarea',
+             'temp':       'slider[0,1,0.1]', 
+             'max_tokens': 'slider[20,100,20]', 
+             'top_p':      'slider[0,1,0.1]'},
+    show_source=True
+)
+def GPT3(Question: str = "Who is Fermat?", 
+         temp: float=0.9, max_tokens: float=100, top_p: float=0.7) -> str:
+    response = openai.Completion.create(engine="davinci",
+        prompt= Question,
+        temperature=temp, max_tokens=max_tokens, top_p=top_p,
+        frequency_penalty=0.6, presence_penalty=0.0,
+    )
+    return f'The answer is: {response.choices[0].text}'

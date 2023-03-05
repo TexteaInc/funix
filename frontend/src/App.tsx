@@ -162,7 +162,7 @@ const App = () => {
             spacing={2}
           >
             <Typography variant="body2">
-              Powered by <Link href="http://funix.io">Funix</Link>
+              Powered by <Link href="http://funix.io">Funix.io</Link>
             </Typography>
             <Box>
               <Link href="https://github.com/TexteaInc/funix">
@@ -170,11 +170,11 @@ const App = () => {
                   <GitHub />
                 </IconButton>
               </Link>
-              <Link href="https://twitter.com/texteaInc">
+              {/* <Link href="https://twitter.com/texteaInc">
                 <IconButton>
                   <Twitter />
                 </IconButton>
-              </Link>
+              </Link> */}
             </Box>
           </Stack>
         </Container>
