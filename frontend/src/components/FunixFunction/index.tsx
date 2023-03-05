@@ -391,7 +391,8 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
     if (response == null) {
       return (
         <Alert severity="info">
-          Execute the function first to see response here
+          Run the function to see the output/return here. To run, click the Run
+          button at the bottom of the left, input panel.
         </Alert>
       );
     } else {

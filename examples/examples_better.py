@@ -16,7 +16,7 @@ def hello(name: str="NCC-1701") -> str:
 @funix(
     title="Table, theme, and argument_config",
     description="""
-### This example shows off multiple features of Funix. Click `Show source` to see the code.
+### This example shows off multiple features of Funix. Click `Source Code` to see the code.
 * Per-argument customizations are aggregated in the `argument_config` parameter. 
 * Parameter keys are tuples to configure multiple arguments altogether in a batch.
 * This demo uses the [sunset](https://github.com/TexteaInc/funix/blob/main/examples/sunset_v2.yaml) theme.  For example, the widgets for integers are by default sliders, instead of input boxes.
@@ -56,8 +56,8 @@ def calc(op: Literal["add", "minus"]="add", a: List[int]=[10,20], b: List[int]=[
 # map via cell
 
 @funix(
-    title="""Automatic `map` in tables""",
-    description="""Funix automatically maps a scalar function to rows in a sheet, just like `map` in Python. See the source code for details.**Usage:** Simply click 'Add a row' button to create new rows and then click cells to add numeric values. Finally, Run! """ ,
+    title="""Automatic vectorization""",
+    description="""Funix automatically vectorizes a scalar function on arguments declared to be cells in a sheet. See the source code for details. In this example, arguments `a` and `b` are declared so and hence the function is partially mapped onto them -- partial because the argument `isAdd` is not declared so. **Usage:** Simply click 'Add a row' button to create new rows and then double-click cells to add numeric values. Run, and in the output panel, click the `Sheet` radio button to view the result as a headed table.""" ,
     widgets={
         ("a", "b"): "sheet",
     },
@@ -66,13 +66,13 @@ def calc(op: Literal["add", "minus"]="add", a: List[int]=[10,20], b: List[int]=[
     },
     show_source=True
 )
-def cell_test(a: int, b: int) -> int:
-    return a + b 
+def cell_test(a: int, b: int, isAdd: bool) -> int:
+    return a + b if isAdd else a-b
 
 # Show all widgets
 @funix(
-    show_source=True,
-    description="Showing off all widgets supported by Funix. Be sure to click Submit to reveal the output widgets as well. More examples at [QuickStart](https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md)",
+    title="All widgets",
+    description="Showing off all widgets supported by Funix. *Be sure to click Run to reveal the output widgets.* CLick `Source Code` to see the mapping from each input/output type to a widget. Most widgets here are determined by the default theme. Only a handful of them are customized in the `widgets` parameter in the `@funix` decorator.  More examples at [QuickStart](https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md)",
 
     # we only need to customized non-default/theme widgets
     widgets={'int_input_slider': 'slider',
@@ -81,7 +81,8 @@ def cell_test(a: int, b: int) -> int:
              'literal_input_radio': 'radio',
              'literal_input_select': 'select',
              'str_input_textarea': 'textarea', 
-             ('X', 'Y', 'Z'): 'sheet'}
+             ('X', 'Y', 'Z'): 'sheet'},
+    show_source=True
 )
 def widget_showoff(
     int_input_slider: int=32,
@@ -141,7 +142,7 @@ def hello_world(name: str) -> str:
 Basic types like _int_ or _str_ are for sure. **Markdown** or `HTML` strings are automatically rendered. But it does more, including tables, video players, Matplotlib plots, and the tree views of JSON strings.
 """, \
         f"The sum of the first two numbers in the input panels is {int_input_slider + float_input_slider}", \
-        "### Your function can return **video, image, audio, and binary files** and Funix will add a player/downloader for you. You can return multiple multimedia objects in a list and each of them will get a player.", \
+        "### Funix will add a player/downloader for multimedia and binary file returns. ", \
         "http://curiosity.shoutca.st:8019/128", \
         "https://github.com/TexteaInc/funix-doc/blob/main/illustrations/workflow.png?raw=true",\
         ["http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4", "https://user-images.githubusercontent.com/438579/219586150-7ff491dd-dfea-41ea-bfad-4610abf1fe20.mp4"], \
@@ -220,13 +221,13 @@ def argument_selection(
         description="Visualize two columns of a table, where the two columns use different input UIs",
         widgets={
            "a": "sheet",
-           "b": "sheet", "slider[0,1,0.01]"
+           "b": ["sheet", "slider[0,1,0.01]"]
         }
 )
 
 def slider_table_plot(
-    a: List[int]=list(range(10)), 
-    b: List[float] = [random.random() for _ in range(10)] 
+    a: List[int]=list(range(30)), 
+    b: List[float] = [random.random() for _ in range(30)] 
     ) -> Figure:
     fig = plt.figure()
     plt.plot(a, b)
@@ -236,6 +237,36 @@ def slider_table_plot(
 # conditional visibility
 
 # layout
+@funix(
+    title="Layout Example",
+    description="""
+    This example create a card for a Github repo based on the user name and repo name. The purpose of this example is to show how to customize the layout in a row-based grid approach.""",
+    # argument_labels={
+    #   "user_name": "username",
+    # },
+    input_layout=[
+        [{"html": "https://github.com/", "width": 3.5},
+         {"argument": "user_name", "width": 4},
+         {"html": "/", "width": 0.2},
+         {"argument": "repo_name", "width": 4},]
+         # all in row 1
+        ],
+    output_layout=[
+        [{"return": 0}], # row 1
+        [{"markdown": "**Download Link**", "width": 2},
+         {"return": 1}], # row 2
+        [{"markdown": "**Visit the repo**"},
+         {"return": 2}] # row 3
+    ]
+)
+def layout_example(user_name: str="texteainc", 
+                repo_name: str="json-viewer") -> (Image, File, Markdown):
+    url = f"https://github.com/{user_name}/{repo_name}"
+    author = url.split("/")[3]
+    name = url.split("/")[4]
+    return f"https://opengraph.githubassets.com/1/{author}/{name}", \
+           f"{url}/archive/refs/heads/main.zip", \
+           f"[{url}]({url})"
 
 # multi-page, a non-AI simple one 
 haha="hello"
@@ -280,9 +311,9 @@ openai.api_key = os.environ.get("OPENAI_KEY")
     "sys_env_var": "Use system environment variable"
   }, 
   conditional_visible=[ { "if": {"sys_env_var": False}, "then": ["api_key"],  } ],
-    show_source=True
+  show_source=True
 )
-def set(api_key: str="", sys_env_var:bool=True) -> str:
+def set(api_key: str="", sys_env_var:bool=False) -> str:
     if sys_env_var:
         return "OpenAI API key is set in your environment variable. Nothing changes."
     else:

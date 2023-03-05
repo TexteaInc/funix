@@ -95,7 +95,9 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
     <Card>
       <CardContent>
         <FormControl>
-          <FormLabel id="function-list-radio-group-label">Function</FormLabel>
+          <FormLabel id="function-list-radio-group-label">
+            Select a function/page:{" "}
+          </FormLabel>
           <RadioGroup
             aria-labelledby="function-list-radio-group-label"
             name="function-list-radio-group"
