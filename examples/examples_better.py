@@ -16,19 +16,6 @@ def hello(name: str="NCC-1701") -> str:
 @funix(
     title="Table, theme, and argument_config",
     description="""
-<<<<<<< HEAD
-### This example shows off multiple features of Funix.
-* Per-argument customizations are aggregated in the `argument_config` parameter.
-* Arugments (a and b here) of same configurations are configured jointly as a tuple in `argument_config`.
-* The `theme` parameter is used to customize the look and widget selection of the app.
-* The resulting sheet's header is set in the return `dict`. The header is _Total_ if the operator is _add_, and _Difference_ if the operator is _minus_.
-
-### Usage of this demo
-1. Select an opeartor
-2. Enter two lists of numbers in the two columns of the table. Some values are prefilled.
-3. Click Submit to see the result.
-4. In the Output panel, click the `Sheet` radio button to view the result as a headed table.
-=======
 ### This example shows off multiple features of Funix. Click `Show source` to see the code.
 * Per-argument customizations are aggregated in the `argument_config` parameter. 
 * Parameter keys are tuples to configure multiple arguments altogether in a batch.
@@ -41,7 +28,6 @@ def hello(name: str="NCC-1701") -> str:
 3. To add rows, click the `Add a Row` button. 
 4. Click Submit to see the result.
 5. In the Output panel, click the `Sheet` radio button to view the result as a headed table. 
->>>>>>> caf9770 (update examples and minor change to frontend)
     """,
     # theme = "https://raw.githubusercontent.com/TexteaInc/funix-doc/main/examples/sunset_v2.yaml",
     theme = "./sunset_v2.yaml",
@@ -56,17 +42,7 @@ def hello(name: str="NCC-1701") -> str:
 	        "argument_label": "Select an operation",
         },
         #FIXME: in argument_config, the key cannot be a tuple, like ("a", "b"): {"widget":"sheet", "treat_as":"column"}.
-<<<<<<< HEAD
-        "a": {
-            "widget": "sheet"
-        },
-        "b": {
-            "widget": "sheet"
-        }
-    },
-=======
     }, 
->>>>>>> caf9770 (update examples and minor change to frontend)
     show_source=True
 )
 def calc(op: Literal["add", "minus"]="add", a: List[int]=[10,20], b: List[int]=[50,72], c: List[bool]=[True, False]) -> dict:
@@ -79,10 +55,6 @@ def calc(op: Literal["add", "minus"]="add", a: List[int]=[10,20], b: List[int]=[
 
 # map via cell
 
-<<<<<<< HEAD
-# map via cell
-
-=======
 @funix(
     title="""Automatic `map` in tables""",
     description="""Funix automatically maps a scalar function to rows in a sheet, just like `map` in Python. See the source code for details.**Usage:** Simply click 'Add a row' button to create new rows and then click cells to add numeric values. Finally, Run! """ ,
@@ -96,7 +68,6 @@ def calc(op: Literal["add", "minus"]="add", a: List[int]=[10,20], b: List[int]=[
 )
 def cell_test(a: int, b: int) -> int:
     return a + b 
->>>>>>> caf9770 (update examples and minor change to frontend)
 
 # Show all widgets
 @funix(
@@ -109,14 +80,8 @@ def cell_test(a: int, b: int) -> int:
              'bool_input_switch': 'switch',
              'literal_input_radio': 'radio',
              'literal_input_select': 'select',
-<<<<<<< HEAD
-             'str_input_textarea': 'textarea',
-             'X': 'sheet', 'Z': 'sheet',
-             'Y': 'sheet', }
-=======
              'str_input_textarea': 'textarea', 
              ('X', 'Y', 'Z'): 'sheet'}
->>>>>>> caf9770 (update examples and minor change to frontend)
 )
 def widget_showoff(
     int_input_slider: int=32,
@@ -135,11 +100,7 @@ def widget_showoff(
     X: typing.List[int]=[1919, 1949, 1979, 2019],
     Y: typing.List[float]=[3.141, 2.718, 6.626, 2.997],
     Z: typing.List[str]=["Pi", "e", "Planck", "Speed of light"]
-<<<<<<< HEAD
-    ) -> Tuple[Markdown, str, HTML, dict, Markdown,  dict, Image, Markdown, Audio, File, List[Video] , Markdown, Figure, Code]:
-=======
     ) -> Tuple[Markdown, str, Markdown, Audio, File, List[Video] ,  HTML, dict, Image, Markdown,  dict, Markdown, Figure, Code]: 
->>>>>>> caf9770 (update examples and minor change to frontend)
 
     matplotlib_figure = plt.figure()
     plt.plot(
