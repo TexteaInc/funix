@@ -205,9 +205,10 @@ def guess(
 
 @funix(
         title="Let users select",
-        description="This example shows how to provide argument/input values that users can select from in the UI. Simpliy taking advantage of Python's default values for keyword arguments, Literal type in type hints, and the `example` parameter in Funix. ",
-        examples={"arg1": [1, 5, 7]},
-        widgets={"arg2": "radio"}
+        description="This example shows how to provide argument/input values that users can select from in the UI. Simpliy taking advantage of Python's default values for keyword arguments, Literal type in type hints, and the `example` parameter in Funix. ", 
+        examples={"arg1": [1, 5, 7]}, 
+        widgets={"arg2": "radio"},
+        show_source=True 
 )
 def argument_selection(
         arg1: int,
@@ -222,7 +223,8 @@ def argument_selection(
         widgets={
            "a": "sheet",
            "b": ["sheet", "slider[0,1,0.01]"]
-        }
+        }, 
+        show_source=True
 )
 
 def slider_table_plot(
@@ -257,7 +259,8 @@ def slider_table_plot(
          {"return": 1}], # row 2
         [{"markdown": "**Visit the repo**"},
          {"return": 2}] # row 3
-    ]
+    ], 
+    show_source = True 
 )
 def layout_example(user_name: str="texteainc",
                 repo_name: str="json-viewer") -> (Image, File, Markdown):
