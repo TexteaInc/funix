@@ -483,18 +483,17 @@ def funix(
 
                 function_arg_type_dict = get_type_dict(function_param.annotation)
                 decorated_params[function_arg_name].update(function_arg_type_dict)
-
                 default_example = function_param.default
                 if not default_example is inspect._empty:
                     decorated_params[function_arg_name]["default"] = default_example
                 elif decorated_params[function_arg_name]["type"] == "bool":
                     decorated_params[function_arg_name]["default"] = False
-                elif "optional" in decorated_params[function_arg_name].keys() and \
+                elif "optional" in decorated_params[function_arg_name] and \
                         decorated_params[function_arg_name]["optional"]:
                     decorated_params[function_arg_name]["default"] = None
-                if function_arg_name not in json_schema_props.keys():
-                    json_schema_props[function_arg_name] = dict()
-                if "widget" in decorated_params[function_arg_name].keys():
+                if function_arg_name not in json_schema_props:
+                    json_schema_props[function_arg_name] = {}
+                if "widget" in decorated_params[function_arg_name]:
                     widget = decorated_params[function_arg_name]["widget"]
                 else:
                     if function_arg_type_dict is None:
@@ -509,11 +508,11 @@ def funix(
                     "object" if function_arg_type_dict is None else function_arg_type_dict["type"],
                     0,
                     widget,
-                    parsed_theme[1]
+                    {} if "widget" in decorated_params[function_arg_name] else parsed_theme[1]
                 )
 
-                for prop_key in ["widget", "whitelist", "example", "keys", "default", "label"]:
-                    if prop_key in decorated_params[function_arg_name]:
+                for prop_key in ["whitelist", "example", "keys", "default", "label"]:
+                    if prop_key in decorated_params[function_arg_name].keys():
                         json_schema_props[function_arg_name][prop_key] = decorated_params[function_arg_name][prop_key]
 
                 if "whitelist" in json_schema_props[function_arg_name] and "example" in json_schema_props[function_arg_name]:
@@ -528,7 +527,7 @@ def funix(
                             "object" if function_arg_type_dict is None else function_arg_type_dict["type"],
                             0,
                             widget[1:],
-                            {}
+                            {} if "widget" in decorated_params[function_arg_name] else parsed_theme[1]
                         )
                     json_schema_props[function_arg_name]["type"] = "array"
 
