@@ -437,7 +437,7 @@ def funix(
             for prop in [
                 (safe_widgets, "widget"),
                 (safe_treat_as, "treat_as"),
-                (safe_argument_labels, "label"),
+                (safe_argument_labels, "title"),
                 (safe_examples, "example"),
                 (safe_whitelist, "whitelist")
             ]:
@@ -459,22 +459,30 @@ def funix(
             safe_argument_config = {} if argument_config is None else argument_config
 
             for decorator_arg_name, decorator_arg_dict in safe_argument_config.items():
-                if decorator_arg_name not in decorated_params:
-                    decorated_params[decorator_arg_name] = {}
+                if isinstance(decorator_arg_name, str):
+                    decorator_arg_names = [decorator_arg_name]
+                else:
+                    decorator_arg_names = list(decorator_arg_name)
+                for decorator_arg_name in decorator_arg_names:
+                    if decorator_arg_name not in decorated_params:
+                        decorated_params[decorator_arg_name] = {}
 
-                treat_as_config = decorator_arg_dict.get("treat_as", "config")
-                decorated_params[decorator_arg_name]["treat_as"] = treat_as_config
-                if treat_as_config != "config":
-                    input_attr = decorator_arg_dict["treat_as"] if input_attr == "" else input_attr
-                    if input_attr != decorator_arg_dict["treat_as"]:
-                        raise Exception(f"{function_name} input type doesn't match")
+                    treat_as_config = decorator_arg_dict.get("treat_as", "config")
+                    decorated_params[decorator_arg_name]["treat_as"] = treat_as_config
+                    if treat_as_config != "config":
+                        input_attr = decorator_arg_dict["treat_as"] if input_attr == "" else input_attr
+                        if input_attr != decorator_arg_dict["treat_as"]:
+                            raise Exception(f"{function_name} input type doesn't match")
 
-                for prop_key in ["widget", "argument_label", "whitelist", "example"]:
-                    if prop_key in decorator_arg_dict:
-                        decorated_params[decorator_arg_name][prop_key] = decorator_arg_dict[prop_key]
+                    for prop_key in ["widget", "label", "whitelist", "example"]:
+                        if prop_key in decorator_arg_dict:
+                            if prop_key == "label":
+                                decorated_params[decorator_arg_name]["title"] = decorator_arg_dict[prop_key]
+                            else:
+                                decorated_params[decorator_arg_name][prop_key] = decorator_arg_dict[prop_key]
 
-                if "whitelist" in decorated_params[decorator_arg_name] and "example" in decorated_params[decorator_arg_name]:
-                    raise Exception(f"{function_name}: {decorator_arg_name} has both an example and a whitelist")
+                    if "whitelist" in decorated_params[decorator_arg_name] and "example" in decorated_params[decorator_arg_name]:
+                        raise Exception(f"{function_name}: {decorator_arg_name} has both an example and a whitelist")
 
             for _, function_param in function_params.items():
                 function_arg_name = function_param.name
@@ -511,7 +519,7 @@ def funix(
                     {} if "widget" in decorated_params[function_arg_name] else parsed_theme[1]
                 )
 
-                for prop_key in ["whitelist", "example", "keys", "default", "label"]:
+                for prop_key in ["whitelist", "example", "keys", "default", "title"]:
                     if prop_key in decorated_params[function_arg_name].keys():
                         json_schema_props[function_arg_name][prop_key] = decorated_params[function_arg_name][prop_key]
 

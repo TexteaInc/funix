@@ -31,8 +31,8 @@ ConditionalVisibleType = Optional[
     list[dict[str, list[str] | dict[str, Any]]]
 ]
 ArgumentConfigType = Optional[
-    Dict[Text, Dict[Text, Any]] |
-    dict[str, dict[str, Any]]
+    Dict[Text | Tuple, Dict[Text, Any]] |
+    dict[str | tuple, dict[str, Any]]
 ]
 
 

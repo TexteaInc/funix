@@ -17,17 +17,17 @@ def hello(name: str="NCC-1701") -> str:
     title="Table, theme, and argument_config",
     description="""
 ### This example shows off multiple features of Funix. Click `Source Code` to see the code.
-* Per-argument customizations are aggregated in the `argument_config` parameter. 
+* Per-argument customizations are aggregated in the `argument_config` parameter.
 * Parameter keys are tuples to configure multiple arguments altogether in a batch.
 * This demo uses the [sunset](https://github.com/TexteaInc/funix/blob/main/examples/sunset_v2.yaml) theme.  For example, the widgets for integers are by default sliders, instead of input boxes.
 * The resulting sheet's header is set in the return `dict`. The header is _Total_ if the operator is _add_, and _Difference_ if the operator is _minus_.
 
 ### Enjoy this demo
-1. Select an opeartor, add or minus. 
-2. Use the sliders to adjust the numbers in any cell. 
-3. To add rows, click the `Add a Row` button. 
+1. Select an opeartor, add or minus.
+2. Use the sliders to adjust the numbers in any cell.
+3. To add rows, click the `Add a Row` button.
 4. Click Submit to see the result.
-5. In the Output panel, click the `Sheet` radio button to view the result as a headed table. 
+5. In the Output panel, click the `Sheet` radio button to view the result as a headed table.
     """,
     # theme = "https://raw.githubusercontent.com/TexteaInc/funix-doc/main/examples/sunset_v2.yaml",
     theme = "./sunset_v2.yaml",
@@ -39,10 +39,10 @@ def hello(name: str="NCC-1701") -> str:
     },
     argument_config={
         "op": {
-	        "argument_label": "Select an operation",
+	        "label": "Select an operation",
         },
         #FIXME: in argument_config, the key cannot be a tuple, like ("a", "b"): {"widget":"sheet", "treat_as":"column"}.
-    }, 
+    },
     show_source=True
 )
 def calc(op: Literal["add", "minus"]="add", a: List[int]=[10,20], b: List[int]=[50,72], c: List[bool]=[True, False]) -> dict:
@@ -80,7 +80,7 @@ def cell_test(a: int, b: int, isAdd: bool) -> int:
              'bool_input_switch': 'switch',
              'literal_input_radio': 'radio',
              'literal_input_select': 'select',
-             'str_input_textarea': 'textarea', 
+             'str_input_textarea': 'textarea',
              ('X', 'Y', 'Z'): 'sheet'},
     show_source=True
 )
@@ -101,16 +101,16 @@ def widget_showoff(
     X: typing.List[int]=[1919, 1949, 1979, 2019],
     Y: typing.List[float]=[3.141, 2.718, 6.626, 2.997],
     Z: typing.List[str]=["Pi", "e", "Planck", "Speed of light"]
-    ) -> Tuple[Markdown, str, Markdown, Audio, File, List[Video] ,  HTML, dict, Image, Markdown,  dict, Markdown, Figure, Code]: 
+    ) -> Tuple[Markdown, str, Markdown, Audio, File, List[Video] ,  HTML, dict, Image, Markdown,  dict, Markdown, Figure, Code]:
 
     matplotlib_figure = plt.figure()
     plt.plot(
-        range(1,50), 
+        range(1,50),
         [random.random() for i in range(1,50)],
         'r-'
         )
     plt.plot(
-        range(1,50), 
+        range(1,50),
         [random.random() for i in range(1,50)],
         'k--'
         )
@@ -201,22 +201,22 @@ def guess(
             else:
                 return "Smaller"
 
-# Default, choices, and example values 
+# Default, choices, and example values
 
 @funix(
         title="Let users select",
-        description="This example shows how to provide argument/input values that users can select from in the UI. Simpliy taking advantage of Python's default values for keyword arguments, Literal type in type hints, and the `example` parameter in Funix. ", 
-        examples={"arg1": [1, 5, 7]}, 
+        description="This example shows how to provide argument/input values that users can select from in the UI. Simpliy taking advantage of Python's default values for keyword arguments, Literal type in type hints, and the `example` parameter in Funix. ",
+        examples={"arg1": [1, 5, 7]},
         widgets={"arg2": "radio"}
 )
 def argument_selection(
-        arg1: int, 
-        arg2: typing.Literal["is", "is not"], 
+        arg1: int,
+        arg2: typing.Literal["is", "is not"],
         arg3: str="prime",
         ) -> str:
     return f"The number {arg1} {arg2} {arg3}."
 
-# Plot and paste 
+# Plot and paste
 @funix(
         description="Visualize two columns of a table, where the two columns use different input UIs",
         widgets={
@@ -226,8 +226,8 @@ def argument_selection(
 )
 
 def slider_table_plot(
-    a: List[int]=list(range(30)), 
-    b: List[float] = [random.random() for _ in range(30)] 
+    a: List[int]=list(range(30)),
+    b: List[float] = [random.random() for _ in range(30)]
     ) -> Figure:
     fig = plt.figure()
     plt.plot(a, b)
@@ -259,7 +259,7 @@ def slider_table_plot(
          {"return": 2}] # row 3
     ]
 )
-def layout_example(user_name: str="texteainc", 
+def layout_example(user_name: str="texteainc",
                 repo_name: str="json-viewer") -> (Image, File, Markdown):
     url = f"https://github.com/{user_name}/{repo_name}"
     author = url.split("/")[3]
@@ -268,17 +268,17 @@ def layout_example(user_name: str="texteainc",
            f"{url}/archive/refs/heads/main.zip", \
            f"[{url}]({url})"
 
-# multi-page, a non-AI simple one 
+# multi-page, a non-AI simple one
 haha="hello"
 @funix(
         title="Multipage: Page 1",
         description= """
-This demo shows how to pass data between pages. 
+This demo shows how to pass data between pages.
 
-It's very simple. Each page is a Funix-decorated function. So just use a global variable to pass data between pages. 
+It's very simple. Each page is a Funix-decorated function. So just use a global variable to pass data between pages.
 
-Another example is OpenAI demos where OpenAI key is set in one page while DallE and GPT3 demos use the key in other pages. Check them out using the function selector above""", 
-        argument_labels = {"x": "New value for `haha`"}, 
+Another example is OpenAI demos where OpenAI key is set in one page while DallE and GPT3 demos use the key in other pages. Check them out using the function selector above""",
+        argument_labels = {"x": "New value for `haha`"},
         show_source = True
 )
 def set_value_here(x: str) -> Markdown:
@@ -287,12 +287,12 @@ def set_value_here(x: str) -> Markdown:
     return f"The value of `haha` has been set to **{haha}**. Now check its value in 'Multipage: Page 2'. It should have already been changed."
 
 @funix(
-       title="Multipage: Page 2", 
+       title="Multipage: Page 2",
        description = """
-**Run 'Multiplage: Page 1' first**. 
+**Run 'Multiplage: Page 1' first**.
 
-Click the Run button to get the value of the variable `haha` set in 'Multipage: Page 1'. Default value of `haha` is 'hello'. """, 
-        show_source = True 
+Click the Run button to get the value of the variable `haha` set in 'Multipage: Page 1'. Default value of `haha` is 'hello'. """,
+        show_source = True
 )
 def get_value_here() -> Markdown:
     return f"the value of `haha` is **{haha}**."
@@ -307,9 +307,9 @@ openai.api_key = os.environ.get("OPENAI_KEY")
 @funix( # Funix.io, the laziest way to build web apps in Python
   title="OpenAI: set key",
   argument_labels={
-    "api_key": "Enter your API key", 
+    "api_key": "Enter your API key",
     "sys_env_var": "Use system environment variable"
-  }, 
+  },
   conditional_visible=[ { "if": {"sys_env_var": False}, "then": ["api_key"],  } ],
   show_source=True
 )
@@ -344,12 +344,12 @@ Ask a question to GPT-3
 
 You need to set your OpenAI API key first. To do so, click on the "Set OpenAI key" button above. Then come back here by clicking on the "Dall-E" button again.""",
     widgets={'Question': 'textarea',
-             'temp':       'slider[0,1,0.1]', 
-             'max_tokens': 'slider[20,100,20]', 
+             'temp':       'slider[0,1,0.1]',
+             'max_tokens': 'slider[20,100,20]',
              'top_p':      'slider[0,1,0.1]'},
     show_source=True
 )
-def GPT3(Question: str = "Who is Fermat?", 
+def GPT3(Question: str = "Who is Fermat?",
          temp: float=0.9, max_tokens: float=100, top_p: float=0.7) -> str:
     response = openai.Completion.create(engine="davinci",
         prompt= Question,
@@ -357,3 +357,19 @@ def GPT3(Question: str = "Who is Fermat?",
         frequency_penalty=0.6, presence_penalty=0.0,
     )
     return f'The answer is: {response.choices[0].text}'
+
+@funix(
+    argument_config={
+        ("a", "b"): {
+            "widget": "slider[0,10,0.1]"
+        },
+        "a": {
+            "label": "This ia a"
+        },
+        "b": {
+            "label": "This ia b"
+        }
+    }
+)
+def slider_example(a: float=1, b: float=2) -> str:
+    return f"a={a}, b={b}"
