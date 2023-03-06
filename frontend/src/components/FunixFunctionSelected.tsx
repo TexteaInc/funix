@@ -7,7 +7,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import React, { Suspense } from "react";
+import React, { Suspense, useState } from "react";
 import { useAtom } from "jotai";
 import FunixFunction from "./FunixFunction";
 import { useLocation } from "react-router-dom";
@@ -21,10 +21,11 @@ const FunixFunctionSelected: React.FC<FunctionSelectedProps> = ({
 }) => {
   const [{ selectedFunction }] = useAtom(storeAtom);
   const { pathname } = useLocation();
+  const pathParams = useState(
+    pathname.split("/").filter((value) => value !== "")
+  );
 
-  const pathParams = pathname.split("/").filter((value) => value !== "");
-
-  if (pathParams.length !== 0 && !selectedFunction) {
+  if (pathParams[0].length !== 0 && !selectedFunction) {
     return <Alert severity="warning">Your function is not found.</Alert>;
   }
 
@@ -53,4 +54,4 @@ const FunixFunctionSelected: React.FC<FunctionSelectedProps> = ({
   );
 };
 
-export default FunixFunctionSelected;
+export default React.memo(FunixFunctionSelected);

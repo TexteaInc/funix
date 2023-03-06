@@ -5,6 +5,7 @@ import {
   Button,
   Container,
   createTheme,
+  CssBaseline,
   Dialog,
   DialogActions,
   DialogContent,
@@ -22,20 +23,20 @@ import {
 } from "@mui/material";
 import FunixFunctionList from "./components/FunixFunctionList";
 import FunixFunctionSelected from "./components/FunixFunctionSelected";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { GitHub, Settings } from "@mui/icons-material";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { storeAtom } from "./store";
 import { useAtom } from "jotai";
 import { getList } from "./shared";
 
 const App = () => {
-  const { search } = useLocation();
   const navigate = useNavigate();
-  const query = new URLSearchParams(search);
-  const backendStr = query.get("backend");
   const funixBackend: string | undefined = process.env.REACT_APP_FUNIX_BACKEND;
-  const [backend, setBackend] = useState(backendStr || funixBackend);
+  const [backend, setBackend] = useState(funixBackend);
+  const [backendURL, setBackendURL] = useState<URL | undefined>(
+    backend ? new URL(backend) : undefined
+  );
   const [tempBackend, setTempBackend] = useState(backend);
   const [open, setOpen] = useState(false);
   const [{ theme, showFunctionDetail }, setStore] = useAtom(storeAtom);
@@ -55,14 +56,16 @@ const App = () => {
       .then(() => {
         setBackend(window.location.origin);
         setTempBackend(window.location.origin);
+        setBackendURL(new URL(window.location.origin));
       })
       .catch(() => {
         console.warn("No backend server on the same port!");
       });
-  }, []);
+  }, [window.location.origin]);
 
   return (
     <ThemeProvider theme={createTheme(theme || undefined)}>
+      <CssBaseline />
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle>Settings</DialogTitle>
         <DialogContent>
@@ -113,14 +116,14 @@ const App = () => {
         </DialogActions>
       </Dialog>
       <Container sx={{ paddingTop: 2, paddingBottom: 8 }} maxWidth={false}>
-        {backend ? (
+        {backendURL ? (
           <Stack
             spacing={2}
             sx={{ width: "100%", margin: "0 auto" }}
             id="funix-stack"
           >
-            <FunixFunctionList backend={new URL(backend)} />
-            <FunixFunctionSelected backend={new URL(backend)} />
+            <FunixFunctionList backend={backendURL} />
+            <FunixFunctionSelected backend={backendURL} />
           </Stack>
         ) : (
           <Alert severity="error">
@@ -184,4 +187,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default memo(App);

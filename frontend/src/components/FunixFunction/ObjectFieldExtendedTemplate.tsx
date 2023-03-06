@@ -944,4 +944,4 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
   );
 };
 
-export default ObjectFieldExtendedTemplate;
+export default React.memo(ObjectFieldExtendedTemplate);

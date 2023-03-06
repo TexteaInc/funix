@@ -1,5 +1,4 @@
 import copy
-import random
 from typing import Any
 from uuid import uuid4 as uuid
 
@@ -31,10 +30,11 @@ def get_full_style_from_sugar(key: str, value: Any):
     sugar_info = __theme_style_sugar_dict[key]
     return dict_replace(sugar_info, "${value}", value)
 
-def get_mui_theme(theme, colors):
+def get_mui_theme(theme, colors, typography):
     mui_theme = {
         "components": {},
-        "palette": {}
+        "palette": {},
+        "typography": {},
     }
     temp_colors = {}
     if colors:
@@ -45,6 +45,8 @@ def get_mui_theme(theme, colors):
                 mui_theme["palette"][color] = {"main": colors[color]}
             else:
                 mui_theme["palette"][color] = colors[color]
+    if typography:
+        mui_theme["typography"] = typography
     for widget_name in theme.keys():
         widget_mui_name = "Mui" + widget_name[0].upper() + widget_name[1::]
         mui_theme["components"][widget_mui_name] = {
@@ -104,6 +106,7 @@ def parse_theme(theme):
     type_widget_dict = {}
     widget_style = {}
     custom_palette = {}
+    custom_typography = {}
     if "types" in theme:
         for type_name in theme["types"]:
             widget_name = theme["types"][type_name]
@@ -140,5 +143,7 @@ def parse_theme(theme):
     if "colors" in theme:
         for color_name in theme["colors"].keys():
             custom_palette[color_name] = theme["colors"][color_name]
-    mui_theme = get_mui_theme(widget_style, custom_palette)
+    if "typography" in theme:
+        custom_typography = theme["typography"]
+    mui_theme = get_mui_theme(widget_style, custom_palette, custom_typography)
     return type_names, type_widget_dict, widget_style, custom_palette, mui_theme

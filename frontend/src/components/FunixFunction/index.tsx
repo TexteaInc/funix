@@ -655,4 +655,4 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
   );
 };
 
-export default FunixFunction;
+export default React.memo(FunixFunction);

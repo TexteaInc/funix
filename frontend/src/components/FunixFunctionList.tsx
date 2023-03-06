@@ -17,7 +17,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 export type FunctionListProps = {
   backend: URL;
 };
-
 const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
   const [, setStore] = useAtom(storeAtom);
   const [state, setState] = useState<FunctionPreview[]>([]);
@@ -25,8 +24,6 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
   const [url, setURL] = useState("");
   const { pathname } = useLocation();
   const navigate = useNavigate();
-
-  const pathParams = pathname.split("/").filter((value) => value !== "");
 
   const handleFetchFunctionDetail = useCallback(
     (functionPreview: FunctionPreview) => {
@@ -55,7 +52,7 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
     }
     queryData().then();
     setURL(backend.origin);
-  }, [backend, url, setURL]);
+  }, [backend, url]);
 
   const handleRadioGroupChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const functionName: string | null = e.currentTarget.value;
@@ -72,6 +69,7 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
   };
 
   useEffect(() => {
+    const pathParams = pathname.split("/").filter((value) => value !== "");
     if (
       pathParams.length !== 0 &&
       state.length !== 0 &&
@@ -89,7 +87,7 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
         setRadioGroupValue(functionName);
       }
     }
-  }, [pathParams, state]);
+  }, [pathname, state]);
 
   if (state.length === 1) return <></>;
 
@@ -121,4 +119,4 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
   );
 };
 
-export default FunixFunctionList;
+export default React.memo(FunixFunctionList);

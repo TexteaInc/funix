@@ -1,6 +1,6 @@
 import { Card } from "@mui/material";
 import { Prism } from "react-syntax-highlighter";
-import { coy } from "react-syntax-highlighter/dist/esm/styles/prism";
+import mcoy from "./mcoy";
 
 interface OutputCodeProps {
   code: string;
@@ -19,7 +19,7 @@ export default function OutputCode(props: OutputCodeProps) {
         wrapLongLines
         showLineNumbers
         lineProps={{ style: { flexWrap: "wrap" } }}
-        style={coy}
+        style={mcoy as any}
       >
         {props.code}
       </Prism>

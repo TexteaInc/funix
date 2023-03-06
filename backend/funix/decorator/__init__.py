@@ -238,10 +238,33 @@ def set_global_theme(path: str):
     __default_theme = get_theme(path)
     __parsed_themes["__default"] = parse_theme(__default_theme)
 
-
 def import_theme(path: str, name: str):
     global __themes
     __themes[name] = get_theme(path)
+
+def set_theme(theme: dict, name: str):
+    global __themes
+    __themes[name] = theme
+
+def set_theme_parser_backend(theme: str, name: str, parser: Literal["json5", "yaml"] = "json5"):
+    global __themes
+    if parser == "json5":
+        set_theme(json5.loads(theme), name)
+    elif parser == "yaml":
+        set_theme(yaml.load(theme, yaml.FullLoader), name)
+    else:
+        raise ValueError(f"Unknown parser: {parser}")
+
+def clear_default_theme():
+    global __default_theme, __parsed_themes
+    __default_theme = {}
+    __parsed_themes.pop("__default")
+
+def set_theme_yaml(theme: str, name: str):
+    set_theme_parser_backend(theme, name, "yaml")
+
+def set_theme_json5(theme: str, name: str):
+    set_theme_parser_backend(theme, name, "json5")
 
 def conv_row_item(row_item: dict, item_type: str):
     conved_item = row_item
