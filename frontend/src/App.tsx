@@ -1,7 +1,6 @@
 import {
   Alert,
   AlertTitle,
-  AppBar,
   Box,
   Button,
   Container,
@@ -10,6 +9,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Fab,
   FormControlLabel,
   IconButton,
   Link,
@@ -18,7 +18,6 @@ import {
   Switch,
   TextField,
   ThemeProvider,
-  Toolbar,
   Typography,
 } from "@mui/material";
 import FunixFunctionList from "./components/FunixFunctionList";
@@ -113,16 +112,6 @@ const App = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      <AppBar sx={{ position: "relative" }}>
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ ml: 2, flex: 1 }}>
-            Funix
-          </Typography>
-          <IconButton edge="end" color="inherit" onClick={() => setOpen(true)}>
-            <Settings />
-          </IconButton>
-        </Toolbar>
-      </AppBar>
       <Container sx={{ paddingTop: 2, paddingBottom: 8 }} maxWidth={false}>
         {backend ? (
           <Stack
@@ -150,10 +139,11 @@ const App = () => {
           left: 0,
           right: 0,
           padding: ".5rem",
+          zIndex: 100,
         }}
         component="footer"
       >
-        <Container maxWidth="lg">
+        <Container maxWidth={false}>
           <Stack
             direction="row"
             justifyContent="space-between"
@@ -178,6 +168,18 @@ const App = () => {
           </Stack>
         </Container>
       </Paper>
+      <Fab
+        color="primary"
+        onClick={() => setOpen(true)}
+        sx={{
+          position: "fixed",
+          bottom: "4.5rem",
+          right: "1.5rem",
+          zIndex: 100,
+        }}
+      >
+        <Settings />
+      </Fab>
     </ThemeProvider>
   );
 };

@@ -7,6 +7,7 @@ import {
   FormLabel,
   Radio,
   RadioGroup,
+  Typography,
 } from "@mui/material";
 import { storeAtom } from "../store";
 import { useAtom } from "jotai";
@@ -76,15 +77,16 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
       state.length !== 0 &&
       pathParams[0] !== radioGroupValue
     ) {
+      const functionName = decodeURIComponent(pathParams[0]);
       const selectedFunctionPreview = state.filter(
-        (preview) => preview.name === pathParams[0]
+        (preview) => preview.name === functionName
       );
       if (selectedFunctionPreview.length !== 0) {
         setStore((store) => ({
           ...store,
           selectedFunction: selectedFunctionPreview[0],
         }));
-        setRadioGroupValue(pathParams[0]);
+        setRadioGroupValue(functionName);
       }
     }
   }, [pathParams, state]);
@@ -96,7 +98,7 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
       <CardContent>
         <FormControl>
           <FormLabel id="function-list-radio-group-label">
-            Select a function/page:{" "}
+            <Typography>Select a function/page:</Typography>
           </FormLabel>
           <RadioGroup
             aria-labelledby="function-list-radio-group-label"

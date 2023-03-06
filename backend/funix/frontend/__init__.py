@@ -12,7 +12,9 @@ def start():
 
     @app.route("/<path:path>")
     def send_static(path):
-        return send_from_directory(folder, path)
+        if os.path.exists(os.path.join(folder, path)):
+            return send_from_directory(folder, path)
+        return send_from_directory(folder, "index.html")
 
     @app.route("/static/css/<path:path>")
     def send_css_static(path):
