@@ -44,7 +44,7 @@ typography:
 """, "textbook")
 
 @funix(
-        show_source=True
+        show_source=True,
 )
 def hello(name: str="NCC-1701") -> str:
 	return f"Hello, {name}."
@@ -294,13 +294,13 @@ def slider_table_plot(
     show_source = True
 )
 def layout_example(user_name: str="texteainc",
-                repo_name: str="json-viewer") -> (Image, File, Markdown):
+                repo_name: str="json-viewer") -> (Image, File, Markdown, Theme):
     url = f"https://github.com/{user_name}/{repo_name}"
     author = url.split("/")[3]
     name = url.split("/")[4]
     return f"https://opengraph.githubassets.com/1/{author}/{name}", \
            f"{url}/archive/refs/heads/main.zip", \
-           f"[{url}]({url})"
+           f"[{url}]({url})"， {”basic“： {“ccolor”： “#4545”}}
 
 # multi-page, a non-AI simple one
 haha="hello"
@@ -357,7 +357,6 @@ def set(api_key: str="", sys_env_var:bool=False) -> str:
             openai.api_key = api_key
             return "OpenAI API key has been set via the web form! If it was set via an environment variable, it's been overwritten."
 
-
 @funix( # Funix.io, the laziest way to build web apps in Python
     title="OpenAI: Dall-E",
     description="""
@@ -371,18 +370,28 @@ def dalle(Prompt: str = "a cat on a red jeep") -> Image:
     return response["data"][0]["url"]
 
 
-@funix(  # Funix.io, the laziest way to build web apps in Python
-    title="OpenAI: GPT-3",
-    description="""
-Ask a question to GPT-3
-
-You need to set your OpenAI API key first. To do so, click on the "Set OpenAI key" button above. Then come back here by clicking on the "Dall-E" button again.""",
-    widgets={'Question': 'textarea',
-             'temp':       'slider[0,1,0.1]',
-             'max_tokens': 'slider[20,100,20]',
-             'top_p':      'slider[0,1,0.1]'},
-    show_source=True
+@funix(
 )
+def ChatGPT(prompt:str, openai_key:str)-> str:
+    completion = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo", 
+        messages=[{"role": "user", "content": "Tell the world about the ChatGPT API in the style of a pirate."}]
+    )
+    return completion["choices"][0]["message"]["content"]
+
+
+# @funix(  # Funix.io, the laziest way to build web apps in Python
+#     title="OpenAI: GPT-3",
+#     description="""
+# Ask a question to GPT-3
+
+# You need to set your OpenAI API key first. To do so, click on the "Set OpenAI key" button above. Then come back here by clicking on the "Dall-E" button again.""",
+#     widgets={'Question': 'textarea',
+#              'temp':       'slider[0,1,0.1]',
+#              'max_tokens': 'slider[20,100,20]',
+#              'top_p':      'slider[0,1,0.1]'},
+#     show_source=True
+# )
 def GPT3(Question: str = "Who is Fermat?",
          temp: float=0.9, max_tokens: float=100, top_p: float=0.7) -> str:
     response = openai.Completion.create(engine="davinci",
