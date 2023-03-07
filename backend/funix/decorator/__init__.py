@@ -233,7 +233,7 @@ def get_theme(path: str | None) -> Any:
                 raise Exception(f"Theme {path} not found")
 
 
-def set_global_theme(path: str):
+def set_default_theme(path: str):
     global __default_theme, __parsed_themes
     __default_theme = get_theme(path)
     __parsed_themes["__default"] = parse_theme(__default_theme)

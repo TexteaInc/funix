@@ -294,13 +294,13 @@ def slider_table_plot(
     show_source = True
 )
 def layout_example(user_name: str="texteainc",
-                repo_name: str="json-viewer") -> (Image, File, Markdown, Theme):
+                repo_name: str="json-viewer") -> (Image, File, Markdown):
     url = f"https://github.com/{user_name}/{repo_name}"
     author = url.split("/")[3]
     name = url.split("/")[4]
     return f"https://opengraph.githubassets.com/1/{author}/{name}", \
            f"{url}/archive/refs/heads/main.zip", \
-           f"[{url}]({url})"， {”basic“： {“ccolor”： “#4545”}}
+           f"[{url}]({url})"
 
 # multi-page, a non-AI simple one
 haha="hello"
@@ -374,7 +374,7 @@ def dalle(Prompt: str = "a cat on a red jeep") -> Image:
 )
 def ChatGPT(prompt:str, openai_key:str)-> str:
     completion = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo", 
+        model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": "Tell the world about the ChatGPT API in the style of a pirate."}]
     )
     return completion["choices"][0]["message"]["content"]
