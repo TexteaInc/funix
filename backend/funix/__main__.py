@@ -1,27 +1,7 @@
 import os
 import plac
-import socket
 import sys
-
 from . import *
-
-def check_port_is_used(port: int, host: str):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        sock.connect((host, port))
-        return True
-    except:
-        return False
-
-
-def get_unused_port_from(port: int, host: str):
-    print(f"Checking port {port} is used or not...")
-    nowPort = port
-    while check_port_is_used(nowPort, host):
-        if nowPort == 65535:
-            raise Exception("No port available!")
-        nowPort += 1
-    return nowPort
 
 @plac.pos("module_name", "The Python module containing functions to be turned into web apps by Funix. For example, if your functions are in the file hello.py, you should pass `hello` here.")
 @plac.opt("host", "Host of Funix", abbrev = "H")
@@ -46,7 +26,7 @@ def main(module_name = None, host = "0.0.0.0", port = 3000, no_frontend = False,
 
     sys.path.append(os.getcwd())
     parsed_host: str = os.getenv("FUNIX_HOST", host)
-    parsed_port: int = get_unused_port_from(int(os.getenv("FUNIX_PORT", port)), parsed_host)
+    parsed_port: int = int(os.getenv("FUNIX_PORT", port))
     parsed_no_frontend: bool = os.getenv("FUNIX_NO_FRONTEND", no_frontend)
     parsed_no_browser: bool = os.getenv("FUNIX_NO_BROWSER", no_browser)
     run(
