@@ -372,34 +372,16 @@ def dalle(Prompt: str = "a cat on a red jeep") -> Image:
     response = openai.Image.create(prompt=Prompt, n=1, size="1024x1024")
     return response["data"][0]["url"]
 
-
 @funix(
+        widgets={"prompt": "textarea"}
 )
-def ChatGPT(prompt:str, openai_key:str)-> str:
+def ChatGPT(
+    openai_key: str, 
+    prompt: str="Who is Cauchy? \n Why is he famous? \n What is his Wikipedia page?", )-> str:
+    import openai
+    openai.api_key = openai_key
     completion = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": "Tell the world about the ChatGPT API in the style of a pirate."}]
+        model="gpt-3.5-turbo", 
+        messages=[{"role": "user", "content": prompt}]
     )
     return completion["choices"][0]["message"]["content"]
-
-
-# @funix(  # Funix.io, the laziest way to build web apps in Python
-#     title="OpenAI: GPT-3",
-#     description="""
-# Ask a question to GPT-3
-
-# You need to set your OpenAI API key first. To do so, click on the "Set OpenAI key" button above. Then come back here by clicking on the "Dall-E" button again.""",
-#     widgets={'Question': 'textarea',
-#              'temp':       'slider[0,1,0.1]',
-#              'max_tokens': 'slider[20,100,20]',
-#              'top_p':      'slider[0,1,0.1]'},
-#     show_source=True
-# )
-def GPT3(Question: str = "Who is Fermat?",
-         temp: float=0.9, max_tokens: float=100, top_p: float=0.7) -> str:
-    response = openai.Completion.create(engine="davinci",
-        prompt= Question,
-        temperature=temp, max_tokens=max_tokens, top_p=top_p,
-        frequency_penalty=0.6, presence_penalty=0.0,
-    )
-    return f'The answer is: {response.choices[0].text}'
