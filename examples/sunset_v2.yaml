@@ -4,11 +4,17 @@ types:
   int: slider
   bool: switch
 
-styles:
-  basic:
-    color: "#ff9e1b"
-    contrastText: "#fefefe"
+colors:
+    background:
+        default: "#ff9e1b"
+        # paper: "#f9f0d8"
 
-  tooltip:
-    arrow: false
-    enterTouchDelay: 0
+# styles:
+#   basic:
+#     color: "#ff9e1b"
+#     contrastText: "#fefefe"
+
+  # tooltip:
+  #   arrow: false
+  #   enterTouchDelay: 0
+

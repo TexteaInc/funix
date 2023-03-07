@@ -570,7 +570,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
                 <Grid item>
                   <FormControlLabel
                     control={<Checkbox defaultChecked={false} disabled />}
-                    label="Continuous run (not implemented yet)"
+                    label="Continuous run"
                   />{" "}
                 </Grid>
               </Grid>
