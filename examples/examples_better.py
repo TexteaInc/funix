@@ -345,7 +345,10 @@ openai.api_key = os.environ.get("OPENAI_KEY")
     "sys_env_var": "Use system environment variable"
   },
   conditional_visible=[ { "if": {"sys_env_var": False}, "then": ["api_key"],  } ],
-  show_source=True
+  show_source=True,
+  widgets={
+    "api_key": "password"
+  }
 )
 def set(api_key: str="", sys_env_var:bool=False) -> str:
     if sys_env_var:

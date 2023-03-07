@@ -10,7 +10,9 @@ import {
   FormControlLabel,
   FormLabel,
   Grid,
+  IconButton,
   Input,
+  InputAdornment,
   Radio,
   RadioGroup,
   Slider,
@@ -20,6 +22,7 @@ import SliderValueLabel from "../Common/SliderValueLabel";
 import { sliderWidgetParser } from "../Common/SliderWidgetParser";
 import { castValue } from "../Common/ValueOperation";
 import MarkdownDiv from "../Common/MarkdownDiv";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 const { getDisplayLabel } = utils;
 
@@ -172,6 +175,7 @@ const TextExtendedWidget = ({
   const [inputValue, setInputValue] = React.useState<
     string | number | boolean | object | null | undefined
   >(value || value === 0 ? value : "");
+  const [showPassword, setShowPassword] = React.useState(false);
 
   const _onValueChange = (rawValue: any) => {
     const castedValue = castValue(rawValue, inputType);
@@ -206,6 +210,26 @@ const TextExtendedWidget = ({
       : [];
   const freeSolo: boolean = contentPolicy != ContentPolicy.Whitelist;
 
+  const inputProps =
+    schema.widget === "password"
+      ? {
+          endAdornment: (
+            <InputAdornment position="end">
+              <IconButton
+                onClick={() => setShowPassword((show) => !show)}
+                onMouseDown={(e) => e.preventDefault()}
+                edge="end"
+                sx={{
+                  m: 0,
+                }}
+              >
+                {showPassword ? <VisibilityOff /> : <Visibility />}
+              </IconButton>
+            </InputAdornment>
+          ),
+        }
+      : {};
+
   return (
     <Autocomplete
       disableClearable={inputType === "number" || inputType === "integer"}
@@ -233,6 +257,10 @@ const TextExtendedWidget = ({
           type={
             inputType === "number" || inputType === "integer"
               ? "number"
+              : schema.widget === "password"
+              ? showPassword
+                ? "text"
+                : "password"
               : "text"
           }
           value={inputValue}
@@ -244,7 +272,10 @@ const TextExtendedWidget = ({
           }: React.ChangeEvent<HTMLInputElement>) => {
             if (freeSolo) return _onValueChange(value);
           }}
-          InputLabelProps={{ required: false }}
+          InputProps={inputProps}
+          InputLabelProps={{
+            required: false,
+          }}
         />
       )}
       freeSolo={freeSolo}
