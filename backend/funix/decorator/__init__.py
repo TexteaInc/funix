@@ -21,7 +21,8 @@ __supported_basic_types_dict = {
     "int": "integer",
     "float": "number",
     "str": "string",
-    "bool": "boolean"
+    "bool": "boolean",
+    "range": "integer"
 }
 __supported_basic_file_types = ["Images", "Videos", "Audios", "Files"]
 __banned_function_name_and_path = ["list", "file", "static", "config", "param", "call"]
@@ -108,6 +109,10 @@ def get_type_dict(annotation):
             return {
                 "type": getattr(annotation, "__name__")
             }
+        elif annotation_type_class_name == "range":
+            return {
+                "type": "range"
+            }
         elif annotation_type_class_name in ["UnionType", "_UnionGenericAlias"]:
             if len(getattr(annotation, "__args__")) != 2 or \
                 getattr(annotation, "__args__")[0].__name__ == "NoneType" or \
@@ -136,6 +141,8 @@ def get_type_widget_prop(function_arg_type_name, index, function_arg_widget, wid
             widget = function_arg_widget[index]
     else:
         widget = ""
+    if function_arg_type_name == "range":
+        widget = function_arg_widget
     if function_arg_type_name in widget_type:
         widget = widget_type[function_arg_type_name]
     if function_arg_type_name in __supported_basic_types:
@@ -147,8 +154,8 @@ def get_type_widget_prop(function_arg_type_name, index, function_arg_widget, wid
         return {
             "type": "array",
             "items": {
-              "type": "any",
-              "widget": ""
+                "type": "any",
+                "widget": ""
             },
             "widget": widget
         }
@@ -532,6 +539,8 @@ def funix(
                     else:
                         if function_arg_type_dict["type"] in ["list", "dict", "typing.Dict"]:
                             widget = "json"
+                        elif function_arg_type_dict["type"] == "range":
+                            widget = f"slider[{function_param.annotation.start},{function_param.annotation.stop - 1},{function_param.annotation.step}]"
                         else:
                             widget = ""
 

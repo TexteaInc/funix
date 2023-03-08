@@ -79,5 +79,4 @@ Support Code like:
 }
 
 or just a string like "print('hello world')"
-frontend will detect the language automatically
 """
