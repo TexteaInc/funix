@@ -21,8 +21,7 @@ __supported_basic_types_dict = {
     "int": "integer",
     "float": "number",
     "str": "string",
-    "bool": "boolean",
-    "range": "integer"
+    "bool": "boolean"
 }
 __supported_basic_file_types = ["Images", "Videos", "Audios", "Files"]
 __banned_function_name_and_path = ["list", "file", "static", "config", "param", "call"]
@@ -141,13 +140,16 @@ def get_type_widget_prop(function_arg_type_name, index, function_arg_widget, wid
             widget = function_arg_widget[index]
     else:
         widget = ""
-    if function_arg_type_name == "range":
-        widget = function_arg_widget
     if function_arg_type_name in widget_type:
         widget = widget_type[function_arg_type_name]
     if function_arg_type_name in __supported_basic_types:
         return {
             "type": __supported_basic_types_dict[function_arg_type_name],
+            "widget": widget
+        }
+    elif function_arg_type_name.startswith("range"):
+        return {
+            "type": "integer",
             "widget": widget
         }
     elif function_arg_type_name == "list":
@@ -539,10 +541,22 @@ def funix(
                     else:
                         if function_arg_type_dict["type"] in ["list", "dict", "typing.Dict"]:
                             widget = "json"
-                        elif function_arg_type_dict["type"] == "range":
-                            widget = f"slider[{function_param.annotation.start},{function_param.annotation.stop - 1},{function_param.annotation.step}]"
                         else:
                             widget = ""
+
+                if type(function_param.annotation) is range:
+                    start = function_param.annotation.start if type(function_param.annotation.start) is int else 0
+                    stop = function_param.annotation.stop if type(function_param.annotation.stop) is int else 101
+                    step = function_param.annotation.step if type(function_param.annotation.step) is int else 1
+                    widget = f"slider[{start},{stop - 1},{step}]"
+                else:
+                    if type(function_param.annotation).__name__ == "_GenericAlias" and function_param.annotation.__name__ == "List":
+                        arg = function_param.annotation.__args__[0]
+                        start = arg.start if type(arg.start) is int else 0
+                        stop = arg.stop if type(arg.stop) is int else 101
+                        step = arg.step if type(arg.step) is int else 1
+                        widget = [widget if isinstance(widget, str) else widget[0], f"slider[{arg.start},{arg.stop - 1},{arg.step}]"]
+
 
                 json_schema_props[function_arg_name] = get_type_widget_prop(
                     "object" if function_arg_type_dict is None else function_arg_type_dict["type"],
