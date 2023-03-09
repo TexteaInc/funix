@@ -27,7 +27,8 @@ export default {
   'pre[class*="language-"]': {
     color: "black",
     background: "none",
-    fontFamily: "Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace",
+    fontFamily:
+      "JetBrains Mono, Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace",
     fontSize: "1em",
     textAlign: "left",
     whiteSpace: "pre",

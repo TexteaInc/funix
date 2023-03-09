@@ -148,15 +148,17 @@ def widget_showoff(
         )
 
     sum_ = calc(op=literal_input_radio, a=X, b=Y)
-
-    code = {
-            "lang": "python",
-            "code": """from funix import funix
+    code_content = """
+from funix import funix
 
 @funix()
 def hello_world(name: str) -> str:
     return f"Hello, {name}"
-"""
+""".strip()
+
+    code = {
+            "lang": "python",
+            "code": code_content
     }
 
     my_dict= {"name": "Funix",
@@ -376,12 +378,12 @@ def dalle(Prompt: str = "a cat on a red jeep") -> Image:
         widgets={"prompt": "textarea"}
 )
 def ChatGPT(
-    openai_key: str, 
+    openai_key: str,
     prompt: str="Who is Cauchy? \n Why is he famous? \n What is his Wikipedia page?", )-> str:
     import openai
     openai.api_key = openai_key
     completion = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo", 
+        model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}]
     )
     return completion["choices"][0]["message"]["content"]

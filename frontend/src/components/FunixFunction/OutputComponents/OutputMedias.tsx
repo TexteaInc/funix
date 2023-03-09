@@ -17,7 +17,7 @@ export default function OutputMedias(props: {
   return (
     <>
       {medias.map((media, index) => {
-        const relativeMedia = media.startsWith("/files/")
+        const relativeMedia = media.startsWith("/file/")
           ? new URL(media, props.backend).toString()
           : media;
 

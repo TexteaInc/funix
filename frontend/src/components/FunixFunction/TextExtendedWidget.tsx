@@ -208,12 +208,19 @@ const TextExtendedWidget = ({
       : contentPolicy == ContentPolicy.Example
       ? rawSchema["example"]
       : [];
+
   const freeSolo: boolean = contentPolicy != ContentPolicy.Whitelist;
 
-  const inputProps =
-    schema.widget === "password"
-      ? {
-          endAdornment: (
+  return (
+    <Autocomplete
+      disableClearable={inputType === "number" || inputType === "integer"}
+      size="small"
+      value={value || value === 0 ? value : ""}
+      getOptionLabel={(option) => option.toString()}
+      renderInput={(params: AutocompleteRenderInputParams) => {
+        const newParams = params;
+        if (schema.widget === "password") {
+          newParams.InputProps.endAdornment = (
             <InputAdornment position="end">
               <IconButton
                 onClick={() => setShowPassword((show) => !show)}
@@ -226,58 +233,50 @@ const TextExtendedWidget = ({
                 {showPassword ? <VisibilityOff /> : <Visibility />}
               </IconButton>
             </InputAdornment>
-          ),
+          );
         }
-      : {};
-
-  return (
-    <Autocomplete
-      disableClearable={inputType === "number" || inputType === "integer"}
-      size="small"
-      value={value || value === 0 ? value : ""}
-      getOptionLabel={(option) => option.toString()}
-      renderInput={(params: AutocompleteRenderInputParams) => (
-        <TextField
-          multiline={schema.widget === "textarea"}
-          maxRows={schema.widget === "textarea" ? 5 : 1}
-          {...params}
-          id={id}
-          placeholder={placeholder}
-          label={
-            displayLabel ? (
-              <MarkdownDiv
-                markdown={schema.title || label || "input"}
-                isRenderInline={true}
-              />
-            ) : null
-          }
-          autoFocus={autofocus}
-          required={required}
-          disabled={disabled || readonly}
-          type={
-            inputType === "number" || inputType === "integer"
-              ? "number"
-              : schema.widget === "password"
-              ? showPassword
-                ? "text"
-                : "password"
-              : "text"
-          }
-          value={inputValue}
-          error={rawErrors.length > 0}
-          onBlur={_onBlur}
-          onFocus={_onFocus}
-          onChange={({
-            target: { value },
-          }: React.ChangeEvent<HTMLInputElement>) => {
-            if (freeSolo) return _onValueChange(value);
-          }}
-          InputProps={inputProps}
-          InputLabelProps={{
-            required: false,
-          }}
-        />
-      )}
+        return (
+          <TextField
+            multiline={schema.widget === "textarea"}
+            maxRows={schema.widget === "textarea" ? 5 : 1}
+            {...newParams}
+            id={id}
+            placeholder={placeholder}
+            label={
+              displayLabel ? (
+                <MarkdownDiv
+                  markdown={schema.title || label || "input"}
+                  isRenderInline={true}
+                />
+              ) : null
+            }
+            autoFocus={autofocus}
+            required={required}
+            disabled={disabled || readonly}
+            type={
+              inputType === "number" || inputType === "integer"
+                ? "number"
+                : schema.widget === "password"
+                ? showPassword
+                  ? "text"
+                  : "password"
+                : "text"
+            }
+            value={inputValue}
+            error={rawErrors.length > 0}
+            onBlur={_onBlur}
+            onFocus={_onFocus}
+            onChange={({
+              target: { value },
+            }: React.ChangeEvent<HTMLInputElement>) => {
+              if (freeSolo) return _onValueChange(value);
+            }}
+            InputLabelProps={{
+              required: false,
+            }}
+          />
+        );
+      }}
       freeSolo={freeSolo}
       options={autocompleteOptions}
       onChange={(_, value) => _onValueChange(value)}
