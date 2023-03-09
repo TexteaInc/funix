@@ -29,6 +29,7 @@ import { memo, useEffect, useState } from "react";
 import { storeAtom } from "./store";
 import { useAtom } from "jotai";
 import { getList } from "./shared";
+import { SiDiscord } from "@icons-pack/react-simple-icons";
 
 const App = () => {
   const navigate = useNavigate();
@@ -160,6 +161,11 @@ const App = () => {
               <Link href="https://github.com/TexteaInc/funix">
                 <IconButton>
                   <GitHub />
+                </IconButton>
+              </Link>
+              <Link href="https://discord.gg/sxHQE3mvuZ">
+                <IconButton>
+                  <SiDiscord />
                 </IconButton>
               </Link>
               {/* <Link href="https://twitter.com/texteaInc">
