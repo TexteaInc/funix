@@ -10,7 +10,10 @@ import React from "react";
 import MarkdownDiv from "../Common/MarkdownDiv";
 
 const SwitchWidget = (props: WidgetProps) => {
-  const [checked, setChecked] = React.useState<boolean>(!!props.schema.default);
+  console.log(props);
+  const [checked, setChecked] = React.useState<boolean>(
+    !!(props.schema.default || props.value)
+  );
 
   const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setChecked(event.target.checked);

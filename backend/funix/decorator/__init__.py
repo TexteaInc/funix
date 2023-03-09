@@ -544,18 +544,19 @@ def funix(
                         else:
                             widget = ""
 
-                if type(function_param.annotation) is range:
+                if type(function_param.annotation) is range or function_param.annotation is range:
                     start = function_param.annotation.start if type(function_param.annotation.start) is int else 0
                     stop = function_param.annotation.stop if type(function_param.annotation.stop) is int else 101
                     step = function_param.annotation.step if type(function_param.annotation.step) is int else 1
                     widget = f"slider[{start},{stop - 1},{step}]"
                 else:
                     if type(function_param.annotation).__name__ == "_GenericAlias" and function_param.annotation.__name__ == "List":
-                        arg = function_param.annotation.__args__[0]
-                        start = arg.start if type(arg.start) is int else 0
-                        stop = arg.stop if type(arg.stop) is int else 101
-                        step = arg.step if type(arg.step) is int else 1
-                        widget = [widget if isinstance(widget, str) else widget[0], f"slider[{arg.start},{arg.stop - 1},{arg.step}]"]
+                        if function_param.annotation.__args__[0] is range or type(function_param.annotation.__args__[0]) is range:
+                            arg = function_param.annotation.__args__[0]
+                            start = arg.start if type(arg.start) is int else 0
+                            stop = arg.stop if type(arg.stop) is int else 101
+                            step = arg.step if type(arg.step) is int else 1
+                            widget = [widget if isinstance(widget, str) else widget[0], f"slider[{arg.start},{arg.stop - 1},{arg.step}]"]
 
 
                 json_schema_props[function_arg_name] = get_type_widget_prop(
