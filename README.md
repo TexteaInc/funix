@@ -11,23 +11,26 @@
 
 [![PyPI version](https://badge.fury.io/py/funix.svg)](https://badge.fury.io/py/funix)
 
-<h4><a href="https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md">QuickStart Guide</a>  | <a href="[README.zh-CN.md](https://github.com/TexteaInc/funix/blob/main/README.zh-CN.md)">简体中文</a>
+<h4><a href="https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md">QuickStart Guide</a> | <a href="https://textea.notion.site/Funix-Reference-Manual-452a8ce51bdf4c29b4650bed7df270f6">Reference Manual</a> | <a href="[README.zh-CN.md](https://github.com/TexteaInc/funix/blob/main/README.zh-CN.md)">简体中文</a>
  </h4>
 
-![Introduction video]( https://github.com/TexteaInc/funix-doc/raw/main/videos/ppt_out.gif)
+![Introduction video](https://github.com/TexteaInc/funix-doc/raw/main/videos/30_seconds.gif)
 
 <a href="https://www.youtube.com/watch?v=UGp5gbR8f3c">Watch on YouTube</a>
 
-<br /><br />
 
 </div>
 
-Funix automatically turns an ordinary Python function into a web app without needing you to specify any widgets. 
-Simply add a `@funix` decorator above your function and then it becomes an app in the browser for anyone, without coding skills, to use.
+## Features
 
-Funix supports complex data types/widgets, such as multi-column data tables or Matplotlib chats.
-If you need to customize the UI, do it declaratively.
-Funix is non-intrusive. You can still run or debug your Python code locally as usual.
+Funix is designed for an algorithm/ML engineer to build web apps without writing code related to the UI, not even selecting a widget and passing it to or calling it in a Python function. 
+
+* Generating web app UI from the signature of a Python function.
+* Inferring widgets from variable types. No manual widget selection needed.
+* Type-to-widget mapping stored in themes for cross-app UI consistency. 
+* Declarative UI customization when needed. 
+* Non-intrusive. You can still run or debug your Python code locally as usual.
+ 
 
 
 > **WIP**: Funix is still under development. If you have any questions, please feel free to [open an issue](https://github.com/TexteaInc/funix/issues/new).
