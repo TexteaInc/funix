@@ -11,7 +11,7 @@
 
 [![PyPI version](https://badge.fury.io/py/funix.svg)](https://badge.fury.io/py/funix)
 
-<h4><a href="https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md">QuickStart Guide</a> | <a href="https://textea.notion.site/Funix-Reference-Manual-452a8ce51bdf4c29b4650bed7df270f6">Reference Manual</a> | <a href="[README.zh-CN.md](https://github.com/TexteaInc/funix/blob/main/README.zh-CN.md)">简体中文</a>
+<h4><a href="https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md">QuickStart Guide</a> | <a href="https://textea.notion.site/Funix-Reference-Manual-452a8ce51bdf4c29b4650bed7df270f6">Reference Manual</a> | <a href="https://github.com/TexteaInc/funix/blob/main/README.zh-CN.md">简体中文</a>
  </h4>
 
 ![](https://github.com/TexteaInc/funix-doc/blob/main/videos/chatgpt/scence_1_ChatGPT_in_two_lines/chatgpt_1.gif?raw=true)

@@ -66,8 +66,7 @@ def hello(name: str="NCC-1701") -> str:
 4. Click Submit to see the result.
 5. In the Output panel, click the `Sheet` radio button to view the result as a headed table.
     """,
-    # theme = "https://raw.githubusercontent.com/TexteaInc/funix-doc/main/examples/sunset_v2.yaml",
-    theme = "./sunset_v2.yaml",
+    theme = "https://raw.githubusercontent.com/TexteaInc/funix-doc/main/examples/sunset_v2.yaml",
     widgets  = {
       ("a", "b", "c"): "sheet",
     },
@@ -342,41 +341,26 @@ openai.api_key = os.environ.get("OPENAI_KEY")
 
 
 @funix( # Funix.io, the laziest way to build web apps in Python
-  title="OpenAI: set key",
-  argument_labels={
-    "api_key": "Enter your API key",
-    "sys_env_var": "Use system environment variable"
-  },
-  conditional_visible=[ { "if": {"sys_env_var": False}, "then": ["api_key"],  } ],
-  show_source=True,
-  widgets={
-    "api_key": "password"
-  }
-)
-def set(api_key: str="", sys_env_var:bool=False) -> str:
-    if sys_env_var:
-        return "OpenAI API key is set in your environment variable. Nothing changes."
-    else:
-        if api_key == "":
-            return "You entered an empty string. Try again."
-        else:
-            openai.api_key = api_key
-            return "OpenAI API key has been set via the web form! If it was set via an environment variable, it's been overwritten."
-
-@funix( # Funix.io, the laziest way to build web apps in Python
     title="OpenAI: Dall-E",
     description="""
 Generate an image by prompt with DALL-E
 
 You need to set your OpenAI API key first. To do so, click on the "Set OpenAI key" button above. Then come back here by clicking on the "Dall-E" button again.""",
+    widgets={"openai_key":"password"}, 
     show_source=True
 )
-def dalle(Prompt: str = "a cat on a red jeep") -> Image:
+def dalle(
+    openai_key: str, 
+    Prompt: str = "a cat on a red jeep") -> Image:
+    import openai
+    openai.api_key = openai_key
+
     response = openai.Image.create(prompt=Prompt, n=1, size="1024x1024")
     return response["data"][0]["url"]
 
 @funix(
-        widgets={"prompt": "textarea"}
+        widgets={"openai_key":"password", "prompt": "textarea"}, 
+        show_source=True, 
 )
 def ChatGPT(
     openai_key: str,
