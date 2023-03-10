@@ -6,15 +6,27 @@ widget_config = Tuple[str, TypedDict]
 def generate_widget_config(widget: str, config: TypedDict) -> widget_config:
     return widget, config
 
-def generate_frontend_widget_config(config: widget_config | str) -> str:
-    if isinstance(config, tuple):
-        return f"{config[0]}{json.dumps(list(config[1].values()))}"
-    return config
+widgets_update_config = {}
+
+def register_widget_update_config(widget: str):
+    def decorator(func):
+        widgets_update_config[widget] = func
+    return decorator
+
+def dump_frontend_config(config: widget_config) -> str:
+    list_config = json.dumps(list(widgets_update_config[config[0]](list(config[1].values())).values()))
+    return f"{config[0]}{list_config}"
 
 class slider_config(TypedDict):
     min: int | float
     max: int | float
     step: int | float
+
+@register_widget_update_config("slider")
+def slider_config_update(*args) -> slider_config:
+    new_config = slider_config(min=0, max=100, step=0.1)
+    new_config.update(slider(*args[0])[1])
+    return new_config
 
 
 def slider(*args, **kwargs) -> Tuple[str, str]:
@@ -44,3 +56,8 @@ def slider(*args, **kwargs) -> Tuple[str, str]:
         config["step"] = 1 if use_type is int else 0.1
     config = slider_config(min=use_type(config["min"]), max=use_type(config["max"]), step=use_type(config["step"]))
     return generate_widget_config("slider", config)
+
+def generate_frontend_widget_config(config: widget_config | str) -> str:
+    if isinstance(config, tuple):
+        return dump_frontend_config(config)
+    return config
