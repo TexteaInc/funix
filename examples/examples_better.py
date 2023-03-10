@@ -342,10 +342,7 @@ openai.api_key = os.environ.get("OPENAI_KEY")
 
 @funix( # Funix.io, the laziest way to build web apps in Python
     title="OpenAI: Dall-E",
-    description="""
-Generate an image by prompt with DALL-E
-
-You need to set your OpenAI API key first. To do so, click on the "Set OpenAI key" button above. Then come back here by clicking on the "Dall-E" button again.""",
+    description="""Generate an image by prompt with DALL-E.""",
     widgets={"openai_key":"password"}, 
     show_source=True
 )
@@ -359,16 +356,21 @@ def dalle(
     return response["data"][0]["url"]
 
 @funix(
-        widgets={"openai_key":"password", "prompt": "textarea"}, 
+        widgets={"openai_key":"password", 
+                 "prompt": "textarea"}, 
         show_source=True, 
 )
 def ChatGPT(
     openai_key: str,
-    prompt: str="Who is Cauchy? \n Why is he famous? \n What is his Wikipedia page?", )-> str:
+    # max_tokens: range(20, 100, 20), 
+    prompt: str="Who is Cauchy? \n Why is he famous? \n What is his Wikipedia page?",
+    )-> str:
     import openai
     openai.api_key = openai_key
+
     completion = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": prompt}]
+        model= "gpt-3.5-turbo",
+        messages = [{"role": "user", "content": prompt}],
+        max_tokens = max_tokens,
     )
     return completion["choices"][0]["message"]["content"]
