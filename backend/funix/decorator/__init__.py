@@ -14,6 +14,7 @@ from uuid import uuid4 as uuid
 from .theme import parse_theme
 from urllib.parse import urlparse
 import matplotlib.pyplot as plt, mpld3
+from ..widget import generate_frontend_widget_config
 from ..hint import DestinationType, WidgetsType, TreatAsType, WhitelistType, ExamplesType, LabelsType, LayoutType, \
     ConditionalVisibleType, ArgumentConfigType
 
@@ -460,6 +461,22 @@ def funix(
                     if "example" in decorated_params[arg_name] and "whitelist" in decorated_params[arg_name]:
                         raise Exception(f"{function_name}: {arg_name} has both an example and a whitelist")
 
+            def parse_widget(widget: str | tuple | list):
+                if isinstance(widget, str):
+                    return widget
+                elif isinstance(widget, tuple):
+                    return generate_frontend_widget_config(widget)
+                elif isinstance(widget, list):
+                    result = []
+                    for widget_item in widget:
+                        if isinstance(widget_item, tuple):
+                            result.append(generate_frontend_widget_config(widget_item))
+                        elif isinstance(widget_item, list):
+                            result.append(parse_widget(widget_item))
+                        elif isinstance(widget_item, str):
+                            result.append(widget_item)
+                    return result
+
             safe_widgets = {} if widgets is None else widgets
             safe_treat_as = {} if treat_as is None else treat_as
             safe_examples = {} if examples is None else examples
@@ -475,7 +492,10 @@ def funix(
             ]:
                 for prop_arg_name in prop[0]:
                     if isinstance(prop_arg_name, str):
-                        put_props_in_params(prop_arg_name, prop[1], prop[0][prop_arg_name])
+                        if prop[1] == "widget":
+                            put_props_in_params(prop_arg_name, prop[1], parse_widget(prop[0][prop_arg_name]))
+                        else:
+                            put_props_in_params(prop_arg_name, prop[1], prop[0][prop_arg_name])
                         if prop[1] in ["example", "whitelist"]:
                             check_example_whitelist(prop_arg_name)
                     else:
@@ -483,6 +503,10 @@ def funix(
                             for index, prop_arg_name in enumerate(prop_arg_name):
                                 put_props_in_params(prop_arg_name, prop[1], prop[0][prop_arg_name][index])
                                 check_example_whitelist(prop_arg_name)
+                        elif prop[1] == "widget":
+                            cached_result = parse_widget(prop[0][prop_arg_name])
+                            for prop_arg_name_item in prop_arg_name:
+                                put_props_in_params(prop_arg_name_item, prop[1], cached_result)
                         else:
                             for prop_arg_name_item in prop_arg_name:
                                 put_props_in_params(prop_arg_name_item, prop[1], prop[0][prop_arg_name])
@@ -510,6 +534,8 @@ def funix(
                         if prop_key in decorator_arg_dict:
                             if prop_key == "label":
                                 decorated_params[decorator_arg_name]["title"] = decorator_arg_dict[prop_key]
+                            elif prop_key == "widget":
+                                decorated_params[decorator_arg_name][prop_key] = parse_widget(decorator_arg_dict[prop_key])
                             else:
                                 decorated_params[decorator_arg_name][prop_key] = decorator_arg_dict[prop_key]
 

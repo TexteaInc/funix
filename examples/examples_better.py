@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 
 from funix import funix, set_theme_yaml
 from funix.hint import Image, File, Markdown, HTML, Code, Video, Audio
+from funix.widget import slider
 
 set_theme_yaml("""
 styles:
@@ -107,8 +108,8 @@ def cell_test(a: int, b: int, isAdd: bool) -> int:
     description="Showing off all widgets supported by Funix. *Be sure to click Run to reveal the output widgets.* CLick `Source Code` to see the mapping from each input/output type to a widget. Most widgets here are determined by the default theme. Only a handful of them are customized in the `widgets` parameter in the `@funix` decorator.  More examples at [QuickStart](https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md)",
 
     # we only need to customized non-default/theme widgets
-    widgets={'int_input_slider': 'slider',
-             'float_input_slider': 'slider[0,10,0.1]',
+    widgets={'int_input_slider': slider(),
+             'float_input_slider': slider(0, 500, 0.1),
              'bool_input_switch': 'switch',
              'literal_input_radio': 'radio',
              'literal_input_select': 'select',
@@ -203,7 +204,7 @@ randomNumber = (random.randint(0, 100) + random.randint(0, 100)) / 2
     },
     widgets={
         "show": "switch",
-        ("input1", "input2"): "slider[0, 100]"
+        ("input1", "input2"): slider(0, 100)
     },
     input_layout=[
         [{"markdown": "**Guess Number**"}],
@@ -256,7 +257,7 @@ def argument_selection(
         description="Visualize two columns of a table, where the two columns use different input UIs",
         widgets={
            "a": "sheet",
-           "b": ["sheet", "slider[0,1,0.01]"]
+           "b": ["sheet", slider(0, 1, 0.01)]
         },
         show_source=True
 )
