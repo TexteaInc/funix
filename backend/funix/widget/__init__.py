@@ -1,35 +1,40 @@
 import json
-from typing import TypedDict, Tuple
+from typing import TypedDict
 
 
-widget_config = Tuple[str, TypedDict]
-def generate_widget_config(widget: str, config: TypedDict) -> widget_config:
+def generate_widget_config(widget: str, config: TypedDict) -> tuple[str, TypedDict]:
     return widget, config
 
+
 widgets_update_config = {}
+
 
 def register_widget_update_config(widget: str):
     def decorator(func):
         widgets_update_config[widget] = func
+
     return decorator
 
-def dump_frontend_config(config: widget_config) -> str:
+
+def dump_frontend_config(config: tuple[str, TypedDict]) -> str:
     list_config = json.dumps(list(widgets_update_config[config[0]](list(config[1].values())).values()))
     return f"{config[0]}{list_config}"
 
-class slider_config(TypedDict):
+
+class SliderConfig(TypedDict):
     min: int | float
     max: int | float
     step: int | float
 
+
 @register_widget_update_config("slider")
-def slider_config_update(*args) -> slider_config:
-    new_config = slider_config(min=0, max=100, step=0.1)
+def slider_config_update(*args) -> SliderConfig:
+    new_config = SliderConfig(min=0, max=100, step=0.1)
     new_config.update(slider(*args[0])[1])
     return new_config
 
 
-def slider(*args, **kwargs) -> Tuple[str, str]:
+def slider(*args, **kwargs) -> tuple[str, TypedDict]:
     config = {
         "min": 0,
         "max": 100
@@ -48,16 +53,17 @@ def slider(*args, **kwargs) -> Tuple[str, str]:
                 config["min"] = kwargs["min"]
             if "step" in kwargs:
                 config["step"] = kwargs["step"]
-    use_type = float
     if "step" in config:
-        use_type = int if isinstance(config["step"], int) and isinstance(config["min"], int) and isinstance(config["max"], int) else float
+        use_type = int if isinstance(config["step"], int) and isinstance(config["min"], int) and isinstance(
+            config["max"], int) else float
     else:
         use_type = int if isinstance(config["min"], int) and isinstance(config["max"], int) else float
-        config["step"] = 1 if use_type is int else 0.1
-    config = slider_config(min=use_type(config["min"]), max=use_type(config["max"]), step=use_type(config["step"]))
+    config["step"] = 1 if use_type is int else 0.1
+    config = SliderConfig(min=use_type(config["min"]), max=use_type(config["max"]), step=use_type(config["step"]))
     return generate_widget_config("slider", config)
 
-def generate_frontend_widget_config(config: widget_config | str) -> str:
+
+def generate_frontend_widget_config(config: tuple[str, TypedDict] | str) -> str:
     if isinstance(config, tuple):
         return dump_frontend_config(config)
     return config

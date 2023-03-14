@@ -283,6 +283,38 @@ def conv_row_item(row_item: dict, item_type: str):
     conved_item.pop(item_type)
     return conved_item
 
+def funix_param_to_widget(annotation):
+    need_config = hasattr(annotation, "__funix_need_config__")
+    if need_config:
+        if annotation.__funix_has_config__:
+            return f"{annotation.__funix_widget__}{json.dumps(list(annotation.__funix_config__.values()))}"
+        else:
+            return annotation.__funix_widget__
+    return annotation.__funix_widget__
+
+def function_param_to_widget(annotation, widget):
+    if type(annotation) is range or annotation is range:
+        start = annotation.start if type(annotation.start) is int else 0
+        stop = annotation.stop if type(annotation.stop) is int else 101
+        step = annotation.step if type(annotation.step) is int else 1
+        widget = f"slider[{start},{stop - 1},{step}]"
+    elif hasattr(annotation, "__funix__"):
+        widget = funix_param_to_widget(annotation)
+    else:
+        if type(annotation).__name__ == "_GenericAlias" and annotation.__name__ == "List":
+            if annotation.__args__[0] is range or type(annotation.__args__[0]) is range:
+                arg = annotation.__args__[0]
+                start = arg.start if type(arg.start) is int else 0
+                stop = arg.stop if type(arg.stop) is int else 101
+                step = arg.step if type(arg.step) is int else 1
+                widget = [widget if isinstance(widget, str) else widget[0],
+                          f"slider[{start},{stop - 1},{step}]"]
+            elif hasattr(annotation.__args__[0], "__funix__"):
+                widget = [widget if isinstance(widget, str) else widget[0],
+                          funix_param_to_widget(annotation.__args__[0])]
+    return widget
+
+
 def funix(
         path: Optional[str] = None,
         title: Optional[str] = None,
@@ -569,24 +601,18 @@ def funix(
                             widget = "json"
                         else:
                             widget = ""
-
-                if type(function_param.annotation) is range or function_param.annotation is range:
-                    start = function_param.annotation.start if type(function_param.annotation.start) is int else 0
-                    stop = function_param.annotation.stop if type(function_param.annotation.stop) is int else 101
-                    step = function_param.annotation.step if type(function_param.annotation.step) is int else 1
-                    widget = f"slider[{start},{stop - 1},{step}]"
-                else:
-                    if type(function_param.annotation).__name__ == "_GenericAlias" and function_param.annotation.__name__ == "List":
-                        if function_param.annotation.__args__[0] is range or type(function_param.annotation.__args__[0]) is range:
-                            arg = function_param.annotation.__args__[0]
-                            start = arg.start if type(arg.start) is int else 0
-                            stop = arg.stop if type(arg.stop) is int else 101
-                            step = arg.step if type(arg.step) is int else 1
-                            widget = [widget if isinstance(widget, str) else widget[0], f"slider[{arg.start},{arg.stop - 1},{arg.step}]"]
-
-
+                
+                widget = function_param_to_widget(function_param.annotation, widget)
+                param_type = "object" if function_arg_type_dict is None else function_arg_type_dict["type"]
+                if hasattr(function_param.annotation, "__funix__"):
+                    if hasattr(function_param.annotation, "__funix_bool__"):
+                        new_function_arg_type_dict = get_type_dict(bool)
+                    else:
+                        new_function_arg_type_dict = get_type_dict(function_param.annotation.__funix_base__)
+                    if new_function_arg_type_dict is not None:
+                        param_type = new_function_arg_type_dict["type"]
                 json_schema_props[function_arg_name] = get_type_widget_prop(
-                    "object" if function_arg_type_dict is None else function_arg_type_dict["type"],
+                    param_type,
                     0,
                     widget,
                     {} if "widget" in decorated_params[function_arg_name] else parsed_theme[1]
@@ -605,7 +631,7 @@ def funix(
                     return_type_parsed = "array"
                     json_schema_props[function_arg_name]["items"] = \
                         get_type_widget_prop(
-                            "object" if function_arg_type_dict is None else function_arg_type_dict["type"],
+                            param_type,
                             0,
                             widget[1:],
                             {} if "widget" in decorated_params[function_arg_name] else parsed_theme[1]
