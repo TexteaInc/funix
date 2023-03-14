@@ -19,6 +19,8 @@ set_theme = decorator.set_theme
 set_theme_yaml = decorator.set_theme_yaml
 set_theme_json5 = decorator.set_theme_json5
 
+new_funix_type = decorator.new_funix_type
+
 from ipaddress import IPv4Address, IPv6Address, ip_address, ip_network
 
 def check_port_is_used(port: int, host: str):

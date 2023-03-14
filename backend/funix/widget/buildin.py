@@ -73,4 +73,3 @@ class BoolCheckBox(int):
 class BoolSwitch(int):
     __funix_bool__ = True
     pass
-

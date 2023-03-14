@@ -601,7 +601,7 @@ def funix(
                             widget = "json"
                         else:
                             widget = ""
-                
+
                 widget = function_param_to_widget(function_param.annotation, widget)
                 param_type = "object" if function_arg_type_dict is None else function_arg_type_dict["type"]
                 if hasattr(function_param.annotation, "__funix__"):
@@ -814,3 +814,20 @@ def funix_json5(config: Optional[str] = None):
 
 def funix_yaml(config: Optional[str] = None):
     return funix_parser_backend(config, "yaml")
+
+def new_funix_type(widget: str, config_func: Optional[Callable] = None):
+    if not config_func is None:
+        def cls_init(self, *args, **kwargs):
+            self.__funix_has_config__ = True
+            self.__funix_config__ = config_func(*args, **kwargs)[1]
+    def decorator(cls):
+        cls.__funix__ = True
+        cls.__funix_widget__ = widget
+        cls.__funix_base__ = cls.__base__
+        if not config_func is None:
+            cls.__funix_need_config__ = True
+            cls.__funix_has_config__ = False
+            cls.__funix_config__ = None
+            cls.__init__ = cls_init
+        return cls
+    return decorator
