@@ -107,17 +107,15 @@ def parse_theme(theme):
     widget_style = {}
     custom_palette = {}
     custom_typography = {}
-    if "types" in theme:
-        for type_name in theme["types"]:
-            widget_name = theme["types"][type_name]
-            if "," in type_name:
-                common_types_names = [name.strip() for name in type_name.split(",")]
-                type_names += common_types_names
-                for name in common_types_names:
-                    type_widget_dict[name] = widget_name
+    if "widgets" in theme:
+        for type_name in theme["widgets"]:
+            if isinstance(type_name, tuple):
+                for name in type_name:
+                    type_names.append(name)
+                    type_widget_dict[name] = theme["widgets"][type_name]
             else:
                 type_names.append(type_name)
-                type_widget_dict[type_name] = widget_name
+                type_widget_dict[type_name] = theme["widgets"][type_name]
     if "styles" in theme:
         if "basic" in theme["styles"]:
             if "color" in theme["styles"]["basic"]:

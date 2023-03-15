@@ -130,7 +130,7 @@ def get_type_dict(annotation):
         }
 
 
-def get_type_widget_prop(function_arg_type_name, index, function_arg_widget, widget_type):
+def get_type_widget_prop(function_arg_type_name, index, function_arg_widget, widget_type, function_annotation):
     # Basic and List only
     if isinstance(function_arg_widget, str):
         widget = function_arg_widget
@@ -143,6 +143,10 @@ def get_type_widget_prop(function_arg_type_name, index, function_arg_widget, wid
         widget = ""
     if function_arg_type_name in widget_type:
         widget = widget_type[function_arg_type_name]
+    for single_widget_type in widget_type:
+        if function_annotation.__name__ == single_widget_type:
+            widget = widget_type[single_widget_type]
+            break
     if function_arg_type_name in __supported_basic_types:
         return {
             "type": __supported_basic_types_dict[function_arg_type_name],
@@ -252,11 +256,16 @@ def import_theme(path: str, name: str):
     global __themes
     __themes[name] = get_theme(path)
 
-def set_theme(theme: dict, name: str):
+def set_theme(theme: dict, name: Optional[str] = None):
     global __themes
+    if name is None:
+        if "_name" in theme:
+            name = theme["_name"]
+        else:
+            raise Exception("Theme name not found")
     __themes[name] = theme
 
-def set_theme_parser_backend(theme: str, name: str, parser: Literal["json5", "yaml"] = "json5"):
+def set_theme_parser_backend(theme: str, name: Optional[str] = None, parser: Literal["json5", "yaml"] = "json5"):
     global __themes
     if parser == "json5":
         set_theme(json5.loads(theme), name)
@@ -270,10 +279,10 @@ def clear_default_theme():
     __default_theme = {}
     __parsed_themes.pop("__default")
 
-def set_theme_yaml(theme: str, name: str):
+def set_theme_yaml(theme: str, name: Optional[str] = None):
     set_theme_parser_backend(theme, name, "yaml")
 
-def set_theme_json5(theme: str, name: str):
+def set_theme_json5(theme: str, name: Optional[str] = None):
     set_theme_parser_backend(theme, name, "json5")
 
 def conv_row_item(row_item: dict, item_type: str):
@@ -615,7 +624,8 @@ def funix(
                     param_type,
                     0,
                     widget,
-                    {} if "widget" in decorated_params[function_arg_name] else parsed_theme[1]
+                    {} if "widget" in decorated_params[function_arg_name] else parsed_theme[1],
+                    function_param.annotation
                 )
 
                 for prop_key in ["whitelist", "example", "keys", "default", "title"]:
@@ -634,7 +644,8 @@ def funix(
                             param_type,
                             0,
                             widget[1:],
-                            {} if "widget" in decorated_params[function_arg_name] else parsed_theme[1]
+                            {} if "widget" in decorated_params[function_arg_name] else parsed_theme[1],
+                            function_param.annotation
                         )
                     json_schema_props[function_arg_name]["type"] = "array"
 
