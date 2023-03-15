@@ -1,7 +1,8 @@
-from funix import import_theme, set_default_theme, funix
+from funix import set_theme, set_default_theme, funix
+from themes.sunset import sunset
 import typing
 
-import_theme("./sunset_v2.yaml", "sunset")
+set_theme(sunset)
 set_default_theme("sunset")
 
 
