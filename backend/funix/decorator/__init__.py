@@ -176,7 +176,13 @@ def get_type_widget_prop(function_arg_type_name, index, function_arg_widget, wid
             return {
                 "type": "array",
                 "widget": widget,
-                "items": get_type_widget_prop(content_type, index + 1, function_arg_widget, widget_type)
+                "items": get_type_widget_prop(
+                    content_type,
+                    index + 1,
+                    function_arg_widget,
+                    widget_type,
+                    function_annotation
+                )
             }
         elif function_arg_type_name == "typing.Dict":
             return {
@@ -259,8 +265,8 @@ def import_theme(path: str, name: str):
 def set_theme(theme: dict, name: Optional[str] = None):
     global __themes
     if name is None:
-        if "_name" in theme:
-            name = theme["_name"]
+        if "name" in theme:
+            name = theme["name"]
         else:
             raise Exception("Theme name not found")
     __themes[name] = theme

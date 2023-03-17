@@ -63,6 +63,10 @@ def slider(*args, **kwargs) -> tuple[str, TypedDict]:
     return generate_widget_config("slider", config)
 
 
+def code(language: str) -> tuple[str, TypedDict]:
+    return generate_widget_config("code", {"language": language})
+
+
 def generate_frontend_widget_config(config: tuple[str, TypedDict] | str) -> str:
     if isinstance(config, tuple):
         return dump_frontend_config(config)

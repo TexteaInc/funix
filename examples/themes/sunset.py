@@ -2,7 +2,7 @@ from funix.widget import slider
 
 
 sunset = {
-    "_name": "sunset",
+    "name": "sunset",
     "widgets": {
         "float": "inputbox",
         "str": "textarea",

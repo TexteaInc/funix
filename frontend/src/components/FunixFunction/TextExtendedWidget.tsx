@@ -23,6 +23,7 @@ import { sliderWidgetParser } from "../Common/SliderWidgetParser";
 import { castValue } from "../Common/ValueOperation";
 import MarkdownDiv from "../Common/MarkdownDiv";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import Editor from "@monaco-editor/react";
 
 const { getDisplayLabel } = utils;
 
@@ -138,6 +139,45 @@ const TextExtendedWidget = ({
           </Grid>
         </Grid>
       </FormControl>
+    );
+  }
+
+  if (
+    schema.widget?.indexOf("code") !== -1 &&
+    schema.widget !== undefined &&
+    schema.type === "string"
+  ) {
+    const [src, setSrc] = React.useState<string>(schema.default || value);
+
+    let language = "plaintext";
+
+    if (
+      schema.widget.indexOf("[") !== -1 &&
+      schema.widget.indexOf("]") !== -1
+    ) {
+      language = schema.widget
+        .split("[")[1]
+        .split("]")[0]
+        .trim()
+        .replaceAll('"', "");
+    }
+
+    return (
+      <Editor
+        height={300}
+        width="100%"
+        value={src}
+        language={language}
+        onChange={(value) => {
+          if (value) {
+            setSrc(value);
+            onChange(value);
+          } else {
+            setSrc("");
+            onChange("");
+          }
+        }}
+      />
     );
   }
 

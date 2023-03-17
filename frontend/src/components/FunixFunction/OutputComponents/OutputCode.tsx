@@ -1,6 +1,4 @@
-import { Card } from "@mui/material";
-import { Prism } from "react-syntax-highlighter";
-import mcoy from "./mcoy";
+import Editor from "@monaco-editor/react";
 
 interface OutputCodeProps {
   code: string;
@@ -9,20 +7,14 @@ interface OutputCodeProps {
 
 export default function OutputCode(props: OutputCodeProps) {
   return (
-    <Card
-      sx={{
-        width: "100%",
+    <Editor
+      height={300}
+      width="100%"
+      value={props.code}
+      language={props.language || "plaintext"}
+      options={{
+        readOnly: true,
       }}
-    >
-      <Prism
-        language={props.language}
-        wrapLongLines
-        showLineNumbers
-        lineProps={{ style: { flexWrap: "wrap" } }}
-        style={mcoy as any}
-      >
-        {props.code}
-      </Prism>
-    </Card>
+    />
   );
 }
