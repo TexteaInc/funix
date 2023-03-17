@@ -1,4 +1,4 @@
-from ..widget import slider
+from ..widget import slider, code
 
 
 def new_build_in_type(widget: str):
@@ -72,4 +72,30 @@ class BoolCheckBox(int):
 @new_build_in_type("switch")
 class BoolSwitch(int):
     __funix_bool__ = True
+    pass
+
+
+@new_build_in_type("image")
+class BytesImage(bytes):
+    pass
+
+
+@new_build_in_type("video")
+class BytesVideo(bytes):
+    pass
+
+
+@new_build_in_type("audio")
+class BytesAudio(bytes):
+    pass
+
+
+@new_build_in_type("file")
+class BytesFile(bytes):
+    pass
+
+
+@new_build_in_type("code")
+@set_config(code)
+class StrCode(str):
     pass

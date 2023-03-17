@@ -13,7 +13,7 @@ inputbox = StrInputBox
 
 
 set_theme({
-    "_name": "text",
+    "name": "text",
     "widgets": {
         "bool": "switch",
         "Literal": "radio"
