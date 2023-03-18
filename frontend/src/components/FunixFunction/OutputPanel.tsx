@@ -49,10 +49,10 @@ const OutputPanel = (props: {
     } else {
       try {
         const parsedResponse: object = JSON.parse(response);
-        if ("error_body" in parsedResponse) {
-          return (
-            <OutputError error={parsedResponse as { error_body: string }} />
-          );
+        if (!Array.isArray(parsedResponse)) {
+          if (parsedResponse.hasOwnProperty("error_body")) {
+            return <OutputError error={parsedResponse as any} />;
+          }
         }
         const is1dArray = (target: any) => {
           if (!Array.isArray(target)) return false;
@@ -228,6 +228,8 @@ const OutputPanel = (props: {
       case "list":
       case "object":
       case "dict":
+      case "Dict":
+      case "List":
         return <GuessingDataView response={JSON.stringify(response)} />;
       case "Markdown":
         return <MarkdownDiv markdown={response} isRenderInline={false} />;

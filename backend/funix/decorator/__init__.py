@@ -739,6 +739,8 @@ def funix(
                                 return [change_fig_width(fig)]
                             else:
                                 result = function(**wrapped_function_kwargs)
+                                if isinstance(result, list):
+                                    return [result]
                                 if not isinstance(result, (str, dict, tuple)):
                                     result = json.dumps(result)
                                 if cast_to_list_flag:
