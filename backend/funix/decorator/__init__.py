@@ -13,6 +13,7 @@ from typing import Literal, Optional, Callable, Any
 from uuid import uuid4 as uuid
 from .theme import parse_theme
 from urllib.parse import urlparse
+from urllib.request import urlopen
 import matplotlib.pyplot as plt, mpld3
 from ..widget import generate_frontend_widget_config
 from ..hint import DestinationType, WidgetsType, TreatAsType, WhitelistType, ExamplesType, LabelsType, LayoutType, \
@@ -25,6 +26,7 @@ __supported_basic_types_dict = {
     "bool": "boolean"
 }
 __supported_basic_file_types = ["Images", "Videos", "Audios", "Files"]
+__supported_upload_widgets = ["image", "video", "audio", "file"]
 __banned_function_name_and_path = ["list", "file", "static", "config", "param", "call"]
 __supported_basic_types = list(__supported_basic_types_dict.keys())
 __decorated_functions_list = []
@@ -738,7 +740,7 @@ def funix(
                             else:
                                 result = function(**wrapped_function_kwargs)
                                 if not isinstance(result, (str, dict, tuple)):
-                                    result = str(result)
+                                    result = json.dumps(result)
                                 if cast_to_list_flag:
                                     result = list(result)
                                 else:
@@ -774,9 +776,19 @@ def funix(
                             }
 
                     cell_names = []
-                    for key in decorated_params.keys():
-                        if decorated_params[key]["treat_as"] == "cell":
-                            cell_names.append(key)
+                    upload_base64_files = {}
+                    for key in json_schema_props.keys():
+                        if "treat_as" in json_schema_props[key]:
+                            if json_schema_props[key]["treat_as"] == "cell":
+                                cell_names.append(key)
+                        if "widget" in json_schema_props[key]:
+                            if json_schema_props[key]["widget"] in __supported_upload_widgets:
+                                upload_base64_files[key] = "single"
+                        if "items" in json_schema_props[key]:
+                            if "widget" in json_schema_props[key]["items"]:
+                                if json_schema_props[key]["items"]["widget"] in __supported_upload_widgets:
+                                    upload_base64_files[key] = "multiple"
+
                     if function_kwargs is None:
                         return {"error_type": "wrapper", "error_body": "No arguments passed to function."}
                     if len(cell_names) > 0:
@@ -795,6 +807,17 @@ def funix(
                             else:
                                 result.append(temp_result)
                         return [{"result": result}]
+                    elif len(upload_base64_files) > 0:
+                        new_args = function_kwargs
+                        for key in upload_base64_files.keys():
+                            if upload_base64_files[key] == "single":
+                                with urlopen(function_kwargs[key]) as rsp:
+                                    new_args[key] = rsp.read()
+                            elif upload_base64_files[key] == "multiple":
+                                for index, each in enumerate(function_kwargs[key]):
+                                    with urlopen(each) as rsp:
+                                        new_args[key][index] = rsp.read()
+                        return wrapped_function(**new_args)
                     else:
                         return wrapped_function(**function_kwargs)
                 except:

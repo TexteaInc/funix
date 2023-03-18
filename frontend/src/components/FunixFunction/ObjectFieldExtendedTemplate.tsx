@@ -53,6 +53,7 @@ import { GridRowModel } from "@mui/x-data-grid/models/gridRows";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import MarkdownDiv from "../Common/MarkdownDiv";
 import { sliderWidgetParser } from "../Common/SliderWidgetParser";
+import FileUploadWidget from "./FileUploadWidget";
 
 let rowIdCounter = 0;
 
@@ -105,7 +106,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
       SimpleSelectorWhitelist,
       SheetSelector,
     }
-
+    const filesType = ["image", "video", "audio", "file"];
     if (!isArray) {
       if (elementContent.props.schema.widget === "json") {
         if (elementContent.props.schema.keys) {
@@ -127,6 +128,17 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
             ),
           };
         }
+      } else if (filesType.indexOf(elementContent.props.schema.widget) !== -1) {
+        return {
+          type: "config",
+          element: (
+            <FileUploadWidget
+              widget={elementContent.props}
+              multiple={false}
+              supportType={elementContent.props.schema.widget}
+            />
+          ),
+        };
       } else {
         return {
           type: "config",
@@ -348,6 +360,17 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
                 checkType={
                   elementContent.props.schema.items?.type || "DO_NOT_CHECK"
                 }
+              />
+            ),
+          };
+        } else if (filesType.indexOf(elementProps.schema.items.widget) !== -1) {
+          return {
+            type: "config",
+            element: (
+              <FileUploadWidget
+                widget={elementContent.props}
+                multiple={true}
+                supportType={elementProps.schema.items.widget}
               />
             ),
           };

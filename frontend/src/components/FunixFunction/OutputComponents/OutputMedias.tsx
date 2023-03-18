@@ -4,15 +4,15 @@ export default function OutputMedias(props: {
   medias: string[] | string;
   type: string;
   backend: string;
+  outline?: boolean;
 }) {
   const medias = Array.isArray(props.medias) ? props.medias : [props.medias];
 
-  const component =
-    props.type.toLowerCase() === "images"
-      ? "img"
-      : props.type.toLowerCase() === "videos"
-      ? "video"
-      : "audio";
+  const component = props.type.toLowerCase().startsWith("image")
+    ? "img"
+    : props.type.toLowerCase().startsWith("video")
+    ? "video"
+    : "audio";
 
   return (
     <>
@@ -30,6 +30,7 @@ export default function OutputMedias(props: {
               maxWidth: "100%",
               maxHeight: "100%",
             }}
+            variant={props.outline ? "outlined" : "elevation"}
           >
             <CardMedia component={component} controls image={relativeMedia} />
           </Card>
