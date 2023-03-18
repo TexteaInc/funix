@@ -1,9 +1,9 @@
 import os
-import json
 from funix.app import app
 from flask import send_from_directory
 
 folder = os.path.abspath(os.path.join(os.path.abspath(__file__), "../../build"))
+
 
 def start():
     @app.route("/")
