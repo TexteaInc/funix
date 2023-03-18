@@ -7,6 +7,7 @@ import flask
 import inspect
 import requests
 import traceback
+import matplotlib
 from funix.app import app
 from functools import wraps
 from typing import Literal, Optional, Callable, Any
@@ -35,6 +36,8 @@ __wrapper_enabled = False
 __default_theme = {}
 __themes = {}
 __parsed_themes = {}
+
+matplotlib.use("Agg")
 
 def enable_wrapper():
     global __wrapper_enabled, __files_dict, __decorated_functions_list
