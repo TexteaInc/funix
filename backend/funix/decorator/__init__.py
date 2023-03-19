@@ -10,12 +10,12 @@ import traceback
 import matplotlib
 from funix.app import app
 from functools import wraps
-from typing import Literal, Optional, Callable, Any
 from uuid import uuid4 as uuid
 from .theme import parse_theme
 from urllib.parse import urlparse
 from urllib.request import urlopen
 import matplotlib.pyplot as plt, mpld3
+from typing import Literal, Optional, Callable, Any
 from ..widget import generate_frontend_widget_config
 from ..hint import DestinationType, WidgetsType, TreatAsType, WhitelistType, ExamplesType, LabelsType, LayoutType, \
     ConditionalVisibleType, ArgumentConfigType
