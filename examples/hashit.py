@@ -1,7 +1,7 @@
 import hashlib
 from typing import List
 from funix import funix
-from funix.widget.buildin import BytesFile
+from funix.widget.builtin import BytesFile
 
 
 @funix(

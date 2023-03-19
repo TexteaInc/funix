@@ -8,6 +8,8 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
+  ImageList,
+  ImageListItem,
   Paper,
   Stack,
   Table,
@@ -53,7 +55,6 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
   const [open, setOpen] = React.useState(false);
   const [preview, setPreview] = React.useState<string>("");
   const [previewType, setPreviewType] = React.useState<string>("");
-
   const [confirmOpen, setConfirmOpen] = React.useState(false);
 
   let dropzoneConfig: DropzoneOptions = !props.multiple
@@ -90,7 +91,7 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
     useDropzone(dropzoneConfig);
 
   useEffect(() => {
-    if (acceptedFiles.length > 0) {
+    if (files.length > 0) {
       if (props.multiple) {
         Promise.all(files.map((file) => fileToBase64(file))).then((values) => {
           props.widget.onChange(values);
@@ -101,7 +102,7 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
         });
       }
     }
-  }, [files]);
+  }, [acceptedFiles]);
 
   const removeFile = (index: number) => {
     const newFiles = [...files];
@@ -191,81 +192,110 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
           </Stack>
         </Paper>
         {files.length !== 0 && (
-          <TableContainer component={Paper}>
-            <Table
-              sx={{
-                width: "100%",
-              }}
-              size="small"
-            >
-              <TableHead>
-                <TableRow>
-                  <TableCell>File Name</TableCell>
-                  <TableCell>File Size</TableCell>
-                  <TableCell>Action</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {files.map((file, index) => {
-                  return (
-                    <TableRow key={index}>
-                      <TableCell
-                        align="left"
-                        sx={{
-                          minWidth: "50%",
+          <>
+            {files.filter((file) => file.type.startsWith("image")).length !==
+              0 && (
+              <ImageList
+                variant="masonry"
+                cols={3}
+                gap={8}
+                sx={{ width: "100%" }}
+              >
+                {files
+                  .filter((file) => file.type.startsWith("image"))
+                  .map((item) => (
+                    <ImageListItem key={item.name}>
+                      <img
+                        src={URL.createObjectURL(item)}
+                        alt={item.name}
+                        title={item.name}
+                        loading="lazy"
+                        onClick={() => {
+                          setPreview(URL.createObjectURL(item));
+                          setPreviewType(item.type);
+                          setOpen(true);
                         }}
-                      >
-                        {file.name}
-                      </TableCell>
-                      <TableCell align="left">
-                        {fileSizeToReadable(file.size)}
-                      </TableCell>
-                      <TableCell align="left">
-                        <IconButton
-                          size="small"
-                          onClick={() => {
-                            removeFile(index);
+                      />
+                    </ImageListItem>
+                  ))}
+              </ImageList>
+            )}
+            <TableContainer component={Paper}>
+              <Table
+                sx={{
+                  width: "100%",
+                }}
+                size="small"
+              >
+                <TableHead>
+                  <TableRow>
+                    <TableCell>File Name</TableCell>
+                    <TableCell>File Size</TableCell>
+                    <TableCell>Action</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {files.map((file, index) => {
+                    return (
+                      <TableRow key={index}>
+                        <TableCell
+                          align="left"
+                          sx={{
+                            minWidth: "50%",
                           }}
                         >
-                          <Delete fontSize="small" />
-                        </IconButton>
-                        {(file.type.startsWith("image") ||
-                          file.type.startsWith("video") ||
-                          file.type.startsWith("audio")) && (
+                          {file.name}
+                        </TableCell>
+                        <TableCell align="left">
+                          {fileSizeToReadable(file.size)}
+                        </TableCell>
+                        <TableCell align="left">
                           <IconButton
                             size="small"
                             onClick={() => {
-                              fileToBase64(file).then((value) => {
-                                setPreview(value as string);
-                                setPreviewType(file.type);
-                                setOpen(true);
-                              });
+                              removeFile(index);
                             }}
                           >
-                            <Preview fontSize="small" />
+                            <Delete fontSize="small" />
                           </IconButton>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-              <TableFooter>
-                <TableCell>
-                  <Button
-                    color="error"
-                    startIcon={<Delete />}
-                    onClick={() => {
-                      setConfirmOpen(true);
-                    }}
-                    size="small"
-                  >
-                    Delete All
-                  </Button>
-                </TableCell>
-              </TableFooter>
-            </Table>
-          </TableContainer>
+                          {(file.type.startsWith("image") ||
+                            file.type.startsWith("video") ||
+                            file.type.startsWith("audio")) && (
+                            <IconButton
+                              size="small"
+                              onClick={() => {
+                                fileToBase64(file).then((value) => {
+                                  setPreview(value as string);
+                                  setPreviewType(file.type);
+                                  setOpen(true);
+                                });
+                              }}
+                            >
+                              <Preview fontSize="small" />
+                            </IconButton>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+                <TableFooter>
+                  <TableCell>
+                    <Button
+                      color="error"
+                      startIcon={<Delete />}
+                      onClick={() => {
+                        setConfirmOpen(true);
+                      }}
+                      size="small"
+                    >
+                      Delete All
+                    </Button>
+                  </TableCell>
+                </TableFooter>
+              </Table>
+            </TableContainer>
+          </>
         )}
       </Stack>
     </>
