@@ -41,9 +41,9 @@ class CodeConfig(TypedDict):
     code: Optional[str | Text]
 
 
-BasicFileType = Optional[Text | str]
+BasicFileType = Optional[Text | str | bytes]
 """
-For URL, path
+For URL, path, bytes
 For example: "https://example.org/imgs/1.png"
 """
 

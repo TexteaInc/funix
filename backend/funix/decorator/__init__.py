@@ -1,9 +1,11 @@
+import io
 import os
 import re
 import json
 import yaml
 import json5
 import flask
+import base64
 import inspect
 import requests
 import traceback
@@ -53,7 +55,10 @@ def enable_wrapper():
         @app.get("/file/<string:fid>")
         def __funix_export_file(fid: str):
             if fid in __files_dict:
-                return flask.send_file(__files_dict[fid])
+                if isinstance(__files_dict[fid], str):
+                    return flask.send_file(__files_dict[fid])
+                else:
+                    return flask.send_file(io.BytesIO(__files_dict[fid]), mimetype="application/octet-stream")
             else:
                 return flask.abort(404)
 
@@ -214,7 +219,15 @@ def is_valid_uri(uri: str) -> bool:
     except:
         return False
 
-def get_real_uri(path: str) -> str:
+def get_real_uri(path: str | bytes) -> str:
+    if isinstance(path, bytes):
+        fid = uuid().hex
+        result = f"/file/{fid}"
+        if not path in list(__files_dict.values()):
+            __files_dict[fid] = path
+        else:
+            return f"/file/{list(__files_dict.keys())[list(__files_dict.values()).index(path)]}"
+        return result
     if not is_valid_uri(path):
         fid = uuid().hex
         result = f"/file/{fid}"
@@ -227,9 +240,9 @@ def get_real_uri(path: str) -> str:
     else:
         return path
 
-def get_static_uri(path: str | list[str]) -> str | list[str]:
+def get_static_uri(path: str | list[str] | bytes | list[bytes]) -> str | list[str]:
     global __files_dict
-    if isinstance(path, str):
+    if isinstance(path, (str, bytes)):
         return get_real_uri(path)
     elif isinstance(path, list):
         uris = [get_real_uri(uri) for uri in path]
@@ -740,6 +753,8 @@ def funix(
                             if return_type_parsed == "Figure":
                                 fig = function(**wrapped_function_kwargs)
                                 return [change_fig_width(fig)]
+                            if return_type_parsed in __supported_basic_file_types:
+                                return [get_static_uri(function(**wrapped_function_kwargs))]
                             else:
                                 result = function(**wrapped_function_kwargs)
                                 if isinstance(result, list):
