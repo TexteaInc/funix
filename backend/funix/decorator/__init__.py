@@ -876,18 +876,20 @@ def funix_yaml(config: Optional[str] = None):
     return funix_parser_backend(config, "yaml")
 
 def new_funix_type(widget: str, config_func: Optional[Callable] = None):
-    if not config_func is None:
-        def cls_init(self, *args, **kwargs):
-            self.__funix_has_config__ = True
-            self.__funix_config__ = config_func(*args, **kwargs)[1]
     def decorator(cls):
-        cls.__funix__ = True
-        cls.__funix_widget__ = widget
-        cls.__funix_base__ = cls.__base__
-        if not config_func is None:
-            cls.__funix_need_config__ = True
-            cls.__funix_has_config__ = False
-            cls.__funix_config__ = None
-            cls.__init__ = cls_init
-        return cls
+        if config_func is None:
+            cls.__funix__ = True
+            cls.__funix_widget__ = widget
+            cls.__funix_base__ = cls.__base__
+            return cls
+        else:
+            def new_cls_func(*args, **kwargs):
+                cls.__funix__ = True
+                cls.__funix_widget__ = widget
+                cls.__funix_base__ = cls.__base__
+                cls.__funix_config__ = config_func(*args, **kwargs)[1]
+                cls.__funix_need_config__ = True
+                cls.__funix_has_config__ = True
+                return cls
+            return new_cls_func
     return decorator

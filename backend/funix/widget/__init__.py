@@ -58,7 +58,8 @@ def slider(*args, **kwargs) -> tuple[str, TypedDict]:
             config["max"], int) else float
     else:
         use_type = int if isinstance(config["min"], int) and isinstance(config["max"], int) else float
-    config["step"] = 1 if use_type is int else 0.1
+    if "step" not in config:
+        config["step"] = 0.1 if use_type == float else 1
     config = SliderConfig(min=use_type(config["min"]), max=use_type(config["max"]), step=use_type(config["step"]))
     return generate_widget_config("slider", config)
 
