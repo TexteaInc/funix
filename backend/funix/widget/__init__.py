@@ -17,8 +17,10 @@ def register_widget_update_config(widget: str):
 
 
 def dump_frontend_config(config: tuple[str, TypedDict]) -> str:
-    list_config = json.dumps(list(widgets_update_config[config[0]](list(config[1].values())).values()))
-    return f"{config[0]}{list_config}"
+    if config[0] in widgets_update_config:
+        list_config = json.dumps(list(widgets_update_config[config[0]](list(config[1].values())).values()))
+        return f"{config[0]}{list_config}"
+    return f"{config[0]}{json.dumps(list(config[1].values()))}"
 
 
 class SliderConfig(TypedDict):
