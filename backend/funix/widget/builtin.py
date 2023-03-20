@@ -11,18 +11,12 @@ def new_build_in_type(widget: str):
     return decorator
 
 
-def set_config(func: callable):
-    def cls_init(self, *args, **kwargs):
-        self.__funix_has_config__ = True
-        self.__funix_config__ = func(*args, **kwargs)[1]
-
+def put_config(widget, *args, **kwargs):
     def decorator(cls):
         cls.__funix_need_config__ = True
-        cls.__funix_has_config__ = False
-        cls.__funix_config__ = None
-        cls.__init__ = cls_init
+        cls.__funix_has_config__ = True
+        cls.__funix_config__ = widget(*args, **kwargs)[1]
         return cls
-
     return decorator
 
 
@@ -31,10 +25,15 @@ class IntInputBox(int):
     pass
 
 
-@new_build_in_type("slider")
-@set_config(slider)
-class IntSlider(int):
-    pass
+def int_slider(*args, **kwargs):
+    @new_build_in_type("slider")
+    @put_config(slider, *args, **kwargs)
+    class _IntSlider(int):
+        pass
+    return _IntSlider
+
+
+IntSlider = int_slider
 
 
 @new_build_in_type("inputbox")
@@ -42,10 +41,12 @@ class FloatInputBox(float):
     pass
 
 
-@new_build_in_type("slider")
-@set_config(slider)
-class FloatSlider(float):
-    pass
+def float_slider(*args, **kwargs):
+    @new_build_in_type("slider")
+    @put_config(slider, *args, **kwargs)
+    class _FloatSlider(float):
+        pass
+    return _FloatSlider
 
 
 @new_build_in_type("inputbox")
@@ -95,7 +96,12 @@ class BytesFile(bytes):
     pass
 
 
-@new_build_in_type("code")
-@set_config(code)
-class StrCode(str):
-    pass
+def str_code(*args, **kwargs):
+    @new_build_in_type("code")
+    @put_config(code, *args, **kwargs)
+    class _StrCode(str):
+        pass
+    return _StrCode
+
+
+StrCode = str_code
