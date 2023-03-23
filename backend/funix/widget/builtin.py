@@ -13,8 +13,6 @@ def new_build_in_type(widget: str):
 
 def put_config(widget, *args, **kwargs):
     def decorator(cls):
-        cls.__funix_need_config__ = True
-        cls.__funix_has_config__ = True
         cls.__funix_config__ = widget(*args, **kwargs)[1]
         return cls
     return decorator

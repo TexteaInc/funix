@@ -317,13 +317,11 @@ def conv_row_item(row_item: dict, item_type: str):
     return conved_item
 
 def funix_param_to_widget(annotation):
-    need_config = hasattr(annotation, "__funix_need_config__")
+    need_config = hasattr(annotation, "__funix_config__")
     if need_config:
-        if annotation.__funix_has_config__:
-            return f"{annotation.__funix_widget__}{json.dumps(list(annotation.__funix_config__.values()))}"
-        else:
-            return annotation.__funix_widget__
-    return annotation.__funix_widget__
+        return f"{annotation.__funix_widget__}{json.dumps(list(annotation.__funix_config__.values()))}"
+    else:
+        return annotation.__funix_widget__
 
 def function_param_to_widget(annotation, widget):
     if type(annotation) is range or annotation is range:
@@ -641,7 +639,10 @@ def funix(
                     if hasattr(function_param.annotation, "__funix_bool__"):
                         new_function_arg_type_dict = get_type_dict(bool)
                     else:
-                        new_function_arg_type_dict = get_type_dict(function_param.annotation.__funix_base__)
+                        if hasattr(function_param.annotation, "__funix_base__"):
+                            new_function_arg_type_dict = get_type_dict(function_param.annotation.__funix_base__)
+                        else:
+                            new_function_arg_type_dict = get_type_dict(function_param.annotation.__base__)
                     if new_function_arg_type_dict is not None:
                         param_type = new_function_arg_type_dict["type"]
                 json_schema_props[function_arg_name] = get_type_widget_prop(
@@ -888,8 +889,6 @@ def new_funix_type(widget: str, config_func: Optional[Callable] = None):
                 cls.__funix_widget__ = widget
                 cls.__funix_base__ = cls.__base__
                 cls.__funix_config__ = config_func(*args, **kwargs)[1]
-                cls.__funix_need_config__ = True
-                cls.__funix_has_config__ = True
                 return cls
             return new_cls_func
     return decorator
