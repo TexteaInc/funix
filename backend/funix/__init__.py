@@ -8,6 +8,8 @@ import funix.decorator as decorator
 from funix.app import app
 from funix.frontend import start
 
+import inspect
+
 funix = decorator.funix
 funix_yaml = decorator.funix_yaml
 funix_json5 = decorator.funix_json5
@@ -81,14 +83,32 @@ def __prep(main_class: typing.Optional[str]):
         print ("Error: No Python module provided. \n How to fix: Please provide a module and try again. If your functions are in a file called hello.py, you should pass hello here. \n Example: funix hello")
         exit()
 
+def __lazy_prep(main_class: typing.Optional[str]):
+    decorator.enable_wrapper()
+    if main_class:
+        module = importlib.import_module(main_class)
+        members = reversed(dir(module))
+        for member in members:
+            if inspect.isfunction(getattr(module, member)):
+                funix()(getattr(module, member))
+    else:
+        print ("Error: No Python module provided. \n How to fix: Please provide a module and try again. If your functions are in a file called hello.py, you should pass hello here. \n Example: funix hello")
+        exit()
+
 def run(
     main_class: str,
     host: typing.Optional[str] = "0.0.0.0",
     port: typing.Optional[int] = 3000,
     no_frontend: typing.Optional[bool] = False,
-    no_browser: typing.Optional[bool] = False
+    no_browser: typing.Optional[bool] = False,
+    lazy: typing.Optional[bool] = False
 ):
-    __prep(main_class=main_class)
+    if lazy:
+        print("You are using lazy mode. This mode will automatically wrap all functions in your module.")
+        __lazy_prep(main_class=main_class)
+    else:
+        __prep(main_class=main_class)
+
     parsed_ip = ip_address(host)
     parsed_port = get_unused_port_from(port, parsed_ip)
     if not no_frontend:
