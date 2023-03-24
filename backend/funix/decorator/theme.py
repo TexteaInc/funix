@@ -39,7 +39,7 @@ def get_mui_theme(theme, colors, typography):
     temp_colors = {}
     if colors:
         for color in colors.keys():
-            if color == "mode":
+            if color in ["mode", "divider"]:
                 mui_theme["palette"][color] = colors[color]
             elif isinstance(colors[color], str):
                 mui_theme["palette"][color] = {"main": colors[color]}
