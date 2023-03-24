@@ -10,7 +10,7 @@ __theme_style_sugar_dict = {
         }
     }
 }
-__basic_widgets = ["slider", "input", "textField", "switch", "button", "checkbox"]
+__basic_widgets = ["slider", "input", "textField", "switch", "button", "checkbox", "radio"]
 
 def dict_replace(original_dict: dict, original: str, new: Any):
     if isinstance(original_dict, dict):
@@ -116,6 +116,9 @@ def parse_theme(theme):
             else:
                 type_names.append(type_name)
                 type_widget_dict[type_name] = theme["widgets"][type_name]
+    if "colors" in theme:
+        for color_name in theme["colors"].keys():
+            custom_palette[color_name] = theme["colors"][color_name]
     if "styles" in theme:
         if "basic" in theme["styles"]:
             if "color" in theme["styles"]["basic"]:
@@ -138,9 +141,6 @@ def parse_theme(theme):
                 widget_style[widget_name].update(theme["styles"][widget_name])
             else:
                 widget_style[widget_name] = theme["styles"][widget_name]
-    if "colors" in theme:
-        for color_name in theme["colors"].keys():
-            custom_palette[color_name] = theme["colors"][color_name]
     if "typography" in theme:
         custom_typography = theme["typography"]
     mui_theme = get_mui_theme(widget_style, custom_palette, custom_typography)
