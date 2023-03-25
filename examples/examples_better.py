@@ -8,14 +8,16 @@ from funix import funix, set_theme_yaml
 from funix.hint import Image, File, Markdown, HTML, Code, Video, Audio
 from funix.widget import slider
 
-set_theme_yaml("""
+#TODO: To replace with Python-based theme settings
+funix.set_theme_yaml("""
 styles:
     basic:
         color: "#d26b65"
         contrastText: "#fefefe"
 """, "Indian Red")
 
-set_theme_yaml("""
+#TODO: To replace with Python-based theme settings
+funix.set_theme_yaml("""
 styles:
     basic:
         color: "#24415f"
@@ -39,7 +41,8 @@ colors:
     success: "#80ab6f"
 """, "葛飾 北斎")
 
-set_theme_yaml("""
+#TODO: To replace with Python-based theme settings
+funix.set_theme_yaml("""
 typography:
     fontFamily: "Comic Sans MS"
 """, "textbook")
@@ -67,6 +70,7 @@ def hello(name: str="NCC-1701") -> str:
 5. In the Output panel, click the `Sheet` radio button to view the result as a headed table.
     """,
     theme = "https://raw.githubusercontent.com/TexteaInc/funix-doc/main/examples/sunset_v2.yaml",
+    # theme = "葛飾 北斎",
     widgets  = {
       ("a", "b", "c"): "sheet",
     },
@@ -190,50 +194,51 @@ Basic types like _int_ or _str_ are for sure. **Markdown** or `HTML` strings are
         code
 
 
-randomNumber = (random.randint(0, 100) + random.randint(0, 100)) / 2
+randomNumber = random.randint(0, 100)
 
 @funix(
-    title="Guess Number",
-    description="Guess Number: Input two numbers, and the program will calculate the average of them. If the average "
-                "number is program's guess number, you win! Otherwise, you lose.",
+    title="Number guessing",
+    description="The program has a random integer between 0 and 100 in its mind. You play the game by entering two numbers and the average of them will be used to guess the random number. If the average of your two numbers equals to the random number in the program's mind, you win! Otherwise, you will be instructed to guess bigger or smaller next time. Of course, you can cheat by togging the `Let me cheat` switch.",
     argument_labels={
         "input1": "Number 1",
         "input2": "Number 2",
-        "show": "Show me the number 😭"
+        "cheat": "Let me cheat 😭"
     },
     widgets={
         "show": "switch",
         ("input1", "input2"): slider(0, 100)
     },
     input_layout=[
-        [{"markdown": "**Guess Number**"}],
+        [{"markdown": "**Guess a number**"}],
         [
             {"argument": "input1", "width": 6},
             {"argument": "input2", "width": 6}
         ],
         [{"dividing": "Cheat Option", "position": "left"}],
-        [{"argument": "show", "width": 12}]
+        [{"argument": "cheat", "width": 12}]
     ],
     show_source=True,
 )
 def guess(
     input1: int = 0,
     input2: int = 0,
-    show: bool = False
+    cheat: bool = False
 ) -> str:
     global randomNumber
-    if show:
-        return f"The number is {randomNumber}"
+    if cheat:
+        result = f"The number is {randomNumber}. And it has been reset."
+        randomNumber = random.randint(0, 100)
+        return result
     else:
         if (input1 + input2) / 2 == randomNumber:
-            result = f"You win! The number is {randomNumber}. And random number is reset."
-            randomNumber = (random.randint(0, 100) + random.randint(0, 100)) / 2
+            result = f"You won! The number was {randomNumber}. And it has been reset."
+            randomNumber = random.randint(0, 100)
             return result
         else:
             if (input1 + input2) / 2 > randomNumber:
-                return "Bigger"
+                return "Try smaller. "
             else:
-                return "Smaller"
+                return "Try bigger. "
 
 # Default, choices, and example values
 
@@ -253,7 +258,7 @@ def argument_selection(
 
 # Plot and paste
 @funix(
-        description="Visualize two columns of a table, where the two columns use different input UIs",
+        description="Visualize two columns of a table, where the two columns use different input UIs: numeric input boxes and sliders, resepctively.",
         widgets={
            "a": "sheet",
            "b": ["sheet", slider(0, 1, 0.01)]
@@ -271,6 +276,21 @@ def slider_table_plot(
 
 
 # conditional visibility
+
+# simple layout 
+@funix(
+    input_layout=[
+        [{'dividing': "Funix rocks!"}], # row 1
+        [{"argument": "x", "width": 4},
+         {"argument": "y", "width": 4}], # row 2
+    ],
+    output_layout=[
+        [{"markdown": "**First return**"}, {"return": 0}], # row 1
+        [{"markdown": "**Second return**"}, {"return": 1}] # row 2
+    ]
+) 
+def simple_layout(x: int, y: int) -> (int, int):
+    return x + y, x - y
 
 # layout
 @funix(
@@ -344,33 +364,54 @@ openai.api_key = os.environ.get("OPENAI_KEY")
     title="OpenAI: Dall-E",
     description="""Generate an image by prompt with DALL-E.""",
     widgets={"openai_key":"password"}, 
+    conditional_visible=[
+        {"if": {"show_advanced": True,}, 
+            "then": ["openai_key"]}
+    ],
     show_source=True
 )
 def dalle(
-    openai_key: str, 
-    Prompt: str = "a cat on a red jeep") -> Image:
-    import openai
-    openai.api_key = openai_key
+    Prompt: str = "a cat on a red jeep",
+    openai_key: str= "", 
+) -> Image:
+    if openai_key!="":
+        openai.api_key = openai_key
 
-    response = openai.Image.create(prompt=Prompt, n=1, size="1024x1024")
+    response = openai.Image.create(prompt=Prompt)
     return response["data"][0]["url"]
 
 @funix(
-        widgets={"openai_key":"password", 
-                 "prompt": "textarea"}, 
-        show_source=True, 
+    description="""Try the **ChatGPT** app in [Funix](http://funix.io)""",
+    argument_labels = {
+        "prompt" : "_What do you wanna ask?_",
+        "max_tokens": "**Length** of the answer",
+        "show_advanced": "Show advanced options",
+        "openai_key": "Use your own OpenAI key",
+        "model": "Choose a model",
+    },
+    widgets={"openai_key": "password", "model": "radio",
+                "show_advanced": "checkbox", "show_verbose": "switch"},
+    conditional_visible=[
+        {"if": {"show_advanced": True,}, 
+            "then": ["max_tokens", "model", "openai_key"]}
+    ],
+    show_source=True 
 )
-def ChatGPT(
-    openai_key: str,
-    # max_tokens: range(20, 100, 20), 
-    prompt: str="Who is Cauchy? \n Why is he famous? \n What is his Wikipedia page?",
-    )-> str:
-    import openai
-    openai.api_key = openai_key
-
+def ChatGPT(prompt: str, 
+            model : typing.Literal['gpt-3.5-turbo', 'gpt-3.5-turbo-0301']= 'gpt-3.5-turbo',
+            max_tokens: range(20, 100, 20)=80,
+            openai_key: str = "",
+            show_advanced: bool = False,
+            )  -> str:      
+    if openai_key != "":     
+        openai.api_key = openai_key
     completion = openai.ChatCompletion.create(
-        model= "gpt-3.5-turbo",
-        messages = [{"role": "user", "content": prompt}],
-        max_tokens = max_tokens,
+        messages=[{"role": "user", "content": prompt}],
+        model=model, 
+        max_tokens=max_tokens,
     )
     return completion["choices"][0]["message"]["content"]
+
+# Per OpenAI's documentation, 
+# https://platform.openai.com/docs/guides/chat/introduction
+# The main input is the messages parameter. Messages must be an array of message objects, where each object has a role (either "system", "user", or "assistant") and content (the content of the message). Conversations can be as short as 1 message or fill many pages.
