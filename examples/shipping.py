@@ -1,4 +1,4 @@
-import typing, os
+import typing, os, json
 
 import easypost
 easypost.api_key = os.getenv("EASYPOST_API_KEY")
@@ -63,7 +63,7 @@ def easypost_demo(
     L: float=6, W: float=8, H: float=0.4, 
     value: float=5,
     package: typing.Literal["Parcel", "Flat", "Letter"] = "Flat",
-)  -> typing.Tuple[funix.hint.HTML, funix.hint.Image ]:
+)  -> typing.Tuple[funix.hint.Markdown, funix.hint.HTML, funix.hint.Image, dict]:
     from_address = {
         "name": from_who,
         "street1": from_address_1,
@@ -90,7 +90,9 @@ def easypost_demo(
         "length": L,
         "width": W,
         "height": H,
-        "weight": weight
+        "weight": weight,
+        "predefined_package" : package
+
     }
 
     if os.getenv("EASYPOST_API_KEY") == None or EASYPOST_API_KEY != "":
@@ -103,9 +105,11 @@ def easypost_demo(
     )
     shipment.buy(rate=shipment.lowest_rate())
 
-    print (shipment.tracking_code, shipment.postage_label.label_url)
+    print (shipment.fees[1].amount, shipment.tracking_code, shipment.postage_label.label_url)
 
-    return f'Tracking number (click to track):\
+    return f'The shipment cost you **${shipment.fees[1].amount}**', \
+    f'Tracking number (click to track):\
          <a href="https://tools.usps.com/go/TrackConfirmAction?\
             tLabels={shipment.tracking_code}">{shipment.tracking_code}</a>', \
-        shipment.postage_label.label_url
+        shipment.postage_label.label_url, \
+        json.loads(str(shipment))
