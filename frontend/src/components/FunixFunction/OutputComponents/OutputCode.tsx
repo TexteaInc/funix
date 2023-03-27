@@ -14,6 +14,9 @@ export default function OutputCode(props: OutputCodeProps) {
       language={props.language || "plaintext"}
       options={{
         readOnly: true,
+        minimap: {
+          enabled: false,
+        },
       }}
     />
   );

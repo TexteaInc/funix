@@ -8,3 +8,5 @@ frontend/build
 *.egg-info
 venv/
 dist/
+.nova
+.DS_Store

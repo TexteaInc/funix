@@ -168,6 +168,11 @@ const TextExtendedWidget = ({
         width="100%"
         value={src}
         language={language}
+        options={{
+          minimap: {
+            enabled: false,
+          },
+        }}
         onChange={(value) => {
           if (value) {
             setSrc(value);
