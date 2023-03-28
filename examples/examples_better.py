@@ -4,48 +4,14 @@ from typing import List, Tuple, Literal
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 
-from funix import funix, set_theme_yaml
+from funix import funix, set_theme
+from themes.better import indian_red, textbook, hokusai
 from funix.hint import Image, File, Markdown, HTML, Code, Video, Audio
 from funix.widget import slider
 
-#TODO: To replace with Python-based theme settings
-funix.set_theme_yaml("""
-styles:
-    basic:
-        color: "#d26b65"
-        contrastText: "#fefefe"
-""", "Indian Red")
-
-#TODO: To replace with Python-based theme settings
-funix.set_theme_yaml("""
-styles:
-    basic:
-        color: "#24415f"
-        contrastText: "#e0e4d4"
-
-colors:
-    background:
-        default: "#f9f0d8"
-        paper: "#f9f0d8"
-
-    text:
-        primary: "#505762"
-        secondary: "#5a606a"
-        hint: "#5b616a"
-
-    primary: "#24415f"
-    secondary: "#a63624"
-    error: "#973121"
-    warning: "#c27b5c"
-    info: "#437ea1"
-    success: "#80ab6f"
-""", "葛飾 北斎")
-
-#TODO: To replace with Python-based theme settings
-funix.set_theme_yaml("""
-typography:
-    fontFamily: "Comic Sans MS"
-""", "textbook")
+set_theme(indian_red)
+set_theme(textbook)
+set_theme(hokusai)
 
 @funix(
         show_source=True,
