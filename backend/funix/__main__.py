@@ -9,7 +9,16 @@ from . import *
 @plac.flg("no_frontend", "Disable frontend server", abbrev = "F")
 @plac.flg("no_browser", "Disable auto open browser", abbrev = "B")
 @plac.flg("lazy", "Load functions without decorator", abbrev = "l")
-def main(module_name = None, host = "0.0.0.0", port = 3000, no_frontend = False, no_browser = False, lazy = False):
+@plac.flg("dir_mode", "Enable directory mode", abbrev = "d")
+def main(
+    module_name = None,
+    host = "0.0.0.0",
+    port = 3000,
+    no_frontend = False,
+    no_browser = False,
+    lazy = False,
+    dir_mode = False
+):
     """Funix: Building web apps without manually creating widgets
 
     Funix turns your Python function into a web app
@@ -31,13 +40,15 @@ def main(module_name = None, host = "0.0.0.0", port = 3000, no_frontend = False,
     parsed_no_frontend: bool = os.getenv("FUNIX_NO_FRONTEND", no_frontend)
     parsed_no_browser: bool = os.getenv("FUNIX_NO_BROWSER", no_browser)
     parsed_lazy: bool = os.getenv("FUNIX_LAZY", lazy)
+    parsed_dir_mode: bool = os.getenv("FUNIX_DIR_MODE", dir_mode)
     run(
         host=parsed_host,
         port=parsed_port,
         main_class=module_name,
         no_frontend=parsed_no_frontend,
         no_browser=parsed_no_browser,
-        lazy=parsed_lazy
+        lazy=parsed_lazy,
+        dir_mode=parsed_dir_mode
     )
 
 def cli_main():

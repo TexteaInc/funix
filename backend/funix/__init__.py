@@ -1,4 +1,6 @@
 import importlib
+import os
+import sys
 import socket
 import typing
 from threading import Thread
@@ -75,25 +77,20 @@ class OpenFrontend(Thread):
             pass
         webbrowser.open(f"http://{self.host}:{self.port}")
 
-def __prep(main_class: typing.Optional[str]):
-    decorator.enable_wrapper()
-    if main_class:
-        importlib.import_module(main_class)
-    else:
-        print ("Error: No Python module provided. \n How to fix: Please provide a module and try again. If your functions are in a file called hello.py, you should pass hello here. \n Example: funix hello")
-        exit()
 
-def __lazy_prep(main_class: typing.Optional[str]):
+def __prep(main_class: typing.Optional[str], lazy: bool):
     decorator.enable_wrapper()
     if main_class:
         module = importlib.import_module(main_class)
-        members = reversed(dir(module))
-        for member in members:
-            if inspect.isfunction(getattr(module, member)):
-                funix()(getattr(module, member))
+        if lazy:
+            members = reversed(dir(module))
+            for member in members:
+                if inspect.isfunction(getattr(module, member)):
+                    funix()(getattr(module, member))
     else:
-        print ("Error: No Python module provided. \n How to fix: Please provide a module and try again. If your functions are in a file called hello.py, you should pass hello here. \n Example: funix hello")
-        exit()
+        print("Error: No Python module provided. \n How to fix: Please provide a module and try again. If your "
+              "functions are in a file called hello.py, you should pass hello here. \n Example: funix hello")
+        sys.exit(1)
 
 def run(
     main_class: str,
@@ -101,13 +98,20 @@ def run(
     port: typing.Optional[int] = 3000,
     no_frontend: typing.Optional[bool] = False,
     no_browser: typing.Optional[bool] = False,
-    lazy: typing.Optional[bool] = False
+    lazy: typing.Optional[bool] = False,
+    dir_mode: typing.Optional[bool] = False
 ):
-    if lazy:
-        print("You are using lazy mode. This mode will automatically wrap all functions in your module.")
-        __lazy_prep(main_class=main_class)
+    if dir_mode:
+        if os.path.exists(main_class) and os.path.isdir(main_class):
+            sys.path.append(main_class)
+            files = os.listdir(main_class)
+            for file in files:
+                if file.endswith(".py"):
+                    __prep(main_class=file[:-3], lazy=lazy)
+        else:
+            raise Exception("Directory not found!")
     else:
-        __prep(main_class=main_class)
+        __prep(main_class=main_class, lazy=lazy)
 
     parsed_ip = ip_address(host)
     parsed_port = get_unused_port_from(port, parsed_ip)
