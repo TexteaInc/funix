@@ -92,6 +92,16 @@ def __prep(main_class: typing.Optional[str], lazy: bool):
               "functions are in a file called hello.py, you should pass hello here. \n Example: funix hello")
         sys.exit(1)
 
+
+def get_path_modules(path: str):
+    sys.path.append(path)
+    files = os.listdir(path)
+    for file in files:
+        if os.path.isdir(os.path.join(path, file)):
+            yield from get_path_modules(os.path.join(path, file))
+        if file.endswith(".py"):
+            yield file[:-3]
+
 def run(
     main_class: str,
     host: typing.Optional[str] = "0.0.0.0",
@@ -103,11 +113,8 @@ def run(
 ):
     if dir_mode:
         if os.path.exists(main_class) and os.path.isdir(main_class):
-            sys.path.append(main_class)
-            files = os.listdir(main_class)
-            for file in files:
-                if file.endswith(".py"):
-                    __prep(main_class=file[:-3], lazy=lazy)
+            for module in get_path_modules(main_class):
+                __prep(main_class=module, lazy=lazy)
         else:
             raise Exception("Directory not found!")
     else:
