@@ -47,6 +47,9 @@ def float_slider(*args, **kwargs):
     return _FloatSlider
 
 
+FloatSlider = float_slider
+
+
 @new_build_in_type("inputbox")
 class StrInputBox(str):
     pass

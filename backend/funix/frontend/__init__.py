@@ -23,3 +23,7 @@ def start():
     @app.route("/static/js/<path:path>")
     def send_js_static(path):
         return send_from_directory(os.path.abspath(os.path.join(folder, "static/js/")), path)
+
+    @app.route("/static/media/<path:path>")
+    def send_media_static(path):
+        return send_from_directory(os.path.abspath(os.path.join(folder, "static/media/")), path)

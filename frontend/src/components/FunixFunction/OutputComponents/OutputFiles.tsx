@@ -8,6 +8,7 @@ import {
   TableRow,
 } from "@mui/material";
 import { FileDownload } from "@mui/icons-material";
+import PDFViewer from "../../Common/PDFViewer";
 
 export default function OutputFiles(props: {
   files: string[] | string;
@@ -28,6 +29,13 @@ export default function OutputFiles(props: {
             const relativeFile = file.startsWith("/file/")
               ? new URL(file, props.backend).toString()
               : file;
+
+            const isPDF = relativeFile.endsWith(".pdf");
+
+            if (isPDF) {
+              return <PDFViewer pdf={relativeFile} />;
+            }
+
             return (
               <TableRow key={index}>
                 <TableCell

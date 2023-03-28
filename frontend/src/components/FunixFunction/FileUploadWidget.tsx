@@ -260,7 +260,8 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
                           </IconButton>
                           {(file.type.startsWith("image") ||
                             file.type.startsWith("video") ||
-                            file.type.startsWith("audio")) && (
+                            file.type.startsWith("audio") ||
+                            file.type === "application/pdf") && (
                             <IconButton
                               size="small"
                               onClick={() => {

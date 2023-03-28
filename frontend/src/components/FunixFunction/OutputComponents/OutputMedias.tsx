@@ -1,4 +1,5 @@
 import { Card, CardMedia } from "@mui/material";
+import PDFViewer from "../../Common/PDFViewer";
 
 export default function OutputMedias(props: {
   medias: string[] | string;
@@ -12,6 +13,8 @@ export default function OutputMedias(props: {
     ? "img"
     : props.type.toLowerCase().startsWith("video")
     ? "video"
+    : props.type.toLowerCase().startsWith("application/pdf")
+    ? "pdf"
     : "audio";
 
   return (
@@ -20,6 +23,8 @@ export default function OutputMedias(props: {
         const relativeMedia = media.startsWith("/file/")
           ? new URL(media, props.backend).toString()
           : media;
+
+        const isPDF = component === "pdf" || relativeMedia.endsWith(".pdf");
 
         return (
           <Card
@@ -32,7 +37,11 @@ export default function OutputMedias(props: {
             }}
             variant={props.outline ? "outlined" : "elevation"}
           >
-            <CardMedia component={component} controls image={relativeMedia} />
+            {isPDF ? (
+              <PDFViewer pdf={relativeMedia} />
+            ) : (
+              <CardMedia component={component} controls image={relativeMedia} />
+            )}
           </Card>
         );
       })}

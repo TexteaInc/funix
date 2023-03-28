@@ -229,7 +229,7 @@ def get_real_uri(path: str | bytes) -> str:
             return f"/file/{list(__files_dict.keys())[list(__files_dict.values()).index(path)]}"
         return result
     if not is_valid_uri(path):
-        fid = uuid().hex
+        fid = uuid().hex + "." + path.split(".")[-1]
         result = f"/file/{fid}"
         abs_path = os.path.abspath(path)
         if not abs_path in list(__files_dict.values()):
