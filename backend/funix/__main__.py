@@ -11,6 +11,7 @@ from . import *
 @plac.flg("lazy", "Load functions without decorator", abbrev = "l")
 @plac.flg("dir_mode", "Enable directory mode", abbrev = "d")
 @plac.flg("package_mode", "Enable package mode", abbrev = "P")
+@plac.opt("from_git", "Import module from git", abbrev = "g")
 def main(
     module_name = None,
     host = "0.0.0.0",
@@ -19,7 +20,8 @@ def main(
     no_browser = False,
     lazy = False,
     dir_mode = False,
-    package_mode = False
+    package_mode = False,
+    from_git = None
 ):
     """Funix: Building web apps without manually creating widgets
 
@@ -32,8 +34,8 @@ def main(
     Visit us at http://funix.io
     """
 
-    if not module_name:
-        print("Error: No Python module provided.\nPlease run \"funix --help\" for more information.")
+    if not module_name and not from_git:
+        print("Error: No Python module or git repo provided.\nPlease run \"funix --help\" for more information.")
         sys.exit(1)
 
     if dir_mode and package_mode:
@@ -47,6 +49,8 @@ def main(
     parsed_no_browser: bool = os.getenv("FUNIX_NO_BROWSER", no_browser)
     parsed_lazy: bool = os.getenv("FUNIX_LAZY", lazy)
     parsed_dir_mode: bool = os.getenv("FUNIX_DIR_MODE", dir_mode)
+    parsed_package_mode: bool = os.getenv("FUNIX_PACKAGE_MODE", package_mode)
+    parsed_from_git: str = os.getenv("FUNIX_FROM_GIT", from_git)
     run(
         host=parsed_host,
         port=parsed_port,
@@ -55,7 +59,8 @@ def main(
         no_browser=parsed_no_browser,
         lazy=parsed_lazy,
         dir_mode=parsed_dir_mode,
-        package_mode=package_mode
+        package_mode=parsed_package_mode,
+        from_git=parsed_from_git
     )
 
 def cli_main():
