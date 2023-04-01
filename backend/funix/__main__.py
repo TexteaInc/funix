@@ -10,6 +10,7 @@ from . import *
 @plac.flg("no_browser", "Disable auto open browser", abbrev = "B")
 @plac.flg("lazy", "Load functions without decorator", abbrev = "l")
 @plac.flg("dir_mode", "Enable directory mode", abbrev = "d")
+@plac.flg("package_mode", "Enable package mode", abbrev = "P")
 def main(
     module_name = None,
     host = "0.0.0.0",
@@ -17,7 +18,8 @@ def main(
     no_frontend = False,
     no_browser = False,
     lazy = False,
-    dir_mode = False
+    dir_mode = False,
+    package_mode = False
 ):
     """Funix: Building web apps without manually creating widgets
 
@@ -34,6 +36,10 @@ def main(
         print("Error: No Python module provided.\nPlease run \"funix --help\" for more information.")
         sys.exit(1)
 
+    if dir_mode and package_mode:
+        print("Error: Cannot use both directory mode and package mode.\nPlease run \"funix --help\" for more information.")
+        sys.exit(1)
+
     sys.path.append(os.getcwd())
     parsed_host: str = os.getenv("FUNIX_HOST", host)
     parsed_port: int = int(os.getenv("FUNIX_PORT", port))
@@ -48,7 +54,8 @@ def main(
         no_frontend=parsed_no_frontend,
         no_browser=parsed_no_browser,
         lazy=parsed_lazy,
-        dir_mode=parsed_dir_mode
+        dir_mode=parsed_dir_mode,
+        package_mode=package_mode
     )
 
 def cli_main():

@@ -53,6 +53,10 @@ export type FunctionPreview = {
    * Unique path that won't make conflict
    */
   path: string;
+  /**
+   * Module path to the function, for tree viewer
+   */
+  module: null | string;
 };
 
 export type GetListResponse = {

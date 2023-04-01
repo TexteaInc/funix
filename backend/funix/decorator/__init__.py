@@ -5,7 +5,6 @@ import json
 import yaml
 import json5
 import flask
-import base64
 import inspect
 import requests
 import traceback
@@ -33,6 +32,7 @@ __supported_upload_widgets = ["image", "video", "audio", "file"]
 __banned_function_name_and_path = ["list", "file", "static", "config", "param", "call"]
 __supported_basic_types = list(__supported_basic_types_dict.keys())
 __decorated_functions_list = []
+__decorated_functions_names_list = []
 __files_dict = {}
 __wrapper_enabled = False
 __default_theme = {}
@@ -361,7 +361,8 @@ def funix(
         input_layout: LayoutType = [],
         output_layout: LayoutType = [],
         conditional_visible: ConditionalVisibleType = [],
-        argument_config: ArgumentConfigType = {}
+        argument_config: ArgumentConfigType = {},
+        __full_module: Optional[str] = None,
 ):
     global __parsed_themes
 
@@ -393,9 +394,14 @@ def funix(
                     raise Exception(f"{function_name}'s path: {path} is not allowed")
                 endpoint = path.strip("/")
 
+            if function_title in __decorated_functions_names_list:
+                raise Exception(f"Function with name {function_title} already exists")
+
+            __decorated_functions_names_list.append(function_title)
             __decorated_functions_list.append({
                 "name": function_title,
-                "path": endpoint
+                "path": endpoint,
+                "module": __full_module,
             })
 
             if show_source:

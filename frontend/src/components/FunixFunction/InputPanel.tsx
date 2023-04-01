@@ -10,7 +10,7 @@ import Card from "@mui/material/Card";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import Form from "@rjsf/material-ui/v5";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { callFunctionRaw, FunctionDetail } from "../../shared";
 import ObjectFieldExtendedTemplate from "./ObjectFieldExtendedTemplate";
 import SwitchWidget from "./SwitchWidget";
