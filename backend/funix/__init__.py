@@ -78,7 +78,7 @@ class OpenFrontend(Thread):
         webbrowser.open(f"http://{self.host}:{self.port}")
 
 
-def __prep(main_class: typing.Optional[str], lazy: bool):
+def __prep(main_class: typing.Optional[str], lazy: bool, need_path: bool):
     decorator.enable_wrapper()
     if main_class:
         module = importlib.import_module(main_class)
@@ -86,7 +86,10 @@ def __prep(main_class: typing.Optional[str], lazy: bool):
             members = reversed(dir(module))
             for member in members:
                 if inspect.isfunction(getattr(module, member)):
-                    funix()(getattr(module, member))
+                    if need_path:
+                        funix(__full_module=f"{module.__name__}")(getattr(module, member))
+                    else:
+                        funix()(getattr(module, member))
     else:
         print("Error: No Python module provided. \n How to fix: Please provide a module and try again. If your "
               "functions are in a file called hello.py, you should pass hello here. \n Example: funix hello")
@@ -100,6 +103,8 @@ def get_path_modules(path: str):
         if os.path.isdir(os.path.join(path, file)):
             yield from get_path_modules(os.path.join(path, file))
         if file.endswith(".py"):
+            if file == "__init__.py":
+                continue
             yield file[:-3]
 
 def run(
@@ -109,16 +114,24 @@ def run(
     no_frontend: typing.Optional[bool] = False,
     no_browser: typing.Optional[bool] = False,
     lazy: typing.Optional[bool] = False,
-    dir_mode: typing.Optional[bool] = False
+    dir_mode: typing.Optional[bool] = False,
+    package_mode: typing.Optional[bool] = False
 ):
     if dir_mode:
         if os.path.exists(main_class) and os.path.isdir(main_class):
             for module in get_path_modules(main_class):
-                __prep(main_class=module, lazy=lazy)
+                __prep(main_class=module, lazy=lazy, need_path=True)
         else:
             raise Exception("Directory not found!")
+    elif package_mode:
+        module = importlib.import_module(main_class)
+        path = module.__file__
+        if path is None:
+            raise Exception("`__init__.py` not found, please check this package!")
+        for module in get_path_modules(os.path.dirname(path)):
+            __prep(main_class=module, lazy=lazy, need_path=True)
     else:
-        __prep(main_class=main_class, lazy=lazy)
+        __prep(main_class=main_class, lazy=lazy, need_path=False)
 
     parsed_ip = ip_address(host)
     parsed_port = get_unused_port_from(port, parsed_ip)
