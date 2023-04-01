@@ -1,3 +1,4 @@
+import atexit
 import importlib
 import os
 import sys
@@ -6,11 +7,16 @@ import typing
 from threading import Thread
 import webbrowser
 
+import git
+
 import funix.decorator as decorator
 from funix.app import app
 from funix.frontend import start
 
 import inspect
+
+import tempfile
+import shutil
 
 funix = decorator.funix
 funix_yaml = decorator.funix_yaml
@@ -115,8 +121,24 @@ def run(
     no_browser: typing.Optional[bool] = False,
     lazy: typing.Optional[bool] = False,
     dir_mode: typing.Optional[bool] = False,
-    package_mode: typing.Optional[bool] = False
+    package_mode: typing.Optional[bool] = False,
+    from_git: typing.Optional[str] = None
 ):
+    if from_git:
+        tempdir = tempfile.mkdtemp()
+        git.Repo.clone_from(url = from_git, to_path = tempdir)
+
+        @atexit.register
+        def clean_tempdir():
+            shutil.rmtree(tempdir)
+
+        sys.path.append(tempdir)
+        if main_class:
+            pass
+        elif dir_mode:
+            main_class = tempdir
+        elif package_mode:
+            raise Exception("Package mode is not supported for git mode, try to use dir mode!")
     if dir_mode:
         if os.path.exists(main_class) and os.path.isdir(main_class):
             for module in get_path_modules(main_class):
