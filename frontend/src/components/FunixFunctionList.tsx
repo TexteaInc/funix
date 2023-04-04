@@ -56,6 +56,8 @@ const FunixFunctionTreeOrList = (props: {
       </FormControl>
     );
   }
+
+  const [nowFunction, setNowFunction] = useState<null | string>("");
   const tree = props.functions.reduce((acc, f) => {
     let current = acc;
     for (const m of f.module ? f.module.split(".") : ["NFunix"]) {
@@ -74,10 +76,14 @@ const FunixFunctionTreeOrList = (props: {
     if (Array.isArray(tree)) {
       return tree.map((v) => (
         <ListItemButton
-          onClick={() => props.setResponse(v)}
+          onClick={() => {
+            setNowFunction(v);
+            props.setResponse(v);
+          }}
           key={v}
           sx={{
             paddingLeft: `${now * 2}rem`,
+            bgcolor: nowFunction === v ? "grey.200" : "background.paper",
           }}
         >
           <ListItemText primary={v} />
@@ -153,7 +159,6 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
     }));
     async function queryData() {
       const { list } = await getList(new URL("/list", backend));
-      console.log(list);
       setState(list);
       if (list.length === 1) {
         handleFetchFunctionDetail(list[0]);
