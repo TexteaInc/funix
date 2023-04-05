@@ -1,18 +1,10 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
-  Card,
-  CardContent,
   Collapse,
-  FormControl,
-  FormControlLabel,
-  FormLabel,
   List,
   ListItemButton,
   ListItemText,
   ListSubheader,
-  Radio,
-  RadioGroup,
-  Typography,
 } from "@mui/material";
 import { storeAtom } from "../store";
 import { useAtom } from "jotai";
@@ -24,122 +16,38 @@ export type FunctionListProps = {
   backend: URL;
 };
 
-const FunixFunctionTreeOrList = (props: {
-  functions: FunctionPreview[];
-  value: string | null;
-  onChange: (event: React.ChangeEvent<HTMLInputElement>, value: string) => void;
-  setResponse: (functionName: string) => void;
-}) => {
-  const needTree = props.functions.some((f) => typeof f.module === "string");
-  if (!needTree) {
-    return (
-      <FormControl>
-        <FormLabel id="function-list-radio-group-label">
-          <Typography>Select a function/page:</Typography>
-        </FormLabel>
-        <RadioGroup
-          aria-labelledby="function-list-radio-group-label"
-          name="function-list-radio-group"
-          value={props.value}
-          onChange={props.onChange}
-          row
-        >
-          {props.functions.map((functionPreview) => (
-            <FormControlLabel
-              key={functionPreview.name}
-              value={functionPreview.name}
-              control={<Radio />}
-              label={functionPreview.name}
-            />
-          ))}
-        </RadioGroup>
-      </FormControl>
-    );
-  }
-
-  const [nowFunction, setNowFunction] = useState<null | string>("");
-  const tree = props.functions.reduce((acc, f) => {
-    let current = acc;
-    for (const m of f.module ? f.module.split(".") : ["NFunix"]) {
-      if (current[m] === undefined) {
-        current[m] = [];
-      }
-      current = current[m];
+// Just need children
+const FunixList = (props: {
+  children: React.ReactNode;
+  functionLength: number;
+}) => (
+  <List
+    sx={{
+      width: "100%",
+      bgcolor: "background.paper",
+    }}
+    component="nav"
+    aria-labelledby="function-list"
+    subheader={
+      <ListSubheader id="function-list">
+        Functions / Pages ({props.functionLength})
+      </ListSubheader>
     }
-    current.push(f.name);
-    return acc;
-  }, {} as Record<string, any>);
-  const renderTree = (
-    tree: Record<string, any> | string[],
-    now: number
-  ): any => {
-    if (Array.isArray(tree)) {
-      return tree.map((v) => (
-        <ListItemButton
-          onClick={() => {
-            setNowFunction(v);
-            props.setResponse(v);
-          }}
-          key={v}
-          sx={{
-            paddingLeft: `${now * 2}rem`,
-            bgcolor: nowFunction === v ? "grey.200" : "background.paper",
-          }}
-        >
-          <ListItemText primary={v} />
-        </ListItemButton>
-      ));
-    }
-    return Object.entries(tree).map(([k, v]) => {
-      if (typeof v === "object") {
-        const [open, setOpen] = useState(false);
-        return (
-          <>
-            <ListItemButton
-              onClick={() => {
-                setOpen((open) => !open);
-              }}
-            >
-              <ListItemText primary={k} />
-              {open ? <ExpandLess /> : <ExpandMore />}
-            </ListItemButton>
-            <Collapse in={open} timeout="auto" unmountOnExit>
-              <List component="div" disablePadding>
-                {renderTree(v, now + 1)}
-              </List>
-            </Collapse>
-          </>
-        );
-      }
-      return <></>;
-    });
-  };
-  return (
-    <List
-      sx={{
-        width: "100%",
-        bgcolor: "background.paper",
-      }}
-      component="nav"
-      aria-labelledby="function-list-radio-group-label"
-      subheader={
-        <ListSubheader id="function-list-radio-group-label">
-          Select a function/page:
-        </ListSubheader>
-      }
-    >
-      {renderTree(tree, 0)}
-    </List>
-  );
-};
+  >
+    {props.children}
+  </List>
+);
 
 const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
+  type TreeState = Record<string, boolean>;
   const [, setStore] = useAtom(storeAtom);
   const [state, setState] = useState<FunctionPreview[]>([]);
   const [radioGroupValue, setRadioGroupValue] = useState<string | null>(null);
   const [url, setURL] = useState("");
+  const [isTree, setTree] = useState(false);
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const [treeState, setTreeState] = useState<TreeState>({});
 
   const handleFetchFunctionDetail = useCallback(
     (functionPreview: FunctionPreview) => {
@@ -160,6 +68,7 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
     async function queryData() {
       const { list } = await getList(new URL("/list", backend));
       setState(list);
+      setTree(list.some((f) => typeof f.module === "string"));
       if (list.length === 1) {
         handleFetchFunctionDetail(list[0]);
         setRadioGroupValue(list[0].name);
@@ -180,11 +89,6 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
       handleFetchFunctionDetail(selectedFunctionPreview[0]);
       setRadioGroupValue(functionName);
     }
-  };
-
-  const handleRadioGroupChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const functionName: string | null = e.currentTarget.value;
-    changeRadioGroupValue(functionName);
   };
 
   useEffect(() => {
@@ -208,19 +112,110 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
     }
   }, [pathname, state]);
 
-  if (state.length === 1) return <></>;
+  if (!isTree) {
+    return (
+      <FunixList functionLength={state.length}>
+        {state.map((functionPreview) => (
+          <ListItemButton
+            onClick={() => {
+              changeRadioGroupValue(functionPreview.name);
+            }}
+            key={functionPreview.name}
+            sx={{
+              bgcolor:
+                radioGroupValue === functionPreview.name
+                  ? "grey.200"
+                  : "background.paper",
+            }}
+          >
+            <ListItemText primary={functionPreview.name} />
+          </ListItemButton>
+        ))}
+      </FunixList>
+    );
+  }
 
+  let functionsLength = 0;
+
+  const tree = state.reduce((acc, f) => {
+    let current = acc;
+    for (const m of f.module ? f.module.split(".") : ["NFunix"]) {
+      if (current[m] === undefined) {
+        current[m] = [];
+      }
+      current = current[m];
+    }
+    current.push(f.name);
+    functionsLength += 1;
+    return acc;
+  }, {} as Record<string, any>);
+
+  const renderTree = (
+    tree: Record<string, any> | string[],
+    now: number
+  ): any => {
+    if (Array.isArray(tree)) {
+      return tree.map((v) => (
+        <ListItemButton
+          onClick={() => {
+            changeRadioGroupValue(v);
+          }}
+          key={v}
+          sx={{
+            paddingLeft: `${now * 2}rem`,
+            bgcolor: radioGroupValue === v ? "grey.200" : "background.paper",
+          }}
+        >
+          <ListItemText primary={v} />
+        </ListItemButton>
+      ));
+    }
+    return Object.entries(tree).map(([k, v]) => {
+      if (typeof v === "object") {
+        return (
+          <>
+            <ListItemButton
+              onClick={() => {
+                setTreeState((state) => ({
+                  ...state,
+                  [`${k}${v}`]: state.hasOwnProperty(`${k}${v}`)
+                    ? !state[`${k}${v}`]
+                    : true,
+                }));
+              }}
+            >
+              <ListItemText primary={k} />
+              {treeState.hasOwnProperty(`${k}${v}`) ? (
+                treeState[`${k}${v}`] ? (
+                  <ExpandLess />
+                ) : (
+                  <ExpandMore />
+                )
+              ) : (
+                <ExpandMore />
+              )}
+            </ListItemButton>
+            <Collapse
+              in={
+                treeState.hasOwnProperty(`${k}${v}`)
+                  ? treeState[`${k}${v}`]
+                  : false
+              }
+              timeout="auto"
+              unmountOnExit
+            >
+              <List>{renderTree(v, now + 1)}</List>
+            </Collapse>
+          </>
+        );
+      }
+      return <></>;
+    });
+  };
   return (
-    <Card>
-      <CardContent>
-        <FunixFunctionTreeOrList
-          functions={state}
-          value={radioGroupValue}
-          onChange={handleRadioGroupChange}
-          setResponse={changeRadioGroupValue}
-        />
-      </CardContent>
-    </Card>
+    <FunixList functionLength={functionsLength}>
+      {renderTree(tree, 0)}
+    </FunixList>
   );
 };
 

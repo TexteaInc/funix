@@ -16,7 +16,7 @@ import {
   Typography,
 } from "@mui/material";
 import { DataGrid, GridRowModel } from "@mui/x-data-grid";
-import { useState } from "react";
+import React, { useState } from "react";
 import ReactJson from "react-json-view";
 import { BaseType, FunctionDetail, ReturnType } from "../../shared";
 import OutputError from "./OutputComponents/OutputError";
@@ -414,7 +414,6 @@ const OutputPanel = (props: {
       <Card>
         <CardContent>
           <Stack spacing={1}>
-            <Typography variant="h5">Output</Typography>
             <ResponseView
               response={props.response}
               returnType={props.detail.return_type}
