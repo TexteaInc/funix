@@ -12,6 +12,7 @@ from . import *
 @plac.flg("dir_mode", "Enable directory mode", abbrev = "d")
 @plac.flg("package_mode", "Enable package mode", abbrev = "P")
 @plac.opt("from_git", "Import module from git", abbrev = "g")
+@plac.opt("repo_dir", "The directories in the repo that need to be used", abbrev = "r")
 def main(
     module_name = None,
     host = "0.0.0.0",
@@ -21,7 +22,8 @@ def main(
     lazy = False,
     dir_mode = False,
     package_mode = False,
-    from_git = None
+    from_git = None,
+    repo_dir = None,
 ):
     """Funix: Building web apps without manually creating widgets
 
@@ -51,6 +53,7 @@ def main(
     parsed_dir_mode: bool = os.getenv("FUNIX_DIR_MODE", dir_mode)
     parsed_package_mode: bool = os.getenv("FUNIX_PACKAGE_MODE", package_mode)
     parsed_from_git: str = os.getenv("FUNIX_FROM_GIT", from_git)
+    parsed_repo_dir: str = os.getenv("FUNIX_REPO_DIR", repo_dir)
     run(
         host=parsed_host,
         port=parsed_port,
@@ -60,7 +63,8 @@ def main(
         lazy=parsed_lazy,
         dir_mode=parsed_dir_mode,
         package_mode=parsed_package_mode,
-        from_git=parsed_from_git
+        from_git=parsed_from_git,
+        repo_dir=parsed_repo_dir
     )
 
 def cli_main():

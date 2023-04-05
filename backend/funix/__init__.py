@@ -122,7 +122,8 @@ def run(
     lazy: typing.Optional[bool] = False,
     dir_mode: typing.Optional[bool] = False,
     package_mode: typing.Optional[bool] = False,
-    from_git: typing.Optional[str] = None
+    from_git: typing.Optional[str] = None,
+    repo_dir: typing.Optional[str] = None
 ):
     if from_git:
         tempdir = tempfile.mkdtemp()
@@ -132,11 +133,15 @@ def run(
         def clean_tempdir():
             shutil.rmtree(tempdir)
 
-        sys.path.append(tempdir)
+        new_path = tempdir
+        if repo_dir:
+            new_path = os.path.join(tempdir, repo_dir)
+        sys.path.append(new_path)
+
         if main_class:
             pass
         elif dir_mode:
-            main_class = tempdir
+            main_class = new_path
         elif package_mode:
             raise Exception("Package mode is not supported for git mode, try to use dir mode!")
     if dir_mode:
