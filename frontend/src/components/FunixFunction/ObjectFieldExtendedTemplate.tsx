@@ -947,7 +947,6 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
 
   return (
     <Stack spacing={1}>
-      <Typography variant="h5">{props.title}</Typography>
       {props.description !== "" ? (
         <Typography variant="body1">
           <MarkdownDiv markdown={props.description} isRenderInline={false} />

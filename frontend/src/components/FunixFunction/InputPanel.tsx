@@ -77,7 +77,13 @@ const InputPanel = (props: {
   };
 
   return (
-    <Card>
+    <Card
+      onKeyDown={(event) => {
+        if (event.ctrlKey && event.key === "Enter") {
+          handleSubmit().then();
+        }
+      }}
+    >
       <CardContent>
         {formElement}
         <Grid
@@ -88,6 +94,12 @@ const InputPanel = (props: {
           alignItems="center"
         >
           <Grid item xs>
+            <FormControlLabel
+              control={<Checkbox defaultChecked={false} disabled />}
+              label="Continuously Run"
+            />
+          </Grid>
+          <Grid item>
             <Button
               variant="contained"
               size="large"
@@ -100,12 +112,6 @@ const InputPanel = (props: {
             >
               Run
             </Button>
-          </Grid>
-          <Grid item>
-            <FormControlLabel
-              control={<Checkbox defaultChecked={false} disabled />}
-              label="Continuous run"
-            />
           </Grid>
         </Grid>
       </CardContent>
