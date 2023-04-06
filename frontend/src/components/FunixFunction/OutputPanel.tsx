@@ -15,7 +15,7 @@ import {
   Switch,
   Typography,
 } from "@mui/material";
-import { DataGrid, GridRowModel } from "@mui/x-data-grid";
+import { DataGrid, GridRowModel, GridToolbar } from "@mui/x-data-grid";
 import React, { useState } from "react";
 import ReactJson from "react-json-view";
 import { BaseType, FunctionDetail, ReturnType } from "../../shared";
@@ -108,6 +108,9 @@ const OutputPanel = (props: {
                     id: index,
                     root: rowValue,
                   }))}
+                  components={{
+                    Toolbar: GridToolbar,
+                  }}
                 />
               );
             else throw new Error("Unsupported selectedResponseViewType");
@@ -165,6 +168,9 @@ const OutputPanel = (props: {
                     }))}
                     rows={rows}
                     sx={{ minHeight: 400 }}
+                    components={{
+                      Toolbar: GridToolbar,
+                    }}
                   />
                 );
                 if (Object.keys(newObject).length != 0) {
