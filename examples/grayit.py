@@ -2,8 +2,7 @@ from typing import List
 from io import BytesIO
 from PIL import Image as PILImage
 from funix import funix
-from funix.hint import Image
-from funix.widget.builtin import BytesImage
+from funix.hint import Image, BytesImage
 import numpy as np
 
 

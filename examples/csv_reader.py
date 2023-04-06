@@ -1,7 +1,7 @@
 import pandas as pd
 from funix import funix
 from io import StringIO
-from funix.widget.builtin import BytesFile
+from funix.hint import BytesFile
 
 def do_calc(a: int, b: int, op: str) -> int:
     return a + b if op == "add" else a - b

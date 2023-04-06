@@ -1,7 +1,7 @@
 import hashlib
 from typing import List
 from funix import funix
-from funix.widget.builtin import BytesFile
+from funix.hint import BytesFile
 
 
 @funix(
@@ -14,4 +14,3 @@ def hashit(datas: List[BytesFile]) -> list:
         sha256.update(data)
         results.append(sha256.hexdigest())
     return results
-

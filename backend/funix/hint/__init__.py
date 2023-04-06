@@ -1,4 +1,5 @@
 from typing import Any, Dict, List, Literal, NewType, Optional, Tuple, TypedDict, Text, TypeAlias
+from ..widget import builtin
 
 
 DestinationType = Literal["column", "row", "sheet", None]
@@ -80,3 +81,18 @@ Support Code like:
 
 or just a string like "print('hello world')"
 """
+
+IntInputBox: TypeAlias = builtin.IntInputBox
+IntSlider = builtin.IntSlider
+FloatInputBox: TypeAlias = builtin.FloatInputBox
+FloatSlider = builtin.FloatSlider
+StrCode = builtin.StrCode
+StrInputBox: TypeAlias = builtin.StrInputBox
+StrTextarea: TypeAlias = builtin.StrTextarea
+StrPassword: TypeAlias = builtin.StrPassword
+BoolCheckBox: TypeAlias = builtin.BoolCheckBox
+BoolSwitch: TypeAlias = builtin.BoolSwitch
+BytesImage: TypeAlias = builtin.BytesImage
+BytesVideo: TypeAlias = builtin.BytesVideo
+BytesAudio: TypeAlias = builtin.BytesAudio
+BytesFile: TypeAlias = builtin.BytesFile

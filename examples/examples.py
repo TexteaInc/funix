@@ -1,5 +1,5 @@
 from funix import funix
-from typing import List, TypedDict, Literal, Dict
+from typing import List, TypedDict, Dict
 
 
 @funix()

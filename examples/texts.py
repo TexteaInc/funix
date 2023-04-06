@@ -1,6 +1,6 @@
 from funix import set_theme, new_funix_type, funix
 from funix.widget import slider
-from funix.widget.builtin import StrTextarea, StrInputBox
+from funix.hint import StrTextarea, StrInputBox
 from typing import Literal
 
 import re
