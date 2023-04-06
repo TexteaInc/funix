@@ -3,7 +3,6 @@ const getInitValue = (
 ): number | string | boolean | object | null => {
   switch (type) {
     case "string":
-      return "";
     case "text":
       return "";
     case "number":
@@ -24,7 +23,6 @@ const castValue = (
   if (value === null || value == undefined) return value;
   switch (type) {
     case "string":
-      return value.toString();
     case "text":
       return value.toString();
     case "number":

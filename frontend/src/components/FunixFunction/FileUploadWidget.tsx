@@ -7,7 +7,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  IconButton,
   ImageList,
   ImageListItem,
   Paper,
@@ -250,20 +249,25 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
                           {fileSizeToReadable(file.size)}
                         </TableCell>
                         <TableCell align="left">
-                          <IconButton
+                          <Button
+                            variant="text"
                             size="small"
+                            startIcon={<Delete fontSize="small" />}
                             onClick={() => {
                               removeFile(index);
                             }}
+                            color="error"
                           >
-                            <Delete fontSize="small" />
-                          </IconButton>
+                            Delete
+                          </Button>
                           {(file.type.startsWith("image") ||
                             file.type.startsWith("video") ||
                             file.type.startsWith("audio") ||
                             file.type === "application/pdf") && (
-                            <IconButton
+                            <Button
+                              variant="text"
                               size="small"
+                              startIcon={<Preview fontSize="small" />}
                               onClick={() => {
                                 fileToBase64(file).then((value) => {
                                   setPreview(value as string);
@@ -272,8 +276,8 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
                                 });
                               }}
                             >
-                              <Preview fontSize="small" />
-                            </IconButton>
+                              Preview
+                            </Button>
                           )}
                         </TableCell>
                       </TableRow>
