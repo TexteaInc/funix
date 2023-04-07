@@ -54,6 +54,7 @@ const InputPanel = (props: {
       onChange={handleChange}
       widgets={widgets}
       uiSchema={uiSchema}
+      safeRenderCompletion
     />
   );
 
@@ -84,7 +85,11 @@ const InputPanel = (props: {
         }
       }}
     >
-      <CardContent>
+      <CardContent
+        sx={{
+          paddingY: 0,
+        }}
+      >
         {formElement}
         <Grid
           container
@@ -119,4 +124,10 @@ const InputPanel = (props: {
   );
 };
 
-export default InputPanel;
+export default React.memo(InputPanel, (prevProps, nextProps) => {
+  return (
+    prevProps.detail === nextProps.detail &&
+    prevProps.backend === nextProps.backend &&
+    prevProps.setResponse === nextProps.setResponse
+  );
+});

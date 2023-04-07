@@ -18,7 +18,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
   const { data: detail } = useSWR<FunctionDetail>(
     new URL(`/param/${preview.path}`, backend).toString()
   );
-  const [{ inputOutputWidth }, setStore] = useAtom(storeAtom);
+  const [{ inputOutputWidth, sideBarOpen }, setStore] = useAtom(storeAtom);
   const [width, setWidth] = useState(inputOutputWidth);
   const [onResizing, setOnResizing] = useState(false);
   const [response, setResponse] = useState<string | null>(null);
@@ -46,7 +46,9 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
 
   const handleResize = (event: PointerEvent) => {
     event.preventDefault();
-    const newLeftWidth = event.clientX / document.body.clientWidth;
+    const newLeftWidth = sideBarOpen
+      ? event.clientX / (document.body.clientWidth + 240)
+      : event.clientX / document.body.clientWidth;
     const newRightWidth = 1 - newLeftWidth;
     setWidth([
       `${(newLeftWidth * 100).toFixed(3)}%`,

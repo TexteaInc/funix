@@ -16,7 +16,7 @@ import {
   Typography,
 } from "@mui/material";
 import { DataGrid, GridRowModel, GridToolbar } from "@mui/x-data-grid";
-import React, { useState } from "react";
+import React from "react";
 import ReactJson from "react-json-view";
 import { BaseType, FunctionDetail, ReturnType } from "../../shared";
 import OutputError from "./OutputComponents/OutputError";
@@ -36,7 +36,7 @@ const OutputPanel = (props: {
   backend: URL;
   response: string | null;
 }) => {
-  const [{ showFunctionDetail }] = useAtom(storeAtom);
+  const [{ showFunctionDetail, viewType }, setStore] = useAtom(storeAtom);
 
   type ResponseViewProps = {
     response: string | null;
@@ -70,13 +70,6 @@ const OutputPanel = (props: {
         if (typeof parsedResponse !== "object" && !is1dArray(parsedResponse)) {
           return <code>{response ?? ""}</code>;
         }
-        const [selectedResponseViewType, setSelectedResponseViewType] =
-          useState<string>("json");
-        const handleResponseViewChange = (
-          e: React.ChangeEvent<HTMLInputElement>
-        ) => {
-          setSelectedResponseViewType(e.target.value);
-        };
         const responseViewRadioGroup = (
           <FormControl>
             <FormLabel id="response-view-radio-group">View in: </FormLabel>
@@ -84,8 +77,13 @@ const OutputPanel = (props: {
               row
               aria-labelledby="response-view-radio-group"
               name="response-view-radio-group"
-              value={selectedResponseViewType}
-              onChange={handleResponseViewChange}
+              value={viewType}
+              onChange={(event) => {
+                setStore((store) => ({
+                  ...store,
+                  viewType: event.target.value as "json" | "sheet",
+                }));
+              }}
             >
               <FormControlLabel value="json" control={<Radio />} label="JSON" />
               <FormControlLabel
@@ -118,9 +116,7 @@ const OutputPanel = (props: {
           return (
             <div>
               {responseViewRadioGroup}
-              <SelectedResponseView
-                selectedResponseViewType={selectedResponseViewType}
-              />
+              <SelectedResponseView selectedResponseViewType={viewType} />
             </div>
           );
         } else if (
@@ -186,9 +182,7 @@ const OutputPanel = (props: {
             return (
               <div>
                 {responseViewRadioGroup}
-                <SelectedResponseView
-                  selectedResponseViewType={selectedResponseViewType}
-                />
+                <SelectedResponseView selectedResponseViewType={viewType} />
               </div>
             );
           }
@@ -449,4 +443,10 @@ const OutputPanel = (props: {
   );
 };
 
-export default OutputPanel;
+export default React.memo(OutputPanel, (prevProps, nextProps) => {
+  return (
+    prevProps.response === nextProps.response &&
+    prevProps.detail === nextProps.detail &&
+    prevProps.backend === nextProps.backend
+  );
+});

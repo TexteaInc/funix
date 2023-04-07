@@ -68,7 +68,6 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
       field: "id",
       headerName: "ID",
       type: "number",
-      hide: true, // hide the ID column by default
     },
   ];
   const arraySimpleSelectors: JSX.Element[] = [];
@@ -864,6 +863,9 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
             <Box sx={{ height: 400, mt: 1, paddingRight: 1 }}>
               <DataGrid
                 columns={columns}
+                columnVisibilityModel={{
+                  id: false,
+                }}
                 rows={rows}
                 checkboxSelection={true}
                 selectionModel={selectionModel}
@@ -951,7 +953,9 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
         <Typography variant="body1">
           <MarkdownDiv markdown={props.description} isRenderInline={false} />
         </Typography>
-      ) : null}
+      ) : (
+        <></>
+      )}
       {rowElements.map(renderElement)}
       {arraySimpleSelectors.map(renderElement)}
       {configElements.map(renderElement)}
@@ -966,4 +970,4 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
   );
 };
 
-export default React.memo(ObjectFieldExtendedTemplate);
+export default ObjectFieldExtendedTemplate;
