@@ -116,7 +116,8 @@ def run(
 
         @atexit.register
         def clean_tempdir():
-            shutil.rmtree(tempdir)
+            if os.path.exists(tempdir):
+                shutil.rmtree(tempdir)
 
         new_path = tempdir
         if repo_dir:
