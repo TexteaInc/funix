@@ -11,20 +11,24 @@ import Card from "@mui/material/Card";
 // @ts-ignore
 import Form from "@rjsf/material-ui/v5";
 import React, { useEffect, useState } from "react";
-import { callFunctionRaw, FunctionDetail } from "../../shared";
+import { callFunctionRaw, FunctionDetail, FunctionPreview } from "../../shared";
 import ObjectFieldExtendedTemplate from "./ObjectFieldExtendedTemplate";
 import SwitchWidget from "./SwitchWidget";
 import TextExtendedWidget from "./TextExtendedWidget";
+import { useAtom } from "jotai";
+import { storeAtom } from "../../store";
 
 const InputPanel = (props: {
   detail: FunctionDetail;
   backend: URL;
   setResponse: React.Dispatch<React.SetStateAction<string | null>>;
+  preview: FunctionPreview;
 }) => {
   const [form, setForm] = useState<Record<string, any>>({});
   const [waiting, setWaiting] = useState(false);
   const [asyncWaiting, setAsyncWaiting] = useState(false);
   const [requestDone, setRequestDone] = useState(true);
+  const [{ functionSecret }] = useAtom(storeAtom);
 
   useEffect(() => {
     setWaiting(() => !requestDone);
@@ -65,12 +69,24 @@ const InputPanel = (props: {
   };
 
   const handleSubmit = async () => {
-    console.log("Data submitted: ", form);
+    let newForm = form;
+    if (props.preview.secret) {
+      if (
+        props.preview.name in functionSecret &&
+        typeof functionSecret[props.preview.name] === "string"
+      ) {
+        newForm = {
+          ...form,
+          __funix_secret: functionSecret[props.preview.name],
+        };
+      }
+    }
+    console.log("Data submitted: ", newForm);
     setRequestDone(() => false);
     checkResponse().then();
     const response = await callFunctionRaw(
       new URL(`/call/${props.detail.id}`, props.backend),
-      form
+      newForm
     );
     props.setResponse(() => response.toString());
     setWaiting(() => false);
@@ -87,7 +103,7 @@ const InputPanel = (props: {
     >
       <CardContent
         sx={{
-          paddingY: 0,
+          paddingY: 1,
         }}
       >
         {formElement}

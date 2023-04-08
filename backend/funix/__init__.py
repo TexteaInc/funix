@@ -1,27 +1,24 @@
-from gevent import monkey
-monkey.patch_all()
-
 import atexit
 import importlib
 import os
 import sys
 import socket
 import typing
+import urllib.parse
+from threading import Thread
 import webbrowser
 
 import git
-from gunicorn.app.base import BaseApplication
 
 import funix.decorator as decorator
 from funix.app import app
 from funix.frontend import start
 
-from ipaddress import IPv4Address, IPv6Address, ip_address, ip_network
-
 import inspect
 
 import tempfile
 import shutil
+from ipaddress import IPv4Address, IPv6Address, ip_address, ip_network
 
 funix = decorator.funix
 funix_yaml = decorator.funix_yaml
@@ -58,7 +55,7 @@ def get_unused_port_from(port: int, host: IPv4Address | IPv6Address):
     now_port = port
     is_v4 = host.version == 4
     if is_this_host_on_this_network(host):
-        new_host = "127.0.0.1" if is_v4 else "::1"
+        new_host = "127.0.0.1" if is_v4 else "[::1]"
     else:
         new_host = host.compressed
     while check_port_is_used(now_port, new_host):
@@ -66,6 +63,29 @@ def get_unused_port_from(port: int, host: IPv4Address | IPv6Address):
             raise Exception("No available port!")
         now_port += 1
     return now_port
+
+
+class OpenFrontend(Thread):
+    def __init__(self, host: IPv4Address | IPv6Address, port: int):
+        super(OpenFrontend, self).__init__()
+        self.is_v4 = host.version == 4
+        if is_this_host_on_this_network(host):
+            self.host = "127.0.0.1" if self.is_v4 else "[::1]"
+        else:
+            self.host = host.compressed
+        self.port = port
+
+    def is_server_online(self) -> bool:
+        try:
+            socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((self.host, self.port))
+            return True
+        except:
+            return False
+
+    def run(self) -> None:
+        while not self.is_server_online():
+            pass
+        webbrowser.open(f"http://{self.host}:{self.port}")
 
 
 def __prep(main_class: typing.Optional[str], lazy: bool, need_path: bool):
@@ -116,8 +136,7 @@ def run(
 
         @atexit.register
         def clean_tempdir():
-            if os.path.exists(tempdir):
-                shutil.rmtree(tempdir)
+            shutil.rmtree(tempdir)
 
         new_path = tempdir
         if repo_dir:
@@ -148,43 +167,29 @@ def run(
 
     parsed_ip = ip_address(host)
     parsed_port = get_unused_port_from(port, parsed_ip)
+
+    funix_secrets = decorator.export_secrets()
+    if funix_secrets:
+        is_v4 = parsed_ip.version == 4
+        if is_this_host_on_this_network(parsed_ip):
+            local = "127.0.0.1" if is_v4 else "[::1]"
+        else:
+            local = parsed_ip.compressed
+        print("Secrets:")
+        for name, secret in funix_secrets.items():
+            if no_frontend:
+                print(f"{name}\t{secret}")
+            else:
+                print(f"{name}\t{secret}\tLink: http://{local}:{port}/{urllib.parse.quote(name)}?secret={secret}")
+
     if not no_frontend:
         print(f"Starting Funix at http://{host}:{parsed_port}")
     else:
         print(f"Starting Funix backend only at http://{host}:{parsed_port}")
     if not no_frontend and not no_browser:
         start()
-
-    is_v4 = parsed_ip.version == 4
-    if is_this_host_on_this_network(parsed_ip):
-        if is_v4:
-            funix_url = f"http://127.0.0.1:{parsed_port}"
-        else:
-            funix_url = f"http://[::1]:{parsed_port}"
-    else:
-       if is_v4:
-            funix_url = f"http://{parsed_ip.compressed}:{parsed_port}"
-       else:
-            funix_url = f"http://[{parsed_ip.compressed}]:{parsed_port}"
-
-    class FunixServer(BaseApplication):
-        options = {
-            "bind": f"{host}:{parsed_port}",
-            "worker_class": "gevent",
-        }
-
-        def when_ready(self, server):
-            if not no_frontend and not no_browser:
-                webbrowser.open(funix_url)
-
-        def load_config(self):
-            for key, value in self.options.items():
-                self.cfg.set(key.lower(), value)
-
-            if not no_frontend and not no_browser:
-                self.cfg.set("when_ready", self.when_ready)
-
-        def load(self):
-            return app
-
-    FunixServer().run()
+        if not no_browser:
+            web_browser_start = OpenFrontend(host=parsed_ip, port=parsed_port)
+            web_browser_start.daemon = True
+            web_browser_start.start()
+    app.run(host=host, port=parsed_port)

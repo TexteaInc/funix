@@ -40,12 +40,12 @@ const FunixList = (props: {
 
 const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
   type TreeState = Record<string, boolean>;
-  const [, setStore] = useAtom(storeAtom);
+  const [{ functionSecret }, setStore] = useAtom(storeAtom);
   const [state, setState] = useState<FunctionPreview[]>([]);
   const [radioGroupValue, setRadioGroupValue] = useState<string | null>(null);
   const [url, setURL] = useState("");
   const [isTree, setTree] = useState(false);
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const navigate = useNavigate();
   const [treeState, setTreeState] = useState<TreeState>({});
 
@@ -111,6 +111,21 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
       }
     }
   }, [pathname, state]);
+
+  useEffect(() => {
+    if (search === "" || typeof radioGroupValue !== "string") return;
+    const searchParams = new URLSearchParams(search);
+    const secret = searchParams.get("secret");
+    const newFunctionSecret = {
+      ...functionSecret,
+      [radioGroupValue]: secret,
+    };
+    setStore((store) => ({
+      ...store,
+      functionSecret: newFunctionSecret,
+    }));
+    navigate(`/${radioGroupValue}`);
+  }, [search, radioGroupValue]);
 
   if (!isTree) {
     return (

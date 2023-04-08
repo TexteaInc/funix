@@ -179,7 +179,12 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
             spacing={2}
           >
             <input {...getInputProps()} />
-            <Typography variant="body2">
+            <Typography
+              variant="body2"
+              sx={{
+                paddingX: 2,
+              }}
+            >
               Drag and drop some {fileString} here, or click to select{" "}
               {fileString}
             </Typography>

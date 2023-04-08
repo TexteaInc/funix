@@ -57,6 +57,10 @@ export type FunctionPreview = {
    * Module path to the function, for tree viewer
    */
   module: null | string;
+  /**
+   * Is this function protected by token
+   */
+  secret: boolean;
 };
 
 export type GetListResponse = {
@@ -176,4 +180,20 @@ export async function callFunctionRaw(
       "Content-Type": "application/json",
     },
   }).then((response) => response.text());
+}
+
+export async function verifyToken(
+  url: URL,
+  secret: string,
+  init?: RequestInit
+): Promise<boolean> {
+  return f(url, {
+    ...init,
+    method: "POST",
+    body: JSON.stringify({ secret }),
+    headers: {
+      ...init?.headers,
+      "Content-Type": "application/json",
+    },
+  }).then((response) => response.success);
 }

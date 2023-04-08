@@ -8,6 +8,7 @@ export type Store = {
   inputOutputWidth: string[];
   sideBarOpen: boolean;
   viewType: "json" | "sheet";
+  functionSecret: Record<string, string | null>;
 };
 
 export const storeAtom = atom<Store>({
@@ -17,4 +18,5 @@ export const storeAtom = atom<Store>({
   inputOutputWidth: ["50%", "50%"],
   sideBarOpen: true,
   viewType: "json",
+  functionSecret: {},
 });

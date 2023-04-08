@@ -37,6 +37,7 @@ import {
   GitHub,
   Settings,
   Sick,
+  Token,
 } from "@mui/icons-material";
 import React, { memo, useEffect, useState } from "react";
 import { storeAtom } from "./store";
@@ -124,16 +125,26 @@ const DrawerHeader = styled("div")(({ theme }) => ({
 
 const App = () => {
   const navigate = useNavigate();
+  const [
+    { theme, showFunctionDetail, selectedFunction, functionSecret },
+    setStore,
+  ] = useAtom(storeAtom);
+
   const funixBackend: string | undefined = process.env.REACT_APP_FUNIX_BACKEND;
+  const selectedFunctionSecret: string | null = selectedFunction?.secret
+    ? selectedFunction?.name in functionSecret
+      ? functionSecret[selectedFunction?.name]
+      : null
+    : null;
   const [backend, setBackend] = useState(funixBackend);
   const [backendURL, setBackendURL] = useState<URL | undefined>(
     backend ? new URL(backend) : undefined
   );
   const [tempBackend, setTempBackend] = useState(backend);
+  const [tempSecret, setTempSecret] = useState(selectedFunctionSecret);
   const [open, setOpen] = useState(false);
+  const [tokenOpen, setTokenOpen] = useState(false);
   const [sideBarOpen, setSideBarOpen] = useState(true); // By default
-  const [{ theme, showFunctionDetail, selectedFunction }, setStore] =
-    useAtom(storeAtom);
 
   useEffect(() => {
     getList(new URL("/list", window.location.origin))
@@ -167,6 +178,51 @@ const App = () => {
   return (
     <ThemeProvider theme={createTheme(theme || undefined)}>
       <CssBaseline />
+      <Dialog
+        open={tokenOpen}
+        onClose={() => setTokenOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Secret Token</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Secret Token"
+            onChange={(e) => setTempSecret(e.target.value)}
+            value={tempSecret}
+            fullWidth
+            variant="standard"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setTempSecret(selectedFunctionSecret);
+              setTokenOpen(false);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => {
+              if (selectedFunction) {
+                setStore((store) => ({
+                  ...store,
+                  functionSecret: {
+                    ...store.functionSecret,
+                    [selectedFunction.name]: tempSecret,
+                  },
+                }));
+              }
+              setTokenOpen(false);
+            }}
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle>Settings</DialogTitle>
         <DialogContent>
@@ -230,6 +286,19 @@ const App = () => {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             {selectedFunction ? selectedFunction.name : "Funix"}
           </Typography>
+          {selectedFunction && selectedFunction.secret && (
+            <IconButton
+              size="large"
+              color="inherit"
+              edge="end"
+              onClick={() => {
+                setTempSecret(selectedFunctionSecret);
+                setTokenOpen(true);
+              }}
+            >
+              <Token />
+            </IconButton>
+          )}
           <IconButton
             size="large"
             onClick={() => setOpen(true)}

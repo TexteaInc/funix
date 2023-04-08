@@ -6,6 +6,7 @@ import yaml
 import json5
 import flask
 import inspect
+import secrets
 import requests
 import traceback
 import matplotlib
@@ -33,6 +34,8 @@ __banned_function_name_and_path = ["list", "file", "static", "config", "param", 
 __supported_basic_types = list(__supported_basic_types_dict.keys())
 __decorated_functions_list = []
 __decorated_functions_names_list = []
+__decorated_secret_functions_dict = {}
+__decorated_id_to_function_dict = {}
 __files_dict = {}
 __wrapper_enabled = False
 __default_theme = {}
@@ -61,6 +64,7 @@ def enable_wrapper():
                     return flask.send_file(io.BytesIO(__files_dict[fid]), mimetype="application/octet-stream")
             else:
                 return flask.abort(404)
+
 
 def get_type_dict(annotation):
     if isinstance(annotation, object):  # is class
@@ -349,6 +353,7 @@ def function_param_to_widget(annotation, widget):
 def funix(
         path: Optional[str] = None,
         title: Optional[str] = None,
+        secret: bool = False,
         description: Optional[str] = "",
         destination: DestinationType = None,
         show_source: bool = False,
@@ -397,11 +402,16 @@ def funix(
             if function_title in __decorated_functions_names_list:
                 raise Exception(f"Function with name {function_title} already exists")
 
+            if secret:
+                __decorated_id_to_function_dict[id] = function_title
+                __decorated_secret_functions_dict[id] = secrets.token_hex(16)
+
             __decorated_functions_names_list.append(function_title)
             __decorated_functions_list.append({
                 "name": function_title,
                 "path": endpoint,
                 "module": __full_module,
+                "secret": secret,
             })
 
             if show_source:
@@ -744,6 +754,31 @@ def funix(
             decorated_function_param_getter.__setattr__("__name__", f"{function_name}_param_getter")
             get_wrapper(decorated_function_param_getter)
 
+            if secret:
+                @app.post(f"/verify/{endpoint}")
+                @app.post(f"/verify/{id}")
+                def verify_secret():
+                    data = flask.request.get_json()
+                    if data is None:
+                        return flask.Response(json.dumps({
+                            "success": False,
+                        }), mimetype="application/json", status=400)
+
+                    if "secret" not in data:
+                        return flask.Response(json.dumps({
+                            "success": False,
+                        }), mimetype="application/json", status=400)
+
+                    user_secret = flask.request.get_json()["secret"]
+                    if user_secret == __decorated_secret_functions_dict[id]:
+                        return flask.Response(json.dumps({
+                            "success": True,
+                        }), mimetype="application/json", status=200)
+                    else:
+                        return flask.Response(json.dumps({
+                            "success": False,
+                        }), mimetype="application/json", status=400)
+
             @wraps(function)
             def wrapper():
                 try:
@@ -818,6 +853,21 @@ def funix(
 
                     if function_kwargs is None:
                         return {"error_type": "wrapper", "error_body": "No arguments passed to function."}
+                    if secret:
+                        if "__funix_secret" in function_kwargs:
+                            if not __decorated_secret_functions_dict[id] == function_kwargs["__funix_secret"]:
+                                return {
+                                    "error_type": "wrapper",
+                                    "error_body": "Provided secret is incorrect."
+                                }
+                            else:
+                                del function_kwargs["__funix_secret"]
+                        else:
+                            return {
+                                "error_type": "wrapper",
+                                "error_body": "No secret provided."
+                            }
+
                     if len(cell_names) > 0:
                         length = len(function_kwargs[cell_names[0]])
                         static_keys = function_kwargs.keys() - cell_names
@@ -862,6 +912,7 @@ def funix(
 
     return decorator
 
+
 def funix_parser_backend(config: Optional[str] = None, parser: Literal["json5", "yaml"] = "json5"):
     def decorator(function: Callable):
         if config is None:
@@ -876,11 +927,14 @@ def funix_parser_backend(config: Optional[str] = None, parser: Literal["json5", 
             return funix(**jsonConfig)(function)
     return decorator
 
+
 def funix_json5(config: Optional[str] = None):
     return funix_parser_backend(config, "json5")
 
+
 def funix_yaml(config: Optional[str] = None):
     return funix_parser_backend(config, "yaml")
+
 
 def new_funix_type(widget: str, config_func: Optional[Callable] = None):
     def decorator(cls):
@@ -898,3 +952,10 @@ def new_funix_type(widget: str, config_func: Optional[Callable] = None):
                 return cls
             return new_cls_func
     return decorator
+
+
+def export_secrets():
+    __new_dict = {}
+    for function_id, secret in __decorated_secret_functions_dict.items():
+        __new_dict[__decorated_id_to_function_dict[function_id]] = secret
+    return __new_dict
