@@ -128,7 +128,8 @@ def run(
     dir_mode: typing.Optional[bool] = False,
     package_mode: typing.Optional[bool] = False,
     from_git: typing.Optional[str] = None,
-    repo_dir: typing.Optional[str] = None
+    repo_dir: typing.Optional[str] = None,
+    no_debug: typing.Optional[bool] = False,
 ):
     if from_git:
         tempdir = tempfile.mkdtemp()
@@ -192,4 +193,4 @@ def run(
             web_browser_start = OpenFrontend(host=parsed_ip, port=parsed_port)
             web_browser_start.daemon = True
             web_browser_start.start()
-    app.run(host=host, port=parsed_port)
+    app.run(host=host, port=parsed_port, debug=not no_debug)

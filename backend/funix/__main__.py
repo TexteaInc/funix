@@ -12,8 +12,9 @@ from . import run
 @plac.flg("no_frontend", "Disable frontend server", abbrev="F")
 @plac.flg("no_browser", "Disable auto open browser", abbrev="B")
 @plac.flg("lazy", "Load functions without decorator", abbrev="l")
-@plac.flg("dir_mode", "Enable directory mode", abbrev="d")
-@plac.flg("package_mode", "Enable package mode", abbrev="P")
+@plac.flg("recursive", "Enable directory mode", abbrev="R")
+@plac.flg("package", "Enable package mode", abbrev="P")
+@plac.flg("no_debug", "Disable debug mode", abbrev="D")
 @plac.opt("from_git", "Import module from git", abbrev="g")
 @plac.opt("repo_dir", "The directories in the repo that need to be used", abbrev="r")
 def main(
@@ -25,6 +26,7 @@ def main(
         lazy=False,
         dir_mode=False,
         package_mode=False,
+        no_debug=False,
         from_git=None,
         repo_dir=None,
 ):
@@ -59,6 +61,7 @@ def main(
     parsed_package_mode: bool = os.getenv("FUNIX_PACKAGE_MODE", package_mode)
     parsed_from_git: str = os.getenv("FUNIX_FROM_GIT", from_git)
     parsed_repo_dir: str = os.getenv("FUNIX_REPO_DIR", repo_dir)
+    parsed_no_debug: bool = os.getenv("FUNIX_NO_DEBUG", no_debug)
     run(
         host=parsed_host,
         port=parsed_port,
@@ -69,7 +72,8 @@ def main(
         dir_mode=parsed_dir_mode,
         package_mode=parsed_package_mode,
         from_git=parsed_from_git,
-        repo_dir=parsed_repo_dir
+        repo_dir=parsed_repo_dir,
+        no_debug=parsed_no_debug
     )
 
 
