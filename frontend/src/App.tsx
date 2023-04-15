@@ -35,17 +35,19 @@ import {
   ArrowForward,
   Functions,
   GitHub,
+  History,
   Settings,
   Sick,
   Token,
 } from "@mui/icons-material";
-import React, { memo, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { storeAtom } from "./store";
 import { useAtom } from "jotai";
 import { getList } from "./shared";
 import { SiDiscord } from "@icons-pack/react-simple-icons";
 import MuiAppBar, { AppBarProps as MuiAppBarProps } from "@mui/material/AppBar";
 import MuiPaper, { PaperProps as MuiPaperProps } from "@mui/material/Paper";
+import HistoryDialog from "./components/HistoryDialog";
 
 // From MUI docs
 const drawerWidth = 240;
@@ -145,6 +147,7 @@ const App = () => {
   const [open, setOpen] = useState(false);
   const [tokenOpen, setTokenOpen] = useState(false);
   const [sideBarOpen, setSideBarOpen] = useState(true); // By default
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   useEffect(() => {
     getList(new URL("/list", window.location.origin))
@@ -157,6 +160,16 @@ const App = () => {
         console.warn("No backend server on the same port!");
       });
   }, [window.location.origin]);
+
+  useEffect(() => {
+    if (typeof backendURL === "undefined") return;
+    setStore((store) => {
+      return {
+        ...store,
+        backend: backendURL,
+      };
+    });
+  }, [backendURL]);
 
   useEffect(() => {
     setStore((store) => ({
@@ -178,6 +191,7 @@ const App = () => {
   return (
     <ThemeProvider theme={createTheme(theme || undefined)}>
       <CssBaseline />
+      <HistoryDialog open={historyOpen} setOpen={setHistoryOpen} />
       <Dialog
         open={tokenOpen}
         onClose={() => setTokenOpen(false)}
@@ -239,7 +253,7 @@ const App = () => {
           <FormControlLabel
             control={
               <Switch
-                value={showFunctionDetail}
+                checked={showFunctionDetail}
                 onChange={(event) => {
                   setStore((store) => ({
                     ...store,
@@ -299,6 +313,14 @@ const App = () => {
               <Token />
             </IconButton>
           )}
+          <IconButton
+            size="large"
+            color="inherit"
+            edge="end"
+            onClick={() => setHistoryOpen(true)}
+          >
+            <History />
+          </IconButton>
           <IconButton
             size="large"
             onClick={() => setOpen(true)}
@@ -404,4 +426,4 @@ const App = () => {
   );
 };
 
-export default memo(App);
+export default App;

@@ -930,8 +930,8 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
 
   // Object Rendering
 
-  const renderElement = (element: any) => (
-    <div className="property-wrapper">
+  const renderElement = (element: any, key: number) => (
+    <div className="property-wrapper" key={key}>
       <Box sx={{ mt: 1 }}>{element}</Box>
     </div>
   );
@@ -950,7 +950,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
   return (
     <Stack spacing={1}>
       {props.description !== "" ? (
-        <Typography variant="body1">
+        <Typography variant="body1" component="div">
           <MarkdownDiv markdown={props.description} isRenderInline={false} />
         </Typography>
       ) : (

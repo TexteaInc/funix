@@ -19,12 +19,20 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
   const { data: detail } = useSWR<FunctionDetail>(
     new URL(`/param/${preview.path}`, backend).toString()
   );
-  const [{ inputOutputWidth, sideBarOpen, functionSecret }, setStore] =
-    useAtom(storeAtom);
+  const [
+    {
+      inputOutputWidth,
+      sideBarOpen,
+      functionSecret,
+      backHistory,
+      backConsensus,
+    },
+    setStore,
+  ] = useAtom(storeAtom);
   const [width, setWidth] = useState(inputOutputWidth);
   const [onResizing, setOnResizing] = useState(false);
   const [response, setResponse] = useState<string | null>(null);
-  const [verfied, setVerified] = useState(!preview.secret);
+  const [verified, setVerified] = useState(!preview.secret);
 
   useEffect(() => {
     if (preview.name in functionSecret && preview.secret) {
@@ -40,6 +48,49 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
         });
     }
   }, [functionSecret, preview]);
+
+  useEffect(() => {
+    if (backHistory === null) return;
+    if (backHistory.input !== null) {
+      if ("__funix_secret" in backHistory.input) {
+        setStore((store) => {
+          const newFunctionSecret = store.functionSecret;
+          newFunctionSecret[backHistory.functionName] = backHistory.input
+            ? backHistory.input["__funix_secret"]
+            : null;
+          return {
+            ...store,
+            functionSecret: newFunctionSecret,
+          };
+        });
+      }
+    }
+    if (backHistory.output !== null) {
+      if (typeof backHistory.output === "string") {
+        setResponse(backHistory.output);
+      } else {
+        setResponse(JSON.stringify(backHistory.output));
+      }
+      setStore((store) => {
+        const newBackConsensus = [...store.backConsensus];
+        newBackConsensus[1] = true;
+        return {
+          ...store,
+          backConsensus: newBackConsensus,
+        };
+      });
+    }
+  }, [backHistory]);
+
+  useEffect(() => {
+    if (backConsensus.every((v) => v)) {
+      setStore((store) => ({
+        ...store,
+        backConsensus: [false, false, false],
+        backHistory: null,
+      }));
+    }
+  }, [backConsensus]);
 
   useEffect(() => {
     setStore((store) => ({
@@ -96,7 +147,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
               add <code>?secret=[token]</code> to the URL.
             </Stack>
           </Alert>
-        ) : !verfied ? (
+        ) : !verified ? (
           <Alert severity="error">
             <AlertTitle>Secret incorrect</AlertTitle>
             <Stack direction="row" alignItems="center" gap={1}>

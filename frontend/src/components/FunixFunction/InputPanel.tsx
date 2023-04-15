@@ -17,6 +17,7 @@ import SwitchWidget from "./SwitchWidget";
 import TextExtendedWidget from "./TextExtendedWidget";
 import { useAtom } from "jotai";
 import { storeAtom } from "../../store";
+import useFunixHistory from "../../shared/useFunixHistory";
 
 const InputPanel = (props: {
   detail: FunctionDetail;
@@ -28,11 +29,38 @@ const InputPanel = (props: {
   const [waiting, setWaiting] = useState(false);
   const [asyncWaiting, setAsyncWaiting] = useState(false);
   const [requestDone, setRequestDone] = useState(true);
-  const [{ functionSecret }] = useAtom(storeAtom);
+  const [{ functionSecret, backHistory, backConsensus }, setStore] =
+    useAtom(storeAtom);
+  const { setInput, setOutput } = useFunixHistory();
 
   useEffect(() => {
     setWaiting(() => !requestDone);
   }, [asyncWaiting]);
+
+  useEffect(() => {
+    if (backHistory === null) return;
+    if (backHistory.input !== null) {
+      setForm(backHistory.input);
+      setStore((store) => {
+        const newBackConsensus = [...store.backConsensus];
+        newBackConsensus[2] = true;
+        return {
+          ...store,
+          backConsensus: newBackConsensus,
+        };
+      });
+    }
+  }, [backHistory]);
+
+  useEffect(() => {
+    if (backConsensus.every((v) => v)) {
+      setStore((store) => ({
+        ...store,
+        backConsensus: [false, false, false],
+        backHistory: null,
+      }));
+    }
+  }, [backConsensus]);
 
   const handleChange = ({ formData }: Record<string, any>) => {
     // console.log("Data changed: ", formData);
@@ -69,6 +97,7 @@ const InputPanel = (props: {
   };
 
   const handleSubmit = async () => {
+    const now = new Date().getTime();
     let newForm = form;
     if (props.preview.secret) {
       if (
@@ -81,6 +110,7 @@ const InputPanel = (props: {
         };
       }
     }
+    setInput(now, props.preview.name, newForm);
     console.log("Data submitted: ", newForm);
     setRequestDone(() => false);
     checkResponse().then();
@@ -88,6 +118,7 @@ const InputPanel = (props: {
       new URL(`/call/${props.detail.id}`, props.backend),
       newForm
     );
+    setOutput(now, props.preview.name, response);
     props.setResponse(() => response.toString());
     setWaiting(() => false);
     setRequestDone(() => true);

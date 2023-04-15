@@ -9,6 +9,7 @@
     "@icons-pack/react-simple-icons": "^7.1.0",
     "@monaco-editor/react": "^4.4.6",
     "@mui/icons-material": "^5.10.2",
+    "@mui/lab": "^5.0.0-alpha.126",
     "@mui/material": "^5.9.1",
     "@mui/x-data-grid": "^5.15.3",
     "@rjsf/core": "^4.2.2",

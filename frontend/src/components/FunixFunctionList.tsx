@@ -40,7 +40,8 @@ const FunixList = (props: {
 
 const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
   type TreeState = Record<string, boolean>;
-  const [{ functionSecret }, setStore] = useAtom(storeAtom);
+  const [{ functionSecret, backHistory, backConsensus }, setStore] =
+    useAtom(storeAtom);
   const [state, setState] = useState<FunctionPreview[]>([]);
   const [radioGroupValue, setRadioGroupValue] = useState<string | null>(null);
   const [url, setURL] = useState("");
@@ -68,6 +69,10 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
     async function queryData() {
       const { list } = await getList(new URL("/list", backend));
       setState(list);
+      setStore((store) => ({
+        ...store,
+        functions: list.map((f) => f.name),
+      }));
       setTree(list.some((f) => typeof f.module === "string"));
       if (list.length === 1) {
         handleFetchFunctionDetail(list[0]);
@@ -77,6 +82,29 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
     queryData().then();
     setURL(backend.origin);
   }, [backend, url]);
+
+  useEffect(() => {
+    if (backHistory === null) return;
+    changeRadioGroupValue(backHistory.functionName);
+    setStore((store) => {
+      const newBackConsensus = [...store.backConsensus];
+      newBackConsensus[0] = true;
+      return {
+        ...store,
+        backConsensus: newBackConsensus,
+      };
+    });
+  }, [backHistory]);
+
+  useEffect(() => {
+    if (backConsensus.every((v) => v)) {
+      setStore((store) => ({
+        ...store,
+        backConsensus: [false, false, false],
+        backHistory: null,
+      }));
+    }
+  }, [backConsensus]);
 
   const changeRadioGroupValue = (functionName: string) => {
     const selectedFunctionPreview = state.filter(

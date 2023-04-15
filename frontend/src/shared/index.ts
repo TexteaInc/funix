@@ -1,4 +1,5 @@
 import { CellType, cellTypes } from "./sheet";
+import { History } from "./useFunixHistory";
 
 const f = (...args: Parameters<typeof fetch>) =>
   fetch(...args).then((response) => response.json());
@@ -196,4 +197,32 @@ export async function verifyToken(
       "Content-Type": "application/json",
     },
   }).then((response) => response.success);
+}
+
+export function exportHistories(histories: History[]) {
+  const a = document.createElement("a");
+  const now = new Date().toISOString();
+  a.href = URL.createObjectURL(
+    new Blob([JSON.stringify(histories, null, 2)], {
+      type: "application/json",
+    })
+  );
+  a.setAttribute("download", `${now}_Histories_Export.json`);
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+export function exportHistory(history: History) {
+  const a = document.createElement("a");
+  const now = new Date().toISOString();
+  a.href = URL.createObjectURL(
+    new Blob([JSON.stringify(history, null, 2)], {
+      type: "application/json",
+    })
+  );
+  a.setAttribute("download", `${now}_${history.functionName}_Export.json`);
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
