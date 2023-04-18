@@ -33,6 +33,7 @@ import { useNavigate } from "react-router-dom";
 import {
   ArrowBack,
   ArrowForward,
+  EventNote,
   Functions,
   GitHub,
   History,
@@ -47,47 +48,79 @@ import { getList } from "./shared";
 import { SiDiscord } from "@icons-pack/react-simple-icons";
 import MuiAppBar, { AppBarProps as MuiAppBarProps } from "@mui/material/AppBar";
 import MuiPaper, { PaperProps as MuiPaperProps } from "@mui/material/Paper";
-import HistoryDialog from "./components/HistoryDialog";
+import HistoryDialog from "./components/History/HistoryDialog";
+import HistoryList from "./components/History/HistoryList";
 
 // From MUI docs
 const drawerWidth = 240;
 
-const Main = styled("main", { shouldForwardProp: (prop) => prop !== "open" })<{
-  open?: boolean;
-}>(({ theme, open }) => ({
+const calcDrawerWidth = (
+  leftOpen: boolean | undefined,
+  rightOpen: boolean | undefined
+) => {
+  return (Number(!!leftOpen) + Number(!!rightOpen)) * drawerWidth;
+};
+
+const Main = styled("main", {
+  shouldForwardProp: (prop) => {
+    return prop !== "leftOpen" && prop !== "rightOpen";
+  },
+})<{
+  leftOpen?: boolean;
+  rightOpen?: boolean;
+}>(({ theme, leftOpen, rightOpen }) => ({
   flexGrow: 1,
   paddingTop: theme.spacing(2),
   transition: theme.transitions.create("margin", {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
-  ...(open && {
+  ...(leftOpen && {
     transition: theme.transitions.create("margin", {
       easing: theme.transitions.easing.easeOut,
       duration: theme.transitions.duration.enteringScreen,
     }),
     marginLeft: `${drawerWidth}px`,
   }),
+  ...(rightOpen && {
+    transition: theme.transitions.create("margin", {
+      easing: theme.transitions.easing.easeOut,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+    marginRight: `${drawerWidth}px`,
+  }),
 }));
 
 interface AppBarProps extends MuiAppBarProps {
-  open?: boolean;
+  leftOpen?: boolean;
+  rightOpen?: boolean;
 }
 
 interface PaperProps extends MuiPaperProps {
-  open?: boolean;
+  leftOpen?: boolean;
+  rightOpen?: boolean;
 }
 
 const AppBar = styled(MuiAppBar, {
-  shouldForwardProp: (prop) => prop !== "open",
-})<AppBarProps>(({ theme, open }) => ({
+  shouldForwardProp: (prop) => {
+    return prop !== "leftOpen" && prop !== "rightOpen";
+  },
+})<AppBarProps>(({ theme, leftOpen, rightOpen }) => ({
   transition: theme.transitions.create(["margin", "width"], {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
-  ...(open && {
-    width: `calc(100% - ${drawerWidth}px)`,
+  ...(leftOpen && {
+    width: `calc(100% - ${calcDrawerWidth(leftOpen, rightOpen)}px)`,
     marginLeft: `${drawerWidth}px`,
+    transition: theme.transitions.create(["margin", "width"], {
+      easing: theme.transitions.easing.easeOut,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+  }),
+  ...(rightOpen && {
+    width: `calc(100% - ${calcDrawerWidth(leftOpen, rightOpen)}px)`,
+    marginRight: `${drawerWidth}px`,
     transition: theme.transitions.create(["margin", "width"], {
       easing: theme.transitions.easing.easeOut,
       duration: theme.transitions.duration.enteringScreen,
@@ -96,8 +129,10 @@ const AppBar = styled(MuiAppBar, {
 }));
 
 const TransitionFooter = styled(MuiPaper, {
-  shouldForwardProp: (prop) => prop !== "open",
-})<PaperProps>(({ theme, open }) => ({
+  shouldForwardProp: (prop) => {
+    return prop !== "leftOpen" && prop !== "rightOpen";
+  },
+})<PaperProps>(({ theme, leftOpen, rightOpen }) => ({
   transition: theme.transitions.create("width", {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
@@ -107,8 +142,8 @@ const TransitionFooter = styled(MuiPaper, {
   padding: theme.spacing(1),
   zIndex: 100,
   width: "100%",
-  ...(open && {
-    width: `calc(100% - ${drawerWidth}px)`,
+  ...((leftOpen || rightOpen) && {
+    width: `calc(100% - ${calcDrawerWidth(leftOpen, rightOpen)}px)`,
     transition: theme.transitions.create("width", {
       easing: theme.transitions.easing.easeOut,
       duration: theme.transitions.duration.enteringScreen,
@@ -147,6 +182,7 @@ const App = () => {
   const [open, setOpen] = useState(false);
   const [tokenOpen, setTokenOpen] = useState(false);
   const [sideBarOpen, setSideBarOpen] = useState(true); // By default
+  const [historySideBarOpen, setHistorySideBarOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
 
   useEffect(() => {
@@ -286,7 +322,11 @@ const App = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      <AppBar position="fixed" open={sideBarOpen}>
+      <AppBar
+        position="fixed"
+        leftOpen={sideBarOpen}
+        rightOpen={historySideBarOpen}
+      >
         <Toolbar>
           <IconButton
             color="inherit"
@@ -320,6 +360,14 @@ const App = () => {
             onClick={() => setHistoryOpen(true)}
           >
             <History />
+          </IconButton>
+          <IconButton
+            size="large"
+            color="inherit"
+            edge="end"
+            onClick={() => setHistorySideBarOpen((prevState) => !prevState)}
+          >
+            <EventNote />
           </IconButton>
           <IconButton
             size="large"
@@ -360,7 +408,7 @@ const App = () => {
           <FunixFunctionList backend={backendURL} />
         ) : (
           <List>
-            <ListItem disablePadding>
+            <ListItem>
               <ListItemIcon>
                 <Sick />
               </ListItemIcon>
@@ -369,7 +417,7 @@ const App = () => {
           </List>
         )}
       </Drawer>
-      <Main open={sideBarOpen}>
+      <Main leftOpen={sideBarOpen} rightOpen={historySideBarOpen}>
         <Container sx={{ paddingTop: 10, paddingBottom: 8 }} maxWidth={false}>
           {backendURL ? (
             <Stack
@@ -377,7 +425,11 @@ const App = () => {
               sx={{ width: "100%", margin: "0 auto" }}
               id="funix-stack"
             >
-              <FunixFunctionSelected backend={backendURL} />
+              <FunixFunctionSelected
+                backend={backendURL}
+                leftSideBarOpen={sideBarOpen}
+                rightSideBarOpen={historySideBarOpen}
+              />
             </Stack>
           ) : (
             <Alert severity="error">
@@ -389,7 +441,7 @@ const App = () => {
             </Alert>
           )}
         </Container>
-        <TransitionFooter open={sideBarOpen}>
+        <TransitionFooter leftOpen={sideBarOpen} rightOpen={historySideBarOpen}>
           <Container maxWidth={false}>
             <Stack
               direction="row"
@@ -422,6 +474,29 @@ const App = () => {
           </Container>
         </TransitionFooter>
       </Main>
+      <Drawer
+        sx={{
+          width: drawerWidth,
+          flexShrink: 0,
+          "& .MuiDrawer-paper": {
+            width: drawerWidth,
+            boxSizing: "border-box",
+          },
+        }}
+        variant="persistent"
+        anchor="right"
+        open={historySideBarOpen}
+      >
+        <DrawerHeader>
+          <ListItem>
+            <IconButton onClick={() => setHistorySideBarOpen(false)}>
+              {theme?.direction === "ltr" ? <ArrowBack /> : <ArrowForward />}
+            </IconButton>
+          </ListItem>
+        </DrawerHeader>
+        <Divider />
+        <HistoryList />
+      </Drawer>
     </ThemeProvider>
   );
 };

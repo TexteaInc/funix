@@ -15,18 +15,22 @@ export type FunctionDetailProps = {
   backend: URL;
 };
 
-const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
+export type FunixFunctionProps = {
+  leftSideBarOpen: boolean;
+  rightSideBarOpen: boolean;
+};
+
+const FunixFunction: React.FC<FunctionDetailProps & FunixFunctionProps> = ({
+  preview,
+  backend,
+  leftSideBarOpen,
+  rightSideBarOpen,
+}) => {
   const { data: detail } = useSWR<FunctionDetail>(
     new URL(`/param/${preview.path}`, backend).toString()
   );
   const [
-    {
-      inputOutputWidth,
-      sideBarOpen,
-      functionSecret,
-      backHistory,
-      backConsensus,
-    },
+    { inputOutputWidth, functionSecret, backHistory, backConsensus },
     setStore,
   ] = useAtom(storeAtom);
   const [width, setWidth] = useState(inputOutputWidth);
@@ -117,9 +121,11 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
 
   const handleResize = (event: PointerEvent) => {
     event.preventDefault();
-    const newLeftWidth = sideBarOpen
-      ? event.clientX / (document.body.clientWidth + 240)
-      : event.clientX / document.body.clientWidth;
+    const newLeftWidth =
+      event.clientX /
+      (document.body.clientWidth +
+        Number(leftSideBarOpen) * 240 -
+        Number(rightSideBarOpen) * 240);
     const newRightWidth = 1 - newLeftWidth;
     setWidth([
       `${(newLeftWidth * 100).toFixed(3)}%`,

@@ -14,10 +14,14 @@ import { useLocation } from "react-router-dom";
 
 export type FunctionSelectedProps = {
   backend: URL;
+  leftSideBarOpen: boolean;
+  rightSideBarOpen: boolean;
 };
 
 const FunixFunctionSelected: React.FC<FunctionSelectedProps> = ({
   backend,
+  leftSideBarOpen,
+  rightSideBarOpen,
 }) => {
   const [{ selectedFunction }] = useAtom(storeAtom);
   const { pathname } = useLocation();
@@ -49,6 +53,8 @@ const FunixFunctionSelected: React.FC<FunctionSelectedProps> = ({
         preview={selectedFunction}
         key={selectedFunction.path}
         backend={backend}
+        leftSideBarOpen={leftSideBarOpen}
+        rightSideBarOpen={rightSideBarOpen}
       />
     </Suspense>
   );

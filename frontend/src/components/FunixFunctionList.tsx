@@ -164,12 +164,7 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
               changeRadioGroupValue(functionPreview.name);
             }}
             key={functionPreview.name}
-            sx={{
-              bgcolor:
-                radioGroupValue === functionPreview.name
-                  ? "grey.200"
-                  : "background.paper",
-            }}
+            selected={radioGroupValue === functionPreview.name}
           >
             <ListItemText primary={functionPreview.name} />
           </ListItemButton>

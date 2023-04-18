@@ -6,6 +6,7 @@ export type History = {
   input: Record<any, any> | null;
   output: PostCallResponse | string | object | null;
   functionName: string;
+  name: string | null;
   timestamp: number;
 };
 
@@ -39,6 +40,7 @@ const useFunixHistory = () => {
             input,
             output: null,
             functionName,
+            name: null,
             timestamp,
           });
         }
@@ -73,6 +75,7 @@ const useFunixHistory = () => {
             input: null,
             output: newOutput,
             functionName,
+            name: null,
             timestamp,
           });
         }
@@ -109,6 +112,7 @@ const useFunixHistory = () => {
             input,
             output: newOutput,
             functionName,
+            name: null,
             timestamp,
           });
         }
@@ -127,6 +131,19 @@ const useFunixHistory = () => {
       );
       localStorage.setItem("funix-history", JSON.stringify(newHistories));
       return newHistories;
+    });
+    window.dispatchEvent(new Event("funix-history-changed"));
+  });
+
+  const setHistoryName = useEventCallback((timestamp: number, name: string) => {
+    setHistories(() => {
+      const prevHistories = getHistories();
+      const index = prevHistories.findIndex((h) => h.timestamp === timestamp);
+      if (index !== -1) {
+        prevHistories[index].name = name;
+      }
+      localStorage.setItem("funix-history", JSON.stringify(prevHistories));
+      return prevHistories;
     });
     window.dispatchEvent(new Event("funix-history-changed"));
   });
@@ -163,6 +180,7 @@ const useFunixHistory = () => {
     setInputOutput,
     removeHistory,
     clearHistory,
+    setHistoryName,
     histories,
     getHistories,
   };
