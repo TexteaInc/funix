@@ -188,10 +188,10 @@ const HistoryDialog = (props: {
             onClick={() => {
               if (selectedHistory !== null) {
                 setHistoryName(selectedHistory.timestamp, tempRename);
-                setRenameDialogOpen(false);
-                setSelectedHistory(null);
-                setTempRename("");
               }
+              setRenameDialogOpen(false);
+              setSelectedHistory(null);
+              setTempRename("");
             }}
           >
             Rename
