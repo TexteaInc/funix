@@ -11,6 +11,7 @@ import { useAtom } from "jotai";
 import { FunctionPreview, getList } from "../shared";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
+import MarkdownDiv from "./Common/MarkdownDiv";
 
 export type FunctionListProps = {
   backend: URL;
@@ -166,7 +167,15 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
             key={functionPreview.name}
             selected={radioGroupValue === functionPreview.name}
           >
-            <ListItemText primary={functionPreview.name} />
+            <ListItemText
+              primary={
+                <MarkdownDiv
+                  markdown={functionPreview.name}
+                  isRenderInline={true}
+                />
+              }
+              disableTypography
+            />
           </ListItemButton>
         ))}
       </FunixList>
@@ -201,10 +210,12 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
           key={v}
           sx={{
             paddingLeft: `${now * 2}rem`,
-            bgcolor: radioGroupValue === v ? "grey.200" : "background.paper",
           }}
         >
-          <ListItemText primary={v} />
+          <ListItemText
+            primary={<MarkdownDiv markdown={v} isRenderInline={true} />}
+            disableTypography
+          />
         </ListItemButton>
       ));
     }
@@ -222,7 +233,10 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
                 }));
               }}
             >
-              <ListItemText primary={k} />
+              <ListItemText
+                primary={<MarkdownDiv markdown={k} isRenderInline={true} />}
+                disableTypography
+              />
               {treeState.hasOwnProperty(`${k}${v}`) ? (
                 treeState[`${k}${v}`] ? (
                   <ExpandLess />
