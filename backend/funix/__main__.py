@@ -24,8 +24,8 @@ def main(
         no_frontend=False,
         no_browser=False,
         lazy=False,
-        dir_mode=False,
-        package_mode=False,
+        recursive=False,
+        package=False,
         no_debug=False,
         from_git=None,
         repo_dir=None,
@@ -45,7 +45,7 @@ def main(
         print("Error: No Python module or git repo provided.\nPlease run \"funix --help\" for more information.")
         sys.exit(1)
 
-    if dir_mode and package_mode:
+    if recursive and package:
         print(
             "Error: Cannot use both directory mode and package mode.\nPlease run \"funix --help\" for more information."
         )
@@ -57,8 +57,8 @@ def main(
     parsed_no_frontend: bool = os.getenv("FUNIX_NO_FRONTEND", no_frontend)
     parsed_no_browser: bool = os.getenv("FUNIX_NO_BROWSER", no_browser)
     parsed_lazy: bool = os.getenv("FUNIX_LAZY", lazy)
-    parsed_dir_mode: bool = os.getenv("FUNIX_DIR_MODE", dir_mode)
-    parsed_package_mode: bool = os.getenv("FUNIX_PACKAGE_MODE", package_mode)
+    parsed_dir_mode: bool = os.getenv("FUNIX_DIR_MODE", recursive)
+    parsed_package_mode: bool = os.getenv("FUNIX_PACKAGE_MODE", package)
     parsed_from_git: str = os.getenv("FUNIX_FROM_GIT", from_git)
     parsed_repo_dir: str = os.getenv("FUNIX_REPO_DIR", repo_dir)
     parsed_no_debug: bool = os.getenv("FUNIX_NO_DEBUG", no_debug)
