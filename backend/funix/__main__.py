@@ -66,9 +66,12 @@ def main(
     parsed_no_debug: bool = os.getenv("FUNIX_NO_DEBUG", no_debug)
     parsed_secret: bool | str = os.getenv("FUNIX_SECRET", secret)
 
-    if parsed_secret.lower() == "true":
-        parsed_secret = True
-    elif parsed_secret.lower() == "false" or parsed_secret == "" or parsed_secret is None:
+    if isinstance(parsed_secret, str):
+        if parsed_secret.lower() == "true":
+            parsed_secret = True
+        elif parsed_secret.lower() == "false" or parsed_secret == "":
+            parsed_secret = False
+    elif parsed_secret is None:
         parsed_secret = False
 
     if isinstance(parsed_secret, bool) and parsed_secret:
