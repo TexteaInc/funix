@@ -194,10 +194,16 @@ const HistoryList = () => {
                   }}
                 >
                   <ListItemIcon>{getHistoryStatusIcon(status)}</ListItemIcon>
-                  <ListItemText
-                    primary={history.name || "Untitled"}
-                    secondary={new Date(history.timestamp).toLocaleString()}
-                  />
+                  {history.name !== null ? (
+                    <ListItemText
+                      primary={history.name}
+                      secondary={new Date(history.timestamp).toLocaleString()}
+                    />
+                  ) : (
+                    <ListItemText
+                      primary={new Date(history.timestamp).toLocaleString()}
+                    />
+                  )}
                 </ListItemButton>
               </ListItem>
             );
