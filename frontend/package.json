@@ -44,7 +44,7 @@
     "lint": "eslint -c .eslintrc.js . --ext .ts,.tsx,.js --cache --fix",
     "lint:ci": "eslint -c .eslintrc.js . --ext .ts,.tsx,.js --cache",
     "funix:test": "env REACT_APP_FUNIX_BACKEND=http://127.0.0.1:8080 react-scripts start",
-    "funix:build": "env BUILD_PATH=../backend/funix/build react-scripts build"
+    "funix:build": "env BUILD_PATH=../backend/funix/build GENERATE_SOURCEMAP=false react-scripts build"
   },
   "eslintConfig": {
     "extends": [
