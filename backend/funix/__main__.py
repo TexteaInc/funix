@@ -1,6 +1,7 @@
 import os
 import plac
 import sys
+import secrets
 from . import run
 
 
@@ -17,6 +18,7 @@ from . import run
 @plac.flg("no_debug", "Disable debug mode", abbrev="D")
 @plac.opt("from_git", "Import module from git", abbrev="g")
 @plac.opt("repo_dir", "The directories in the repo that need to be used", abbrev="r")
+@plac.opt("secret", "The secret key for the full app", abbrev="s")
 def main(
         module_name=None,
         host="0.0.0.0",
@@ -29,6 +31,7 @@ def main(
         no_debug=False,
         from_git=None,
         repo_dir=None,
+        secret=None,
 ):
     """Funix: Building web apps without manually creating widgets
 
@@ -38,8 +41,7 @@ def main(
     customizable per-widget or kept consistent across apps via themes.
 
     Just write your core logic and leave the rest to Funix.
-    Visit us at http://funix.io
-    """
+    Visit us at http://funix.io"""
 
     if not module_name and not from_git:
         print("Error: No Python module or git repo provided.\nPlease run \"funix --help\" for more information.")
@@ -62,6 +64,16 @@ def main(
     parsed_from_git: str = os.getenv("FUNIX_FROM_GIT", from_git)
     parsed_repo_dir: str = os.getenv("FUNIX_REPO_DIR", repo_dir)
     parsed_no_debug: bool = os.getenv("FUNIX_NO_DEBUG", no_debug)
+    parsed_secret: bool | str = os.getenv("FUNIX_SECRET", secret)
+
+    if parsed_secret.lower() == "true":
+        parsed_secret = True
+    elif parsed_secret.lower() == "false" or parsed_secret == "" or parsed_secret is None:
+        parsed_secret = False
+
+    if isinstance(parsed_secret, bool) and parsed_secret:
+        parsed_secret = secrets.token_hex(16)
+
     run(
         host=parsed_host,
         port=parsed_port,
@@ -73,7 +85,8 @@ def main(
         package_mode=parsed_package_mode,
         from_git=parsed_from_git,
         repo_dir=parsed_repo_dir,
-        no_debug=parsed_no_debug
+        no_debug=parsed_no_debug,
+        app_secret=parsed_secret
     )
 
 

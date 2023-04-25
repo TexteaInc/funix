@@ -32,6 +32,7 @@ set_theme_yaml = decorator.set_theme_yaml
 set_theme_json5 = decorator.set_theme_json5
 
 new_funix_type = decorator.new_funix_type
+set_app_secret = decorator.set_app_secret
 
 
 def check_port_is_used(port: int, host: str):
@@ -130,6 +131,7 @@ def run(
     from_git: typing.Optional[str] = None,
     repo_dir: typing.Optional[str] = None,
     no_debug: typing.Optional[bool] = False,
+    app_secret: typing.Optional[str | bool] = False,
 ):
     if from_git:
         tempdir = tempfile.mkdtemp()
@@ -150,6 +152,10 @@ def run(
             main_class = new_path
         elif package_mode:
             raise Exception("Package mode is not supported for git mode, try to use dir mode!")
+
+    if app_secret and isinstance(app_secret, str):
+        set_app_secret(app_secret)
+
     if dir_mode:
         if os.path.exists(main_class) and os.path.isdir(main_class):
             for module in get_path_modules(main_class):
@@ -177,11 +183,13 @@ def run(
         else:
             local = parsed_ip.compressed
         print("Secrets:")
+        print("-" * 15)
         for name, secret in funix_secrets.items():
-            if no_frontend:
-                print(f"{name}\t{secret}")
-            else:
-                print(f"{name}\t{secret}\tLink: http://{local}:{port}/{urllib.parse.quote(name)}?secret={secret}")
+            print(f"Name: {name}")
+            print(f"Secret: {secret}")
+            if not no_frontend:
+                print(f"Link: http://{local}:{port}/{urllib.parse.quote(name)}?secret={secret}")
+            print("-" * 15)
 
     if not no_frontend:
         print(f"Starting Funix at http://{host}:{parsed_port}")

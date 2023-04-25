@@ -41,8 +41,13 @@ __wrapper_enabled = False
 __default_theme = {}
 __themes = {}
 __parsed_themes = {}
+__app_secret = None
 
 matplotlib.use("Agg")
+
+def set_app_secret(secret: str):
+    global __app_secret
+    __app_secret = secret
 
 def enable_wrapper():
     global __wrapper_enabled, __files_dict, __decorated_functions_list
@@ -353,7 +358,7 @@ def function_param_to_widget(annotation, widget):
 def funix(
         path: Optional[str] = None,
         title: Optional[str] = None,
-        secret: bool = False,
+        secret: bool | str = False,
         description: Optional[str] = "",
         destination: DestinationType = None,
         show_source: bool = False,
@@ -402,16 +407,23 @@ def funix(
             if function_title in __decorated_functions_names_list:
                 raise Exception(f"Function with name {function_title} already exists")
 
-            if secret:
+            if __app_secret:
                 __decorated_id_to_function_dict[id] = function_title
-                __decorated_secret_functions_dict[id] = secrets.token_hex(16)
+                __decorated_secret_functions_dict[id] = __app_secret
+            elif secret:
+                __decorated_id_to_function_dict[id] = function_title
+                if isinstance(secret, bool):
+                    __decorated_secret_functions_dict[id] = secrets.token_hex(16)
+                else:
+                    __decorated_secret_functions_dict[id] = secret
+            secret_key = __decorated_secret_functions_dict.get(id, None)
 
             __decorated_functions_names_list.append(function_title)
             __decorated_functions_list.append({
                 "name": function_title,
                 "path": endpoint,
                 "module": __full_module,
-                "secret": secret,
+                "secret": secret_key,
             })
 
             if show_source:
@@ -746,17 +758,20 @@ def funix(
                 "source": source_code,
             }
 
-            get_wrapper = app.get(f"/param/{endpoint}")
+            get_wrapper_endpoint = app.get(f"/param/{endpoint}")
+            get_wrapper_id = app.get(f"/param/{id}")
 
             def decorated_function_param_getter():
                 return flask.Response(json.dumps(decorated_function), mimetype="application/json")
 
             decorated_function_param_getter.__setattr__("__name__", f"{function_name}_param_getter")
-            get_wrapper(decorated_function_param_getter)
+            get_wrapper_endpoint(decorated_function_param_getter)
+            get_wrapper_id(decorated_function_param_getter)
 
-            if secret:
-                @app.post(f"/verify/{endpoint}")
-                @app.post(f"/verify/{id}")
+            if secret_key:
+                verify_secret_endpoint = app.post(f"/verify/{endpoint}")
+                verify_secret_id = app.post(f"/verify/{id}")
+
                 def verify_secret():
                     data = flask.request.get_json()
                     if data is None:
@@ -778,6 +793,9 @@ def funix(
                         return flask.Response(json.dumps({
                             "success": False,
                         }), mimetype="application/json", status=400)
+                verify_secret.__setattr__("__name__", f"{function_name}_verify_secret")
+                verify_secret_endpoint(verify_secret)
+                verify_secret_id(verify_secret)
 
             @wraps(function)
             def wrapper():
