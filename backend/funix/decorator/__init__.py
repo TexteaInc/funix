@@ -690,6 +690,9 @@ def funix(
 
                 json_schema_props[function_arg_name]["customLayout"] = decorated_params[function_arg_name].get("customLayout", False)
 
+                if decorated_params[function_arg_name]["treat_as"]:
+                    json_schema_props[function_arg_name]["treat_as"] = decorated_params[function_arg_name]["treat_as"]
+
                 if decorated_params[function_arg_name]["treat_as"] == "cell":
                     return_type_parsed = "array"
                     json_schema_props[function_arg_name]["items"] = \
@@ -857,6 +860,7 @@ def funix(
 
                     cell_names = []
                     upload_base64_files = {}
+
                     for key in json_schema_props.keys():
                         if "treat_as" in json_schema_props[key]:
                             if json_schema_props[key]["treat_as"] == "cell":
