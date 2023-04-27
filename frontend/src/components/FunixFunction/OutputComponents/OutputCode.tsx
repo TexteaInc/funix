@@ -8,10 +8,13 @@ interface OutputCodeProps {
 export default function OutputCode(props: OutputCodeProps) {
   return (
     <Editor
-      height={300}
       width="100%"
       value={props.code}
       language={props.language || "plaintext"}
+      onMount={(editor) => {
+        const height = editor.getContentHeight();
+        editor.layout({ height });
+      }}
       options={{
         readOnly: true,
         minimap: {
