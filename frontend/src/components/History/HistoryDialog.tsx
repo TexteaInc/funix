@@ -109,8 +109,6 @@ const HistoryDialog = (props: {
   // const [backdropOpen, setBackdropOpen] = React.useState(false);
   // const [rewindSnackbarOpen, setRewindSnackbarOpen] = React.useState(false);
 
-  const histories = getHistories();
-
   const backHistory = (history: History) => {
     setStore((store) => ({
       ...store,
@@ -124,6 +122,12 @@ const HistoryDialog = (props: {
   //   setRewindSnackbarOpen(true);
   //   backHistory(history);
   // };
+
+  const [histories, setHistories] = React.useState<History[]>([]);
+
+  React.useEffect(() => {
+    getHistories().then((h) => setHistories(h));
+  }, [getHistories]);
 
   return (
     <>
@@ -216,7 +220,9 @@ const HistoryDialog = (props: {
         <DialogActions>
           <Button
             onClick={() => {
-              exportHistories(histories);
+              getHistories().then((histories) => {
+                exportHistories(histories);
+              });
             }}
           >
             Export All
@@ -290,7 +296,7 @@ const HistoryDialog = (props: {
           }}
           maxWidth="lg"
         >
-          {getHistories().length === 0 ? (
+          {histories.length === 0 ? (
             <Alert severity="info">No history, try to run some functions</Alert>
           ) : (
             <Timeline
@@ -474,7 +480,7 @@ const HistoryDialog = (props: {
                               size="small"
                               color="error"
                               startIcon={<Delete />}
-                              onClick={() => removeHistory(history.timestamp)}
+                              onClick={() => removeHistory(history.uuid)}
                             >
                               Delete
                             </Button>

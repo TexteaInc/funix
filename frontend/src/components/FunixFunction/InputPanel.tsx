@@ -29,8 +29,10 @@ const InputPanel = (props: {
   const [waiting, setWaiting] = useState(false);
   const [asyncWaiting, setAsyncWaiting] = useState(false);
   const [requestDone, setRequestDone] = useState(true);
-  const [{ functionSecret, backHistory, backConsensus }, setStore] =
-    useAtom(storeAtom);
+  const [
+    { functionSecret, backHistory, backConsensus, saveHistory },
+    setStore,
+  ] = useAtom(storeAtom);
   const { setInput, setOutput } = useFunixHistory();
 
   useEffect(() => {
@@ -110,7 +112,13 @@ const InputPanel = (props: {
         };
       }
     }
-    setInput(now, props.preview.name, newForm);
+    if (saveHistory) {
+      try {
+        await setInput(now, props.preview.name, newForm);
+      } catch (error) {
+        console.error(error);
+      }
+    }
     console.log("Data submitted: ", newForm);
     setRequestDone(() => false);
     checkResponse().then();
@@ -118,7 +126,13 @@ const InputPanel = (props: {
       new URL(`/call/${props.detail.id}`, props.backend),
       newForm
     );
-    setOutput(now, props.preview.name, response);
+    if (saveHistory) {
+      try {
+        await setOutput(now, props.preview.name, response);
+      } catch (e) {
+        console.error(e);
+      }
+    }
     props.setResponse(() => response.toString());
     setWaiting(() => false);
     setRequestDone(() => true);

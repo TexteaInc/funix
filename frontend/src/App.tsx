@@ -13,6 +13,7 @@ import {
   Divider,
   Drawer,
   FormControlLabel,
+  FormGroup,
   IconButton,
   Link,
   List,
@@ -164,7 +165,13 @@ const DrawerHeader = styled("div")(({ theme }) => ({
 const App = () => {
   const navigate = useNavigate();
   const [
-    { theme, showFunctionDetail, selectedFunction, functionSecret },
+    {
+      theme,
+      showFunctionDetail,
+      selectedFunction,
+      functionSecret,
+      saveHistory,
+    },
     setStore,
   ] = useAtom(storeAtom);
 
@@ -287,20 +294,36 @@ const App = () => {
             value={tempBackend}
             error={!checkURL(tempBackend)}
           />
-          <FormControlLabel
-            control={
-              <Switch
-                checked={showFunctionDetail}
-                onChange={(event) => {
-                  setStore((store) => ({
-                    ...store,
-                    showFunctionDetail: event.target.checked,
-                  }));
-                }}
-              />
-            }
-            label="Show function detail"
-          />
+          <FormGroup>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showFunctionDetail}
+                  onChange={(event) => {
+                    setStore((store) => ({
+                      ...store,
+                      showFunctionDetail: event.target.checked,
+                    }));
+                  }}
+                />
+              }
+              label="Show function detail"
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={saveHistory}
+                  onChange={(event) => {
+                    setStore((store) => ({
+                      ...store,
+                      saveHistory: event.target.checked,
+                    }));
+                  }}
+                />
+              }
+              label={"Save history"}
+            />
+          </FormGroup>
         </DialogContent>
         <DialogActions>
           <Button

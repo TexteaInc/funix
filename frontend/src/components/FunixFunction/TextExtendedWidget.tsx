@@ -1,7 +1,7 @@
 // Extended from TextWidget
 // Ref: https://github.com/rjsf-team/react-jsonschema-form/blob/4049011ea59737232a86c193d96131ce61be85fa/packages/material-ui/src/TextWidget/TextWidget.tsx
 
-import React from "react";
+import React, { useCallback, useEffect } from "react";
 import { WidgetProps, utils } from "@rjsf/core";
 import {
   Autocomplete,
@@ -57,9 +57,18 @@ const TextExtendedWidget = ({
     const defaultStep = schema.type === "integer" ? 1 : 0.1;
     const step = args[2] || defaultStep;
 
+    const refreshSliderValue = useCallback(
+      () => (value === undefined ? min : value),
+      [value]
+    );
+
     const [sliderValue, setSliderValue] = React.useState<
       number | string | Array<number | string>
-    >(value === undefined ? min : value);
+    >(refreshSliderValue);
+
+    useEffect(() => {
+      setSliderValue(refreshSliderValue);
+    }, [value]);
 
     const customSetSliderValue = (
       value: number | string | Array<number | string>
@@ -147,7 +156,12 @@ const TextExtendedWidget = ({
     schema.widget !== undefined &&
     schema.type === "string"
   ) {
+    console.log(value);
     const [src, setSrc] = React.useState<string>(schema.default || value);
+
+    useEffect(() => {
+      setSrc(schema.default || value);
+    }, [value]);
 
     let language = "plaintext";
 
@@ -187,12 +201,27 @@ const TextExtendedWidget = ({
   }
 
   if (schema.widget === "radio" && "whitelist" in rawSchema) {
-    const [value, setValue] = React.useState<string>(
-      schema.default ? `${schema.default}` : ""
+    console.log(value);
+
+    const refreshRadioValue = useCallback(
+      () =>
+        value === undefined
+          ? schema.default
+            ? `${schema.default}`
+            : ""
+          : `${value}`,
+      [value]
     );
 
+    const [radioValue, setRadioValue] =
+      React.useState<string>(refreshRadioValue);
+
+    useEffect(() => {
+      setRadioValue(refreshRadioValue);
+    }, [value]);
+
     const _onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-      setValue(event.target.value);
+      setRadioValue(event.target.value);
       onChange(event.target.value);
     };
 
@@ -201,7 +230,7 @@ const TextExtendedWidget = ({
         <FormLabel>
           <MarkdownDiv markdown={label || schema.title} isRenderInline={true} />
         </FormLabel>
-        <RadioGroup value={value} onChange={_onChange} row>
+        <RadioGroup value={radioValue} onChange={_onChange} row>
           {(rawSchema.whitelist as string[]).map(
             (item: string, index: number) => (
               <FormControlLabel
@@ -258,7 +287,11 @@ const TextExtendedWidget = ({
 
   return (
     <Autocomplete
-      disableClearable={inputType === "number" || inputType === "integer"}
+      disableClearable={
+        inputType === "number" ||
+        inputType === "integer" ||
+        schema.widget === "textarea"
+      }
       size="small"
       value={value || value === 0 ? value : ""}
       getOptionLabel={(option) => option.toString()}
@@ -266,24 +299,27 @@ const TextExtendedWidget = ({
         const newParams = params;
         if (schema.widget === "password") {
           newParams.InputProps.endAdornment = (
-            <InputAdornment position="end">
-              <IconButton
-                onClick={() => setShowPassword((show) => !show)}
-                onMouseDown={(e) => e.preventDefault()}
-                edge="end"
-                sx={{
-                  m: 0,
-                }}
-              >
-                {showPassword ? <VisibilityOff /> : <Visibility />}
-              </IconButton>
-            </InputAdornment>
+            <>
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={() => setShowPassword((show) => !show)}
+                  onMouseDown={(e) => e.preventDefault()}
+                  edge="end"
+                  sx={{
+                    m: 0,
+                  }}
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+              {newParams.InputProps.endAdornment}
+            </>
           );
         }
         return (
           <TextField
             multiline={schema.widget === "textarea"}
-            maxRows={schema.widget === "textarea" ? 5 : 1}
+            rows={schema.widget === "textarea" ? 5 : 1}
             {...newParams}
             id={id}
             placeholder={placeholder}

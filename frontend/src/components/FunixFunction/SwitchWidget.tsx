@@ -6,24 +6,29 @@ import {
   FormGroup,
   Switch,
 } from "@mui/material";
-import React from "react";
+import React, { useEffect } from "react";
 import MarkdownDiv from "../Common/MarkdownDiv";
 
 const SwitchWidget = (props: WidgetProps) => {
   const [checked, setChecked] = React.useState<boolean>(
-    !!(props.schema.default || props.value)
+    !!(props.value || props.schema.default)
   );
+
+  useEffect(() => {
+    setChecked(!!(props.value || props.schema.default));
+  }, [props.value]);
 
   const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setChecked(event.target.checked);
     props.onChange(event.target.checked);
   };
 
-  let control = <Checkbox checked={checked} onChange={onChange} />;
-
-  if ("widget" in props.schema && props.schema.widget === "switch") {
-    control = <Switch checked={checked} onChange={onChange} />;
-  }
+  const control =
+    "widget" in props.schema && props.schema.widget === "switch" ? (
+      <Switch checked={checked} onChange={onChange} />
+    ) : (
+      <Checkbox checked={checked} onChange={onChange} />
+    );
 
   return (
     <FormControl fullWidth>

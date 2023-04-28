@@ -37,13 +37,18 @@ const HistoryList = () => {
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [tempRename, setTempRename] = useState("");
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [histories, setHistories] = useState<History[]>([]);
   const open = Boolean(anchorEl);
 
   useEffect(() => {
     setSelectedHistoryTimestamp(-1);
   }, [selectedFunction]);
 
-  const histories = getHistories();
+  useEffect(() => {
+    getHistories().then((h) => {
+      setHistories(h);
+    });
+  }, [getHistories]);
 
   if (selectedFunction === null || histories.length === 0) {
     return (
@@ -119,7 +124,7 @@ const HistoryList = () => {
         <MenuItem
           onClick={() => {
             if (selectedHistory !== null) {
-              removeHistory(selectedHistory.timestamp);
+              removeHistory(selectedHistory.uuid);
             }
             setSelectedHistory(null);
             setAnchorEl(null);
