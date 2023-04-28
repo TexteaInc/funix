@@ -1,6 +1,5 @@
 import { PostCallResponse } from "./index";
-import { useCallback, useEffect, useState } from "react";
-import { useEventCallback } from "@mui/material";
+import * as localforage from "localforage";
 
 export type History = {
   input: Record<any, any> | null;
@@ -8,171 +7,156 @@ export type History = {
   functionName: string;
   name: string | null;
   timestamp: number;
+  uuid: string;
 };
 
-declare global {
-  interface WindowEventMap {
-    "funix-history-changed": CustomEvent;
-  }
-}
-
 const useFunixHistory = () => {
-  const getHistories = useCallback(() => {
-    const funixHistories = localStorage.getItem("funix-history");
-    if (funixHistories) {
-      return JSON.parse(funixHistories) as History[];
-    }
-    return [];
-  }, []);
-
-  const [histories, setHistories] = useState<History[]>(getHistories);
-
-  const setInput = useEventCallback(
-    (timestamp: number, functionName: string, input: Record<any, any>) => {
-      setHistories(() => {
-        // no previous history, may cause bug (last action is not recorded)
-        const newHistories = getHistories();
-        const index = newHistories.findIndex((h) => h.timestamp === timestamp);
-        if (index !== -1) {
-          newHistories[index].input = input;
-        } else {
-          newHistories.push({
-            input,
-            output: null,
-            functionName,
-            name: null,
-            timestamp,
-          });
+  const getHistories = async () => {
+    return localforage
+      .getItem("funix-history")
+      .then((value) => {
+        if (value) {
+          // By my hand, I think I will handle it (oh, e, hah
+          return JSON.parse(value as string) as History[];
         }
-        localStorage.setItem("funix-history", JSON.stringify(newHistories));
-        return newHistories;
+        return [] as History[];
+      })
+      .catch(() => {
+        return [] as History[];
       });
-      window.dispatchEvent(new Event("funix-history-changed"));
-    }
-  );
+  };
 
-  const setOutput = useEventCallback(
-    (
-      timestamp: number,
-      functionName: string,
-      output: PostCallResponse | string
-    ) => {
-      setHistories(() => {
-        const newHistories = getHistories();
-        const index = newHistories.findIndex((h) => h.timestamp === timestamp);
-        let newOutput = output;
-        if (typeof output === "string") {
-          try {
-            newOutput = JSON.parse(output);
-          } catch (e) {
-            newOutput = output;
-          }
-        }
-        if (index !== -1) {
-          newHistories[index].output = newOutput;
-        } else {
-          newHistories.push({
-            input: null,
-            output: newOutput,
-            functionName,
-            name: null,
-            timestamp,
-          });
-        }
-        localStorage.setItem("funix-history", JSON.stringify(newHistories));
-        return newHistories;
-      });
-      window.dispatchEvent(new Event("funix-history-changed"));
-    }
-  );
-
-  const setInputOutput = useEventCallback(
-    (
-      timestamp: number,
-      functionName: string,
-      input: Record<any, any>,
-      output: string | PostCallResponse
-    ) => {
-      setHistories(() => {
-        const newHistories = getHistories();
-        const index = newHistories.findIndex((h) => h.timestamp === timestamp);
-        let newOutput = output;
-        if (typeof output === "string") {
-          try {
-            newOutput = JSON.parse(output);
-          } catch (e) {
-            newOutput = output;
-          }
-        }
-        if (index !== -1) {
-          newHistories[index].input = input;
-          newHistories[index].output = newOutput;
-        } else {
-          newHistories.push({
-            input,
-            output: newOutput,
-            functionName,
-            name: null,
-            timestamp,
-          });
-        }
-        localStorage.setItem("funix-history", JSON.stringify(newHistories));
-        return newHistories;
-      });
-      window.dispatchEvent(new Event("funix-history-changed"));
-    }
-  );
-
-  const removeHistory = useEventCallback((timestamp: number) => {
-    setHistories(() => {
-      const prevHistories = getHistories();
-      const newHistories = prevHistories.filter(
-        (h) => h.timestamp !== timestamp
-      );
-      localStorage.setItem("funix-history", JSON.stringify(newHistories));
-      return newHistories;
-    });
-    window.dispatchEvent(new Event("funix-history-changed"));
-  });
-
-  const setHistoryName = useEventCallback((timestamp: number, name: string) => {
-    setHistories(() => {
-      const prevHistories = getHistories();
-      const index = prevHistories.findIndex((h) => h.timestamp === timestamp);
+  const setInput = async (
+    timestamp: number,
+    functionName: string,
+    input: Record<any, any>
+  ) => {
+    getHistories().then((histories) => {
+      const index = histories.findIndex((h) => h.timestamp === timestamp);
       if (index !== -1) {
-        prevHistories[index].name = name;
+        histories[index].input = input;
+      } else {
+        histories.push({
+          input,
+          output: null,
+          functionName,
+          name: null,
+          timestamp,
+          uuid: window.crypto.randomUUID(),
+        });
       }
-      localStorage.setItem("funix-history", JSON.stringify(prevHistories));
-      return prevHistories;
+      localforage
+        .setItem("funix-history", JSON.stringify(histories))
+        .then(() => {
+          // ignore
+        });
     });
-    window.dispatchEvent(new Event("funix-history-changed"));
-  });
+  };
 
-  const clearHistory = useEventCallback(() => {
-    setHistories([]);
-    localStorage.removeItem("funix-history");
-    window.dispatchEvent(new Event("funix-history-changed"));
-  });
-
-  useEffect(() => {
-    setHistories(getHistories());
-  }, []);
-
-  const handleStorageChange = useCallback(
-    (event: StorageEvent | CustomEvent) => {
-      if (
-        (event as StorageEvent)?.key &&
-        (event as StorageEvent)?.key !== "funix-history"
-      ) {
-        return;
+  const setOutput = async (
+    timestamp: number,
+    functionName: string,
+    output: PostCallResponse | string
+  ) => {
+    getHistories().then((histories) => {
+      const index = histories.findIndex((h) => h.timestamp === timestamp);
+      let newOutput = output;
+      if (typeof output === "string") {
+        try {
+          newOutput = JSON.parse(output);
+        } catch (e) {
+          newOutput = output;
+        }
       }
-      setHistories(getHistories);
-    },
-    [getHistories]
-  );
+      if (index !== -1) {
+        histories[index].output = newOutput;
+      } else {
+        histories.push({
+          input: null,
+          output: newOutput,
+          functionName,
+          name: null,
+          timestamp,
+          uuid: window.crypto.randomUUID(),
+        });
+      }
+      localforage
+        .setItem("funix-history", JSON.stringify(histories))
+        .then(() => {
+          // ignore
+        });
+    });
+  };
 
-  window.addEventListener("storage", handleStorageChange);
-  window.addEventListener("funix-history-changed", handleStorageChange);
+  const setInputOutput = (
+    timestamp: number,
+    functionName: string,
+    input: Record<any, any>,
+    output: string | PostCallResponse
+  ) => {
+    getHistories().then((histories) => {
+      const index = histories.findIndex((h) => h.timestamp === timestamp);
+      let newOutput = output;
+      if (typeof output === "string") {
+        try {
+          newOutput = JSON.parse(output);
+        } catch (e) {
+          newOutput = output;
+        }
+      }
+      if (index !== -1) {
+        histories[index].input = input;
+        histories[index].output = newOutput;
+      } else {
+        histories.push({
+          input,
+          output: newOutput,
+          functionName,
+          name: null,
+          timestamp,
+          uuid: window.crypto.randomUUID(),
+        });
+      }
+      localforage
+        .setItem("funix-history", JSON.stringify(histories))
+        .then(() => {
+          // ignore
+        });
+    });
+  };
+
+  const removeHistory = (uuid: string) => {
+    getHistories().then((histories) => {
+      localforage
+        .setItem(
+          "funix-history",
+          JSON.stringify(histories.filter((h) => h.uuid !== uuid))
+        )
+        .then(() => {
+          // ignore
+        });
+    });
+  };
+
+  const setHistoryName = (timestamp: number, name: string) => {
+    getHistories().then((histories) => {
+      const index = histories.findIndex((h) => h.timestamp === timestamp);
+      if (index !== -1) {
+        histories[index].name = name;
+      }
+      localforage
+        .setItem("funix-history", JSON.stringify(histories))
+        .then(() => {
+          // ignore
+        });
+    });
+  };
+
+  const clearHistory = () => {
+    localforage.removeItem("funix-history").then(() => {
+      // ignore
+    });
+  };
 
   return {
     setInput,
@@ -181,7 +165,6 @@ const useFunixHistory = () => {
     removeHistory,
     clearHistory,
     setHistoryName,
-    histories,
     getHistories,
   };
 };

@@ -22,11 +22,14 @@ import {
 } from "@mui/material";
 import { Delete, FileUpload, Preview } from "@mui/icons-material";
 import OutputMedias from "./OutputComponents/OutputMedias";
+import { useAtom } from "jotai";
+import { storeAtom } from "../../store";
 
 interface FileUploadWidgetInterface {
   widget: WidgetProps;
   multiple: boolean;
   supportType: "image" | "audio" | "video" | "file";
+  data?: any;
 }
 
 const fileToBase64 = (file: File) => {
@@ -49,12 +52,28 @@ const fileSizeToReadable = (size: number) => {
   return `${n.toFixed(n < 10 && l > 0 ? 1 : 0)} ${units[l]}`;
 };
 
+const base64stringToFile = (base64: string) => {
+  const byteString = window.atob(base64.split(",")[1]);
+  const ab = new ArrayBuffer(byteString.length);
+  const ia = new Uint8Array(ab);
+  for (let i = 0; i < byteString.length; i++) {
+    ia[i] = byteString.charCodeAt(i);
+  }
+  const fileBlob = new Blob([ab]);
+
+  const fileType = base64.split(",")[0].split(":")[1].split(";")[0];
+  return new File([fileBlob], "History back, no metadata keep.", {
+    type: fileType,
+  });
+};
+
 const FileUploadWidget = (props: FileUploadWidgetInterface) => {
   const [files, setFiles] = React.useState<File[]>([]);
   const [open, setOpen] = React.useState(false);
   const [preview, setPreview] = React.useState<string>("");
   const [previewType, setPreviewType] = React.useState<string>("");
   const [confirmOpen, setConfirmOpen] = React.useState(false);
+  const [{ backHistory }] = useAtom(storeAtom);
 
   let dropzoneConfig: DropzoneOptions = !props.multiple
     ? { multiple: false, maxFiles: 1 }
@@ -102,6 +121,26 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
       }
     }
   }, [acceptedFiles]);
+
+  useEffect(() => {
+    if (backHistory !== null) {
+      console.log(backHistory);
+      if (
+        props.data !== null &&
+        typeof props.data !== "undefined" &&
+        (typeof props.data === "object" && Array.isArray(props.data)
+          ? props.data.length > 0
+          : Object.keys(props.data).length > 0)
+      ) {
+        const backData = props.multiple
+          ? (props.data as string[])
+          : [props.data as string];
+        setFiles([]);
+        const newFiles = backData.map((data) => base64stringToFile(data));
+        setFiles(newFiles);
+      }
+    }
+  }, [props.data, backHistory]);
 
   const removeFile = (index: number) => {
     const newFiles = [...files];

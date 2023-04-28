@@ -1,5 +1,5 @@
 import { WidgetProps } from "@rjsf/core";
-import React from "react";
+import React, { useCallback, useEffect } from "react";
 import ReactJson, { InteractionProps } from "react-json-view";
 import { Stack, Typography } from "@mui/material";
 import { castValue, getInitValue } from "../Common/ValueOperation";
@@ -8,6 +8,7 @@ interface JSONEditorWidgetInterface {
   widget: WidgetProps;
   checkType: string;
   keys?: { [key: string]: string };
+  data?: any;
 }
 
 type JSONType = number | string | boolean | object | null | undefined;
@@ -22,9 +23,18 @@ const JSONEditorWidget = (props: JSONEditorWidgetInterface) => {
       value[key] = getInitValue(props.keys[key]);
     }
   }
-  const [src, setSrc] = React.useState<object>(
-    () => props.widget.value || props.widget.schema.default || value
+
+  const refreshSrc = useCallback(
+    () =>
+      props.data || props.widget.value || props.widget.schema.default || value,
+    [props.data]
   );
+
+  const [src, setSrc] = React.useState<object>(refreshSrc);
+
+  useEffect(() => {
+    setSrc(refreshSrc);
+  }, [props.data]);
 
   const handleEdit = React.useCallback((value: InteractionProps) => {
     if (value.updated_src instanceof Array) {
@@ -52,7 +62,9 @@ const JSONEditorWidget = (props: JSONEditorWidgetInterface) => {
     }
   }, []);
 
-  let reactJSON: JSX.Element = (
+  const reactJSON = props.keys ? (
+    <ReactJson src={src} onEdit={handleEdit} />
+  ) : (
     <ReactJson
       src={src}
       onEdit={handleEdit}
@@ -60,10 +72,6 @@ const JSONEditorWidget = (props: JSONEditorWidgetInterface) => {
       onAdd={handleEdit}
     />
   );
-
-  if (props.keys) {
-    reactJSON = <ReactJson src={src} onEdit={handleEdit} />;
-  }
 
   return (
     <Stack spacing={1}>

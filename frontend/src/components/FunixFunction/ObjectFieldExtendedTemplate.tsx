@@ -32,6 +32,7 @@ import {
   GridRowId,
   GridRowsProp,
   GridSelectionModel,
+  GridValidRowModel,
   HideGridColMenuItem,
   MuiEvent,
   SortGridMenuItems,
@@ -54,12 +55,16 @@ import Grid2 from "@mui/material/Unstable_Grid2";
 import MarkdownDiv from "../Common/MarkdownDiv";
 import { sliderWidgetParser } from "../Common/SliderWidgetParser";
 import FileUploadWidget from "./FileUploadWidget";
+import { useAtom } from "jotai";
+import { storeAtom } from "../../store";
 
 let rowIdCounter = 0;
 
 const stopEventPropagation = (e: SyntheticEvent) => e.stopPropagation();
 
 const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
+  const [{ backHistory }] = useAtom(storeAtom);
+  const deepClonedFormData = JSON.parse(JSON.stringify(props.formData));
   const configElements: (SchemaField | JSX.Element)[] = [];
   const rowElements: JSX.Element[] = [];
   const arrayElementsInSheet: any[] = [];
@@ -83,6 +88,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
   ): propElementToJSXElementReturn => {
     const elementContent = element.content;
     const elementProps = elementContent.props;
+    const elementData = elementProps.formData;
     const isArray = elementProps.schema.type === "array";
     const isArrayInSheet =
       elementProps.schema.type === "array" &&
@@ -116,6 +122,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
                 widget={elementContent.props}
                 checkType={""}
                 keys={elementContent.props.schema.keys}
+                data={elementData}
               />
             ),
           };
@@ -123,7 +130,11 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
           return {
             type: "config",
             element: (
-              <JSONEditorWidget widget={elementContent.props} checkType={""} />
+              <JSONEditorWidget
+                widget={elementContent.props}
+                checkType={""}
+                data={elementData}
+              />
             ),
           };
         }
@@ -135,6 +146,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
               widget={elementContent.props}
               multiple={false}
               supportType={elementContent.props.schema.widget}
+              data={elementData}
             />
           ),
         };
@@ -359,6 +371,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
                 checkType={
                   elementContent.props.schema.items?.type || "DO_NOT_CHECK"
                 }
+                data={elementData}
               />
             ),
           };
@@ -370,6 +383,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
                 widget={elementContent.props}
                 multiple={true}
                 supportType={elementProps.schema.items.widget}
+                data={elementData}
               />
             ),
           };
@@ -587,15 +601,54 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
   });
 
   const [rows, setRows] = React.useState<GridRowsProp>([]);
+
   useEffect(() => {
-    updateRJSFObjectField().then(() => null);
-    return;
-  }, [rows]);
+    if (backHistory !== null) {
+      rowIdCounter = 0;
+      setRows([]);
+      backSheet();
+    } else {
+      updateRJSFObjectField().then(() => null);
+    }
+  }, [rows, backHistory]);
+
   const [selectionModel, setSelectionModel] =
     React.useState<GridSelectionModel>([]);
 
   let gridData: Record<string, Array<any>> = {};
   let updateRJSFObjectFieldOpIdCounter = 0;
+
+  const backSheet = () => {
+    const newSheet: Record<string, any[]> = {};
+    const newSheetModel: GridValidRowModel[] = [];
+    for (const column of columns) {
+      if (column.field === "id") continue;
+      const arrayElementsWithKey = arrayElementsInSheet.filter(
+        (element) => element.key === column.field
+      );
+      for (const element of arrayElementsWithKey) {
+        const key = element.key;
+        if (key in deepClonedFormData) {
+          newSheet[key] = deepClonedFormData[key];
+        }
+      }
+    }
+    const longestArrayLength = Math.max(
+      ...Object.values(newSheet).map((array) => array.length)
+    );
+    const keysInNewSheet = Object.keys(newSheet);
+    for (let i = 0; i < longestArrayLength; i++) {
+      const sheetRow: Record<string, any> = {};
+      for (const key of keysInNewSheet) {
+        sheetRow[key] = newSheet[key][i];
+      }
+      newSheetModel.push({
+        id: i,
+        ...sheetRow,
+      });
+    }
+    setRows(newSheetModel);
+  };
 
   const updateRJSFObjectField = async () => {
     updateRJSFObjectFieldOpIdCounter++;
@@ -805,7 +858,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
     type: string;
   };
 
-  const pushDefaultValuesToSheet = (): void => {
+  const pushDefaultValuesToSheet = () => {
     let maxLength = 0;
     const defaultValues: defaultSheetValues[] = arrayElementsInSheet.map(
       (element) => {
@@ -847,16 +900,16 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
         <Card className="property-wrapper" sx={{ mt: 1 }}>
           <Box sx={{ width: "100%" }} padding={1}>
             <Stack direction="row" spacing={1}>
-              <Button size="small" onClick={handleAddRow}>
+              <Button size="small" onClick={handleAddRow} variant="text">
                 Add a row
               </Button>
-              <Button size="small" onClick={handleDeleteRows}>
+              <Button size="small" onClick={handleDeleteRows} variant="text">
                 Delete selected row(s)
               </Button>
-              <Button size="small" onClick={handleCopyRows}>
+              <Button size="small" onClick={handleCopyRows} variant="text">
                 Copy
               </Button>
-              <Button size="small" onClick={handlePasteRows}>
+              <Button size="small" onClick={handlePasteRows} variant="text">
                 Paste
               </Button>
             </Stack>

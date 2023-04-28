@@ -13,6 +13,7 @@ export type Store = {
   backend: null | URL;
   backHistory: null | History;
   backConsensus: boolean[];
+  saveHistory: boolean;
 };
 
 export const storeAtom = atom<Store>({
@@ -26,4 +27,5 @@ export const storeAtom = atom<Store>({
   backend: null,
   backHistory: null,
   backConsensus: [false, false, false],
+  saveHistory: true,
 });
