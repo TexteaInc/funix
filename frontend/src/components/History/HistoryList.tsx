@@ -26,7 +26,7 @@ import {
   Sick,
 } from "@mui/icons-material";
 import { getHistoryInfo, getHistoryStatusIcon } from "./HistoryUtils";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { exportHistory } from "../../shared";
 
 const HistoryList = () => {
@@ -45,10 +45,12 @@ const HistoryList = () => {
   }, [selectedFunction]);
 
   useEffect(() => {
-    getHistories().then((h) => {
-      setHistories(h);
-    });
-  }, [getHistories]);
+    getHistories().then((h) => setHistories(h));
+  }, []);
+
+  window.addEventListener("funix-history-update", () => {
+    getHistories().then((h) => setHistories(h));
+  });
 
   if (selectedFunction === null || histories.length === 0) {
     return (
