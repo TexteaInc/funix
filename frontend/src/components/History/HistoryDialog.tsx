@@ -30,7 +30,7 @@ import {
   FileDownload,
   Preview,
 } from "@mui/icons-material";
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Timeline,
   TimelineConnector,
@@ -80,17 +80,22 @@ import {
 //   });
 // };
 
-const TryJson = (props: { src: string | PostCallResponse }) => {
+const TryJson = (props: {
+  src: string | PostCallResponse;
+  collapsed: boolean;
+}) => {
   if (typeof props.src === "string") {
     try {
       const parsed = JSON.parse(props.src);
-      return <ReactJson src={parsed} collapsed />;
+      return <ReactJson src={parsed} collapsed={props.collapsed} />;
     } catch {
       return <code>{props.src}</code>;
     }
   }
-  return <ReactJson src={props.src} collapsed />;
+  return <ReactJson src={props.src} collapsed={props.collapsed} />;
 };
+
+type InputAndOutput = "input" | "output";
 
 const HistoryDialog = (props: {
   open: boolean;
@@ -106,6 +111,9 @@ const HistoryDialog = (props: {
   );
   const [renameDialogOpen, setRenameDialogOpen] = React.useState(false);
   const [tempRename, setTempRename] = React.useState("");
+  const [singleCollapsedMap, setSingleCollapsedMap] = React.useState<
+    Record<string, Record<InputAndOutput, boolean>>
+  >({});
   // const [backdropOpen, setBackdropOpen] = React.useState(false);
   // const [rewindSnackbarOpen, setRewindSnackbarOpen] = React.useState(false);
 
@@ -117,6 +125,13 @@ const HistoryDialog = (props: {
     props.setOpen(false);
   };
 
+  const getSingleCollapsed = (uuid: string, type: InputAndOutput) => {
+    if (uuid in singleCollapsedMap) {
+      return singleCollapsedMap[uuid][type];
+    }
+    return false;
+  };
+
   // const rewindOver = (history: History) => {
   //   setBackdropOpen(false);
   //   setRewindSnackbarOpen(true);
@@ -125,9 +140,13 @@ const HistoryDialog = (props: {
 
   const [histories, setHistories] = React.useState<History[]>([]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     getHistories().then((h) => setHistories(h));
-  }, [getHistories]);
+  }, []);
+
+  window.addEventListener("funix-history-update", () => {
+    getHistories().then((h) => setHistories(h));
+  });
 
   return (
     <>
@@ -319,6 +338,15 @@ const HistoryDialog = (props: {
                   const disabled =
                     functions === null ||
                     !functions?.includes(history.functionName);
+                  // setSingleCollapsedMap((prevState) => {
+                  //   return {
+                  //     ...prevState,
+                  //     [history.uuid]: {
+                  //       input: false,
+                  //       output: false,
+                  //     },
+                  //   };
+                  // });
                   return (
                     <TimelineItem key={index}>
                       <TimelineOppositeContent
@@ -379,7 +407,24 @@ const HistoryDialog = (props: {
                               </Typography>
                             )}
                             <FunixHistoryStepper status={status} />
-                            <Accordion disabled={history.input === null}>
+                            <Accordion
+                              disabled={history.input === null}
+                              expanded={
+                                history.input !== null &&
+                                getSingleCollapsed(history.uuid, "input")
+                              }
+                              onChange={(event, expanded) => {
+                                setSingleCollapsedMap((prevState) => {
+                                  return {
+                                    ...prevState,
+                                    [history.uuid]: {
+                                      ...prevState[history.uuid],
+                                      input: expanded,
+                                    },
+                                  };
+                                });
+                              }}
+                            >
                               <AccordionSummary expandIcon={<ExpandMore />}>
                                 <Typography>Input</Typography>
                               </AccordionSummary>
@@ -387,16 +432,37 @@ const HistoryDialog = (props: {
                                 sx={{
                                   maxWidth: "100%",
                                   overflow: "auto",
+                                  maxHeight: "50vh",
                                 }}
                               >
                                 {history.input !== null ? (
-                                  <ReactJson src={history.input} collapsed />
+                                  <ReactJson
+                                    src={history.input}
+                                    collapsed={true}
+                                  />
                                 ) : (
                                   <Typography>No input</Typography>
                                 )}
                               </AccordionDetails>
                             </Accordion>
-                            <Accordion disabled={history.output === null}>
+                            <Accordion
+                              disabled={history.output === null}
+                              expanded={
+                                history.output !== null &&
+                                getSingleCollapsed(history.uuid, "output")
+                              }
+                              onChange={(event, expanded) => {
+                                setSingleCollapsedMap((prevState) => {
+                                  return {
+                                    ...prevState,
+                                    [history.uuid]: {
+                                      ...prevState[history.uuid],
+                                      output: expanded,
+                                    },
+                                  };
+                                });
+                              }}
+                            >
                               <AccordionSummary expandIcon={<ExpandMore />}>
                                 <Typography
                                   sx={{
@@ -412,9 +478,18 @@ const HistoryDialog = (props: {
                                   </Typography>
                                 )}
                               </AccordionSummary>
-                              <AccordionDetails>
+                              <AccordionDetails
+                                sx={{
+                                  maxWidth: "100%",
+                                  overflow: "auto",
+                                  maxHeight: "50vh",
+                                }}
+                              >
                                 {history.output !== null ? (
-                                  <TryJson src={history.output} />
+                                  <TryJson
+                                    src={history.output}
+                                    collapsed={true}
+                                  />
                                 ) : (
                                   <Typography>No output</Typography>
                                 )}

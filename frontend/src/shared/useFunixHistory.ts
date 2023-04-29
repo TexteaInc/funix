@@ -10,6 +10,12 @@ export type History = {
   uuid: string;
 };
 
+declare global {
+  interface WindowEventMap {
+    "funix-history-update": CustomEvent;
+  }
+}
+
 const useFunixHistory = () => {
   const getHistories = async () => {
     return localforage
@@ -48,7 +54,7 @@ const useFunixHistory = () => {
       localforage
         .setItem("funix-history", JSON.stringify(histories))
         .then(() => {
-          // ignore
+          window.dispatchEvent(new CustomEvent("funix-history-update"));
         });
     });
   };
@@ -83,7 +89,7 @@ const useFunixHistory = () => {
       localforage
         .setItem("funix-history", JSON.stringify(histories))
         .then(() => {
-          // ignore
+          window.dispatchEvent(new CustomEvent("funix-history-update"));
         });
     });
   };
@@ -120,7 +126,7 @@ const useFunixHistory = () => {
       localforage
         .setItem("funix-history", JSON.stringify(histories))
         .then(() => {
-          // ignore
+          window.dispatchEvent(new CustomEvent("funix-history-update"));
         });
     });
   };
@@ -133,7 +139,7 @@ const useFunixHistory = () => {
           JSON.stringify(histories.filter((h) => h.uuid !== uuid))
         )
         .then(() => {
-          // ignore
+          window.dispatchEvent(new CustomEvent("funix-history-update"));
         });
     });
   };
@@ -147,14 +153,14 @@ const useFunixHistory = () => {
       localforage
         .setItem("funix-history", JSON.stringify(histories))
         .then(() => {
-          // ignore
+          window.dispatchEvent(new CustomEvent("funix-history-update"));
         });
     });
   };
 
   const clearHistory = () => {
     localforage.removeItem("funix-history").then(() => {
-      // ignore
+      window.dispatchEvent(new CustomEvent("funix-history-update"));
     });
   };
 
