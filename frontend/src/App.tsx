@@ -52,6 +52,7 @@ import MuiPaper, { PaperProps as MuiPaperProps } from "@mui/material/Paper";
 import HistoryDialog from "./components/History/HistoryDialog";
 import HistoryList from "./components/History/HistoryList";
 import MarkdownDiv from "./components/Common/MarkdownDiv";
+import InlineBox from "./components/Common/InlineBox";
 
 // From MUI docs
 const drawerWidth = 240;
@@ -461,10 +462,13 @@ const App = () => {
           ) : (
             <Alert severity="error">
               <AlertTitle>No backend server</AlertTitle>
-              <Stack direction="row" alignItems="center" gap={1}>
-                Please use <code>python -m funix [module]</code> to start
-                frontend server or click <Settings /> to set backend server.
-              </Stack>
+              <InlineBox>
+                Please use
+                <code>python -m funix [module]</code>
+                to start frontend server or click
+                <Settings />
+                to set backend server.
+              </InlineBox>
             </Alert>
           )}
         </Container>

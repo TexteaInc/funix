@@ -9,6 +9,7 @@ import { storeAtom } from "../../store";
 import InputPanel from "./InputPanel";
 import OutputPanel from "./OutputPanel";
 import { Token } from "@mui/icons-material";
+import InlineBox from "../Common/InlineBox";
 
 export type FunctionDetailProps = {
   preview: FunctionPreview;
@@ -147,20 +148,20 @@ const FunixFunction: React.FC<FunctionDetailProps & FunixFunctionProps> = ({
         functionSecret[preview.name] == null ? (
           <Alert severity="warning">
             <AlertTitle>Secret required</AlertTitle>
-            <Stack direction="row" alignItems="center" gap={1}>
+            <InlineBox>
               Now you are in preview mode. To use this function, you need to
               provide a secret. You can click <Token /> to set the secret, or
               add <code>?secret=[token]</code> to the URL.
-            </Stack>
+            </InlineBox>
           </Alert>
         ) : !verified ? (
           <Alert severity="error">
             <AlertTitle>Secret incorrect</AlertTitle>
-            <Stack direction="row" alignItems="center" gap={1}>
+            <InlineBox>
               Now you are in preview mode. Your secret is incorrect. You can
               click <Token /> to reset the secret. If you don't know the secret,
               please contact the author.
-            </Stack>
+            </InlineBox>
           </Alert>
         ) : (
           <></>
