@@ -172,6 +172,7 @@ const App = () => {
       selectedFunction,
       functionSecret,
       saveHistory,
+      appSecret,
     },
     setStore,
   ] = useAtom(storeAtom);
@@ -180,7 +181,7 @@ const App = () => {
   const selectedFunctionSecret: string | null = selectedFunction?.secret
     ? selectedFunction?.name in functionSecret
       ? functionSecret[selectedFunction?.name]
-      : null
+      : appSecret
     : null;
   const [backend, setBackend] = useState(funixBackend);
   const [backendURL, setBackendURL] = useState<URL | undefined>(
@@ -193,6 +194,7 @@ const App = () => {
   const [sideBarOpen, setSideBarOpen] = useState(true); // By default
   const [historySideBarOpen, setHistorySideBarOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [tempAppSecret, setTempAppSecret] = useState(appSecret);
 
   useEffect(() => {
     getList(new URL("/list", window.location.origin))
@@ -286,7 +288,6 @@ const App = () => {
         <DialogTitle>Settings</DialogTitle>
         <DialogContent>
           <TextField
-            autoFocus
             margin="dense"
             label="Backend URL"
             fullWidth
@@ -294,6 +295,14 @@ const App = () => {
             onChange={(e) => setTempBackend(e.target.value)}
             value={tempBackend}
             error={!checkURL(tempBackend)}
+          />
+          <TextField
+            margin="dense"
+            label="All pages secret (for this app)"
+            fullWidth
+            variant="standard"
+            onChange={(e) => setTempAppSecret(e.target.value)}
+            value={tempAppSecret}
           />
           <FormGroup>
             <FormControlLabel
@@ -322,7 +331,7 @@ const App = () => {
                   }}
                 />
               }
-              label={"Save history"}
+              label="Save history"
             />
           </FormGroup>
         </DialogContent>
@@ -330,6 +339,7 @@ const App = () => {
           <Button
             onClick={() => {
               setTempBackend(backend);
+              setTempAppSecret(appSecret);
               setOpen(false);
             }}
           >
@@ -339,6 +349,10 @@ const App = () => {
             onClick={() => {
               navigate("/");
               setBackend(tempBackend);
+              setStore((store) => ({
+                ...store,
+                appSecret: tempAppSecret,
+              }));
               setOpen(false);
             }}
             disabled={!checkURL(tempBackend)}

@@ -31,7 +31,7 @@ const FunixFunction: React.FC<FunctionDetailProps & FunixFunctionProps> = ({
     new URL(`/param/${preview.path}`, backend).toString()
   );
   const [
-    { inputOutputWidth, functionSecret, backHistory, backConsensus },
+    { inputOutputWidth, functionSecret, backHistory, backConsensus, appSecret },
     setStore,
   ] = useAtom(storeAtom);
   const [width, setWidth] = useState(inputOutputWidth);
@@ -40,11 +40,14 @@ const FunixFunction: React.FC<FunctionDetailProps & FunixFunctionProps> = ({
   const [verified, setVerified] = useState(!preview.secret);
 
   useEffect(() => {
-    if (preview.name in functionSecret && preview.secret) {
-      verifyToken(
-        new URL(`/verify/${preview.path}`, backend),
-        functionSecret[preview.name] || ""
-      )
+    if (preview.secret) {
+      const token =
+        preview.name in functionSecret
+          ? functionSecret[preview.name]
+          : appSecret !== null
+          ? appSecret
+          : "";
+      verifyToken(new URL(`/verify/${preview.path}`, backend), token || "")
         .then((result) => {
           setVerified(result);
         })
@@ -52,7 +55,7 @@ const FunixFunction: React.FC<FunctionDetailProps & FunixFunctionProps> = ({
           setVerified(false);
         });
     }
-  }, [functionSecret, preview]);
+  }, [functionSecret, preview, appSecret]);
 
   useEffect(() => {
     if (backHistory === null) return;
@@ -145,7 +148,7 @@ const FunixFunction: React.FC<FunctionDetailProps & FunixFunctionProps> = ({
   return (
     <>
       {needSecret ? (
-        functionSecret[preview.name] == null ? (
+        functionSecret[preview.name] == null && appSecret == null ? (
           <Alert severity="warning">
             <AlertTitle>Secret required</AlertTitle>
             <InlineBox>
@@ -156,11 +159,11 @@ const FunixFunction: React.FC<FunctionDetailProps & FunixFunctionProps> = ({
           </Alert>
         ) : !verified ? (
           <Alert severity="error">
-            <AlertTitle>Secret incorrect</AlertTitle>
+            <AlertTitle>Secret incorrect or waiting for verifying</AlertTitle>
             <InlineBox>
-              Now you are in preview mode. Your secret is incorrect. You can
-              click <Token /> to reset the secret. If you don't know the secret,
-              please contact the author.
+              Now you are in preview mode. Your secret is incorrect or waiting
+              backend to verify. You can click <Token /> to reset the secret. If
+              you don't know the secret, please contact the author.
             </InlineBox>
           </Alert>
         ) : (

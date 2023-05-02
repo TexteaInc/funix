@@ -30,7 +30,7 @@ const InputPanel = (props: {
   const [asyncWaiting, setAsyncWaiting] = useState(false);
   const [requestDone, setRequestDone] = useState(true);
   const [
-    { functionSecret, backHistory, backConsensus, saveHistory },
+    { functionSecret, backHistory, backConsensus, saveHistory, appSecret },
     setStore,
   ] = useAtom(storeAtom);
   const { setInput, setOutput } = useFunixHistory();
@@ -100,18 +100,21 @@ const InputPanel = (props: {
 
   const handleSubmit = async () => {
     const now = new Date().getTime();
-    let newForm = form;
-    if (props.preview.secret) {
-      if (
-        props.preview.name in functionSecret &&
-        typeof functionSecret[props.preview.name] === "string"
-      ) {
-        newForm = {
-          ...form,
-          __funix_secret: functionSecret[props.preview.name],
-        };
-      }
-    }
+    const newForm = props.preview.secret
+      ? props.preview.name in functionSecret &&
+        functionSecret[props.preview.name] !== null
+        ? {
+            ...form,
+            __funix_secret: functionSecret[props.preview.name],
+          }
+        : appSecret !== null
+        ? {
+            ...form,
+            __funix_secret: appSecret,
+          }
+        : form
+      : form;
+
     if (saveHistory) {
       try {
         await setInput(now, props.preview.name, newForm);
