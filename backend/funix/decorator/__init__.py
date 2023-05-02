@@ -875,7 +875,7 @@ def funix(
 
                     if function_kwargs is None:
                         return {"error_type": "wrapper", "error_body": "No arguments passed to function."}
-                    if secret:
+                    if secret_key:
                         if "__funix_secret" in function_kwargs:
                             if not __decorated_secret_functions_dict[id] == function_kwargs["__funix_secret"]:
                                 return {
