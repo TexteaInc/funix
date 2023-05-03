@@ -22,6 +22,7 @@
     "jotai": "^1.7.4",
     "localforage": "^1.10.0",
     "material-ui-popup-state": "^4.0.2",
+    "notistack": "^3.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-dropzone": "^14.2.3",
