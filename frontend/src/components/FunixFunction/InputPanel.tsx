@@ -18,6 +18,7 @@ import TextExtendedWidget from "./TextExtendedWidget";
 import { useAtom } from "jotai";
 import { storeAtom } from "../../store";
 import useFunixHistory from "../../shared/useFunixHistory";
+import { useSnackbar } from "notistack";
 
 const InputPanel = (props: {
   detail: FunctionDetail;
@@ -34,6 +35,7 @@ const InputPanel = (props: {
     setStore,
   ] = useAtom(storeAtom);
   const { setInput, setOutput } = useFunixHistory();
+  const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
     setWaiting(() => !requestDone);
@@ -119,6 +121,13 @@ const InputPanel = (props: {
       try {
         await setInput(now, props.preview.name, newForm);
       } catch (error) {
+        enqueueSnackbar(
+          "Cannot save input to history, check your console for more information",
+          {
+            variant: "error",
+          }
+        );
+        console.error("Funix History Error:");
         console.error(error);
       }
     }
@@ -132,8 +141,15 @@ const InputPanel = (props: {
     if (saveHistory) {
       try {
         await setOutput(now, props.preview.name, response);
-      } catch (e) {
-        console.error(e);
+      } catch (error) {
+        enqueueSnackbar(
+          "Cannot save output to history, check your console for more information",
+          {
+            variant: "error",
+          }
+        );
+        console.error("Funix History Error:");
+        console.error(error);
       }
     }
     props.setResponse(() => response.toString());

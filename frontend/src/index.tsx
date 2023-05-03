@@ -4,6 +4,9 @@ import "./index.css";
 import App from "./App";
 import { SWRConfig } from "swr";
 import { BrowserRouter } from "react-router-dom";
+import { closeSnackbar, SnackbarProvider } from "notistack";
+import { IconButton } from "@mui/material";
+import { Close } from "@mui/icons-material";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
@@ -18,7 +21,17 @@ root.render(
       }}
     >
       <BrowserRouter>
-        <App />
+        <SnackbarProvider
+          autoHideDuration={3000}
+          maxSnack={3}
+          action={(key) => (
+            <IconButton onClick={() => closeSnackbar(key)} color="inherit">
+              <Close />
+            </IconButton>
+          )}
+        >
+          <App />
+        </SnackbarProvider>
       </BrowserRouter>
     </SWRConfig>
   </React.StrictMode>
