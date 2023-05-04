@@ -45,7 +45,6 @@ import {
 } from "material-ui-popup-state";
 import HoverPopover from "material-ui-popup-state/HoverPopover";
 import { usePopupState } from "material-ui-popup-state/hooks";
-import SheetSwitch from "../SheetComponents/SheetSwitch";
 import SheetSlider from "../SheetComponents/SheetSlider";
 import SheetCheckBox from "../SheetComponents/SheetCheckBox";
 import JSONEditorWidget from "./JSONEditorWidget";
@@ -462,23 +461,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
             }
             break;
           case "boolean":
-            if (itemWidget === "switch") {
-              newColumn = {
-                ...newColumn,
-                editable: false,
-                renderCell: (params) => {
-                  return (
-                    <SheetSwitch
-                      widget={itemWidget}
-                      type={itemType}
-                      params={params}
-                      customChange={handleCustomComponentChange}
-                    />
-                  );
-                },
-              };
-            }
-            if (itemWidget === "checkbox") {
+            if (itemWidget === "checkbox" || itemWidget === "switch") {
               newColumn = {
                 ...newColumn,
                 editable: false,
@@ -489,6 +472,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
                       type={itemType}
                       params={params}
                       customChange={handleCustomComponentChange}
+                      isSwitch={itemWidget === "switch"}
                     />
                   );
                 },

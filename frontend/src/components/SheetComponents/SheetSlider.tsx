@@ -1,5 +1,5 @@
 import { SheetInterface } from "./SheetInterface";
-import React from "react";
+import React, { useEffect } from "react";
 import { FormControl, Grid, Input, Slider } from "@mui/material";
 import SliderValueLabel from "../Common/SliderValueLabel";
 
@@ -13,6 +13,10 @@ export default function SheetSlider(
   const [value, setValue] = React.useState<
     number | string | Array<number | string>
   >(props.params.value === undefined ? props.min : props.params.value);
+
+  useEffect(() => {
+    setValue(props.params.value === undefined ? props.min : props.params.value);
+  }, [props.params.value]);
 
   const customSetValue = (value: number | string | Array<number | string>) => {
     setValue(value);
