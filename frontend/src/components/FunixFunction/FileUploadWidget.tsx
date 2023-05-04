@@ -77,8 +77,8 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
   const [confirmOpen, setConfirmOpen] = React.useState(false);
 
   let dropzoneConfig: DropzoneOptions = !props.multiple
-    ? { multiple: false, maxFiles: 1, maxSize: 1024 * 1024 * 20 }
-    : { multiple: true, maxFiles: 0, maxSize: 1024 * 1024 * 20 };
+    ? { multiple: false, maxFiles: 1, maxSize: 1024 * 1024 * 15 }
+    : { multiple: true, maxFiles: 0, maxSize: 1024 * 1024 * 15 };
 
   switch (props.supportType) {
     case "image":
