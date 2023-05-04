@@ -54,15 +54,12 @@ import Grid2 from "@mui/material/Unstable_Grid2";
 import MarkdownDiv from "../Common/MarkdownDiv";
 import { sliderWidgetParser } from "../Common/SliderWidgetParser";
 import FileUploadWidget from "./FileUploadWidget";
-import { useAtom } from "jotai";
-import { storeAtom } from "../../store";
 
 let rowIdCounter = 0;
 
 const stopEventPropagation = (e: SyntheticEvent) => e.stopPropagation();
 
 const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
-  const [{ backHistory }] = useAtom(storeAtom);
   const deepClonedFormData = JSON.parse(JSON.stringify(props.formData));
   const configElements: (SchemaField | JSX.Element)[] = [];
   const rowElements: JSX.Element[] = [];
@@ -587,14 +584,20 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
   const [rows, setRows] = React.useState<GridRowsProp>([]);
 
   useEffect(() => {
-    if (backHistory !== null) {
-      rowIdCounter = 0;
-      setRows([]);
-      backSheet();
-    } else {
-      updateRJSFObjectField().then(() => null);
-    }
-  }, [rows, backHistory]);
+    updateRJSFObjectField().then(() => null);
+  }, [rows]);
+
+  useEffect(() => {
+    rowIdCounter = 0;
+    setRows([]);
+    backSheet();
+  }, [props.formData]);
+
+  // window.addEventListener("funix-rollback-now", () => {
+  //   rowIdCounter = 0;
+  //   setRows([]);
+  //   backSheet();
+  // });
 
   const [selectionModel, setSelectionModel] =
     React.useState<GridSelectionModel>([]);

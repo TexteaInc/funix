@@ -1,5 +1,6 @@
 import { PostCallResponse } from "./index";
 import * as localforage from "localforage";
+import { enqueueSnackbar } from "notistack";
 
 export type History = {
   input: Record<any, any> | null;
@@ -9,12 +10,6 @@ export type History = {
   timestamp: number;
   uuid: string;
 };
-
-declare global {
-  interface WindowEventMap {
-    "funix-history-update": CustomEvent;
-  }
-}
 
 const useFunixHistory = () => {
   const getHistories = async () => {
@@ -55,6 +50,16 @@ const useFunixHistory = () => {
         .setItem("funix-history", JSON.stringify(histories))
         .then(() => {
           window.dispatchEvent(new CustomEvent("funix-history-update"));
+        })
+        .catch((error) => {
+          enqueueSnackbar(
+            "Cannot save input to history, check your console for more information",
+            {
+              variant: "error",
+            }
+          );
+          console.error("Funix History Error:");
+          console.error(error);
         });
     });
   };
@@ -90,6 +95,16 @@ const useFunixHistory = () => {
         .setItem("funix-history", JSON.stringify(histories))
         .then(() => {
           window.dispatchEvent(new CustomEvent("funix-history-update"));
+        })
+        .catch((error) => {
+          enqueueSnackbar(
+            "Cannot save output to history, check your console for more information",
+            {
+              variant: "error",
+            }
+          );
+          console.error("Funix History Error:");
+          console.error(error);
         });
     });
   };
@@ -127,6 +142,16 @@ const useFunixHistory = () => {
         .setItem("funix-history", JSON.stringify(histories))
         .then(() => {
           window.dispatchEvent(new CustomEvent("funix-history-update"));
+        })
+        .catch((error) => {
+          enqueueSnackbar(
+            "Cannot save input and output to history, check your console for more information",
+            {
+              variant: "error",
+            }
+          );
+          console.error("Funix History Error:");
+          console.error(error);
         });
     });
   };
