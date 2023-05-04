@@ -45,6 +45,7 @@ const InputPanel = (props: {
     if (backHistory === null) return;
     if (backHistory.input !== null) {
       setForm(backHistory.input);
+      window.dispatchEvent(new CustomEvent("funix-rollback-now"));
       setStore((store) => {
         const newBackConsensus = [...store.backConsensus];
         newBackConsensus[2] = true;

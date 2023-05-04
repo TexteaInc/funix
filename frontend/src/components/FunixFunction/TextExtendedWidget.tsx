@@ -156,7 +156,6 @@ const TextExtendedWidget = ({
     schema.widget !== undefined &&
     schema.type === "string"
   ) {
-    console.log(value);
     const [src, setSrc] = React.useState<string>(schema.default || value);
 
     useEffect(() => {
@@ -201,8 +200,6 @@ const TextExtendedWidget = ({
   }
 
   if (schema.widget === "radio" && "whitelist" in rawSchema) {
-    console.log(value);
-
     const refreshRadioValue = useCallback(
       () =>
         value === undefined

@@ -22,8 +22,6 @@ import {
 } from "@mui/material";
 import { Delete, FileUpload, Preview } from "@mui/icons-material";
 import OutputMedias from "./OutputComponents/OutputMedias";
-import { useAtom } from "jotai";
-import { storeAtom } from "../../store";
 
 interface FileUploadWidgetInterface {
   widget: WidgetProps;
@@ -73,7 +71,6 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
   const [preview, setPreview] = React.useState<string>("");
   const [previewType, setPreviewType] = React.useState<string>("");
   const [confirmOpen, setConfirmOpen] = React.useState(false);
-  const [{ backHistory }] = useAtom(storeAtom);
 
   let dropzoneConfig: DropzoneOptions = !props.multiple
     ? { multiple: false, maxFiles: 1 }
@@ -123,24 +120,38 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
   }, [acceptedFiles]);
 
   useEffect(() => {
-    if (backHistory !== null) {
-      console.log(backHistory);
-      if (
-        props.data !== null &&
-        typeof props.data !== "undefined" &&
-        (typeof props.data === "object" && Array.isArray(props.data)
-          ? props.data.length > 0
-          : Object.keys(props.data).length > 0)
-      ) {
-        const backData = props.multiple
-          ? (props.data as string[])
-          : [props.data as string];
-        setFiles([]);
-        const newFiles = backData.map((data) => base64stringToFile(data));
-        setFiles(newFiles);
-      }
+    if (
+      props.data !== null &&
+      typeof props.data !== "undefined" &&
+      (typeof props.data === "object" && Array.isArray(props.data)
+        ? props.data.length > 0
+        : Object.keys(props.data).length > 0)
+    ) {
+      const backData = props.multiple
+        ? (props.data as string[])
+        : [props.data as string];
+      setFiles([]);
+      const newFiles = backData.map((data) => base64stringToFile(data));
+      setFiles(newFiles);
     }
-  }, [props.data, backHistory]);
+  }, [props.data]);
+
+  // window.addEventListener("funix-rollback-now", () => {
+  //   if (
+  //     props.data !== null &&
+  //     typeof props.data !== "undefined" &&
+  //     (typeof props.data === "object" && Array.isArray(props.data)
+  //       ? props.data.length > 0
+  //       : Object.keys(props.data).length > 0)
+  //   ) {
+  //     const backData = props.multiple
+  //       ? (props.data as string[])
+  //       : [props.data as string];
+  //     setFiles([]);
+  //     const newFiles = backData.map((data) => base64stringToFile(data));
+  //     setFiles(newFiles);
+  //   }
+  // });
 
   const removeFile = (index: number) => {
     const newFiles = [...files];

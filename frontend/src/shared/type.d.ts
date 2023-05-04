@@ -1,3 +1,10 @@
+export declare global {
+  interface WindowEventMap {
+    "funix-history-update": CustomEvent;
+    "funix-rollback-now": CustomEvent;
+  }
+}
+
 export declare module "json-schema" {
   type inputRowItem = {
     type: "markdown" | "argument" | "dividing" | "html";
