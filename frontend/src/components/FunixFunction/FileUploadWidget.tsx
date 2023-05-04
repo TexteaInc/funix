@@ -22,6 +22,9 @@ import {
 } from "@mui/material";
 import { Delete, FileUpload, Preview } from "@mui/icons-material";
 import OutputMedias from "./OutputComponents/OutputMedias";
+import { useAtom } from "jotai";
+import { storeAtom } from "../../store";
+import { enqueueSnackbar } from "notistack";
 
 interface FileUploadWidgetInterface {
   widget: WidgetProps;
@@ -66,6 +69,7 @@ const base64stringToFile = (base64: string) => {
 };
 
 const FileUploadWidget = (props: FileUploadWidgetInterface) => {
+  const [{ backHistory }] = useAtom(storeAtom);
   const [files, setFiles] = React.useState<File[]>([]);
   const [open, setOpen] = React.useState(false);
   const [preview, setPreview] = React.useState<string>("");
@@ -73,8 +77,8 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
   const [confirmOpen, setConfirmOpen] = React.useState(false);
 
   let dropzoneConfig: DropzoneOptions = !props.multiple
-    ? { multiple: false, maxFiles: 1 }
-    : { multiple: true, maxFiles: 0 };
+    ? { multiple: false, maxFiles: 1, maxSize: 1024 * 1024 * 20 }
+    : { multiple: true, maxFiles: 0, maxSize: 1024 * 1024 * 20 };
 
   switch (props.supportType) {
     case "image":
@@ -93,16 +97,27 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
     onDrop: useCallback(
       (acceptedFiles: File[]) => {
         if (props.multiple) {
-          setFiles([...files, ...acceptedFiles]);
+          if (files.length + acceptedFiles.length > 5) {
+            enqueueSnackbar(
+              "Files are limited to 5, use WebAPI to call this function",
+              {
+                variant: "warning",
+              }
+            );
+          } else {
+            setFiles([...files, ...acceptedFiles]);
+          }
         } else {
-          setFiles([...acceptedFiles]);
+          if (acceptedFiles.length > 0) {
+            setFiles([...acceptedFiles]);
+          }
         }
       },
       [files]
     ),
   };
 
-  const { acceptedFiles, getRootProps, getInputProps } =
+  const { acceptedFiles, getRootProps, getInputProps, fileRejections } =
     useDropzone(dropzoneConfig);
 
   useEffect(() => {
@@ -120,21 +135,30 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
   }, [acceptedFiles]);
 
   useEffect(() => {
-    if (
-      props.data !== null &&
-      typeof props.data !== "undefined" &&
-      (typeof props.data === "object" && Array.isArray(props.data)
-        ? props.data.length > 0
-        : Object.keys(props.data).length > 0)
-    ) {
-      const backData = props.multiple
-        ? (props.data as string[])
-        : [props.data as string];
+    fileRejections.forEach((file) => {
+      enqueueSnackbar(
+        `${file.file.name} is bigger than 20MB, use WebAPI to call this function`,
+        {
+          variant: "warning",
+        }
+      );
+    });
+  }, [fileRejections]);
+
+  useEffect(() => {
+    if (backHistory !== null && backHistory["input"] !== null) {
       setFiles([]);
-      const newFiles = backData.map((data) => base64stringToFile(data));
-      setFiles(newFiles);
+      const data = backHistory["input"][props.widget.name];
+      if (typeof data === "string") {
+        setFiles([base64stringToFile(data)]);
+      } else {
+        const newFiles = (data as string[]).map((data) =>
+          base64stringToFile(data)
+        );
+        setFiles(newFiles);
+      }
     }
-  }, [props.data]);
+  }, [backHistory]);
 
   // window.addEventListener("funix-rollback-now", () => {
   //   if (

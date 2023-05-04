@@ -132,7 +132,7 @@ const InputPanel = (props: {
         console.error(error);
       }
     }
-    console.log("Data submitted: ", newForm);
+    // console.log("Data submitted: ", newForm);
     setRequestDone(() => false);
     checkResponse().then();
     const response = await callFunctionRaw(
