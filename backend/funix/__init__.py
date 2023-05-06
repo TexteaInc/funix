@@ -1,5 +1,6 @@
 import atexit
 import importlib
+import importlib.util
 import os
 import sys
 import socket
@@ -7,6 +8,7 @@ import typing
 import urllib.parse
 from threading import Thread
 import webbrowser
+from uuid import uuid4 as uuid
 
 import git
 
@@ -89,10 +91,24 @@ class OpenFrontend(Thread):
         webbrowser.open(f"http://{self.host}:{self.port}")
 
 
-def __prep(main_class: typing.Optional[str], lazy: bool, need_path: bool):
+def __import_module(path, need_name):
+    if need_name:
+        name = os.path.basename(path).replace(".py", "")
+    else:
+        name = uuid().hex
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def __prep(module_or_file: typing.Optional[str], lazy: bool, need_path: bool, is_module: bool, need_name=False):
     decorator.enable_wrapper()
-    if main_class:
-        module = importlib.import_module(main_class)
+    if module_or_file:
+        if is_module:
+            module = importlib.import_module(module_or_file)
+        else:
+            module = __import_module(module_or_file, need_name)
         if lazy:
             members = reversed(dir(module))
             for member in members:
@@ -102,8 +118,9 @@ def __prep(main_class: typing.Optional[str], lazy: bool, need_path: bool):
                     else:
                         funix()(getattr(module, member))
     else:
-        print("Error: No Python module provided. \n How to fix: Please provide a module and try again. If your "
-              "functions are in a file called hello.py, you should pass hello here. \n Example: funix hello")
+        print("Error: No Python file, module or directory provided. "
+              "\n How to fix: Please provide a file, module or directory and try again. If your "
+              "functions are in a file called hello.py, you should pass hello.py here. \n Example: funix hello.py")
         sys.exit(1)
 
 
@@ -119,8 +136,18 @@ def get_path_modules(path: str):
             yield file[:-3]
 
 
+def get_python_files_in_dir(path: str):
+    files = os.listdir(path)
+    for file in files:
+        if os.path.isdir(os.path.join(path, file)):
+            yield from get_python_files_in_dir(os.path.join(path, file))
+        else:
+            if file.endswith(".py") and file != "__init__.py":
+                yield os.path.join(path, file)
+
+
 def run(
-    main_class: str,
+    file_or_module_name: str,
     host: typing.Optional[str] = "0.0.0.0",
     port: typing.Optional[int] = 3000,
     no_frontend: typing.Optional[bool] = False,
@@ -135,6 +162,7 @@ def run(
 ):
     if from_git:
         tempdir = tempfile.mkdtemp()
+        print("Please wait, cloning git repo...")
         git.Repo.clone_from(url=from_git, to_path=tempdir)
 
         @atexit.register
@@ -146,10 +174,10 @@ def run(
             new_path = os.path.join(tempdir, repo_dir)
         sys.path.append(new_path)
 
-        if main_class:
+        if file_or_module_name:
             pass
         elif dir_mode:
-            main_class = new_path
+            file_or_module_name = new_path
         elif package_mode:
             raise Exception("Package mode is not supported for git mode, try to use dir mode!")
 
@@ -157,20 +185,31 @@ def run(
         set_app_secret(app_secret)
 
     if dir_mode:
-        if os.path.exists(main_class) and os.path.isdir(main_class):
-            for module in get_path_modules(main_class):
-                __prep(main_class=module, lazy=lazy, need_path=True)
+        if os.path.exists(file_or_module_name) and os.path.isdir(file_or_module_name):
+            for single_file in get_python_files_in_dir(file_or_module_name):
+                __prep(module_or_file=single_file, lazy=lazy, need_path=True, is_module=False, need_name=True)
         else:
-            raise Exception("Directory not found!")
+            raise Exception("Directory not found or not a directory! "
+                            "If you want to use package mode, please use --package/-P option, "
+                            "if you want to use file mode, please use remove --recursive/-R option.")
     elif package_mode:
-        module = importlib.import_module(main_class)
+        module = importlib.import_module(file_or_module_name)
         path = module.__file__
         if path is None:
             raise Exception("`__init__.py` not found, please check this package!")
         for module in get_path_modules(os.path.dirname(path)):
-            __prep(main_class=module, lazy=lazy, need_path=True)
+            __prep(module_or_file=module, lazy=lazy, need_path=True, is_module=True)
     else:
-        __prep(main_class=main_class, lazy=lazy, need_path=False)
+        if not os.path.exists(file_or_module_name):
+            raise Exception("File not found! If you want to use package mode, please use --package/-P option")
+        elif os.path.isdir(file_or_module_name):
+            raise Exception("Oh this is a directory! "
+                            "If you want to use directory/recursive mode, please use --recursive/-R option")
+        elif not file_or_module_name.endswith(".py"):
+            raise Exception("This is not a Python file! "
+                            "You should change the file extension to `.py`.")
+        else:
+            __prep(module_or_file=file_or_module_name, lazy=lazy, need_path=False, is_module=False)
 
     parsed_ip = ip_address(host)
     parsed_port = get_unused_port_from(port, parsed_ip)
