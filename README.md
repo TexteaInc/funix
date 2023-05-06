@@ -6,7 +6,6 @@
 </h1>
 
 
-
 <div align="center">
 
 [![PyPI version](https://badge.fury.io/py/funix.svg)](https://badge.fury.io/py/funix)
@@ -15,19 +14,20 @@
 
 ![Funix workflow](https://raw.githubusercontent.com/TexteaInc/funix-doc/main/illustrations/workflow.png)
 
+https://user-images.githubusercontent.com/438579/236646521-30ed67f4-4708-4cf1-858d-33b65bc53b6a.mp4
+
 </div>
 
 ## Features
 
 Funix is designed for an algorithm/ML engineer to build apps without writing code related to the UI, not even selecting a widget and passing it to or calling it in a Python function. 
 
-* Minimalist: Automatic UI generation. No manual widget selection.
-* Centralized styling: Type-to-widget mapping stored in themes for cross-app UI consistency. 
-* Declarative: All non-default controls, including UI customization, via Python dictionaries. 
-* Non-intrusive: You can still run or debug your Python code locally as usual.
+* **Minimalist**: Automatic UI generation. No manual widget selection.
+* **Centralized styling**: Type-to-widget mapping stored in themes for cross-app UI consistency. 
+* **Declarative**: All non-default controls, including UI customization, via Python dictionaries. 
+* **Non-intrusive**: You can still run or debug your Python code locally as usual.
 
 > **WIP**: Funix is still under development. If you have any questions, please feel free to [open an issue](https://github.com/TexteaInc/funix/issues/new).
-
 
 ## Hello, world in Funix 
 
@@ -50,6 +50,9 @@ A web app will be launched at `http://localhost:3000` and automatically opened i
 
 > **Note**: The `-l` flag stands for _"lazy"_ meaning that only default settings are used. It cannot be used when your function is decorated by the funix decorator `@funix()` which allows you to customize your app. See example usages below of the decorator. 
 
+#### Love Funix? Give us a star
+
+![Borrowed from AppFlowy](https://github.com/AppFlowy-IO/AppFlowy/raw/main/doc/imgs/howtostar.gif)
 
 ## Gallery
 
@@ -189,9 +192,6 @@ Besides starting Funix servers from the command line, you can also start Funix f
 import funix 
 funix.run("localhost", 4010, "examples")
 ```
-
-## Stay up-to-date
-![Borrowed from AppFlowy](https://github.com/AppFlowy-IO/AppFlowy/raw/main/doc/imgs/howtostar.gif)
 
 ## How to contribute
 
