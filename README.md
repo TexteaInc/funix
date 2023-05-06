@@ -2,7 +2,7 @@
     <b>
         Funix.IO<br>
     </b>
-    ⭐️  The laziest way to build web apps in Python.  ⭐️ <br>
+    ⭐️  The laziest way to build AI/data apps in Python.  ⭐️ <br>
 </h1>
 
 
@@ -11,52 +11,49 @@
 
 [![PyPI version](https://badge.fury.io/py/funix.svg)](https://badge.fury.io/py/funix)
 
-<h4><a href="https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md">QuickStart Guide</a> | <a href="https://textea.notion.site/Funix-Reference-Manual-452a8ce51bdf4c29b4650bed7df270f6">Reference Manual</a> | <a href="https://github.com/TexteaInc/funix/blob/main/README.zh-CN.md">简体中文</a>
- </h4>
+<h4><a href="https://youtu.be/DVIV_EUFNbw">Intro video</a> | <a href="https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md">QuickStart Guide</a> | <a href="https://textea.notion.site/Funix-Reference-Manual-452a8ce51bdf4c29b4650bed7df270f6">Reference Manual</a>  </h4>
 
-![](https://github.com/TexteaInc/funix-doc/blob/main/videos/chatgpt/scence_1_ChatGPT_in_two_lines/chatgpt_1.gif?raw=true)
+![Funix workflow](https://raw.githubusercontent.com/TexteaInc/funix-doc/main/illustrations/workflow.png)
+
 </div>
 
 ## Features
 
-Funix is designed for an algorithm/ML engineer to build web apps without writing code related to the UI, not even selecting a widget and passing it to or calling it in a Python function. 
+Funix is designed for an algorithm/ML engineer to build apps without writing code related to the UI, not even selecting a widget and passing it to or calling it in a Python function. 
 
-* Generating web app UI from the signature of a Python function.
-* Inferring widgets from variable types. No manual widget selection needed.
-* Type-to-widget mapping stored in themes for cross-app UI consistency. 
-* Declarative UI customization when needed. 
-* Non-intrusive. You can still run or debug your Python code locally as usual.
- 
-
+* Minimalist: Automatic UI generation. No manual widget selection.
+* Centralized styling: Type-to-widget mapping stored in themes for cross-app UI consistency. 
+* Declarative: All non-default controls, including UI customization, via Python dictionaries. 
+* Non-intrusive: You can still run or debug your Python code locally as usual.
 
 > **WIP**: Funix is still under development. If you have any questions, please feel free to [open an issue](https://github.com/TexteaInc/funix/issues/new).
 
 
-## Hello-world in Funix 
+## Hello, world in Funix 
 
-Add as few as two lines of code above your function to vitialize it into a web app.
+Building a web app in Funix is super easy. Just have a type-hinted Python function: 
 
 ```python
-from funix import funix # add line one
-
-@funix()                # add line two
 def hello(your_name: str) -> str:
     return f"Hello, {your_name}."
 ```
 
-Save the code above as `hello.py`.
-Then run this at the terminal:
+Save in a file (say `hello.py`) and pass to Funix:
 
 ```bash
-funix hello
+funix -l hello.py
 ```
 
 A web app will be launched at `http://localhost:3000` and automatically opened in a browser window.
 
 ![screenshots/hello.png](https://github.com/TexteaInc/funix-doc/raw/main/screenshots/hello.png)
 
+> **Note**: The `-l` flag stands for _"lazy"_ meaning that only default settings are used. It cannot be used when your function is decorated by the funix decorator `@funix()` which allows you to customize your app. See example usages below of the decorator. 
+
 
 ## Gallery
+
+To see more examples, please visit [QuickStart Guide](https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md) or the `examples` folder. 
 
 ### Shortest Dall-E web app in Python
 
