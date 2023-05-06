@@ -10,9 +10,7 @@
 
 [![PyPI version](https://badge.fury.io/py/funix.svg)](https://badge.fury.io/py/funix)
 
-<h4><a href="https://youtu.be/DVIV_EUFNbw">Intro video</a> | <a href="https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md">QuickStart Guide</a> | <a href="https://textea.notion.site/Funix-Reference-Manual-452a8ce51bdf4c29b4650bed7df270f6">Reference Manual</a>  </h4>
-
-![Funix workflow](https://raw.githubusercontent.com/TexteaInc/funix-doc/main/illustrations/workflow.png)
+<h4><a href="https://youtu.be/DVIV_EUFNbw">Intro video</a> | <a href="https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md">QuickStart Guide</a> | <a href="https://textea.notion.site/Funix-Reference-Manual-452a8ce51bdf4c29b4650bed7df270f6">Reference Manual</a> | <a href="https://github.com/TexteaInc/funix/edit/main/README.md#gallery"> Gallary </a> </h4>
 
 https://user-images.githubusercontent.com/438579/236646521-30ed67f4-4708-4cf1-858d-33b65bc53b6a.mp4
 
@@ -54,9 +52,35 @@ A web app will be launched at `http://localhost:3000` and automatically opened i
 
 ![Borrowed from AppFlowy](https://github.com/AppFlowy-IO/AppFlowy/raw/main/doc/imgs/howtostar.gif)
 
+## Installation
+
+* From PyPI (stable)
+    ```bash
+    pip install funix
+    ```
+* From GitHub (latest)
+
+    ```bash
+    pip install "git+https://github.com/TexteaInc/funix.git"
+    ```
+* Local development
+
+    ```bash
+    git clone https://github.com/TexteaInc/funix
+    cd funix
+    pip install -e . 
+    ```
+    Add `--prefix=~/.local` if pip insists to install to system paths. See [#24](https://github.com/TexteaInc/funix/issues/24) and [#23](https://github.com/TexteaInc/funix/issues/23)
+ 
 ## Gallery
 
-To see more examples, please visit [QuickStart Guide](https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md) or the `examples` folder. 
+More examples in <a href="https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md">QuickStart Guide</a> or the <code>examples</code> folder.
+
+### ChatGPT, multi-turn
+
+Code [here](https://github.com/TexteaInc/funix-examples/blob/main/AI/chatGPT_multi_turn.py). Just 77 lines including the HTML layout code and tip messages. 
+
+![Multiturn chat](https://raw.githubusercontent.com/TexteaInc/funix-examples/main/screenshots/AI/chatGPT_multi_turn.png)
 
 ### Shortest Dall-E web app in Python
 
@@ -75,6 +99,8 @@ def dalle(prompt: str = "a cat") -> Image:
 
 ![Dalle demo](https://github.com/TexteaInc/funix-doc/raw/main/screenshots/dalle.jpg)
 
+
+    
 ### Compound UIs
 
 ```python
@@ -98,60 +124,12 @@ def table_plot(a: List[int], b: List[float]) -> Figure:
 
 ![table plot demo static](https://github.com/TexteaInc/funix-doc/raw/main/screenshots/table_plot.png)
 
-### Declarative UI configuration
+### Layout
 
-In Funix, your UI configurations are not intermingled with the functions under UI components. They can be put into configuration files or in themes.
+Code [here](https://github.com/TexteaInc/funix/blob/main/examples/shipping.py)
 
-```python
-from funix import funix_yaml
-
-@funix_yaml("""
-    widgets:
-        x: slider[0,10,1]
-        op: radio
-""")
-
-def power(x: int, op: str) -> Markdown:
-    if op =="square":
-        return  f"\
-* The _square_ of {x} is **{x * x}**. \n \
-* Made by [Funix](http://funix.io)"
-    elif op == "cube":
-        # return x * x * x
-        return  f"\
-* The _cube_ of {x} is **{x * x * x}**. \n \
-* Made by [Funix](http://funix.io)"
-```
-
-![power slider radio](https://github.com/TexteaInc/funix-doc/raw/main/screenshots/power_slider_radio.png)
-
-## More examples
-1. [QuickStart Guide](https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md)
-2. The [`examples` folder in this repo](./examples/)
-
-## Installation
-
-### From PyPI (stable)
-
-```bash
-pip install funix
-```
-
-### From GitHub (latest)
-
-```bash
-pip install "git+https://github.com/TexteaInc/funix.git"
-```
-
-### Local development
-
-If you want to install Funix from a local clone:
-
-1. `git clone https://github.com/TexteaInc/funix`
-2. `cd funix`
-3. `pip install -e .` (add `--prefix=~/.local` if pip insists to install to system paths. See [#24](https://github.com/TexteaInc/funix/issues/24) and [#23](https://github.com/TexteaInc/funix/issues/23))
-
-
+![shipping example](https://raw.githubusercontent.com/TexteaInc/funix-doc/main/screenshots/easypost_shipping.png)
+   
 ## Usage
 
 ### Command line 
