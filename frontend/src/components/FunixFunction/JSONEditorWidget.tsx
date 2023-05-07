@@ -1,8 +1,9 @@
 import { WidgetProps } from "@rjsf/core";
-import React, { useCallback, useEffect } from "react";
+import React, { useEffect } from "react";
 import ReactJson, { InteractionProps } from "react-json-view";
-import { Stack, Typography } from "@mui/material";
+import { Stack } from "@mui/material";
 import { castValue, getInitValue } from "../Common/ValueOperation";
+import MarkdownDiv from "../Common/MarkdownDiv";
 
 interface JSONEditorWidgetInterface {
   widget: WidgetProps;
@@ -24,16 +25,15 @@ const JSONEditorWidget = (props: JSONEditorWidgetInterface) => {
     }
   }
 
-  const refreshSrc = useCallback(
-    () =>
-      props.data || props.widget.value || props.widget.schema.default || value,
-    [props.data]
+  const [src, setSrc] = React.useState<object>(
+    props.data || props.widget.value || props.widget.schema.default || value
   );
 
-  const [src, setSrc] = React.useState<object>(refreshSrc);
-
   useEffect(() => {
-    setSrc(refreshSrc);
+    if (props.data === src) return;
+    setSrc(
+      props.data || props.widget.value || props.widget.schema.default || value
+    );
   }, [props.data]);
 
   const handleEdit = React.useCallback((value: InteractionProps) => {
@@ -75,7 +75,10 @@ const JSONEditorWidget = (props: JSONEditorWidgetInterface) => {
 
   return (
     <Stack spacing={1}>
-      <Typography variant="h5">{props.widget.name}</Typography>
+      <MarkdownDiv
+        markdown={`##### ${props.widget.label || props.widget.name}`}
+        isRenderInline={false}
+      />
       {reactJSON}
     </Stack>
   );

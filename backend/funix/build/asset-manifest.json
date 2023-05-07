@@ -1,12 +1,12 @@
 {
   "files": {
     "main.css": "/static/css/main.521e60ca.css",
-    "main.js": "/static/js/main.069eaadc.js",
+    "main.js": "/static/js/main.1b4d224a.js",
     "static/media/pdf.worker.js": "/static/media/pdf.worker.5036a5d54184cef29958.js",
     "index.html": "/index.html"
   },
   "entrypoints": [
     "static/css/main.521e60ca.css",
-    "static/js/main.069eaadc.js"
+    "static/js/main.1b4d224a.js"
   ]
 }

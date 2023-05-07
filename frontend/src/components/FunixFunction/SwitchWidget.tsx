@@ -15,6 +15,7 @@ const SwitchWidget = (props: WidgetProps) => {
   );
 
   useEffect(() => {
+    if (props.value === checked) return;
     setChecked(!!(props.value || props.schema.default));
   }, [props.value]);
 
@@ -36,7 +37,10 @@ const SwitchWidget = (props: WidgetProps) => {
         <FormControlLabel
           control={control}
           label={
-            <MarkdownDiv markdown={props.label || ""} isRenderInline={true} />
+            <MarkdownDiv
+              markdown={props.label || props.name || ""}
+              isRenderInline={true}
+            />
           }
         />
       </FormGroup>

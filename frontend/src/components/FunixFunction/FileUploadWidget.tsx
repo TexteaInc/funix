@@ -148,6 +148,7 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
   useEffect(() => {
     if (backHistory !== null && backHistory["input"] !== null) {
       setFiles([]);
+      // ehh no, need somebody write better code please
       const data = backHistory["input"][props.widget.name];
       if (typeof data === "string") {
         setFiles([base64stringToFile(data)]);

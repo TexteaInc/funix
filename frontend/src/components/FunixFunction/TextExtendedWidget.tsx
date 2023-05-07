@@ -1,7 +1,7 @@
 // Extended from TextWidget
 // Ref: https://github.com/rjsf-team/react-jsonschema-form/blob/4049011ea59737232a86c193d96131ce61be85fa/packages/material-ui/src/TextWidget/TextWidget.tsx
 
-import React, { useCallback, useEffect } from "react";
+import React, { useEffect } from "react";
 import { WidgetProps, utils } from "@rjsf/core";
 import {
   Autocomplete,
@@ -57,17 +57,13 @@ const TextExtendedWidget = ({
     const defaultStep = schema.type === "integer" ? 1 : 0.1;
     const step = args[2] || defaultStep;
 
-    const refreshSliderValue = useCallback(
-      () => (value === undefined ? min : value),
-      [value]
-    );
-
     const [sliderValue, setSliderValue] = React.useState<
       number | string | Array<number | string>
-    >(refreshSliderValue);
+    >(value === undefined ? min : value);
 
     useEffect(() => {
-      setSliderValue(refreshSliderValue);
+      if (value === sliderValue) return;
+      setSliderValue(value === undefined ? min : value);
     }, [value]);
 
     const customSetSliderValue = (
@@ -106,7 +102,7 @@ const TextExtendedWidget = ({
           {!!label ? (
             <Grid item>
               <MarkdownDiv
-                markdown={label || schema.title}
+                markdown={label || schema.title || ""}
                 isRenderInline={true}
               />
             </Grid>
@@ -157,8 +153,10 @@ const TextExtendedWidget = ({
     schema.type === "string"
   ) {
     const [src, setSrc] = React.useState<string>(schema.default || value);
+    const [height, setHeight] = React.useState(450);
 
     useEffect(() => {
+      if (value === src) return;
       setSrc(schema.default || value);
     }, [value]);
 
@@ -177,14 +175,21 @@ const TextExtendedWidget = ({
 
     return (
       <Editor
-        height={300}
         width="100%"
+        height={height}
         value={src}
         language={language}
         options={{
           minimap: {
             enabled: false,
           },
+        }}
+        onMount={(editor) => {
+          editor.onDidChangeModelContent(() => {
+            setHeight(
+              Math.max(450, editor.getModel().getLineCount() * 20 + 20)
+            );
+          });
         }}
         onChange={(value) => {
           if (value) {
@@ -200,21 +205,23 @@ const TextExtendedWidget = ({
   }
 
   if (schema.widget === "radio" && "whitelist" in rawSchema) {
-    const refreshRadioValue = useCallback(
-      () =>
+    const [radioValue, setRadioValue] = React.useState<string>(
+      value === undefined
+        ? schema.default
+          ? `${schema.default}`
+          : ""
+        : `${value}`
+    );
+
+    useEffect(() => {
+      if (value === radioValue) return;
+      setRadioValue(
         value === undefined
           ? schema.default
             ? `${schema.default}`
             : ""
-          : `${value}`,
-      [value]
-    );
-
-    const [radioValue, setRadioValue] =
-      React.useState<string>(refreshRadioValue);
-
-    useEffect(() => {
-      setRadioValue(refreshRadioValue);
+          : `${value}`
+      );
     }, [value]);
 
     const _onChange = (event: React.ChangeEvent<HTMLInputElement>) => {

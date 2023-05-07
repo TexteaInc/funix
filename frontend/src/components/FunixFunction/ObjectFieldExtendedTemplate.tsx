@@ -54,6 +54,8 @@ import Grid2 from "@mui/material/Unstable_Grid2";
 import MarkdownDiv from "../Common/MarkdownDiv";
 import { sliderWidgetParser } from "../Common/SliderWidgetParser";
 import FileUploadWidget from "./FileUploadWidget";
+import { useAtom } from "jotai";
+import { storeAtom } from "../../store";
 
 let rowIdCounter = 0;
 
@@ -587,11 +589,11 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
     updateRJSFObjectField().then(() => null);
   }, [rows]);
 
-  useEffect(() => {
-    rowIdCounter = 0;
-    setRows([]);
-    backSheet();
-  }, [props.formData]);
+  // useEffect(() => {
+  //   rowIdCounter = 0;
+  //   setRows([]);
+  //   backSheet();
+  // }, [props.formData]);
 
   // window.addEventListener("funix-rollback-now", () => {
   //   rowIdCounter = 0;
@@ -882,6 +884,16 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
   };
 
   const getNewDataGridElementIfAvailable = () => {
+    const [{ backHistory }] = useAtom(storeAtom);
+
+    useEffect(() => {
+      if (backHistory !== null && backHistory["input"] !== null) {
+        rowIdCounter = 0;
+        setRows([]);
+        backSheet();
+      }
+    }, [backHistory, props.formData]);
+
     if (arrayElementsInSheet.length != 0) {
       return (
         <Card className="property-wrapper" sx={{ mt: 1 }}>
@@ -989,12 +1001,8 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
 
   return (
     <Stack spacing={1}>
-      {props.description !== "" ? (
-        <Typography variant="body1" component="div">
-          <MarkdownDiv markdown={props.description} isRenderInline={false} />
-        </Typography>
-      ) : (
-        <></>
+      {props.description !== "" && (
+        <MarkdownDiv markdown={props.description} isRenderInline={false} />
       )}
       {rowElements.map(renderElement)}
       {arraySimpleSelectors.map(renderElement)}
