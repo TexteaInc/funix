@@ -1,7 +1,12 @@
+import atexit
 import copy
-from typing import Any
+import os
+import tempfile
+from typing import Any, Optional
 from uuid import uuid4 as uuid
+import importlib.util
 
+import requests
 
 __theme_style_sugar_dict = {
     "fontColor": {
@@ -11,6 +16,7 @@ __theme_style_sugar_dict = {
     }
 }
 __basic_widgets = ["slider", "input", "textField", "switch", "button", "checkbox", "radio"]
+
 
 def dict_replace(original_dict: dict, original: str, new: Any):
     if isinstance(original_dict, dict):
@@ -30,6 +36,7 @@ def get_full_style_from_sugar(key: str, value: Any):
     sugar_info = __theme_style_sugar_dict[key]
     return dict_replace(sugar_info, "${value}", value)
 
+
 def get_mui_theme(theme, colors, typography):
     mui_theme = {
         "components": {},
@@ -39,7 +46,7 @@ def get_mui_theme(theme, colors, typography):
     temp_colors = {}
     if colors:
         for color in colors.keys():
-            if color in ["mode", "divider"]:
+            if color in ["mode", "divider", "contrastThreshold", "tonalOffset"]:
                 mui_theme["palette"][color] = colors[color]
             elif isinstance(colors[color], str):
                 mui_theme["palette"][color] = {"main": colors[color]}
@@ -67,9 +74,9 @@ def get_mui_theme(theme, colors, typography):
                         mui_theme["components"][widget_mui_name]["defaultProps"][prop_name] = color_name
                         temp_colors[theme[widget_name][prop_name]] = color_name
                 true_color = mui_theme["palette"][color_name]["main"]
-                styleOverride = {}
+                style_override = {}
                 if widget_name == "input":
-                    styleOverride = {
+                    style_override = {
                         "underline": {
                             "&:before": {
                                 "borderColor": true_color
@@ -80,7 +87,7 @@ def get_mui_theme(theme, colors, typography):
                         }
                     }
                 if widget_name == "textField":
-                    styleOverride = {
+                    style_override = {
                         "root": {
                             "& fieldset": {
                                 "borderColor": true_color
@@ -91,8 +98,8 @@ def get_mui_theme(theme, colors, typography):
                             }
                         }
                     }
-                if styleOverride != {}:
-                    mui_theme["components"][widget_mui_name]["styleOverrides"].update(styleOverride)
+                if style_override != {}:
+                    mui_theme["components"][widget_mui_name]["styleOverrides"].update(style_override)
             elif prop_name in __theme_style_sugar_dict.keys():
                 mui_theme["components"][widget_mui_name]["styleOverrides"].update(
                     get_full_style_from_sugar(prop_name, theme[widget_name][prop_name])
@@ -100,6 +107,7 @@ def get_mui_theme(theme, colors, typography):
             else:
                 mui_theme["components"][widget_mui_name]["defaultProps"][prop_name] = theme[widget_name][prop_name]
     return mui_theme
+
 
 def parse_theme(theme):
     type_names = []
@@ -116,32 +124,73 @@ def parse_theme(theme):
             else:
                 type_names.append(type_name)
                 type_widget_dict[type_name] = theme["widgets"][type_name]
-    if "colors" in theme:
-        for color_name in theme["colors"].keys():
-            custom_palette[color_name] = theme["colors"][color_name]
-    if "styles" in theme:
-        if "basic" in theme["styles"]:
-            if "color" in theme["styles"]["basic"]:
+    if "palette" in theme:
+        for color_name in theme["palette"].keys():
+            custom_palette[color_name] = theme["palette"][color_name]
+    if "props" in theme:
+        if "basic" in theme["props"]:
+            if "color" in theme["props"]["basic"]:
                 if "primary" in custom_palette:
-                    custom_palette["primary"]["main"] = theme["styles"]["basic"]["color"]
+                    custom_palette["primary"]["main"] = theme["props"]["basic"]["color"]
                 else:
-                    custom_palette["primary"] = {"main": theme["styles"]["basic"]["color"]}
-                del theme["styles"]["basic"]["color"]
-            if "contrastText" in theme["styles"]["basic"]:
+                    custom_palette["primary"] = {"main": theme["props"]["basic"]["color"]}
+                del theme["props"]["basic"]["color"]
+            if "contrastText" in theme["props"]["basic"]:
                 if "primary" in custom_palette:
-                    custom_palette["primary"]["contrastText"] = theme["styles"]["basic"]["contrastText"]
+                    custom_palette["primary"]["contrastText"] = theme["props"]["basic"]["contrastText"]
                 else:
-                    custom_palette["primary"] = {"contrastText": theme["styles"]["basic"]["contrastText"]}
-                del theme["styles"]["basic"]["contrastText"]
+                    custom_palette["primary"] = {"contrastText": theme["props"]["basic"]["contrastText"]}
+                del theme["props"]["basic"]["contrastText"]
             for basic_widget_name in __basic_widgets:
-                widget_style[basic_widget_name] = copy.deepcopy(theme["styles"]["basic"])
-            del theme["styles"]["basic"]
-        for widget_name in theme["styles"].keys():
+                widget_style[basic_widget_name] = copy.deepcopy(theme["props"]["basic"])
+            del theme["props"]["basic"]
+        for widget_name in theme["props"].keys():
             if widget_name in widget_style:
-                widget_style[widget_name].update(theme["styles"][widget_name])
+                widget_style[widget_name].update(theme["props"][widget_name])
             else:
-                widget_style[widget_name] = theme["styles"][widget_name]
+                widget_style[widget_name] = theme["props"][widget_name]
     if "typography" in theme:
         custom_typography = theme["typography"]
     mui_theme = get_mui_theme(widget_style, custom_palette, custom_typography)
     return type_names, type_widget_dict, widget_style, custom_palette, mui_theme
+
+
+def get_dict_theme(
+    path: Optional[str] = None,
+    url: Optional[str] = None,
+    module: Optional[dict] = None,
+    dict_name: Optional[str] = None
+) -> dict:
+    # check args
+    if dict_name is None:
+        if module is None:
+            raise ValueError("Module must be specified when dict_name is not specified, "
+                             "if you specify path or url, must specify dict_name!")
+    else:
+        if path is None and url is None:
+            raise ValueError("Must specify path or url when dict_name is specified!")
+        elif path is not None and url is not None:
+            raise ValueError("Can't specify both path and url!")
+
+    # import theme
+    name = uuid().hex
+    if path:
+        sepc = importlib.util.spec_from_file_location(name, path)
+        module = importlib.util.module_from_spec(sepc)
+        sepc.loader.exec_module(module)
+    elif url:
+        file_handler, file_path = tempfile.mkstemp()
+
+        @atexit.register
+        def remove_temp():
+            os.remove(file_path)
+
+        file_handler.write(requests.get(url).content)
+        file_handler.flush()
+        sepc = importlib.util.spec_from_file_location(name, file_path)
+        module = importlib.util.module_from_spec(sepc)
+        sepc.loader.exec_module(module)
+    elif module is not None:
+        return module
+    theme = getattr(module, dict_name)
+    return theme

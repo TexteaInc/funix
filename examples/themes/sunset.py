@@ -9,7 +9,7 @@ sunset = {
         ("int", "float"): slider(100),
         "Literal": "radio"
     },
-    "colors": {
+    "palette": {
         "background": {
             "default": "#ff9e1b"
         }

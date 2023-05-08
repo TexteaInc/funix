@@ -7,16 +7,15 @@ import json5
 import flask
 import inspect
 import secrets
-import requests
 import traceback
 import matplotlib
 from funix.app import app
 from functools import wraps
 from uuid import uuid4 as uuid
-from .theme import parse_theme
 from urllib.parse import urlparse
 from urllib.request import urlopen
 import matplotlib.pyplot as plt, mpld3
+from .theme import parse_theme, get_dict_theme
 from typing import Literal, Optional, Callable, Any
 from ..widget import generate_frontend_widget_config
 from ..hint import DestinationType, WidgetsType, TreatAsType, WhitelistType, ExamplesType, LabelsType, LayoutType, \
@@ -45,9 +44,11 @@ __app_secret = None
 
 matplotlib.use("Agg")
 
+
 def set_app_secret(secret: str):
     global __app_secret
     __app_secret = secret
+
 
 def enable_wrapper():
     global __wrapper_enabled, __files_dict, __decorated_functions_list
@@ -228,11 +229,12 @@ def is_valid_uri(uri: str) -> bool:
     except:
         return False
 
+
 def get_real_uri(path: str | bytes) -> str:
     if isinstance(path, bytes):
         fid = uuid().hex
         result = f"/file/{fid}"
-        if not path in list(__files_dict.values()):
+        if path not in list(__files_dict.values()):
             __files_dict[fid] = path
         else:
             return f"/file/{list(__files_dict.keys())[list(__files_dict.values()).index(path)]}"
@@ -241,13 +243,14 @@ def get_real_uri(path: str | bytes) -> str:
         fid = uuid().hex + "." + path.split(".")[-1]
         result = f"/file/{fid}"
         abs_path = os.path.abspath(path)
-        if not abs_path in list(__files_dict.values()):
+        if abs_path not in list(__files_dict.values()):
             __files_dict[fid] = abs_path
         else:
             return f"/file/{list(__files_dict.keys())[list(__files_dict.values()).index(abs_path)]}"
         return result
     else:
         return path
+
 
 def get_static_uri(path: str | list[str] | bytes | list[bytes]) -> str | list[str]:
     global __files_dict
@@ -260,63 +263,32 @@ def get_static_uri(path: str | list[str] | bytes | list[bytes]) -> str | list[st
         raise Exception("Unsupported path type")
 
 
-def get_theme(path: str | None) -> Any:
-    if path is None:
-        return __default_theme
-    if is_valid_uri(path):
-        return yaml.load(requests.get(path).content, yaml.FullLoader)
-    else:
-        if path in __themes:
-            return __themes[path]
-        if os.path.exists(path):
-            with open(path, "r", encoding="utf-8") as f:
-                return yaml.load(f.read(), yaml.FullLoader)
-        else:
-            home_themes_path = os.path.join(os.path.expanduser("~"), os.path.join("./.funix/themes/", path))
-            if os.path.exists(home_themes_path):
-                with open(home_themes_path, "r", encoding="utf-8") as f:
-                    return yaml.load(f.read(), yaml.FullLoader)
-            else:
-                raise Exception(f"Theme {path} not found")
-
-
-def set_default_theme(path: str):
-    global __default_theme, __parsed_themes
-    __default_theme = get_theme(path)
+def set_default_theme(alias: str):
+    global __default_theme, __parsed_themes, __themes
+    if alias not in __themes:
+        raise Exception(f"Theme {alias} does not exist")
+    __default_theme = __themes[alias]
     __parsed_themes["__default"] = parse_theme(__default_theme)
 
-def import_theme(path: str, name: str):
-    global __themes
-    __themes[name] = get_theme(path)
 
-def set_theme(theme: dict, name: Optional[str] = None):
+def import_theme(
+    alias: str,
+    path: Optional[str] = None,
+    url: Optional[str] = None,
+    module: Optional[dict] = None,
+    dict_name: Optional[str] = None
+):
     global __themes
-    if name is None:
-        if "name" in theme:
-            name = theme["name"]
-        else:
-            raise Exception("Theme name not found")
-    __themes[name] = theme
+    if alias in __themes:
+        raise Exception(f"Theme {alias} already exists")
+    __themes[alias] = get_dict_theme(path, url, module, dict_name)
 
-def set_theme_parser_backend(theme: str, name: Optional[str] = None, parser: Literal["json5", "yaml"] = "json5"):
-    global __themes
-    if parser == "json5":
-        set_theme(json5.loads(theme), name)
-    elif parser == "yaml":
-        set_theme(yaml.load(theme, yaml.FullLoader), name)
-    else:
-        raise ValueError(f"Unknown parser: {parser}")
 
 def clear_default_theme():
     global __default_theme, __parsed_themes
     __default_theme = {}
     __parsed_themes.pop("__default")
 
-def set_theme_yaml(theme: str, name: Optional[str] = None):
-    set_theme_parser_backend(theme, name, "yaml")
-
-def set_theme_json5(theme: str, name: Optional[str] = None):
-    set_theme_parser_backend(theme, name, "json5")
 
 def conv_row_item(row_item: dict, item_type: str):
     conved_item = row_item
@@ -325,12 +297,14 @@ def conv_row_item(row_item: dict, item_type: str):
     conved_item.pop(item_type)
     return conved_item
 
+
 def funix_param_to_widget(annotation):
     need_config = hasattr(annotation, "__funix_config__")
     if need_config:
         return f"{annotation.__funix_widget__}{json.dumps(list(annotation.__funix_config__.values()))}"
     else:
         return annotation.__funix_widget__
+
 
 def function_param_to_widget(annotation, widget):
     if type(annotation) is range or annotation is range:
@@ -362,7 +336,7 @@ def funix(
         description: Optional[str] = "",
         destination: DestinationType = None,
         show_source: bool = False,
-        theme: Optional[str] = None,
+        theme_name: Optional[str] = None,
         widgets: WidgetsType = {},
         treat_as: TreatAsType = {},
         whitelist: WhitelistType = {},
@@ -382,17 +356,16 @@ def funix(
             function_name = getattr(function, "__name__")  # function name as id to retrieve function info
             if function_name in __banned_function_name_and_path:
                 raise Exception(f"{function_name} is not allowed, banned names: {__banned_function_name_and_path}")
-            function_theme = get_theme(theme)
             function_title = title if title is not None else function_name
 
             try:
-                if theme is None or theme == "":
+                if not theme_name:
                     parsed_theme = __parsed_themes["__default"]
                 else:
-                    if theme in __parsed_themes:
+                    if theme_name in __parsed_themes:
                         parsed_theme = __parsed_themes[theme]
                     else:
-                        parsed_theme = parse_theme(function_theme)
+                        parsed_theme = parse_theme(__themes[theme_name])
                         __parsed_themes[theme] = parsed_theme
             except:
                 parsed_theme = [], {}, {}, {}, {}
@@ -838,9 +811,9 @@ def funix(
                                                 result[index] = change_fig_width(result[index])
                                             if single_return_type in __supported_basic_file_types:
                                                 if type(result[index]) == "list":
-                                                    result[index] = [get_static_uri(each) for each in result[index]] # type: ignore
+                                                    result[index] = [get_static_uri(each) for each in result[index]]
                                                 else:
-                                                    result[index] = get_static_uri(result[index]) # type: ignore
+                                                    result[index] = get_static_uri(result[index])
                                         return result
                                     else:
                                         if return_type_parsed == "Figure":
@@ -941,12 +914,12 @@ def funix_parser_backend(config: Optional[str] = None, parser: Literal["json5", 
             return funix()(function)
         else:
             if parser == "json5":
-                jsonConfig: Any = json5.loads(config)
+                json_config: Any = json5.loads(config)
             elif parser == "yaml":
-                jsonConfig = yaml.load(config, Loader=yaml.FullLoader)
+                json_config = yaml.load(config, Loader=yaml.FullLoader)
             else:
                 raise ValueError(f"Unknown parser: {parser}")
-            return funix(**jsonConfig)(function)
+            return funix(**json_config)(function)
     return decorator
 
 
