@@ -12,6 +12,7 @@ import {
   TableHead,
   TableRow,
   Typography,
+  useTheme,
 } from "@mui/material";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
@@ -98,13 +99,20 @@ const MarkdownCode = (props: {
   inline?: boolean;
   className?: string;
 }) => {
+  const theme = useTheme();
+
   if (props.inline) {
     return (
       <Typography
         component="span"
         sx={{
           fontFamily: "monospace",
-          backgroundColor: "grey.200",
+          backgroundColor: (theme) =>
+            theme.palette.mode === "light" ? "grey.100" : "grey.800",
+          color: (theme) =>
+            theme.palette.mode === "light"
+              ? "grey.900"
+              : theme.palette.warning.main,
           paddingX: "0.25rem",
           borderRadius: "0.25rem",
         }}
@@ -131,6 +139,7 @@ const MarkdownCode = (props: {
         const height = editor.getContentHeight();
         editor.layout({ height });
       }}
+      theme={theme.palette.mode === "dark" ? "vs-dark" : "light"}
       options={{
         readOnly: true,
         minimap: {

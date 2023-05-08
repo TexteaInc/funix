@@ -1,4 +1,5 @@
 import Editor from "@monaco-editor/react";
+import { useTheme } from "@mui/material";
 
 interface OutputCodeProps {
   code: string;
@@ -6,6 +7,8 @@ interface OutputCodeProps {
 }
 
 export default function OutputCode(props: OutputCodeProps) {
+  const theme = useTheme();
+
   return (
     <Editor
       width="100%"
@@ -15,6 +18,7 @@ export default function OutputCode(props: OutputCodeProps) {
         const height = editor.getContentHeight();
         editor.layout({ height });
       }}
+      theme={theme.palette.mode === "dark" ? "vs-dark" : "light"}
       options={{
         readOnly: true,
         minimap: {

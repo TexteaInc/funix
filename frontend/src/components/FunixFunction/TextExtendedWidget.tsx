@@ -17,6 +17,7 @@ import {
   RadioGroup,
   Slider,
   TextField,
+  useTheme,
 } from "@mui/material";
 import SliderValueLabel from "../Common/SliderValueLabel";
 import { sliderWidgetParser } from "../Common/SliderWidgetParser";
@@ -154,6 +155,7 @@ const TextExtendedWidget = ({
   ) {
     const [src, setSrc] = React.useState<string>(schema.default || value);
     const [height, setHeight] = React.useState(450);
+    const theme = useTheme();
 
     useEffect(() => {
       if (value === src) return;
@@ -184,6 +186,7 @@ const TextExtendedWidget = ({
             enabled: false,
           },
         }}
+        theme={theme.palette.mode === "dark" ? "vs-dark" : "light"}
         onMount={(editor) => {
           editor.onDidChangeModelContent(() => {
             setHeight(

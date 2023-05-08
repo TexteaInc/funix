@@ -1,6 +1,6 @@
 indian_red = {
     "name": "indian_red",
-    "styles": {
+    "props": {
         "basic": {
             "color": "#d26b65",
             "contrastText": "#fefefe"
@@ -23,7 +23,7 @@ hokusai = {
             "contrastText": "#e0e4d4"
         }
     },
-    "colors": {
+    "palette": {
         "background": {
             "default": "#f9f0d8", 
             "paper": "#f9f0d8"

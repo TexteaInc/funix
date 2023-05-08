@@ -25,13 +25,10 @@ from ipaddress import IPv4Address, IPv6Address, ip_address, ip_network
 funix = decorator.funix
 funix_yaml = decorator.funix_yaml
 funix_json5 = decorator.funix_json5
-import_theme = decorator.import_theme
 
 set_default_theme = decorator.set_default_theme
 clear_default_theme = decorator.clear_default_theme
-set_theme = decorator.set_theme
-set_theme_yaml = decorator.set_theme_yaml
-set_theme_json5 = decorator.set_theme_json5
+import_theme = decorator.import_theme
 
 new_funix_type = decorator.new_funix_type
 set_app_secret = decorator.set_app_secret

@@ -14,6 +14,7 @@ import {
   Stack,
   Switch,
   Typography,
+  useTheme,
 } from "@mui/material";
 import { DataGrid, GridRowModel, GridToolbar } from "@mui/x-data-grid";
 import React from "react";
@@ -37,6 +38,7 @@ const OutputPanel = (props: {
   response: string | null;
 }) => {
   const [{ showFunctionDetail, viewType }, setStore] = useAtom(storeAtom);
+  const theme = useTheme();
 
   type ResponseViewProps = {
     response: string | null;
@@ -97,7 +99,16 @@ const OutputPanel = (props: {
         if (Array.isArray(parsedResponse) && is1dArray(parsedResponse)) {
           const SelectedResponseView = (props: any) => {
             if (props.selectedResponseViewType === "json")
-              return <ReactJson src={parsedResponse ?? {}} />;
+              return (
+                <ReactJson
+                  src={parsedResponse ?? {}}
+                  theme={
+                    theme.palette.mode === "dark"
+                      ? "summerfruit"
+                      : "rjv-default"
+                  }
+                />
+              );
             else if (props.selectedResponseViewType === "sheet")
               return (
                 <DataGrid
@@ -130,11 +141,27 @@ const OutputPanel = (props: {
             }
           }
           if (keysOfArraysInSheet.length === 0)
-            return <ReactJson src={parsedResponse ?? {}} />;
+            return (
+              <ReactJson
+                src={parsedResponse ?? {}}
+                theme={
+                  theme.palette.mode === "dark" ? "summerfruit" : "rjv-default"
+                }
+              />
+            );
           else {
             const SelectedResponseView = (props: any) => {
               if (props.selectedResponseViewType === "json")
-                return <ReactJson src={parsedResponse ?? {}} />;
+                return (
+                  <ReactJson
+                    src={parsedResponse ?? {}}
+                    theme={
+                      theme.palette.mode === "dark"
+                        ? "summerfruit"
+                        : "rjv-default"
+                    }
+                  />
+                );
               else if (props.selectedResponseViewType === "sheet") {
                 const rows: GridRowModel[] = [];
                 let newObject: object = {};
@@ -173,7 +200,14 @@ const OutputPanel = (props: {
                   return (
                     <div>
                       {grid}
-                      <ReactJson src={newObject} />
+                      <ReactJson
+                        src={newObject}
+                        theme={
+                          theme.palette.mode === "dark"
+                            ? "summerfruit"
+                            : "rjv-default"
+                        }
+                      />
                     </div>
                   );
                 } else return grid;
@@ -187,7 +221,14 @@ const OutputPanel = (props: {
             );
           }
         } else {
-          return <ReactJson src={parsedResponse ?? {}} />;
+          return (
+            <ReactJson
+              src={parsedResponse ?? {}}
+              theme={
+                theme.palette.mode === "dark" ? "summerfruit" : "rjv-default"
+              }
+            />
+          );
         }
       } catch (e) {
         return <code>{response ?? ""}</code>;
@@ -425,7 +466,13 @@ const OutputPanel = (props: {
         <Card>
           <CardContent>
             <Typography variant="h5">Function Detail</Typography>
-            <ReactJson src={props.detail} collapsed />
+            <ReactJson
+              src={props.detail}
+              collapsed
+              theme={
+                theme.palette.mode === "dark" ? "summerfruit" : "rjv-default"
+              }
+            />
           </CardContent>
         </Card>
       )}

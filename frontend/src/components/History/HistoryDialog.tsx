@@ -18,6 +18,7 @@ import {
   TextField,
   Toolbar,
   Typography,
+  useTheme,
 } from "@mui/material";
 import useFunixHistory, { History } from "../../shared/useFunixHistory";
 import {
@@ -84,15 +85,29 @@ const TryJson = (props: {
   src: string | PostCallResponse;
   collapsed: boolean;
 }) => {
+  const theme = useTheme();
+
   if (typeof props.src === "string") {
     try {
       const parsed = JSON.parse(props.src);
-      return <ReactJson src={parsed} collapsed={props.collapsed} />;
+      return (
+        <ReactJson
+          src={parsed}
+          collapsed={props.collapsed}
+          theme={theme.palette.mode === "dark" ? "summerfruit" : "rjv-default"}
+        />
+      );
     } catch {
       return <code>{props.src}</code>;
     }
   }
-  return <ReactJson src={props.src} collapsed={props.collapsed} />;
+  return (
+    <ReactJson
+      src={props.src}
+      collapsed={props.collapsed}
+      theme={theme.palette.mode === "dark" ? "summerfruit" : "rjv-default"}
+    />
+  );
 };
 
 type InputAndOutput = "input" | "output";
@@ -114,6 +129,7 @@ const HistoryDialog = (props: {
   const [singleCollapsedMap, setSingleCollapsedMap] = React.useState<
     Record<string, Record<InputAndOutput, boolean>>
   >({});
+  const theme = useTheme();
   // const [backdropOpen, setBackdropOpen] = React.useState(false);
   // const [rewindSnackbarOpen, setRewindSnackbarOpen] = React.useState(false);
 
@@ -439,6 +455,11 @@ const HistoryDialog = (props: {
                                   <ReactJson
                                     src={history.input}
                                     collapsed={true}
+                                    theme={
+                                      theme.palette.mode === "dark"
+                                        ? "summerfruit"
+                                        : "rjv-default"
+                                    }
                                   />
                                 ) : (
                                   <Typography>No input</Typography>
