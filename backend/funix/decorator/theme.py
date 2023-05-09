@@ -1,6 +1,7 @@
 import atexit
 import copy
 import os
+import shutil
 import tempfile
 from typing import Any, Optional
 from uuid import uuid4 as uuid
@@ -179,15 +180,18 @@ def get_dict_theme(
         module = importlib.util.module_from_spec(sepc)
         sepc.loader.exec_module(module)
     elif url:
-        file_handler, file_path = tempfile.mkstemp()
+        tempdir = tempfile.mkdtemp()
 
         @atexit.register
         def remove_temp():
-            os.remove(file_path)
+            shutil.rmtree(tempdir)
 
-        file_handler.write(requests.get(url).content)
-        file_handler.flush()
-        sepc = importlib.util.spec_from_file_location(name, file_path)
+        py_theme_path = os.path.join(tempdir, name + ".py")
+
+        with open(py_theme_path, "wb") as f:
+            f.write(requests.get(url).content)
+
+        sepc = importlib.util.spec_from_file_location(name, py_theme_path)
         module = importlib.util.module_from_spec(sepc)
         sepc.loader.exec_module(module)
     elif module is not None:
