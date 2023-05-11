@@ -263,8 +263,8 @@ def slider_table_plot(
          {"argument": "y", "width": 4}],  # row 2
     ],
     output_layout=[
-        [{"markdown": "**First return**"}, {"return": 0}],  # row 1
-        [{"markdown": "**Second return**"}, {"return": 1}]  # row 2
+        [{"markdown": "**First return**"}, {"index": 0}],  # row 1
+        [{"markdown": "**Second return**"}, {"index": 1}]  # row 2
     ]
 )
 def simple_layout(x: int, y: int) -> (int, int):
@@ -286,11 +286,11 @@ def simple_layout(x: int, y: int) -> (int, int):
         # all in row 1
     ],
     output_layout=[
-        [{"return": 0}],  # row 1
+        [{"index": 0}],  # row 1
         [{"markdown": "**Download Link**", "width": 2},
-         {"return": 1}],  # row 2
+         {"index": 1}],  # row 2
         [{"markdown": "**Visit the repo**"},
-         {"return": 2}]  # row 3
+         {"index": 2}]  # row 3
     ],
     show_source=True
 )
@@ -349,7 +349,7 @@ openai.api_key = os.environ.get("OPENAI_KEY")
     description="""Generate an image by prompt with DALL-E.""",
     widgets={"openai_key": "password"},
     conditional_visible=[
-        {"if": {"show_advanced": True, },
+        {"all_if": {"show_advanced": True, },
          "then": ["openai_key"]}
     ],
     show_source=True
@@ -377,7 +377,7 @@ def dalle(
     widgets={"openai_key": "password", "model": "radio",
              "show_advanced": "checkbox", "show_verbose": "switch"},
     conditional_visible=[
-        {"if": {"show_advanced": True, },
+        {"all_if": {"show_advanced": True, },
          "then": ["max_tokens", "model", "openai_key"]}
     ],
     show_source=True

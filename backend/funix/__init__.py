@@ -1,115 +1,67 @@
-import atexit
-import importlib
-import importlib.util
-import os
-import sys
-import socket
-import typing
-import urllib.parse
-from threading import Thread
-import webbrowser
-from uuid import uuid4 as uuid
-
-import git
-
-import funix.decorator as decorator
+from git import Repo
+from os import listdir
 from funix.app import app
-from funix.frontend import start
+from sys import path, exit
+from inspect import isfunction
+from urllib.parse import quote
+from ipaddress import ip_address
+import funix.decorator as decorator
+from importlib import import_module
+from typing import Generator, Optional
+from funix.util.file import create_safe_tempdir
+from os.path import join, isdir, exists, dirname
+from funix.util.module import import_module_from_file
+from funix.frontend import start, OpenFrontend, run_open_frontend
+from funix.util.network import is_this_host_on_this_network, get_unused_port_from, get_str_ip_and_handle_local, \
+    check_port_is_used
 
-import inspect
 
-import tempfile
-import shutil
-from ipaddress import IPv4Address, IPv6Address, ip_address, ip_network
-
+# ---- Exports ----
+# ---- Decorators ----
 funix = decorator.funix
-funix_yaml = decorator.funix_yaml
-funix_json5 = decorator.funix_json5
+# ---- Decorators ----
 
+# ---- Theme ----
 set_default_theme = decorator.set_default_theme
 clear_default_theme = decorator.clear_default_theme
 import_theme = decorator.import_theme
+# ---- Theme ----
 
+# ---- Util ----
 new_funix_type = decorator.new_funix_type
 set_app_secret = decorator.set_app_secret
+# ---- Util ----
+# ---- Exports ----
 
 
-def check_port_is_used(port: int, host: str):
-    try:
-        socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
-        return True
-    except:
-        return False
+def __prep(
+    module_or_file: Optional[str],
+    lazy: bool,
+    need_path: bool,
+    is_module: bool,
+    need_name: bool
+) -> None:
+    """
+    Prepare the module or file. Import and wrap the functions if needed.
+    Developers should not use this function. Import by yourself.
 
-
-def is_this_host_on_this_network(ip: IPv4Address | IPv6Address):
-    is_v4 = ip.version == 4
-    if is_v4:
-        return ip in ip_network("0.0.0.0/32")
-    else:
-        return ip in ip_network("::/128")
-
-
-def get_unused_port_from(port: int, host: IPv4Address | IPv6Address):
-    print(f"Checking port {port} is used or not...")
-    now_port = port
-    is_v4 = host.version == 4
-    if is_this_host_on_this_network(host):
-        new_host = "127.0.0.1" if is_v4 else "[::1]"
-    else:
-        new_host = host.compressed
-    while check_port_is_used(now_port, new_host):
-        if now_port > 65535 or now_port < 0:
-            raise Exception("No available port!")
-        now_port += 1
-    return now_port
-
-
-class OpenFrontend(Thread):
-    def __init__(self, host: IPv4Address | IPv6Address, port: int):
-        super(OpenFrontend, self).__init__()
-        self.is_v4 = host.version == 4
-        if is_this_host_on_this_network(host):
-            self.host = "127.0.0.1" if self.is_v4 else "[::1]"
-        else:
-            self.host = host.compressed
-        self.port = port
-
-    def is_server_online(self) -> bool:
-        try:
-            socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((self.host, self.port))
-            return True
-        except:
-            return False
-
-    def run(self) -> None:
-        while not self.is_server_online():
-            pass
-        webbrowser.open(f"http://{self.host}:{self.port}")
-
-
-def __import_module(path, need_name):
-    if need_name:
-        name = os.path.basename(path).replace(".py", "")
-    else:
-        name = uuid().hex
-    spec = importlib.util.spec_from_file_location(name, path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
-def __prep(module_or_file: typing.Optional[str], lazy: bool, need_path: bool, is_module: bool, need_name=False):
+    Parameters:
+        module_or_file (str): The module or file.
+        lazy (bool): If the functions should be wrapped automatically.
+        need_path (bool): If the path is needed.
+        is_module (bool): Pass `True` if the module_or_file is a module, `False` if it is a file.
+        need_name (bool): For the module, if the name is needed.
+    """
     decorator.enable_wrapper()
     if module_or_file:
         if is_module:
-            module = importlib.import_module(module_or_file)
+            module = import_module(module_or_file)
         else:
-            module = __import_module(module_or_file, need_name)
+            module = import_module_from_file(module_or_file, need_name)
         if lazy:
             members = reversed(dir(module))
             for member in members:
-                if inspect.isfunction(getattr(module, member)):
+                if isfunction(getattr(module, member)):
                     if need_path:
                         funix(__full_module=f"{module.__name__}")(getattr(module, member))
                     else:
@@ -118,113 +70,137 @@ def __prep(module_or_file: typing.Optional[str], lazy: bool, need_path: bool, is
         print("Error: No Python file, module or directory provided. "
               "\n How to fix: Please provide a file, module or directory and try again. If your "
               "functions are in a file called hello.py, you should pass hello.py here. \n Example: funix hello.py")
-        sys.exit(1)
+        exit(1)
 
 
-def get_path_modules(path: str):
-    sys.path.append(path)
-    files = os.listdir(path)
+def get_python_files_in_dir(base_dir: str, add_to_sys_path: bool, need_full_path: bool) -> Generator[str, None, None]:
+    """
+    Get all the Python files in a directory.
+
+    Parameters:
+        base_dir (str): The path.
+        add_to_sys_path (bool): If the path should be added to sys.path.
+        need_full_path (bool): If the full path is needed.
+
+    Returns:
+        Generator[str, None, None]: The Python files.
+    """
+    if add_to_sys_path:
+        path.append(base_dir)
+    files = listdir(base_dir)
     for file in files:
-        if os.path.isdir(os.path.join(path, file)):
-            yield from get_path_modules(os.path.join(path, file))
-        if file.endswith(".py"):
-            if file == "__init__.py":
-                continue
+        if isdir(join(base_dir, file)):
+            yield from get_python_files_in_dir(join(base_dir, file), add_to_sys_path, need_full_path)
+        if file.endswith(".py") and file != "__init__.py":
+            if need_full_path:
+                yield join(base_dir, file)
             yield file[:-3]
-
-
-def get_python_files_in_dir(path: str):
-    files = os.listdir(path)
-    for file in files:
-        if os.path.isdir(os.path.join(path, file)):
-            yield from get_python_files_in_dir(os.path.join(path, file))
-        else:
-            if file.endswith(".py") and file != "__init__.py":
-                yield os.path.join(path, file)
 
 
 def run(
     file_or_module_name: str,
-    host: typing.Optional[str] = "0.0.0.0",
-    port: typing.Optional[int] = 3000,
-    no_frontend: typing.Optional[bool] = False,
-    no_browser: typing.Optional[bool] = False,
-    lazy: typing.Optional[bool] = False,
-    dir_mode: typing.Optional[bool] = False,
-    package_mode: typing.Optional[bool] = False,
-    from_git: typing.Optional[str] = None,
-    repo_dir: typing.Optional[str] = None,
-    no_debug: typing.Optional[bool] = False,
-    app_secret: typing.Optional[str | bool] = False,
-):
+    host: Optional[str] = "0.0.0.0",
+    port: Optional[int] = 3000,
+    no_frontend: Optional[bool] = False,
+    no_browser: Optional[bool] = False,
+    lazy: Optional[bool] = False,
+    dir_mode: Optional[bool] = False,
+    package_mode: Optional[bool] = False,
+    from_git: Optional[str] = None,
+    repo_dir: Optional[str] = None,
+    no_debug: Optional[bool] = False,
+    app_secret: Optional[str | bool] = False,
+) -> None:
+    """
+    Run the funix app.
+    For more information, `funix -h` will help you.
+
+    Parameters:
+        file_or_module_name (str): The file or module name to run.
+        host (str): The host to run the app on, default is "0.0.0.0"
+        port (int): The port to run the app on, default is 3000
+        no_frontend (bool): If you want to disable the frontend, default is False
+        no_browser (bool): If you want to disable the browser opening, default is False
+        lazy (bool): If you want to enable lazy mode, default is False
+        dir_mode (bool): If you want to enable dir mode, default is False
+        package_mode (bool): If you want to enable package mode, default is False
+        from_git (str): If you want to run the app from a git repo, default is None
+        repo_dir (str): If you want to run the app from a git repo, you can specify the directory, default is None
+        no_debug (bool): If you want to disable debug mode, default is False
+        app_secret (str | bool): If you want to set an app secret, default is False
+
+    Returns:
+        None
+
+    Raises:
+        See code for more info.
+    """
     if from_git:
-        tempdir = tempfile.mkdtemp()
+        tempdir = create_safe_tempdir()
         print("Please wait, cloning git repo...")
-        git.Repo.clone_from(url=from_git, to_path=tempdir)
-
-        @atexit.register
-        def clean_tempdir():
-            shutil.rmtree(tempdir)
-
+        Repo.clone_from(url=from_git, to_path=tempdir)
         new_path = tempdir
         if repo_dir:
-            new_path = os.path.join(tempdir, repo_dir)
-        sys.path.append(new_path)
+            new_path = join(tempdir, repo_dir)
+        path.append(new_path)
 
         if file_or_module_name:
             pass
         elif dir_mode:
             file_or_module_name = new_path
         elif package_mode:
-            raise Exception("Package mode is not supported for git mode, try to use dir mode!")
+            raise ValueError("Package mode is not supported for git mode, try to use dir mode!")
 
     if app_secret and isinstance(app_secret, str):
         set_app_secret(app_secret)
 
     if dir_mode:
-        if os.path.exists(file_or_module_name) and os.path.isdir(file_or_module_name):
-            for single_file in get_python_files_in_dir(file_or_module_name):
+        if exists(file_or_module_name) and isdir(file_or_module_name):
+            for single_file in get_python_files_in_dir(
+                base_dir=file_or_module_name,
+                add_to_sys_path=False,
+                need_full_path=True
+            ):
                 __prep(module_or_file=single_file, lazy=lazy, need_path=True, is_module=False, need_name=True)
         else:
-            raise Exception("Directory not found or not a directory! "
-                            "If you want to use package mode, please use --package/-P option, "
-                            "if you want to use file mode, please use remove --recursive/-R option.")
+            raise RuntimeError("Directory not found or not a directory! "
+                               "If you want to use package mode, please use --package/-P option, "
+                               "if you want to use file mode, please use remove --recursive/-R option.")
     elif package_mode:
-        module = importlib.import_module(file_or_module_name)
-        path = module.__file__
-        if path is None:
-            raise Exception("`__init__.py` not found, please check this package!")
-        for module in get_path_modules(os.path.dirname(path)):
-            __prep(module_or_file=module, lazy=lazy, need_path=True, is_module=True)
+        module = import_module(file_or_module_name)
+        module_path = module.__file__
+        if module_path is None:
+            raise RuntimeError("`__init__.py` not found, please check this package!")
+        for module in get_python_files_in_dir(
+            base_dir=dirname(module_path),
+            add_to_sys_path=True,
+            need_full_path=False
+        ):
+            __prep(module_or_file=module, lazy=lazy, need_path=True, is_module=True, need_name=True)
     else:
-        if not os.path.exists(file_or_module_name):
-            raise Exception("File not found! If you want to use package mode, please use --package/-P option")
-        elif os.path.isdir(file_or_module_name):
-            raise Exception("Oh this is a directory! "
-                            "If you want to use directory/recursive mode, please use --recursive/-R option")
+        if not exists(file_or_module_name):
+            raise RuntimeError("File not found! If you want to use package mode, please use --package/-P option")
+        elif isdir(file_or_module_name):
+            raise RuntimeError("Oh this is a directory! If you want to use directory/recursive mode, "
+                               "please use --recursive/-R option")
         elif not file_or_module_name.endswith(".py"):
-            raise Exception("This is not a Python file! "
-                            "You should change the file extension to `.py`.")
+            raise RuntimeError("This is not a Python file! You should change the file extension to `.py`.")
         else:
-            __prep(module_or_file=file_or_module_name, lazy=lazy, need_path=False, is_module=False)
+            __prep(module_or_file=file_or_module_name, lazy=lazy, need_path=False, is_module=False, need_name=False)
 
     parsed_ip = ip_address(host)
     parsed_port = get_unused_port_from(port, parsed_ip)
 
     funix_secrets = decorator.export_secrets()
     if funix_secrets:
-        is_v4 = parsed_ip.version == 4
-        if is_this_host_on_this_network(parsed_ip):
-            local = "127.0.0.1" if is_v4 else "[::1]"
-        else:
-            local = parsed_ip.compressed
+        local = get_str_ip_and_handle_local(parsed_ip)
         print("Secrets:")
         print("-" * 15)
         for name, secret in funix_secrets.items():
             print(f"Name: {name}")
             print(f"Secret: {secret}")
             if not no_frontend:
-                print(f"Link: http://{local}:{port}/{urllib.parse.quote(name)}?secret={secret}")
+                print(f"Link: http://{local}:{port}/{quote(name)}?secret={secret}")
             print("-" * 15)
 
     if not no_frontend:
@@ -234,7 +210,5 @@ def run(
     if not no_frontend and not no_browser:
         start()
         if not no_browser:
-            web_browser_start = OpenFrontend(host=parsed_ip, port=parsed_port)
-            web_browser_start.daemon = True
-            web_browser_start.start()
+            run_open_frontend(parsed_ip, parsed_port)
     app.run(host=host, port=parsed_port, debug=not no_debug)
