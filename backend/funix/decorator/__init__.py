@@ -2,8 +2,6 @@ import io
 import os
 import re
 import json
-import yaml
-import json5
 import flask
 import inspect
 import secrets
@@ -18,8 +16,8 @@ import matplotlib.pyplot as plt, mpld3
 from .theme import parse_theme, get_dict_theme
 from typing import Literal, Optional, Callable, Any
 from ..widget import generate_frontend_widget_config
-from ..hint import DestinationType, WidgetsType, TreatAsType, WhitelistType, ExamplesType, LabelsType, LayoutType, \
-    ConditionalVisibleType, ArgumentConfigType
+from ..hint import DestinationType, WidgetsType, TreatAsType, WhitelistType, ExamplesType, LabelsType, InputLayout, \
+    OutputLayout, ConditionalVisibleType, ArgumentConfigType
 
 __supported_basic_types_dict = {
     "int": "integer",
@@ -330,23 +328,23 @@ def function_param_to_widget(annotation, widget):
 
 
 def funix(
-        path: Optional[str] = None,
-        title: Optional[str] = None,
-        secret: bool | str = False,
-        description: Optional[str] = "",
-        destination: DestinationType = None,
-        show_source: bool = False,
-        theme_name: Optional[str] = None,
-        widgets: WidgetsType = {},
-        treat_as: TreatAsType = {},
-        whitelist: WhitelistType = {},
-        examples: ExamplesType = {},
-        argument_labels: LabelsType = {},
-        input_layout: LayoutType = [],
-        output_layout: LayoutType = [],
-        conditional_visible: ConditionalVisibleType = [],
-        argument_config: ArgumentConfigType = {},
-        __full_module: Optional[str] = None,
+    path: Optional[str] = None,
+    title: Optional[str] = None,
+    secret: bool | str = False,
+    description: Optional[str] = "",
+    destination: DestinationType = None,
+    show_source: bool = False,
+    theme_name: Optional[str] = None,
+    widgets: WidgetsType = {},
+    treat_as: TreatAsType = {},
+    whitelist: WhitelistType = {},
+    examples: ExamplesType = {},
+    argument_labels: LabelsType = {},
+    input_layout: InputLayout = [],
+    output_layout: OutputLayout = [],
+    conditional_visible: ConditionalVisibleType = [],
+    argument_config: ArgumentConfigType = {},
+    __full_module: Optional[str] = None,
 ):
     global __parsed_themes
 
@@ -505,9 +503,9 @@ def funix(
                         row_item_done["type"] = "code"
                         row_item_done["content"] = row_item_done["code"]
                         row_item_done.pop("code")
-                    elif "return" in row_item:
-                        row_item_done["type"] = "return"
-                        return_output_indexes.append(row_item_done["return"])
+                    elif "index" in row_item:
+                        row_item_done["type"] = "index"
+                        return_output_indexes.append(row_item_done["index"])
                     row_layout.append(row_item_done)
                 return_output_layout.append(row_layout)
 
@@ -692,7 +690,7 @@ def funix(
                     },
                     "required": []
                 }
-                if_items: Any = conditional_visible_item["if"]
+                if_items: Any = conditional_visible_item["all_if"]
                 then_items = conditional_visible_item["then"]
                 for if_item in if_items.keys():
                     config["if"]["properties"][if_item] = {
@@ -906,29 +904,6 @@ def funix(
         return function
 
     return decorator
-
-
-def funix_parser_backend(config: Optional[str] = None, parser: Literal["json5", "yaml"] = "json5"):
-    def decorator(function: Callable):
-        if config is None:
-            return funix()(function)
-        else:
-            if parser == "json5":
-                json_config: Any = json5.loads(config)
-            elif parser == "yaml":
-                json_config = yaml.load(config, Loader=yaml.FullLoader)
-            else:
-                raise ValueError(f"Unknown parser: {parser}")
-            return funix(**json_config)(function)
-    return decorator
-
-
-def funix_json5(config: Optional[str] = None):
-    return funix_parser_backend(config, "json5")
-
-
-def funix_yaml(config: Optional[str] = None):
-    return funix_parser_backend(config, "yaml")
 
 
 def new_funix_type(widget: str, config_func: Optional[Callable] = None):

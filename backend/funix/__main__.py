@@ -2,7 +2,7 @@ import os
 import plac
 import sys
 import secrets
-from . import run
+from funix import run
 
 
 @plac.pos("file_or_module_name",
@@ -95,8 +95,13 @@ def main(
 
 
 def cli_main():
+    """
+    The entry point for the command line interface.
+
+    This function is called when you run `python -m funix` or `funix` from the command line.
+    """
     plac.call(main, version="Funix 0.3.6")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli_main()

@@ -25,9 +25,9 @@ export declare module "json-schema" {
       | "audios"
       | "files"
       | "code"
-      | "return";
+      | "index";
     content?: string | string[];
-    return?: number;
+    index?: number;
     argument?: string;
     width?: number;
     offset?: number;

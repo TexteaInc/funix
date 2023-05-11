@@ -403,11 +403,11 @@ const OutputPanel = (props: {
                   />
                 );
                 break;
-              case "return":
+              case "index":
                 itemElement = getTypedElement(
-                  listReturnType[item.return || 0],
-                  parsedResponse[item.return || 0],
-                  item.return || 0
+                  listReturnType[item.index || 0],
+                  parsedResponse[item.index || 0],
+                  item.index || 0
                 );
                 break;
               default:

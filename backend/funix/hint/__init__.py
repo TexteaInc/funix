@@ -1,77 +1,280 @@
-from typing import Any, Dict, List, Literal, NewType, Optional, Tuple, TypedDict, Text, TypeAlias
-from ..widget import builtin
+"""
+This file is used to define the type hint of the Funix backend.
+"""
+from funix.widget import builtin
+from funix.hint.layout import InputRow, OutputRow
+from typing import Any, Literal, NewType, Optional, TypedDict, TypeAlias
 
 
-DestinationType = Literal["column", "row", "sheet", None]
-WidgetsType = Optional[
-    Dict[Tuple | Text, List[Text] | Text] |
-    dict[tuple | str, list[str] | str]
+DestinationType = Optional[Literal["column", "row", "sheet"]]
+"""
+For yodas only, the destination of the page.
+"""
+
+Parameters = str | tuple
+"""
+Parameters.
+
+Types:
+    str: The name of the parameter.
+    tuple: The name of the parameters, for example: `("a", "b", "c")`.
+"""
+
+
+AcceptableWidgets = Literal[
+    "inputbox", "slider", "code", "textarea", "password", "switch", "checkbox", "sheet", "simple", "radio", "simple"
 ]
-TreatAsType = Optional[
-    Dict[Tuple | Text, Text] |
-    dict[tuple | str, str]
-]
-WhitelistType = Optional[
-    Dict[Tuple | Text, List[Any] | List[List[Any]]] |
-    dict[tuple | str, list | list[list]]
-]
-ExamplesType = Optional[
-    Dict[Tuple | Text, List[Any] | List[List[Any]]] |
-    dict[tuple | str, list | list[list]]
-]
-LabelsType = Optional[
-    Dict[Tuple | Text, Text] |
-    dict[tuple | str, str]
-]
-LayoutType = Optional[
-    List[List[Dict[Text, Any]]] |
-    list[list[dict[str, Any]]]
-]
-ConditionalVisibleType = Optional[
-    List[Dict[Text, List[Text] | Dict[Text, Any]]] |
-    list[dict[str, list[str] | dict[str, Any]]]
-]
+"""
+Acceptable widgets. Implemented now.
+"""
+
+WidgetsValue = \
+    list[AcceptableWidgets | tuple[AcceptableWidgets, dict]] | AcceptableWidgets | tuple[AcceptableWidgets, dict]
+"""
+The value of the `widgets`.
+
+Types:
+    list[AcceptableWidgets]: The value of the widgets, for example: `["sheet", "inputbox"]`. Has a hierarchical 
+                             relationship.
+    list[tuple[AcceptableWidgets, dict]]: The value of the widgets, for example: 
+                                          `[("slider", {"min": 1, "max": 200, "step": 2})]`.
+    AcceptableWidgets: The value of the widgets, for example: `"sheet"`. Top-level use, as a rule, stands for all.
+    tuple[AcceptableWidgets, dict]: The value of the widgets, for example: 
+                                    `("slider", {"min": 1, "max": 200, "step": 2})`.
+"""
+
+WidgetsType = Optional[dict[Parameters, WidgetsValue]]
+"""
+The type of the `widgets`.
+
+Examples:
+    {"a": "sheet"} -> The parameter `a` is a sheet.
+    {"a": ["sheet", "inputbox"]} -> The parameter `a` is a sheet and the elements that inside the sheet are input boxes.
+    {("a", "b"): "switch"} -> The parameter `a` and `b` are switches.
+    {("a", "b"): ["sheet", "inputbox"]} -> The parameter `a` and `b` are sheets and the elements that inside the sheets 
+                                           are input boxes.
+"""
+
+TreatAsValues = Literal["column", "config", "cell"]
+"""
+Acceptable values of `treat_as` attribute.
+
+Default: "config", for list or typing.List, please choose "column" or "cell".
+"""
+
+TreatAsType = Optional[dict[Parameters, TreatAsValues]]
+"""
+The type of the `treat_as` attribute.
+
+Examples:
+    {"a": "column"} -> The parameter `a` is a column.
+    {("a", "b"): "cell"} -> The parameter `a` and `b` are cells.
+"""
+
+WhitelistValues = list[list] | list
+"""
+The value of the `whitelist`.
+
+Types:
+    list[list]: The whitelist, for example: [["a", "b"], ["c", "d"]].
+    list: The whitelist, for example: ["a", "b"].
+"""
+
+WhitelistType = Optional[dict[Parameters, WhitelistValues]]
+"""
+The type of the `whitelist`. 
+
+Examples:
+    {"a": ["a", "b"]} -> The parameter `a` has a whitelist, and the whitelist is `["a", "b"]`.
+    {("a", "b"): [["a", "b"], ["c", "d"]]} -> The parameter `a` and `b` have a whitelist, and for `a` the whitelist is
+                                              `["a", "b"]`, for `b` the whitelist is `["c", "d"]`.
+"""
+
+ExamplesValues = list[list] | list
+"""
+The value of the `examples`.
+
+Types:
+    list[list]: The examples, for example: [["a", "b"], ["c", "d"]].
+    list: The examples, for example: ["a", "b"].
+"""
+
+ExamplesType = Optional[dict[Parameters, ExamplesValues]]
+"""
+The type of the `examples`. 
+
+Examples:
+    {"a": ["a", "b"]} -> The parameter `a` has examples, and the examples are `"a"` and `"b"`.
+    {("a", "b"): [["a", "b"], ["c", "d"]]} -> The parameter `a` and `b` have examples, and for `a` the examples are
+                                              `"a"`, `"b"`, for `b` the examples are `"c"`, `"d"`.
+"""
+
+LabelsType = Optional[dict[Parameters, str]]
+"""
+The type of the `argument_labels`.
+
+Examples:
+    {"a": "A"} -> The parameter `a` has a label, and the label is `A`.
+    {("a", "b"): "A"} -> The parameter `a` and `b` have the same label, and the label is `A`.
+"""
+
+
+InputLayout = Optional[list[InputRow]]
+"""
+The type of the `input_layout`.
+
+See `InputRow` for more information.
+"""
+
+OutputLayout = Optional[list[OutputRow]]
+"""
+The type of the `output_layout`.
+
+See `OutputRow` for more information.
+"""
+
+
+class ConditionalVisible(TypedDict):
+    """
+    Conditional visible.
+    """
+
+    all_if: dict[str, Any]
+    """
+    The condition.
+    
+    `str` means the parameter name, `Any` means the value. If the value of the parameter is equal to the value, elements 
+    that in `then` will be visible.
+    """
+
+    then: list[str]
+    """
+    The parameters that will be visible if the condition is true.
+    """
+
+
+ConditionalVisibleType = Optional[list[ConditionalVisible]]
+"""
+The type of the `conditional_visible`.
+
+Examples:
+    [{"all_if": {"a": "b"}, "then": ["c"]}] -> If the value of the parameter `a` is equal to `"b"`, the parameter `c`
+                                               will be visible.
+"""
+
+ArgumentConfigKeys = Literal["treat_as", "whitelist", "example", "widget", "label"]
+"""
+The keys of `argument_config[widget]`.
+"""
+
+
+ArgumentTreatAsType = str
+ArgumentWhitelistType = list[Any]  # Same as the widget type
+ArgumentExampleType = list[Any]  # Same as the widget type
+ArgumentWidgetType = str
+ArgumentLabelType = str
+
 ArgumentConfigType = Optional[
-    Dict[Text | Tuple, Dict[Text, Any]] |
-    dict[str | tuple, dict[str, Any]]
+    dict[Parameters, dict[
+        ArgumentConfigKeys, ArgumentTreatAsType | ArgumentWhitelistType | ArgumentExampleType | ArgumentWidgetType |
+        ArgumentLabelType
+    ]]
 ]
+"""
+The type of the `argument_config`.
+
+Examples:
+    {"a": {"widget": "sheet"}} -> The parameter `a` has a widget, and the widget is `sheet`.
+"""
 
 
 class CodeConfig(TypedDict):
-    lang: Optional[str | Text]
-    code: Optional[str | Text]
+    """
+    The config of the code box.
+
+    For output.
+    """
+
+    lang: Optional[str]
+    """
+    The language of the code.
+    """
+
+    code: Optional[str]
+    """
+    The code.
+    """
 
 
-BasicFileType = Optional[Text | str | bytes]
+BasicFileType = Optional[str | bytes]
 """
-For URL, path, bytes
+Support URL, path, bytes
+
 For example: "https://example.org/imgs/1.png"
 """
 
-_Markdown = NewType("Markdown", type(Optional[str | Text]))
+_Markdown = NewType("Markdown", type(Optional[str]))
 Markdown: TypeAlias = _Markdown
 """
+Markdown type.
+For output.
+
 Support Markdown like "**bold**" and "*italic*"
 """
 
-_HTML = NewType("HTML", type(Optional[str | Text]))
+_HTML = NewType("HTML", type(Optional[str]))
 HTML: TypeAlias = _HTML
 """
+HTML type.
+For output.
+
+
 Support HTML like "<span style='color: red'>red</span>"
 """
 
 _Image = NewType("Images", type(BasicFileType))
 Image: TypeAlias = _Image
+"""
+Image type.
+For output.
+
+See `BasicFileType` for more information.
+"""
+
 _Video = NewType("Videos", type(BasicFileType))
 Video: TypeAlias = _Video
+"""
+Video type.
+For output.
+
+See `BasicFileType` for more information.
+"""
+
 _Audio = NewType("Audios", type(BasicFileType))
 Audio: TypeAlias = _Audio
+"""
+Audio type.
+For output.
+
+See `BasicFileType` for more information.
+"""
+
 _File = NewType("Files", type(BasicFileType))
 File: TypeAlias = _File
+"""
+File type.
+For output.
 
-_Code = NewType("Code", type(Optional[str | Text | CodeConfig]))
+See `BasicFileType` for more information.
+"""
+
+_Code = NewType("Code", type(Optional[str | CodeConfig]))
 Code: TypeAlias = _Code
 """
+Code type.
+For output.
+
+
 Support Code like:
 
 {
@@ -82,6 +285,8 @@ Support Code like:
 or just a string like "print('hello world')"
 """
 
+
+# ---- Built-in Output Widgets ----
 IntInputBox: TypeAlias = builtin.IntInputBox
 IntSlider = builtin.IntSlider
 FloatInputBox: TypeAlias = builtin.FloatInputBox
@@ -96,3 +301,4 @@ BytesImage: TypeAlias = builtin.BytesImage
 BytesVideo: TypeAlias = builtin.BytesVideo
 BytesAudio: TypeAlias = builtin.BytesAudio
 BytesFile: TypeAlias = builtin.BytesFile
+# ---- Built-in Output Widgets ----
