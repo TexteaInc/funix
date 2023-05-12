@@ -1,9 +1,10 @@
 """
 This file is used to define the type hint of the Funix backend.
 """
+
 from funix.widget import builtin
 from funix.hint.layout import InputRow, OutputRow
-from typing import Any, Literal, NewType, Optional, TypedDict, TypeAlias
+from typing import Literal, NewType, Optional, TypedDict, TypeAlias
 
 
 DestinationType = Optional[Literal["column", "row", "sheet"]]
@@ -139,11 +140,11 @@ class ConditionalVisible(TypedDict):
     Conditional visible.
     """
 
-    all_if: dict[str, Any]
+    all_if: dict[str, any]
     """
     The condition.
     
-    `str` means the parameter name, `Any` means the value. If the value of the parameter is equal to the value, elements 
+    `str` means the parameter name, `any` means the value. If the value of the parameter is equal to the value, elements 
     that in `then` will be visible.
     """
 
@@ -169,8 +170,8 @@ The keys of `argument_config[widget]`.
 
 
 ArgumentTreatAsType = str
-ArgumentWhitelistType = list[Any]  # Same as the widget type
-ArgumentExampleType = list[Any]  # Same as the widget type
+ArgumentWhitelistType = list[any]  # Same as the widget type
+ArgumentExampleType = list[any]  # Same as the widget type
 ArgumentWidgetType = str
 ArgumentLabelType = str
 
@@ -302,3 +303,81 @@ BytesVideo: TypeAlias = builtin.BytesVideo
 BytesAudio: TypeAlias = builtin.BytesAudio
 BytesFile: TypeAlias = builtin.BytesFile
 # ---- Built-in Output Widgets ----
+
+
+# ---- Decorator ----
+class DecoratedFunctionListItem(TypedDict):
+    """
+    The item of the list `decorated_functions`.
+    """
+
+    name: str
+    """
+    The name (in frontend, title) of the function.
+    """
+
+    path: str
+    """
+    The path of the function.
+    """
+
+    module: Optional[str]
+    """
+    The module of the function.
+    """
+
+    secret: Optional[str]
+    """
+    The secret of the function.
+    """
+# ---- Decorator ----
+
+
+def new_funix_type(widget: str, config_func: Optional[callable] = None) -> callable:
+    """
+    Decorator for creating new funix types.
+
+    Parameters:
+        widget (str): The widget to use for the new type.
+        config_func (Optional[callable]): A function that returns a tuple of the form (type, config).
+
+    Returns:
+        callable: The decorator.
+    """
+
+    def decorator(cls) -> any:
+        """
+        Creates a new funix type.
+
+        Parameters:
+            cls (any): The class to decorate.
+
+        Returns:
+            any: The decorated class or getting the new funix type function.
+        """
+        if config_func is None:
+            cls.__funix__ = True
+            cls.__funix_widget__ = widget
+            cls.__funix_base__ = cls.__base__
+            return cls
+        else:
+            def new_cls_func(*args, **kwargs):
+                """
+                Creates a new funix type with a config function.
+
+                Parameters:
+                    *args: The arguments to pass to the config function.
+                    **kwargs: The keyword arguments to pass to the config function.
+
+                Returns:
+                    any: The decorated class.
+                """
+                cls.__funix__ = True
+                cls.__funix_widget__ = widget
+                cls.__funix_base__ = cls.__base__
+                cls.__funix_config__ = config_func(*args, **kwargs)[1]
+                return cls
+
+            return new_cls_func
+
+    return decorator

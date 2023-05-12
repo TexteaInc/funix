@@ -1,270 +1,161 @@
-import io
-import os
-import re
-import json
-import flask
-import inspect
-import secrets
-import traceback
-import matplotlib
+"""
+Funix decorator. The central logic of Funix.
+"""
+
+from json import dumps
+from uuid import uuid4
 from funix.app import app
 from functools import wraps
-from uuid import uuid4 as uuid
-from urllib.parse import urlparse
+from typing import Optional
+from types import ModuleType
+from secrets import token_hex
+from traceback import format_exc
 from urllib.request import urlopen
-import matplotlib.pyplot as plt, mpld3
-from .theme import parse_theme, get_dict_theme
-from typing import Literal, Optional, Callable, Any
-from ..widget import generate_frontend_widget_config
-from ..hint import DestinationType, WidgetsType, TreatAsType, WhitelistType, ExamplesType, LabelsType, InputLayout, \
-    OutputLayout, ConditionalVisibleType, ArgumentConfigType
+from flask import Response, request
+from importlib import import_module
+from funix.theme import parse_theme, get_dict_theme
+from funix.widget import generate_frontend_widget_config
+from inspect import Signature, Parameter, getsource, signature
+from funix.decorator.file import enable_file_service, get_static_uri
+from funix.decorator.magic import get_type_dict, get_type_widget_prop, convert_row_item, function_param_to_widget
+from funix.config import banned_function_name_and_path, supported_basic_types, supported_basic_types_dict, \
+    supported_basic_file_types, supported_upload_widgets
+from funix.hint import DestinationType, WidgetsType, TreatAsType, WhitelistType, ExamplesType, LabelsType, \
+    InputLayout, OutputLayout, ConditionalVisibleType, ArgumentConfigType, DecoratedFunctionListItem
 
-__supported_basic_types_dict = {
-    "int": "integer",
-    "float": "number",
-    "str": "string",
-    "bool": "boolean"
-}
-__supported_basic_file_types = ["Images", "Videos", "Audios", "Files"]
-__supported_upload_widgets = ["image", "video", "audio", "file"]
-__banned_function_name_and_path = ["list", "file", "static", "config", "param", "call"]
-__supported_basic_types = list(__supported_basic_types_dict.keys())
-__decorated_functions_list = []
-__decorated_functions_names_list = []
-__decorated_secret_functions_dict = {}
-__decorated_id_to_function_dict = {}
-__files_dict = {}
-__wrapper_enabled = False
-__default_theme = {}
+
+__matplotlib_use = False
+"""
+Whether Funix can handle matplotlib-related logic
+"""
+
+try:
+    # From now on, Funix no longer mandates matplotlib and mpld3
+    import matplotlib
+    matplotlib.use("Agg")  # No display
+    __matplotlib_use = True
+except:
+    pass
+
+
+__decorated_functions_list: list[DecoratedFunctionListItem] = []
+"""
+A list, each element is a dict, record the information of the decorated function.
+
+See `DecoratedFunctionListItem` for more information.
+"""
+
+__decorated_functions_names_list: list[str] = []
+"""
+A list, each element is the name of the decorated function.
+"""
+
+__decorated_secret_functions_dict: dict[str, str] = {}
+"""
+A dict, key is function id, value is secret.
+For checking if the secret is correct.
+"""
+
+__decorated_id_to_function_dict: dict[str, str] = {}
+"""
+A dict, key is function id, value is function name.
+"""
+
+__wrapper_enabled: bool = False
+"""
+If the wrapper is enabled.
+"""
+
+__default_theme: dict = {}
+"""
+The default funix theme.
+"""
+
 __themes = {}
+"""
+A dict, key is theme name, value is funix theme.
+"""
+
 __parsed_themes = {}
-__app_secret = None
+"""
+A dict, key is theme name, value is parsed MUI theme.
+"""
 
-matplotlib.use("Agg")
+__app_secret: str | None = None
+"""
+App secret, for all functions.
+"""
+
+matplotlib.use("Agg")  # Use Agg backend for matplotlib
+
+mpld3: ModuleType | None = None
 
 
-def set_app_secret(secret: str):
+def set_function_secret(secret: str, function_id: str, function_name: str) -> None:
+    """
+    Set the secret of a function.
+
+    Parameters:
+        secret (str): The secret.
+        function_id (str): The function id.
+        function_name (str): The function name.
+    """
+    global __decorated_secret_functions_dict, __decorated_id_to_function_dict
+    __decorated_secret_functions_dict[function_id] = secret
+    __decorated_id_to_function_dict[function_id] = function_name
+
+
+def set_app_secret(secret: str) -> None:
+    """
+    Set the app secret, it will be used for all functions.
+
+    Parameters:
+        secret (str): The secret.
+    """
     global __app_secret
     __app_secret = secret
 
 
-def enable_wrapper():
-    global __wrapper_enabled, __files_dict, __decorated_functions_list
+def enable_wrapper() -> None:
+    """
+    Enable the wrapper, this will add the list and file path to the app.
+    """
+    global __wrapper_enabled, __decorated_functions_list
     if not __wrapper_enabled:
         __wrapper_enabled = True
 
         @app.get("/list")
-        def __funix_export_func_list():
+        def __funix_export_func_list() -> dict:
+            """
+            Send the full function list.
+
+            Routes:
+                /list: The list path, we don't consider the GET "/" route, because it is the index page. And we start
+                       frontend and backend at the same port.
+
+            Returns:
+                dict: The function list.
+            """
             return {
                 "list": __decorated_functions_list,
             }
 
-        @app.get("/file/<string:fid>")
-        def __funix_export_file(fid: str):
-            if fid in __files_dict:
-                if isinstance(__files_dict[fid], str):
-                    return flask.send_file(__files_dict[fid])
-                else:
-                    return flask.send_file(io.BytesIO(__files_dict[fid]), mimetype="application/octet-stream")
-            else:
-                return flask.abort(404)
+        enable_file_service()
 
 
-def get_type_dict(annotation):
-    if isinstance(annotation, object):  # is class
-        annotation_type_class_name = getattr(type(annotation), "__name__")
-        if annotation_type_class_name == "_GenericAlias":
-            if getattr(annotation, "__module__") == "typing":
-                if getattr(annotation, "_name") == "List" or getattr(annotation, "_name") == "Dict":
-                    return {
-                        "type": str(annotation)
-                    }
-                elif str(getattr(annotation, "__origin__")) == "typing.Literal":  # Python 3.8
-                    literal_first_type = get_type_dict(type(getattr(annotation, "__args__")[0]))
-                    if literal_first_type is None:
-                        raise Exception("Unsupported typing")
-                    literal_first_type = get_type_dict(type(getattr(annotation, "__args__")[0]))["type"]
-                    return {
-                        "type": literal_first_type,
-                        "whitelist": getattr(annotation, "__args__")
-                    }
-                elif str(getattr(annotation, "__origin__")) == "typing.Union":  # typing.Optional
-                    union_first_type = get_type_dict(getattr(annotation, "__args__")[0])["type"]
-                    return {
-                        "type": union_first_type,
-                        "optional": True
-                    }
-                else:
-                    raise Exception("Unsupported typing")
-            else:
-                raise Exception("Support typing only")
-        elif annotation_type_class_name == "_LiteralGenericAlias":  # Python 3.10
-            if str(getattr(annotation, "__origin__")) == "typing.Literal":
-                literal_first_type = get_type_dict(type(getattr(annotation, "__args__")[0]))["type"]
-                return {
-                    "type": literal_first_type,
-                    "whitelist": getattr(annotation, "__args__")
-                }
-            else:
-                raise Exception("Unsupported annotation")
-        elif annotation_type_class_name == "_SpecialGenericAlias":
-            if getattr(annotation, "_name") == "Dict" or getattr(annotation, "_name") == "List":
-                return {
-                    "type": str(annotation)
-                }
-        elif annotation_type_class_name == "_TypedDictMeta":
-            key_and_type = {}
-            for key in annotation.__annotations__:
-                key_and_type[key] = \
-                    __supported_basic_types_dict[annotation.__annotations__[key].__name__] \
-                        if annotation.__annotations__[key].__name__ in __supported_basic_types_dict \
-                        else annotation.__annotations__[key].__name__
-            return {
-                "type": "typing.Dict",
-                "keys": key_and_type
-            }
-        elif annotation_type_class_name == "type":
-            return {
-                "type": getattr(annotation, "__name__")
-            }
-        elif annotation_type_class_name == "range":
-            return {
-                "type": "range"
-            }
-        elif annotation_type_class_name in ["UnionType", "_UnionGenericAlias"]:
-            if len(getattr(annotation, "__args__")) != 2 or \
-                getattr(annotation, "__args__")[0].__name__ == "NoneType" or \
-                getattr(annotation, "__args__")[1].__name__ != "NoneType":
-                raise Exception("Must be X | None, Optional[X] or Union[X, None]")
-            return get_type_dict(getattr(annotation, "__args__")[0])
-        else:
-            # raise Exception("Unsupported annotation_type_class_name")
-            return {
-                "type": "typing.Dict"
-            }
-    else:
-        return {
-            "type": str(annotation)
-        }
+def set_default_theme(alias: str) -> None:
+    """
+    Set the default theme.
 
+    Parameters:
+        alias (str): The theme alias.
 
-def get_type_widget_prop(function_arg_type_name, index, function_arg_widget, widget_type, function_annotation):
-    # Basic and List only
-    if isinstance(function_arg_widget, str):
-        widget = function_arg_widget
-    elif isinstance(function_arg_widget, list):
-        if index >= len(function_arg_widget):
-            widget = ""
-        else:
-            widget = function_arg_widget[index]
-    else:
-        widget = ""
-    if function_arg_type_name in widget_type:
-        widget = widget_type[function_arg_type_name]
-    for single_widget_type in widget_type:
-        if function_annotation.__name__ == single_widget_type:
-            widget = widget_type[single_widget_type]
-            break
-    if function_arg_type_name in __supported_basic_types:
-        return {
-            "type": __supported_basic_types_dict[function_arg_type_name],
-            "widget": widget
-        }
-    elif function_arg_type_name.startswith("range"):
-        return {
-            "type": "integer",
-            "widget": widget
-        }
-    elif function_arg_type_name == "list":
-        return {
-            "type": "array",
-            "items": {
-                "type": "any",
-                "widget": ""
-            },
-            "widget": widget
-        }
-    else:
-        typing_list_search_result = re.search(
-            r"typing\.(?P<containerType>List)\[(?P<contentType>.*)]",
-            function_arg_type_name)
-        if isinstance(typing_list_search_result, re.Match):  # typing.List, typing.Dict
-            content_type = typing_list_search_result.group("contentType")
-            # (content_type in __supported_basic_types) for yodas only
-            return {
-                "type": "array",
-                "widget": widget,
-                "items": get_type_widget_prop(
-                    content_type,
-                    index + 1,
-                    function_arg_widget,
-                    widget_type,
-                    function_annotation
-                )
-            }
-        elif function_arg_type_name == "typing.Dict":
-            return {
-                "type": "object",
-                "widget": widget
-            }
-        elif function_arg_type_name == "typing.List":
-            return {
-                "type": "array",
-                "widget": widget
-            }
-        else:
-            # raise Exception("Unsupported Container Type")
-            return {
-                "type": "object",
-                "widget": widget
-            }
-
-
-def is_valid_uri(uri: str) -> bool:
-    try:
-        result = urlparse(uri)
-        return all([result.scheme, result.netloc, result.path])
-    except:
-        return False
-
-
-def get_real_uri(path: str | bytes) -> str:
-    if isinstance(path, bytes):
-        fid = uuid().hex
-        result = f"/file/{fid}"
-        if path not in list(__files_dict.values()):
-            __files_dict[fid] = path
-        else:
-            return f"/file/{list(__files_dict.keys())[list(__files_dict.values()).index(path)]}"
-        return result
-    if not is_valid_uri(path):
-        fid = uuid().hex + "." + path.split(".")[-1]
-        result = f"/file/{fid}"
-        abs_path = os.path.abspath(path)
-        if abs_path not in list(__files_dict.values()):
-            __files_dict[fid] = abs_path
-        else:
-            return f"/file/{list(__files_dict.keys())[list(__files_dict.values()).index(abs_path)]}"
-        return result
-    else:
-        return path
-
-
-def get_static_uri(path: str | list[str] | bytes | list[bytes]) -> str | list[str]:
-    global __files_dict
-    if isinstance(path, (str, bytes)):
-        return get_real_uri(path)
-    elif isinstance(path, list):
-        uris = [get_real_uri(uri) for uri in path]
-        return uris
-    else:
-        raise Exception("Unsupported path type")
-
-
-def set_default_theme(alias: str):
+    Raises:
+        ValueError: If the theme does not exist.
+    """
     global __default_theme, __parsed_themes, __themes
     if alias not in __themes:
-        raise Exception(f"Theme {alias} does not exist")
+        raise ValueError(f"Theme {alias} does not exist")
     __default_theme = __themes[alias]
     __parsed_themes["__default"] = parse_theme(__default_theme)
 
@@ -275,56 +166,46 @@ def import_theme(
     url: Optional[str] = None,
     module: Optional[dict] = None,
     dict_name: Optional[str] = None
-):
+) -> None:
+    """
+    Import a theme from path, url or module (dict).
+
+    Parameters:
+        alias (str): The theme alias.
+        path (str): The path of the theme file.
+        url (str): The url of the theme file.
+        module (dict): The module(dict) of the theme. Here, module is dict.
+        dict_name (str): The name of the theme dict in the module.
+
+    Raises:
+        ValueError: If the theme already exists.
+
+    Notes:
+        Check the `funix.theme.get_dict_theme` function for more information.
+    """
     global __themes
     if alias in __themes:
-        raise Exception(f"Theme {alias} already exists")
+        raise ValueError(f"Theme {alias} already exists")
     __themes[alias] = get_dict_theme(path, url, module, dict_name)
 
 
-def clear_default_theme():
+def clear_default_theme() -> None:
+    """
+    Clear the default theme.
+    """
     global __default_theme, __parsed_themes
     __default_theme = {}
     __parsed_themes.pop("__default")
 
 
-def conv_row_item(row_item: dict, item_type: str):
-    conved_item = row_item
-    conved_item["type"] = item_type
-    conved_item["content"] = row_item[item_type]
-    conved_item.pop(item_type)
-    return conved_item
-
-
-def funix_param_to_widget(annotation):
-    need_config = hasattr(annotation, "__funix_config__")
-    if need_config:
-        return f"{annotation.__funix_widget__}{json.dumps(list(annotation.__funix_config__.values()))}"
-    else:
-        return annotation.__funix_widget__
-
-
-def function_param_to_widget(annotation, widget):
-    if type(annotation) is range or annotation is range:
-        start = annotation.start if type(annotation.start) is int else 0
-        stop = annotation.stop if type(annotation.stop) is int else 101
-        step = annotation.step if type(annotation.step) is int else 1
-        widget = f"slider[{start},{stop - 1},{step}]"
-    elif hasattr(annotation, "__funix__"):
-        widget = funix_param_to_widget(annotation)
-    else:
-        if type(annotation).__name__ == "_GenericAlias" and annotation.__name__ == "List":
-            if annotation.__args__[0] is range or type(annotation.__args__[0]) is range:
-                arg = annotation.__args__[0]
-                start = arg.start if type(arg.start) is int else 0
-                stop = arg.stop if type(arg.stop) is int else 101
-                step = arg.step if type(arg.step) is int else 1
-                widget = [widget if isinstance(widget, str) else widget[0],
-                          f"slider[{start},{stop - 1},{step}]"]
-            elif hasattr(annotation.__args__[0], "__funix__"):
-                widget = [widget if isinstance(widget, str) else widget[0],
-                          funix_param_to_widget(annotation.__args__[0])]
-    return widget
+def export_secrets():
+    """
+    Export all secrets from the decorated functions.
+    """
+    __new_dict: dict[str, str] = {}
+    for function_id, secret in __decorated_secret_functions_dict.items():
+        __new_dict[__decorated_id_to_function_dict[function_id]] = secret
+    return __new_dict
 
 
 def funix(
@@ -335,59 +216,115 @@ def funix(
     destination: DestinationType = None,
     show_source: bool = False,
     theme_name: Optional[str] = None,
-    widgets: WidgetsType = {},
-    treat_as: TreatAsType = {},
-    whitelist: WhitelistType = {},
-    examples: ExamplesType = {},
-    argument_labels: LabelsType = {},
-    input_layout: InputLayout = [],
-    output_layout: OutputLayout = [],
-    conditional_visible: ConditionalVisibleType = [],
-    argument_config: ArgumentConfigType = {},
+    widgets: WidgetsType = None,
+    treat_as: TreatAsType = None,
+    whitelist: WhitelistType = None,
+    examples: ExamplesType = None,
+    argument_labels: LabelsType = None,
+    input_layout: InputLayout = None,
+    output_layout: OutputLayout = None,
+    conditional_visible: ConditionalVisibleType = None,
+    argument_config: ArgumentConfigType = None,
     __full_module: Optional[str] = None,
 ):
+    """
+    Decorator for functions to convert them to web apps
+    The heart of Funix, all the beginning of the magic happens here
+    (or at least most of it lol)
+
+    See document for more details, the docstring here is just a brief summary
+
+    Parameters:
+        path(str): path to the function, if None, the function name will be used (if title available, use title)
+        title(str): title of the function, if None, the function name will be used
+        secret(bool|str):
+            if False, the function will not be locked.
+            if True, the function will be locked with a random 16 character password.
+            if str, the function will be locked with the given password.
+        description(str): description of the function, if None, the function docstring will be used
+        destination(DestinationType): for yodas, no effect on funix
+        show_source(bool): whether to display the code of this function in the frontend
+        theme_name(str): name of the theme to use, if None, the default theme will be used
+        widgets(WidgetsType): parameters to be converted to widgets
+        treat_as(TreatAsType): parameters to be treated as other types
+        whitelist(WhitelistType): acceptable values for parameters
+        examples(ExamplesType): examples for parameters
+        argument_labels(LabelsType): labels for parameters
+        input_layout(InputLayout): layout for input widgets
+        output_layout(OutputLayout): layout for output widgets
+        conditional_visible(ConditionalVisibleType): conditional visibility for widgets
+        argument_config(ArgumentConfigType): config for widgets
+        __full_module(str):
+            full module path of the function, for `path` only.
+            You don't need to set it unless you are funixing a directory and package.
+
+    Returns:
+        function: the decorated function
+
+    Raises:
+        Check code for details
+    """
     global __parsed_themes
 
-    def decorator(function: Callable):
+    def decorator(function: callable) -> callable:
+        """
+        Decorator for functions to convert them to web apps
+
+        Parameters:
+            function(callable): the function to be decorated
+
+        Returns:
+            callable: the decorated function
+
+        Raises:
+            Check code for details
+        """
         if __wrapper_enabled:
-            id: str = str(uuid())
+            function_id = str(uuid4())
+
             function_name = getattr(function, "__name__")  # function name as id to retrieve function info
-            if function_name in __banned_function_name_and_path:
-                raise Exception(f"{function_name} is not allowed, banned names: {__banned_function_name_and_path}")
+            if function_name in banned_function_name_and_path:
+                raise ValueError(f"{function_name} is not allowed, banned names: {banned_function_name_and_path}")
+
             function_title = title if title is not None else function_name
 
-            try:
-                if not theme_name:
+            function_description = description
+            if function_description is None:
+                if function_docstring := getattr(function, "__doc__"):
+                    function_description = function_docstring
+
+            if not theme_name:
+                if "__default" in __parsed_themes:
                     parsed_theme = __parsed_themes["__default"]
                 else:
-                    if theme_name in __parsed_themes:
-                        parsed_theme = __parsed_themes[theme]
-                    else:
-                        parsed_theme = parse_theme(__themes[theme_name])
-                        __parsed_themes[theme] = parsed_theme
-            except:
-                parsed_theme = [], {}, {}, {}, {}
+                    parsed_theme = [], {}, {}, {}, {}
+            else:
+                if theme_name in __parsed_themes:
+                    parsed_theme = __parsed_themes[theme_name]
+                else:
+                    # Cache
+                    parsed_theme = parse_theme(__themes[theme_name])
+                    __parsed_themes[theme_name] = parsed_theme
 
-            if path is None:
+            if not path:
                 endpoint = function_name
             else:
-                if path in __banned_function_name_and_path:
+                if path in banned_function_name_and_path:
                     raise Exception(f"{function_name}'s path: {path} is not allowed")
                 endpoint = path.strip("/")
 
             if function_title in __decorated_functions_names_list:
-                raise Exception(f"Function with name {function_title} already exists")
+                raise ValueError(f"Function with name {function_title} already exists")
 
-            if __app_secret:
-                __decorated_id_to_function_dict[id] = function_title
-                __decorated_secret_functions_dict[id] = __app_secret
+            if __app_secret is not None:
+                set_function_secret(__app_secret, function_id, function_title)
             elif secret:
-                __decorated_id_to_function_dict[id] = function_title
                 if isinstance(secret, bool):
-                    __decorated_secret_functions_dict[id] = secrets.token_hex(16)
+                    set_function_secret(token_hex(16), function_id, function_title)
                 else:
-                    __decorated_secret_functions_dict[id] = secret
-            secret_key = __decorated_secret_functions_dict.get(id, None)
+                    set_function_secret(secret, function_id, function_title)
+
+            secret_key = __decorated_secret_functions_dict.get(function_id, None)
 
             __decorated_functions_names_list.append(function_title)
             __decorated_functions_list.append({
@@ -398,18 +335,19 @@ def funix(
             })
 
             if show_source:
-                source_code = inspect.getsource(function)
+                source_code = getsource(function)
             else:
                 source_code = ""
 
-            function_signature = inspect.signature(function)
+            function_signature = signature(function)
             function_params = function_signature.parameters
             decorated_params = {}
             json_schema_props = {}
 
             cast_to_list_flag = False
 
-            if function_signature.return_annotation is not inspect._empty:
+            if function_signature.return_annotation is not Signature.empty:
+                # TODO: Magic code, I've forgotten what it does, but it works, refactor it if you can
                 # return type dict enforcement for yodas only
                 try:
                     if cast_to_list_flag := function_signature.return_annotation.__class__.__name__ == "tuple" or \
@@ -422,11 +360,11 @@ def funix(
                         )
                         for return_annotation_type in return_annotation:
                             return_annotation_type_name = getattr(return_annotation_type, "__name__")
-                            if return_annotation_type_name in __supported_basic_types:
-                                return_annotation_type_name = __supported_basic_types_dict[return_annotation_type_name]
+                            if return_annotation_type_name in supported_basic_types:
+                                return_annotation_type_name = supported_basic_types_dict[return_annotation_type_name]
                             elif return_annotation_type_name == "List":
                                 list_type_name = getattr(getattr(return_annotation_type, "__args__")[0], "__name__")
-                                if list_type_name in __supported_basic_file_types:
+                                if list_type_name in supported_basic_file_types:
                                     return_annotation_type_name = list_type_name
                             parsed_return_annotation_list.append(return_annotation_type_name)
                         return_type_parsed = parsed_return_annotation_list
@@ -444,22 +382,25 @@ def funix(
                                 return_type_parsed = str(return_type_raw)
                         else:
                             return_type_parsed = getattr(function_signature.return_annotation, "__name__")
-                            if return_type_parsed in __supported_basic_types:
-                                return_type_parsed = __supported_basic_types_dict[return_type_parsed]
+                            if return_type_parsed in supported_basic_types:
+                                return_type_parsed = supported_basic_types_dict[return_type_parsed]
                             elif return_type_parsed == "List":
-                                list_type_name = getattr(getattr(function_signature.return_annotation, "__args__")[0], "__name__")
-                                if list_type_name in __supported_basic_file_types:
+                                list_type_name = getattr(
+                                    getattr(function_signature.return_annotation, "__args__")[0],
+                                    "__name__"
+                                )
+                                if list_type_name in supported_basic_file_types:
                                     return_type_parsed = list_type_name
                 except:
                     return_type_parsed = get_type_dict(function_signature.return_annotation)
-                    if not return_type_parsed is None:
+                    if return_type_parsed is not None:
                         return_type_parsed = return_type_parsed["type"]
             else:
                 return_type_parsed = None
 
             return_input_layout = []
 
-            safe_input_layout = [] if input_layout is None else input_layout
+            safe_input_layout = [] if not input_layout else input_layout
 
             for row in safe_input_layout:
                 row_layout = []
@@ -467,7 +408,7 @@ def funix(
                     row_item_done = row_item
                     for common_row_item_key in ["markdown", "html"]:
                         if common_row_item_key in row_item:
-                            row_item_done = conv_row_item(row_item, common_row_item_key)
+                            row_item_done = convert_row_item(row_item, common_row_item_key)
                     if "argument" in row_item:
                         if row_item["argument"] not in decorated_params:
                             decorated_params[row_item["argument"]] = {}
@@ -484,7 +425,7 @@ def funix(
             return_output_layout = []
             return_output_indexes = []
 
-            safe_output_layout = [] if output_layout is None else output_layout
+            safe_output_layout = [] if not output_layout else output_layout
 
             for row in safe_output_layout:
                 row_layout = []
@@ -492,7 +433,7 @@ def funix(
                     row_item_done = row_item
                     for common_row_item_key in ["markdown", "html", "images", "videos", "audios", "files"]:
                         if common_row_item_key in row_item:
-                            row_item_done = conv_row_item(row_item, common_row_item_key)
+                            row_item_done = convert_row_item(row_item, common_row_item_key)
                     if "dividing" in row_item:
                         row_item_done["type"] = "dividing"
                         if isinstance(row_item["dividing"], str):
@@ -509,48 +450,79 @@ def funix(
                     row_layout.append(row_item_done)
                 return_output_layout.append(row_layout)
 
+            def create_decorated_params(arg_name: str) -> None:
+                """
+                Creates a decorated_params entry for the given arg_name if it doesn't exist
 
-            def create_decorated_params(arg_name: str):
+                Parameters:
+                    arg_name (str): The name of the argument
+                """
                 if arg_name not in decorated_params:
                     decorated_params[arg_name] = {}
 
-            def put_props_in_params(arg_name: str, prop_name: str, prop_value: any):
+            def put_props_in_params(arg_name: str, prop_name: str, prop_value: any) -> None:
+                """
+                Puts the given prop_name and prop_value in the decorated_params entry for the given arg_name
+
+                Parameters:
+                    arg_name (str): The name of the argument
+                    prop_name (str): The name of the prop
+                    prop_value (any): The value of the prop
+                """
                 create_decorated_params(arg_name)
                 decorated_params[arg_name][prop_name] = prop_value
 
-            def check_example_whitelist(arg_name: str):
+            def check_example_whitelist(arg_name: str) -> None:
+                """
+                Checks if the given arg_name has both an example and a whitelist
+
+                Parameters:
+                    arg_name (str): The name of the argument
+
+                Raises:
+                    ValueError: If the given arg_name has both an example and a whitelist
+                """
                 if arg_name in decorated_params:
                     if "example" in decorated_params[arg_name] and "whitelist" in decorated_params[arg_name]:
-                        raise Exception(f"{function_name}: {arg_name} has both an example and a whitelist")
+                        raise ValueError(f"{function_name}: {arg_name} has both an example and a whitelist")
 
-            def parse_widget(widget: str | tuple | list):
-                if isinstance(widget, str):
-                    return widget
-                elif isinstance(widget, tuple):
-                    return generate_frontend_widget_config(widget)
-                elif isinstance(widget, list):
-                    result = []
-                    for widget_item in widget:
+            def parse_widget(widget_info: str | tuple | list) -> list[str] | str:
+                """
+                Parses the given widget_info
+
+                Parameters:
+                    widget_info (str | tuple | list): The widget_info to parse
+
+                Returns:
+                    list[str] | str: The widget
+                """
+                if isinstance(widget_info, str):
+                    return widget_info
+                elif isinstance(widget_info, tuple):
+                    return generate_frontend_widget_config(widget_info)
+                elif isinstance(widget_info, list):
+                    widget_result = []
+                    for widget_item in widget_info:
                         if isinstance(widget_item, tuple):
-                            result.append(generate_frontend_widget_config(widget_item))
+                            widget_result.append(generate_frontend_widget_config(widget_item))
                         elif isinstance(widget_item, list):
-                            result.append(parse_widget(widget_item))
+                            widget_result.append(parse_widget(widget_item))
                         elif isinstance(widget_item, str):
-                            result.append(widget_item)
-                    return result
+                            widget_result.append(widget_item)
+                    return widget_result
 
-            safe_widgets = {} if widgets is None else widgets
-            safe_treat_as = {} if treat_as is None else treat_as
-            safe_examples = {} if examples is None else examples
-            safe_whitelist = {} if whitelist is None else whitelist
-            safe_argument_labels = {} if argument_labels is None else argument_labels
+            safe_widgets = {} if not widgets else widgets
+            safe_treat_as = {} if not treat_as else treat_as
+            safe_examples = {} if not examples else examples
+            safe_whitelist = {} if not whitelist else whitelist
+            safe_argument_labels = {} if not argument_labels else argument_labels
 
             for prop in [
-                (safe_widgets, "widget"),
-                (safe_treat_as, "treat_as"),
-                (safe_argument_labels, "title"),
-                (safe_examples, "example"),
-                (safe_whitelist, "whitelist")
+                [safe_widgets, "widget"],
+                [safe_treat_as, "treat_as"],
+                [safe_argument_labels, "title"],
+                [safe_examples, "example"],
+                [safe_whitelist, "whitelist"]
             ]:
                 for prop_arg_name in prop[0]:
                     if isinstance(prop_arg_name, str):
@@ -562,9 +534,9 @@ def funix(
                             check_example_whitelist(prop_arg_name)
                     else:
                         if prop[1] in ["example", "whitelist"]:
-                            for index, prop_arg_name in enumerate(prop_arg_name):
-                                put_props_in_params(prop_arg_name, prop[1], prop[0][prop_arg_name][index])
-                                check_example_whitelist(prop_arg_name)
+                            for index, single_prop_arg_name in enumerate(prop_arg_name):
+                                put_props_in_params(single_prop_arg_name, prop[1], prop[0][single_prop_arg_name][index])
+                                check_example_whitelist(single_prop_arg_name)
                         elif prop[1] == "widget":
                             cached_result = parse_widget(prop[0][prop_arg_name])
                             for prop_arg_name_item in prop_arg_name:
@@ -581,12 +553,12 @@ def funix(
                     decorator_arg_names = [decorator_arg_name]
                 else:
                     decorator_arg_names = list(decorator_arg_name)
-                for decorator_arg_name in decorator_arg_names:
-                    if decorator_arg_name not in decorated_params:
-                        decorated_params[decorator_arg_name] = {}
+                for single_decorator_arg_name in decorator_arg_names:
+                    if single_decorator_arg_name not in decorated_params:
+                        decorated_params[single_decorator_arg_name] = {}
 
                     treat_as_config = decorator_arg_dict.get("treat_as", "config")
-                    decorated_params[decorator_arg_name]["treat_as"] = treat_as_config
+                    decorated_params[single_decorator_arg_name]["treat_as"] = treat_as_config
                     if treat_as_config != "config":
                         input_attr = decorator_arg_dict["treat_as"] if input_attr == "" else input_attr
                         if input_attr != decorator_arg_dict["treat_as"]:
@@ -595,24 +567,31 @@ def funix(
                     for prop_key in ["widget", "label", "whitelist", "example"]:
                         if prop_key in decorator_arg_dict:
                             if prop_key == "label":
-                                decorated_params[decorator_arg_name]["title"] = decorator_arg_dict[prop_key]
+                                decorated_params[single_decorator_arg_name]["title"] = decorator_arg_dict[prop_key]
                             elif prop_key == "widget":
-                                decorated_params[decorator_arg_name][prop_key] = parse_widget(decorator_arg_dict[prop_key])
+                                decorated_params[single_decorator_arg_name][prop_key] = \
+                                    parse_widget(decorator_arg_dict[prop_key])
                             else:
-                                decorated_params[decorator_arg_name][prop_key] = decorator_arg_dict[prop_key]
+                                decorated_params[single_decorator_arg_name][prop_key] = decorator_arg_dict[prop_key]
 
-                    if "whitelist" in decorated_params[decorator_arg_name] and "example" in decorated_params[decorator_arg_name]:
-                        raise Exception(f"{function_name}: {decorator_arg_name} has both an example and a whitelist")
+                    if "whitelist" in decorated_params[single_decorator_arg_name] and \
+                            "example" in decorated_params[single_decorator_arg_name]:
+                        raise Exception(
+                            f"{function_name}: {single_decorator_arg_name} has both an example and a whitelist"
+                        )
 
             for _, function_param in function_params.items():
                 function_arg_name = function_param.name
                 decorated_params[function_arg_name] = decorated_params.get(function_arg_name, {})
-                decorated_params[function_arg_name]["treat_as"] = decorated_params[function_arg_name].get("treat_as", "config")
+                decorated_params[function_arg_name]["treat_as"] = decorated_params[function_arg_name].get(
+                    "treat_as",
+                    "config"
+                )
 
                 function_arg_type_dict = get_type_dict(function_param.annotation)
                 decorated_params[function_arg_name].update(function_arg_type_dict)
                 default_example = function_param.default
-                if not default_example is inspect._empty:
+                if default_example is not Parameter.empty:
                     decorated_params[function_arg_name]["default"] = default_example
                 elif decorated_params[function_arg_name]["type"] == "bool":
                     decorated_params[function_arg_name]["default"] = False
@@ -656,10 +635,12 @@ def funix(
                     if prop_key in decorated_params[function_arg_name].keys():
                         json_schema_props[function_arg_name][prop_key] = decorated_params[function_arg_name][prop_key]
 
-                if "whitelist" in json_schema_props[function_arg_name] and "example" in json_schema_props[function_arg_name]:
+                if "whitelist" in json_schema_props[function_arg_name] and \
+                        "example" in json_schema_props[function_arg_name]:
                     raise Exception(f"{function_name}: {function_arg_name} has both an example and a whitelist")
 
-                json_schema_props[function_arg_name]["customLayout"] = decorated_params[function_arg_name].get("customLayout", False)
+                json_schema_props[function_arg_name]["customLayout"] = \
+                    decorated_params[function_arg_name].get("customLayout", False)
 
                 if decorated_params[function_arg_name]["treat_as"]:
                     json_schema_props[function_arg_name]["treat_as"] = decorated_params[function_arg_name]["treat_as"]
@@ -690,7 +671,7 @@ def funix(
                     },
                     "required": []
                 }
-                if_items: Any = conditional_visible_item["all_if"]
+                if_items: any = conditional_visible_item["all_if"]
                 then_items = conditional_visible_item["then"]
                 for if_item in if_items.keys():
                     config["if"]["properties"][if_item] = {
@@ -712,15 +693,15 @@ def funix(
                     keep_ordered_dict[key] = json_schema_props[key]
 
             decorated_function = {
-                "id": id,
+                "id": function_id,
                 "name": function_name,
                 "params": decorated_params,
                 "theme": parsed_theme[4],
                 "return_type": return_type_parsed,
-                "description": description,
+                "description": function_description,
                 "schema": {
                     "title": function_title,
-                    "description": description,
+                    "description": function_description,
                     "type": "object",
                     "properties": keep_ordered_dict,
                     "allOf": all_of,
@@ -733,10 +714,20 @@ def funix(
             }
 
             get_wrapper_endpoint = app.get(f"/param/{endpoint}")
-            get_wrapper_id = app.get(f"/param/{id}")
+            get_wrapper_id = app.get(f"/param/{function_id}")
 
             def decorated_function_param_getter():
-                return flask.Response(json.dumps(decorated_function), mimetype="application/json")
+                """
+                Returns the function's parameters
+
+                Routes:
+                    /param/{endpoint}
+                    /param/{function_id}
+
+                Returns:
+                    flask.Response: The function's parameters
+                """
+                return Response(dumps(decorated_function), mimetype="application/json")
 
             decorated_function_param_getter.__setattr__("__name__", f"{function_name}_param_getter")
             get_wrapper_endpoint(decorated_function_param_getter)
@@ -744,111 +735,165 @@ def funix(
 
             if secret_key:
                 verify_secret_endpoint = app.post(f"/verify/{endpoint}")
-                verify_secret_id = app.post(f"/verify/{id}")
+                verify_secret_id = app.post(f"/verify/{function_id}")
 
                 def verify_secret():
-                    data = flask.request.get_json()
-                    if data is None:
-                        return flask.Response(json.dumps({
+                    """
+                    Verifies the user's secret
+
+                    Routes:
+                        /verify/{endpoint}
+                        /verify/{function_id}
+
+                    Returns:
+                        flask.Response: The verification result
+                    """
+                    data = request.get_json()
+
+                    failed_data = Response(dumps({
                             "success": False,
                         }), mimetype="application/json", status=400)
+
+                    if data is None:
+                        return failed_data
 
                     if "secret" not in data:
-                        return flask.Response(json.dumps({
-                            "success": False,
-                        }), mimetype="application/json", status=400)
+                        return failed_data
 
-                    user_secret = flask.request.get_json()["secret"]
-                    if user_secret == __decorated_secret_functions_dict[id]:
-                        return flask.Response(json.dumps({
+                    user_secret = request.get_json()["secret"]
+                    if user_secret == __decorated_secret_functions_dict[function_id]:
+                        return Response(dumps({
                             "success": True,
                         }), mimetype="application/json", status=200)
                     else:
-                        return flask.Response(json.dumps({
-                            "success": False,
-                        }), mimetype="application/json", status=400)
+                        return failed_data
                 verify_secret.__setattr__("__name__", f"{function_name}_verify_secret")
                 verify_secret_endpoint(verify_secret)
                 verify_secret_id(verify_secret)
 
             @wraps(function)
             def wrapper():
-                try:
-                    function_kwargs = flask.request.get_json()
+                """
+                The function's wrapper
 
-                    def change_fig_width(figure):
-                        fig = mpld3.fig_to_dict(figure)
-                        fig["width"] = 560
-                        return fig
+                Routes:
+                    /call/{endpoint}
+                    /call/{function_id}
+
+                Returns:
+                    Any: The function's result
+                """
+                try:
+                    function_kwargs = request.get_json()
+
+                    def get_figure(figure) -> dict:
+                        """
+                        Converts a matplotlib figure to a dictionary for drawing on the frontend
+
+                        Parameters:
+                            figure (matplotlib.figure.Figure): The figure to convert
+
+                        Returns:
+                            dict: The converted figure
+
+                        Raises:
+                            Exception: If matplotlib or mpld3 is not installed
+                        """
+                        global mpld3
+                        if __matplotlib_use:
+                            if mpld3 is None:
+                                try:
+                                    import matplotlib.pyplot
+                                    mpld3 = import_module("mpld3")
+                                except:
+                                    raise Exception("if you use matplotlib, you must install mpld3")
+                            else:
+                                fig = mpld3.fig_to_dict(figure)
+                                fig["width"] = 560  # TODO: Change it in frontend
+                                return fig
+                        else:
+                            raise Exception("Install matplotlib to use this function")
 
                     @wraps(function)
                     def wrapped_function(**wrapped_function_kwargs):
+                        """
+                        The function's wrapper
+                        """
+                        # TODO: Best result handling, refactor it if possible
                         try:
                             if return_type_parsed == "Figure":
                                 fig = function(**wrapped_function_kwargs)
-                                return [change_fig_width(fig)]
-                            if return_type_parsed in __supported_basic_file_types:
+                                return [get_figure(fig)]
+                            if return_type_parsed in supported_basic_file_types:
                                 return [get_static_uri(function(**wrapped_function_kwargs))]
                             else:
-                                result = function(**wrapped_function_kwargs)
-                                if isinstance(result, list):
-                                    return [result]
-                                if not isinstance(result, (str, dict, tuple)):
-                                    result = json.dumps(result)
+                                function_result = function(**wrapped_function_kwargs)
+                                if isinstance(function_result, list):
+                                    return [function_result]
+                                if not isinstance(function_result, (str, dict, tuple)):
+                                    function_result = dumps(function_result)
                                 if cast_to_list_flag:
-                                    result = list(result)
+                                    function_result = list(function_result)
                                 else:
-                                    if isinstance(result, (str, dict)):
-                                        result = [result]
-                                    if isinstance(result, tuple):
-                                        result = list(result)
-                                if result and isinstance(result, list):
+                                    if isinstance(function_result, (str, dict)):
+                                        function_result = [function_result]
+                                    if isinstance(function_result, tuple):
+                                        function_result = list(function_result)
+                                if function_result and isinstance(function_result, list):
                                     if isinstance(return_type_parsed, list):
-                                        for index, single_return_type in enumerate(return_type_parsed):
+                                        for position, single_return_type in enumerate(return_type_parsed):
                                             if single_return_type == "Figure":
-                                                result[index] = change_fig_width(result[index])
-                                            if single_return_type in __supported_basic_file_types:
-                                                if type(result[index]) == "list":
-                                                    result[index] = [get_static_uri(each) for each in result[index]]
+                                                function_result[position] = get_figure(function_result[position])
+                                            if single_return_type in supported_basic_file_types:
+                                                if type(function_result[position]) == "list":
+                                                    function_result[position] = [
+                                                        get_static_uri(single) for single in function_result[position]
+                                                    ]
                                                 else:
-                                                    result[index] = get_static_uri(result[index])
-                                        return result
+                                                    function_result[position] = \
+                                                        get_static_uri(function_result[position])
+                                        return function_result
                                     else:
                                         if return_type_parsed == "Figure":
-                                            result = [change_fig_width(result[0])]
-                                        if return_type_parsed in __supported_basic_file_types:
-                                            if type(result[0]) == "list":
-                                                result = [[get_static_uri(each) for each in result[0]]]
+                                            function_result = [get_figure(function_result[0])]
+                                        if return_type_parsed in supported_basic_file_types:
+                                            if type(function_result[0]) == "list":
+                                                function_result = [
+                                                    [get_static_uri(single) for single in function_result[0]]
+                                                ]
                                             else:
-                                                result = [get_static_uri(result[0])]
-                                        return result
-                                return result
+                                                function_result = [get_static_uri(function_result[0])]
+                                        return function_result
+                                return function_result
                         except:
                             return {
                                 "error_type": "function",
-                                "error_body": traceback.format_exc()
+                                "error_body": format_exc()
                             }
 
                     cell_names = []
                     upload_base64_files = {}
 
-                    for key in json_schema_props.keys():
-                        if "treat_as" in json_schema_props[key]:
-                            if json_schema_props[key]["treat_as"] == "cell":
-                                cell_names.append(key)
-                        if "widget" in json_schema_props[key]:
-                            if json_schema_props[key]["widget"] in __supported_upload_widgets:
-                                upload_base64_files[key] = "single"
-                        if "items" in json_schema_props[key]:
-                            if "widget" in json_schema_props[key]["items"]:
-                                if json_schema_props[key]["items"]["widget"] in __supported_upload_widgets:
-                                    upload_base64_files[key] = "multiple"
+                    # TODO: And the logic below, refactor it if possible
+
+                    for json_schema_prop_key in json_schema_props.keys():
+                        if "treat_as" in json_schema_props[json_schema_prop_key]:
+                            if json_schema_props[json_schema_prop_key]["treat_as"] == "cell":
+                                cell_names.append(json_schema_prop_key)
+                        if "widget" in json_schema_props[json_schema_prop_key]:
+                            if json_schema_props[json_schema_prop_key]["widget"] in supported_upload_widgets:
+                                upload_base64_files[json_schema_prop_key] = "single"
+                        if "items" in json_schema_props[json_schema_prop_key]:
+                            if "widget" in json_schema_props[json_schema_prop_key]["items"]:
+                                if json_schema_props[json_schema_prop_key]["items"]["widget"] in \
+                                        supported_upload_widgets:
+                                    upload_base64_files[json_schema_prop_key] = "multiple"
 
                     if function_kwargs is None:
                         return {"error_type": "wrapper", "error_body": "No arguments passed to function."}
                     if secret_key:
                         if "__funix_secret" in function_kwargs:
-                            if not __decorated_secret_functions_dict[id] == function_kwargs["__funix_secret"]:
+                            if not __decorated_secret_functions_dict[function_id] == function_kwargs["__funix_secret"]:
                                 return {
                                     "error_type": "wrapper",
                                     "error_body": "Provided secret is incorrect."
@@ -879,24 +924,24 @@ def funix(
                         return [{"result": result}]
                     elif len(upload_base64_files) > 0:
                         new_args = function_kwargs
-                        for key in upload_base64_files.keys():
-                            if upload_base64_files[key] == "single":
-                                with urlopen(function_kwargs[key]) as rsp:
-                                    new_args[key] = rsp.read()
-                            elif upload_base64_files[key] == "multiple":
-                                for index, each in enumerate(function_kwargs[key]):
+                        for upload_base64_file_key in upload_base64_files.keys():
+                            if upload_base64_files[upload_base64_file_key] == "single":
+                                with urlopen(function_kwargs[upload_base64_file_key]) as rsp:
+                                    new_args[upload_base64_file_key] = rsp.read()
+                            elif upload_base64_files[upload_base64_file_key] == "multiple":
+                                for pos, each in enumerate(function_kwargs[upload_base64_file_key]):
                                     with urlopen(each) as rsp:
-                                        new_args[key][index] = rsp.read()
+                                        new_args[upload_base64_file_key][pos] = rsp.read()
                         return wrapped_function(**new_args)
                     else:
                         return wrapped_function(**function_kwargs)
                 except:
                     return {
                         "error_type": "wrapper",
-                        "error_body": traceback.format_exc()
+                        "error_body": format_exc()
                     }
 
-            post_wrapper = app.post(f"/call/{id}")
+            post_wrapper = app.post(f"/call/{function_id}")
             post_wrapper(wrapper)
             post_wrapper = app.post(f"/call/{endpoint}")
             post_wrapper(wrapper)
@@ -904,28 +949,3 @@ def funix(
         return function
 
     return decorator
-
-
-def new_funix_type(widget: str, config_func: Optional[Callable] = None):
-    def decorator(cls):
-        if config_func is None:
-            cls.__funix__ = True
-            cls.__funix_widget__ = widget
-            cls.__funix_base__ = cls.__base__
-            return cls
-        else:
-            def new_cls_func(*args, **kwargs):
-                cls.__funix__ = True
-                cls.__funix_widget__ = widget
-                cls.__funix_base__ = cls.__base__
-                cls.__funix_config__ = config_func(*args, **kwargs)[1]
-                return cls
-            return new_cls_func
-    return decorator
-
-
-def export_secrets():
-    __new_dict = {}
-    for function_id, secret in __decorated_secret_functions_dict.items():
-        __new_dict[__decorated_id_to_function_dict[function_id]] = secret
-    return __new_dict

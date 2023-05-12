@@ -1,6 +1,7 @@
 from git import Repo
 from os import listdir
 from funix.app import app
+import funix.hint as hint
 from sys import path, exit
 from inspect import isfunction
 from urllib.parse import quote
@@ -28,7 +29,7 @@ import_theme = decorator.import_theme
 # ---- Theme ----
 
 # ---- Util ----
-new_funix_type = decorator.new_funix_type
+new_funix_type = hint.new_funix_type
 set_app_secret = decorator.set_app_secret
 # ---- Util ----
 # ---- Exports ----

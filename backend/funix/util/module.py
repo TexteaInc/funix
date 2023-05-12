@@ -1,9 +1,10 @@
 """
 Handle module
 """
+
+from uuid import uuid4
 from os.path import basename
 from types import ModuleType
-from uuid import uuid4
 from importlib.util import spec_from_file_location, module_from_spec
 
 
