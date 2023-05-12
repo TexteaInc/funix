@@ -76,7 +76,7 @@ def start() -> None:
     Start the frontend.
     """
     @app.route("/")
-    def send_index():
+    def __send_index():
         """
         Send the index.html file.
 
@@ -89,7 +89,7 @@ def start() -> None:
         return send_from_directory(folder, "index.html")
 
     @app.route("/<path:path>")
-    def send_root_files(path):
+    def __send_root_files(path):
         """
         Send the static files in root or the index.html file for funix frontend.
         If the file doesn't exist, it will send the index.html file.
@@ -108,7 +108,7 @@ def start() -> None:
         return send_from_directory(folder, "index.html")
 
     @app.route("/static/<path:res>/<path:path>")
-    def send_static_files(res, path):
+    def __send_static_files(res, path):
         """
         Send the static files.
 

@@ -2,7 +2,6 @@
 This file contains all the built-in widget types.
 """
 
-from typing import Any
 from funix.widget import slider, code
 
 
@@ -16,14 +15,14 @@ def new_built_in_type(widget: str) -> callable:
     Returns:
         The decorator.
     """
-    def decorator(cls: Any) -> object:
+    def decorator(cls: any) -> object:
         """
         Decorator for define a new built-in type.
         Will modify the class and add some attributes.
         Funix will know this is a funix-built-in type.
 
         Parameters:
-            cls(Any): The class.
+            cls(any): The class.
 
         Returns:
             The modified class.
@@ -49,13 +48,13 @@ def put_config(widget: callable, *args, **kwargs):
     Returns:
         The decorator.
     """
-    def decorator(cls: Any) -> object:
+    def decorator(cls: any) -> object:
         """
         Decorator for put the config generator to the class.
         Will modify the class and add `__funix_config__` attribute.
 
         Parameters:
-            cls(Any): The class.
+            cls(any): The class.
 
         Returns:
             The modified class.
@@ -77,7 +76,7 @@ class IntInputBox(int):
     pass
 
 
-def int_slider(*args, **kwargs) -> Any:
+def int_slider(*args, **kwargs) -> any:
     """
     The built-in int type's slider.
     For input.
@@ -243,7 +242,7 @@ class BytesFile(bytes):
     pass
 
 
-def str_code(*args, **kwargs) -> Any:
+def str_code(*args, **kwargs) -> any:
     """
     The built-in str type's code.
     For input.

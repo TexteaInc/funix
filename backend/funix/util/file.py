@@ -17,9 +17,7 @@ def create_safe_tempdir() -> bytes | str:
     """
     tempdir = mkdtemp()
 
-    @register
-    def clean_tempdir():
-        if exists(tempdir):
-            rmtree(tempdir)
+    register(lambda: exists(tempdir) and rmtree(tempdir))
 
     return tempdir
+
