@@ -109,8 +109,6 @@ __app_secret: str | None = None
 App secret, for all functions.
 """
 
-matplotlib.use("Agg")  # Use Agg backend for matplotlib
-
 mpld3: ModuleType | None = None
 
 

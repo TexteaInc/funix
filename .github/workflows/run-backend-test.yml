@@ -2,6 +2,9 @@ name: Run Backend Test
 
 on:
   push:
+    branches:
+      - main
+      - dev
     paths:
       - "backend/**"
   pull_request:
