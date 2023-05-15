@@ -1,9 +1,10 @@
 import { WidgetProps } from "@rjsf/core";
 import React, { useEffect } from "react";
-import ReactJson, { InteractionProps } from "react-json-view";
-import { Stack, useTheme } from "@mui/material";
+import type { InteractionProps } from "react-json-view";
+import { Stack } from "@mui/material";
 import { castValue, getInitValue } from "../Common/ValueOperation";
 import MarkdownDiv from "../Common/MarkdownDiv";
+import ThemeReactJson from "../Common/ThemeReactJson";
 
 interface JSONEditorWidgetInterface {
   widget: WidgetProps;
@@ -16,8 +17,6 @@ type JSONType = number | string | boolean | object | null | undefined;
 type JSONObjectType = { [key: string]: JSONType | any };
 
 const JSONEditorWidget = (props: JSONEditorWidgetInterface) => {
-  const theme = useTheme();
-
   let value: { [key: string]: JSONType } | JSONType[] = {};
   if (props.widget.schema.type === "array") {
     value = [];
@@ -65,18 +64,13 @@ const JSONEditorWidget = (props: JSONEditorWidgetInterface) => {
   }, []);
 
   const reactJSON = props.keys ? (
-    <ReactJson
-      src={src}
-      onEdit={handleEdit}
-      theme={theme.palette.mode === "dark" ? "summerfruit" : "rjv-default"}
-    />
+    <ThemeReactJson src={src} onEdit={handleEdit} />
   ) : (
-    <ReactJson
+    <ThemeReactJson
       src={src}
       onEdit={handleEdit}
       onDelete={handleEdit}
       onAdd={handleEdit}
-      theme={theme.palette.mode === "dark" ? "summerfruit" : "rjv-default"}
     />
   );
 

@@ -2,9 +2,9 @@
 File utils for funix.
 """
 
-from shutil import rmtree
-from os.path import exists
 from atexit import register
+from os.path import exists
+from shutil import rmtree
 from tempfile import mkdtemp
 
 
@@ -20,4 +20,3 @@ def create_safe_tempdir() -> bytes | str:
     register(lambda: exists(tempdir) and rmtree(tempdir))
 
     return tempdir
-

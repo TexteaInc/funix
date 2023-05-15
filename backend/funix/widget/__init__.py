@@ -22,6 +22,7 @@ def register_widget_update_config(widget: str) -> callable:
     Returns:
         The decorator.
     """
+
     def decorator(func: callable) -> None:
         """
         Decorator for register a widget update config function.
@@ -34,36 +35,24 @@ def register_widget_update_config(widget: str) -> callable:
     return decorator
 
 
-def dump_frontend_config(config: (str, TypedDict)) -> str:
+def dump_frontend_config(widget_name: str, config: TypedDict) -> str:
     """
     Convert the config to a string that can be used in frontend. Will auto update the config if this widget has an
     update config function.
-    And this is the expanded list_config definition 🤣:
-
-    ```python
-    list_config = json.dumps(
-        list(
-            widgets_update_config[
-                config[0]
-            ]  # Get the function in `widgets_update_config` by the widget name.
-            (
-                list(
-                    config[1].values()
-                )  # This is the sorted config list
-            ).values()  # get the values of the sorted merged config list
-        )
-    )
-    ```
 
     Parameters:
-        config((str, TypedDict)): The config.
-            str: Widget name.
-            TypedDict: Widget Config.
+        widget_name (str): The name of the widget.
+        config (TypedDict): The config of the widget.
+
+    Returns:
+        str: The string that can be used in frontend.
     """
-    if config[0] in widgets_update_config:
-        list_config = dumps(list(widgets_update_config[config[0]](list(config[1].values())).values()))
-        return f"{config[0]}{list_config}"
-    return f"{config[0]}{dumps(list(config[1].values()))}"
+    flattened_config = list(config.values())
+    if widget_name in widgets_update_config:
+        update_function = widgets_update_config[widget_name]
+        list_config = dumps(list(update_function(flattened_config).values()))
+        return f"{widget_name}{list_config}"
+    return f"{widget_name}{dumps(flattened_config)}"
 
 
 class SliderConfig(TypedDict):
@@ -114,21 +103,28 @@ def slider(*args, **kwargs) -> (str, SliderConfig):
             str: Widget name, always `slider`.
             SliderConfig: The config of the slider widget.
     """
-    config = {
-        "min": 0,
-        "max": 100
-    }
+    config = {"min": 0, "max": 100}
     if args:
         arg_names = ["min", "max", "step"]
-        for i, arg in enumerate(args[:len(arg_names)]):
+        for i, arg in enumerate(args[: len(arg_names)]):
             config[arg_names[i]] = arg
     elif kwargs:
         config.update(kwargs)
-    use_type = int if \
-        all(isinstance(value, int) for value in [config["min"], config["max"], config.get("step")]) else float
+    use_type = (
+        int
+        if all(
+            isinstance(value, int)
+            for value in [config["min"], config["max"], config.get("step")]
+        )
+        else float
+    )
     if "step" not in config:
         config["step"] = 0.1 if use_type == float else 1
-    config = SliderConfig(min=use_type(config["min"]), max=use_type(config["max"]), step=use_type(config["step"]))
+    config = SliderConfig(
+        min=use_type(config["min"]),
+        max=use_type(config["max"]),
+        step=use_type(config["step"]),
+    )
     return "slider", config
 
 
@@ -168,5 +164,5 @@ def generate_frontend_widget_config(config: tuple[str, TypedDict] | str) -> str:
             str: Widget config (already in str), I will return it directly.
     """
     if isinstance(config, tuple):
-        return dump_frontend_config(config)
+        return dump_frontend_config(config[0], config[1])
     return config

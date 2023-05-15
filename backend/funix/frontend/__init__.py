@@ -2,14 +2,15 @@
 Handle frontend requests and start the frontend.
 """
 
-from funix.app import app
-from webbrowser import open
-from threading import Thread
-from flask import send_from_directory
-from os.path import abspath, join, exists
 from ipaddress import IPv4Address, IPv6Address
-from funix.util.network import get_str_ip_and_handle_local, check_port_is_used
+from os.path import abspath, exists, join
+from threading import Thread
+from webbrowser import open
 
+from flask import send_from_directory
+
+from funix.app import app
+from funix.util.network import get_compressed_ip_address_as_str, is_port_used
 
 folder = abspath(join(abspath(__file__), "../../build"))  # Best abs path ever
 
@@ -25,6 +26,7 @@ class OpenFrontend(Thread):
         host (IPv4Address | IPv6Address): The host.
         port (int): The port.
     """
+
     def __init__(self, host: IPv4Address | IPv6Address, port: int):
         """
         Create a new OpenFrontend instance.
@@ -37,7 +39,7 @@ class OpenFrontend(Thread):
             OpenFrontend: The new OpenFrontend instance.
         """
         super(OpenFrontend, self).__init__()
-        self.host = get_str_ip_and_handle_local(host)
+        self.host = get_compressed_ip_address_as_str(host)
         self.port = port
 
     def is_server_online(self) -> bool:
@@ -47,7 +49,7 @@ class OpenFrontend(Thread):
         Returns:
             bool: If the server is online.
         """
-        return check_port_is_used(self.port, self.host)
+        return is_port_used(self.port, self.host)
 
     def run(self) -> None:
         """
@@ -75,6 +77,7 @@ def start() -> None:
     """
     Start the frontend.
     """
+
     @app.route("/")
     def __send_index():
         """

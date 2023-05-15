@@ -2,7 +2,7 @@
 This file contains all the built-in widget types.
 """
 
-from funix.widget import slider, code
+from funix.widget import code, slider
 
 
 def new_built_in_type(widget: str) -> callable:
@@ -15,6 +15,7 @@ def new_built_in_type(widget: str) -> callable:
     Returns:
         The decorator.
     """
+
     def decorator(cls: any) -> object:
         """
         Decorator for define a new built-in type.
@@ -35,9 +36,9 @@ def new_built_in_type(widget: str) -> callable:
     return decorator
 
 
-def put_config(widget: callable, *args, **kwargs):
+def attach_config(widget: callable, *args, **kwargs):
     """
-    Put the config generator to the class.
+    Attach the config generator to the class.
     For dynamic config generation.
 
     Parameters:
@@ -48,6 +49,7 @@ def put_config(widget: callable, *args, **kwargs):
     Returns:
         The decorator.
     """
+
     def decorator(cls: any) -> object:
         """
         Decorator for put the config generator to the class.
@@ -73,6 +75,7 @@ class IntInputBox(int):
 
     Base Class: int
     """
+
     pass
 
 
@@ -88,15 +91,18 @@ def int_slider(*args, **kwargs) -> any:
     Returns:
         class: The class.
     """
+
     @new_built_in_type("slider")
-    @put_config(slider, *args, **kwargs)
+    @attach_config(slider, *args, **kwargs)
     class _IntSlider(int):
         """
         The built-in int type's slider class.
 
         Base Class: int
         """
+
         pass
+
     return _IntSlider
 
 
@@ -111,6 +117,7 @@ class FloatInputBox(float):
 
     Base Class: float
     """
+
     pass
 
 
@@ -126,15 +133,18 @@ def float_slider(*args, **kwargs):
     Returns:
         class: The class.
     """
+
     @new_built_in_type("slider")
-    @put_config(slider, *args, **kwargs)
+    @attach_config(slider, *args, **kwargs)
     class _FloatSlider(float):
         """
         The built-in float type's slider class.
 
         Base Class: float
         """
+
         pass
+
     return _FloatSlider
 
 
@@ -149,6 +159,7 @@ class StrInputBox(str):
 
     Base Class: str
     """
+
     pass
 
 
@@ -160,6 +171,7 @@ class StrTextarea(str):
 
     Base Class: str
     """
+
     pass
 
 
@@ -171,6 +183,7 @@ class StrPassword(str):
 
     Base Class: str
     """
+
     pass
 
 
@@ -182,6 +195,7 @@ class BoolCheckBox(int):
 
     Base Class: int
     """
+
     __funix_bool__ = True
     pass
 
@@ -194,6 +208,7 @@ class BoolSwitch(int):
 
     Base Class: int
     """
+
     __funix_bool__ = True
     pass
 
@@ -206,6 +221,7 @@ class BytesImage(bytes):
 
     Base Class: bytes
     """
+
     pass
 
 
@@ -217,6 +233,7 @@ class BytesVideo(bytes):
 
     Base Class: bytes
     """
+
     pass
 
 
@@ -228,6 +245,7 @@ class BytesAudio(bytes):
 
     Base Class: bytes
     """
+
     pass
 
 
@@ -239,6 +257,7 @@ class BytesFile(bytes):
 
     Base Class: bytes
     """
+
     pass
 
 
@@ -254,15 +273,18 @@ def str_code(*args, **kwargs) -> any:
     Returns:
         class: The class.
     """
+
     @new_built_in_type("code")
-    @put_config(code, *args, **kwargs)
+    @attach_config(code, *args, **kwargs)
     class _StrCode(str):
         """
         The built-in str type's code class.
 
         Base Class: str
         """
+
         pass
+
     return _StrCode
 
 

@@ -2,10 +2,10 @@
 Handle module
 """
 
-from uuid import uuid4
+from importlib.util import module_from_spec, spec_from_file_location
 from os.path import basename
 from types import ModuleType
-from importlib.util import spec_from_file_location, module_from_spec
+from uuid import uuid4
 
 
 def import_module_from_file(path: str, need_name: bool) -> ModuleType:
