@@ -14,11 +14,9 @@ import {
   Stack,
   Switch,
   Typography,
-  useTheme,
 } from "@mui/material";
 import { DataGrid, GridRowModel, GridToolbar } from "@mui/x-data-grid";
 import React from "react";
-import ReactJson from "react-json-view";
 import { BaseType, FunctionDetail, ReturnType } from "../../shared";
 import OutputError from "./OutputComponents/OutputError";
 import { outputRow } from "json-schema";
@@ -31,6 +29,7 @@ import Grid2 from "@mui/material/Unstable_Grid2";
 import { useAtom } from "jotai";
 import { storeAtom } from "../../store";
 import { ExpandMore } from "@mui/icons-material";
+import ThemeReactJson from "../Common/ThemeReactJson";
 
 const OutputPanel = (props: {
   detail: FunctionDetail;
@@ -38,7 +37,6 @@ const OutputPanel = (props: {
   response: string | null;
 }) => {
   const [{ showFunctionDetail, viewType }, setStore] = useAtom(storeAtom);
-  const theme = useTheme();
 
   type ResponseViewProps = {
     response: string | null;
@@ -99,16 +97,7 @@ const OutputPanel = (props: {
         if (Array.isArray(parsedResponse) && is1dArray(parsedResponse)) {
           const SelectedResponseView = (props: any) => {
             if (props.selectedResponseViewType === "json")
-              return (
-                <ReactJson
-                  src={parsedResponse ?? {}}
-                  theme={
-                    theme.palette.mode === "dark"
-                      ? "summerfruit"
-                      : "rjv-default"
-                  }
-                />
-              );
+              return <ThemeReactJson src={parsedResponse ?? {}} />;
             else if (props.selectedResponseViewType === "sheet")
               return (
                 <DataGrid
@@ -141,27 +130,11 @@ const OutputPanel = (props: {
             }
           }
           if (keysOfArraysInSheet.length === 0)
-            return (
-              <ReactJson
-                src={parsedResponse ?? {}}
-                theme={
-                  theme.palette.mode === "dark" ? "summerfruit" : "rjv-default"
-                }
-              />
-            );
+            return <ThemeReactJson src={parsedResponse ?? {}} />;
           else {
             const SelectedResponseView = (props: any) => {
               if (props.selectedResponseViewType === "json")
-                return (
-                  <ReactJson
-                    src={parsedResponse ?? {}}
-                    theme={
-                      theme.palette.mode === "dark"
-                        ? "summerfruit"
-                        : "rjv-default"
-                    }
-                  />
-                );
+                return <ThemeReactJson src={parsedResponse ?? {}} />;
               else if (props.selectedResponseViewType === "sheet") {
                 const rows: GridRowModel[] = [];
                 let newObject: object = {};
@@ -200,14 +173,7 @@ const OutputPanel = (props: {
                   return (
                     <div>
                       {grid}
-                      <ReactJson
-                        src={newObject}
-                        theme={
-                          theme.palette.mode === "dark"
-                            ? "summerfruit"
-                            : "rjv-default"
-                        }
-                      />
+                      <ThemeReactJson src={newObject} />
                     </div>
                   );
                 } else return grid;
@@ -221,14 +187,7 @@ const OutputPanel = (props: {
             );
           }
         } else {
-          return (
-            <ReactJson
-              src={parsedResponse ?? {}}
-              theme={
-                theme.palette.mode === "dark" ? "summerfruit" : "rjv-default"
-              }
-            />
-          );
+          return <ThemeReactJson src={parsedResponse ?? {}} />;
         }
       } catch (e) {
         return <code>{response ?? ""}</code>;
@@ -466,13 +425,7 @@ const OutputPanel = (props: {
         <Card>
           <CardContent>
             <Typography variant="h5">Function Detail</Typography>
-            <ReactJson
-              src={props.detail}
-              collapsed
-              theme={
-                theme.palette.mode === "dark" ? "summerfruit" : "rjv-default"
-              }
-            />
+            <ThemeReactJson src={props.detail} collapsed />
           </CardContent>
         </Card>
       )}

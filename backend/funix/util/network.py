@@ -2,11 +2,11 @@
 Network utils for funix.
 """
 
-from socket import socket, AF_INET, SOCK_STREAM
 from ipaddress import IPv4Address, IPv6Address, ip_network
+from socket import AF_INET, SOCK_STREAM, socket
 
 
-def get_str_ip_and_handle_local(host: IPv4Address | IPv6Address) -> str:
+def get_compressed_ip_address_as_str(host: IPv4Address | IPv6Address) -> str:
     """
     Get the str ip and handle the local ip.
     Just 0.0.0.0 and :: will be formatted, others will be stringify and returned.
@@ -19,12 +19,12 @@ def get_str_ip_and_handle_local(host: IPv4Address | IPv6Address) -> str:
         str: The handled host.
     """
     is_v4 = host.version == 4
-    if is_this_host_on_this_network(host):
+    if is_ip_on_localhost(host):
         return "127.0.0.1" if is_v4 else "[::1]"
     return host.compressed
 
 
-def check_port_is_used(port: int, host: str) -> bool:
+def is_port_used(port: int, host: str) -> bool:
     """
     Check if the port is used.
 
@@ -42,9 +42,9 @@ def check_port_is_used(port: int, host: str) -> bool:
         return False
 
 
-def is_this_host_on_this_network(ip: IPv4Address | IPv6Address) -> bool:
+def is_ip_on_localhost(ip: IPv4Address | IPv6Address) -> bool:
     """
-    Check if the ip is on this host.
+    Check if the ip is on this host(localhost).
 
     Parameters:
         ip (IPv4Address | IPv6Address): The ip to check.
@@ -74,7 +74,7 @@ def get_next_unused_port(port: int, host: str) -> int | None:
             None: If the port is out of range.
     """
     now_port = port
-    while check_port_is_used(now_port, host):
+    while is_port_used(now_port, host):
         if now_port > 65535:
             return None
         now_port += 1
@@ -96,7 +96,7 @@ def get_previous_unused_port(port: int, host: str) -> int | None:
             None: If the port is out of range.
     """
     now_port = port
-    while check_port_is_used(now_port, host):
+    while is_port_used(now_port, host):
         if now_port < 0:
             return None
         now_port -= 1
@@ -124,8 +124,8 @@ def get_unused_port_from(port: int, host: IPv4Address | IPv6Address) -> int:
         exception, just let Funix crash when all ports are used.
     """
     new_port = port
-    new_host = get_str_ip_and_handle_local(host)
-    if check_port_is_used(new_port, new_host):
+    new_host = get_compressed_ip_address_as_str(host)
+    if is_port_used(new_port, new_host):
         print(f"port {port} is used, try to find next or previous port.")
         next_port = get_next_unused_port(new_port, new_host)
         if next_port is None:

@@ -1,21 +1,26 @@
-from git import Repo
-from os import listdir
-from funix.app import app
-import funix.hint as hint
-from sys import path, exit
-from inspect import isfunction
-from urllib.parse import quote
-from ipaddress import ip_address
-import funix.decorator as decorator
 from importlib import import_module
+from inspect import isfunction
+from ipaddress import ip_address
+from os import listdir
+from os.path import dirname, exists, isdir, join
+from sys import exit, path
 from typing import Generator, Optional
-from funix.util.file import create_safe_tempdir
-from os.path import join, isdir, exists, dirname
-from funix.util.module import import_module_from_file
-from funix.frontend import start, OpenFrontend, run_open_frontend
-from funix.util.network import is_this_host_on_this_network, get_unused_port_from, get_str_ip_and_handle_local, \
-    check_port_is_used
+from urllib.parse import quote
 
+from git import Repo
+
+import funix.decorator as decorator
+import funix.hint as hint
+from funix.app import app
+from funix.frontend import OpenFrontend, run_open_frontend, start
+from funix.util.file import create_safe_tempdir
+from funix.util.module import import_module_from_file
+from funix.util.network import (
+    get_compressed_ip_address_as_str,
+    get_unused_port_from,
+    is_ip_on_localhost,
+    is_port_used,
+)
 
 # ---- Exports ----
 # ---- Decorators ----
@@ -40,7 +45,7 @@ def __prep(
     lazy: bool,
     need_path: bool,
     is_module: bool,
-    need_name: bool
+    need_name: bool,
 ) -> None:
     """
     Prepare the module or file. Import and wrap the functions if needed.
@@ -64,17 +69,23 @@ def __prep(
             for member in members:
                 if isfunction(getattr(module, member)):
                     if need_path:
-                        funix(__full_module=f"{module.__name__}")(getattr(module, member))
+                        funix(__full_module=f"{module.__name__}")(
+                            getattr(module, member)
+                        )
                     else:
                         funix()(getattr(module, member))
     else:
-        print("Error: No Python file, module or directory provided. "
-              "\n How to fix: Please provide a file, module or directory and try again. If your "
-              "functions are in a file called hello.py, you should pass hello.py here. \n Example: funix hello.py")
+        print(
+            "Error: No Python file, module or directory provided. "
+            "\n How to fix: Please provide a file, module or directory and try again. If your "
+            "functions are in a file called hello.py, you should pass hello.py here. \n Example: funix hello.py"
+        )
         exit(1)
 
 
-def get_python_files_in_dir(base_dir: str, add_to_sys_path: bool, need_full_path: bool) -> Generator[str, None, None]:
+def get_python_files_in_dir(
+    base_dir: str, add_to_sys_path: bool, need_full_path: bool
+) -> Generator[str, None, None]:
     """
     Get all the Python files in a directory.
 
@@ -91,7 +102,9 @@ def get_python_files_in_dir(base_dir: str, add_to_sys_path: bool, need_full_path
     files = listdir(base_dir)
     for file in files:
         if isdir(join(base_dir, file)):
-            yield from get_python_files_in_dir(join(base_dir, file), add_to_sys_path, need_full_path)
+            yield from get_python_files_in_dir(
+                join(base_dir, file), add_to_sys_path, need_full_path
+            )
         if file.endswith(".py") and file != "__init__.py":
             if need_full_path:
                 yield join(base_dir, file)
@@ -150,7 +163,9 @@ def run(
         elif dir_mode:
             file_or_module_name = new_path
         elif package_mode:
-            raise ValueError("Package mode is not supported for git mode, try to use dir mode!")
+            raise ValueError(
+                "Package mode is not supported for git mode, try to use dir mode!"
+            )
 
     if app_secret and isinstance(app_secret, str):
         set_app_secret(app_secret)
@@ -158,43 +173,67 @@ def run(
     if dir_mode:
         if exists(file_or_module_name) and isdir(file_or_module_name):
             for single_file in get_python_files_in_dir(
-                base_dir=file_or_module_name,
-                add_to_sys_path=False,
-                need_full_path=True
+                base_dir=file_or_module_name, add_to_sys_path=False, need_full_path=True
             ):
-                __prep(module_or_file=single_file, lazy=lazy, need_path=True, is_module=False, need_name=True)
+                __prep(
+                    module_or_file=single_file,
+                    lazy=lazy,
+                    need_path=True,
+                    is_module=False,
+                    need_name=True,
+                )
         else:
-            raise RuntimeError("Directory not found or not a directory! "
-                               "If you want to use package mode, please use --package/-P option, "
-                               "if you want to use file mode, please use remove --recursive/-R option.")
+            raise RuntimeError(
+                "Directory not found or not a directory! "
+                "If you want to use package mode, please use --package/-P option, "
+                "if you want to use file mode, please use remove --recursive/-R option."
+            )
     elif package_mode:
         module = import_module(file_or_module_name)
         module_path = module.__file__
         if module_path is None:
-            raise RuntimeError("`__init__.py` not found, please check this package!")
+            raise RuntimeError(
+                f"`__init__.py`  is not found inside module path: {module_path}!"
+            )
         for module in get_python_files_in_dir(
-            base_dir=dirname(module_path),
-            add_to_sys_path=True,
-            need_full_path=False
+            base_dir=dirname(module_path), add_to_sys_path=True, need_full_path=False
         ):
-            __prep(module_or_file=module, lazy=lazy, need_path=True, is_module=True, need_name=True)
+            __prep(
+                module_or_file=module,
+                lazy=lazy,
+                need_path=True,
+                is_module=True,
+                need_name=True,
+            )
     else:
         if not exists(file_or_module_name):
-            raise RuntimeError("File not found! If you want to use package mode, please use --package/-P option")
+            raise RuntimeError(
+                "File not found! If you want to use package mode, please use --package/-P option"
+            )
         elif isdir(file_or_module_name):
-            raise RuntimeError("Oh this is a directory! If you want to use directory/recursive mode, "
-                               "please use --recursive/-R option")
+            raise RuntimeError(
+                "Oh this is a directory! If you want to use directory/recursive mode, "
+                "please use --recursive/-R option"
+            )
         elif not file_or_module_name.endswith(".py"):
-            raise RuntimeError("This is not a Python file! You should change the file extension to `.py`.")
+            raise RuntimeError(
+                "This is not a Python file! You should change the file extension to `.py`."
+            )
         else:
-            __prep(module_or_file=file_or_module_name, lazy=lazy, need_path=False, is_module=False, need_name=False)
+            __prep(
+                module_or_file=file_or_module_name,
+                lazy=lazy,
+                need_path=False,
+                is_module=False,
+                need_name=False,
+            )
 
     parsed_ip = ip_address(host)
     parsed_port = get_unused_port_from(port, parsed_ip)
 
     funix_secrets = decorator.export_secrets()
     if funix_secrets:
-        local = get_str_ip_and_handle_local(parsed_ip)
+        local = get_compressed_ip_address_as_str(parsed_ip)
         print("Secrets:")
         print("-" * 15)
         for name, secret in funix_secrets.items():

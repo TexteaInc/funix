@@ -3,12 +3,13 @@ HTTP File service for funix.
 """
 
 from io import BytesIO
-from uuid import uuid4
-from funix.app import app
-from flask import send_file, abort
 from os.path import abspath, splitext
-from funix.util.uri import is_valid_uri
+from uuid import uuid4
 
+from flask import abort, send_file
+
+from funix.app import app
+from funix.util.uri import is_valid_uri
 
 __files_dict: dict[str, bytes | str] = {}
 """
@@ -96,6 +97,8 @@ def enable_file_service():
                 return send_file(__files_dict[fid])
             else:
                 # Like binary
-                return send_file(BytesIO(__files_dict[fid]), mimetype="application/octet-stream")
+                return send_file(
+                    BytesIO(__files_dict[fid]), mimetype="application/octet-stream"
+                )
         else:
             return abort(404)

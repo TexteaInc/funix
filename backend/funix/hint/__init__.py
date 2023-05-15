@@ -2,10 +2,10 @@
 This file is used to define the type hint of the Funix backend.
 """
 
-from funix.widget import builtin
-from funix.hint.layout import InputRow, OutputRow
-from typing import Literal, NewType, Optional, TypedDict, TypeAlias
+from typing import Literal, NewType, Optional, TypeAlias, TypedDict
 
+from funix.hint.layout import InputRow, OutputRow
+from funix.widget import builtin
 
 DestinationType = Optional[Literal["column", "row", "sheet"]]
 """
@@ -23,14 +23,27 @@ Types:
 
 
 AcceptableWidgets = Literal[
-    "inputbox", "slider", "code", "textarea", "password", "switch", "checkbox", "sheet", "simple", "radio", "simple"
+    "inputbox",
+    "slider",
+    "code",
+    "textarea",
+    "password",
+    "switch",
+    "checkbox",
+    "sheet",
+    "simple",
+    "radio",
+    "simple",
 ]
 """
 Acceptable widgets. Implemented now.
 """
 
-WidgetsValue = \
-    list[AcceptableWidgets | tuple[AcceptableWidgets, dict]] | AcceptableWidgets | tuple[AcceptableWidgets, dict]
+WidgetsValue = (
+    list[AcceptableWidgets | tuple[AcceptableWidgets, dict]]
+    | AcceptableWidgets
+    | tuple[AcceptableWidgets, dict]
+)
 """
 The value of the `widgets`.
 
@@ -176,10 +189,17 @@ ArgumentWidgetType = str
 ArgumentLabelType = str
 
 ArgumentConfigType = Optional[
-    dict[Parameters, dict[
-        ArgumentConfigKeys, ArgumentTreatAsType | ArgumentWhitelistType | ArgumentExampleType | ArgumentWidgetType |
-        ArgumentLabelType
-    ]]
+    dict[
+        Parameters,
+        dict[
+            ArgumentConfigKeys,
+            ArgumentTreatAsType
+            | ArgumentWhitelistType
+            | ArgumentExampleType
+            | ArgumentWidgetType
+            | ArgumentLabelType,
+        ],
+    ]
 ]
 """
 The type of the `argument_config`.
@@ -330,6 +350,8 @@ class DecoratedFunctionListItem(TypedDict):
     """
     The secret of the function.
     """
+
+
 # ---- Decorator ----
 
 
@@ -361,6 +383,7 @@ def new_funix_type(widget: str, config_func: Optional[callable] = None) -> calla
             cls.__funix_base__ = cls.__base__
             return cls
         else:
+
             def new_cls_func(*args, **kwargs):
                 """
                 Creates a new funix type with a config function.

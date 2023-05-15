@@ -2,8 +2,7 @@
 Layout components for hint
 """
 
-from typing import TypedDict, Optional, Literal
-
+from typing import Literal, Optional, TypedDict
 
 Number = int | float
 
@@ -186,7 +185,12 @@ class LayoutComponentCode(TypedDict):
     """
 
 
-CommonLayoutComponents = LayoutComponentMarkdown | LayoutComponentHTML | LayoutComponentDivider | LayoutComponentCode
+CommonLayoutComponents = (
+    LayoutComponentMarkdown
+    | LayoutComponentHTML
+    | LayoutComponentDivider
+    | LayoutComponentCode
+)
 """
 Common layout components
 
@@ -200,15 +204,23 @@ Input layout components
 Input layout components are components that can be used in input
 """
 
-OutputLayoutComponents = CommonLayoutComponents | LayoutComponentReturn | LayoutComponentImages | \
-                         LayoutComponentVideos | LayoutComponentAudios | LayoutComponentFiles
+OutputLayoutComponents = (
+    CommonLayoutComponents
+    | LayoutComponentReturn
+    | LayoutComponentImages
+    | LayoutComponentVideos
+    | LayoutComponentAudios
+    | LayoutComponentFiles
+)
 """
 Output layout components
 
 Output layout components are components that can be used in output
 """
 
-AllLayoutComponents = CommonLayoutComponents | InputLayoutComponents | OutputLayoutComponents
+AllLayoutComponents = (
+    CommonLayoutComponents | InputLayoutComponents | OutputLayoutComponents
+)
 """
 All layout components
 

@@ -1,14 +1,18 @@
 import os
-import plac
-import sys
 import secrets
+import sys
+
+import plac
+
 from funix import run
 
 
-@plac.pos("file_or_module_name",
-          "The Python module containing functions to be turned into web apps by Funix. "
-          "For example, if your functions are in the file `hello.py`, you should pass `hello.py` here."
-          "if you want to turn a module called `hello` into a web app, you should pass `hello` here. ")
+@plac.pos(
+    "file_or_module_name",
+    "The Python module containing functions to be turned into web apps by Funix. "
+    "For example, if your functions are in the file `hello.py`, you should pass `hello.py` here."
+    "if you want to turn a module called `hello` into a web app, you should pass `hello` here. ",
+)
 @plac.opt("host", "Host of Funix", abbrev="H")
 @plac.opt("port", "Port of Funix", abbrev="p")
 @plac.flg("no_frontend", "Disable frontend server", abbrev="F")
@@ -21,18 +25,18 @@ from funix import run
 @plac.opt("repo_dir", "The directories in the repo that need to be used", abbrev="r")
 @plac.opt("secret", "The secret key for the full app", abbrev="s")
 def main(
-        file_or_module_name=None,
-        host="0.0.0.0",
-        port=3000,
-        no_frontend=False,
-        no_browser=False,
-        lazy=False,
-        recursive=False,
-        package=False,
-        no_debug=False,
-        from_git=None,
-        repo_dir=None,
-        secret=None,
+    file_or_module_name=None,
+    host="0.0.0.0",
+    port=3000,
+    no_frontend=False,
+    no_browser=False,
+    lazy=False,
+    recursive=False,
+    package=False,
+    no_debug=False,
+    from_git=None,
+    repo_dir=None,
+    secret=None,
 ):
     """Funix: Building web apps without manually creating widgets
 
@@ -45,12 +49,14 @@ def main(
     Visit us at http://funix.io"""
 
     if not file_or_module_name and not from_git:
-        print("Error: No Python module, file or git repo provided.\nPlease run \"funix --help\" for more information.")
+        print(
+            'Error: No Python module, file or git repo provided.\nPlease run "funix --help" for more information.'
+        )
         sys.exit(1)
 
     if recursive and package:
         print(
-            "Error: Cannot use both directory mode and package mode.\nPlease run \"funix --help\" for more information."
+            'Error: Cannot use both directory mode and package mode.\nPlease run "funix --help" for more information.'
         )
         sys.exit(1)
 
@@ -90,7 +96,7 @@ def main(
         from_git=parsed_from_git,
         repo_dir=parsed_repo_dir,
         no_debug=parsed_no_debug,
-        app_secret=parsed_secret
+        app_secret=parsed_secret,
     )
 
 

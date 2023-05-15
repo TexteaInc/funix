@@ -2,23 +2,18 @@
 For parsing theme.
 """
 
-from uuid import uuid4
-from os.path import join
-from requests import get
 from copy import deepcopy
+from os.path import join
 from typing import Optional
+from uuid import uuid4
+
+from requests import get
+
 from funix.config import basic_widgets
 from funix.util.file import create_safe_tempdir
 from funix.util.module import import_module_from_file
 
-
-__theme_style_sugar_dict = {
-    "fontColor": {
-        "root": {
-            "color": "${value}"
-        }
-    }
-}
+__theme_style_sugar_dict = {"fontColor": {"root": {"color": "${value}"}}}
 """
 Syntactic sugar replacement dictionary.
 
@@ -100,54 +95,59 @@ def get_mui_theme(theme: dict, colors: dict, typography: dict) -> dict:
         widget_mui_name = "Mui" + widget_name[0].upper() + widget_name[1::]
         mui_theme["components"][widget_mui_name] = {
             "defaultProps": {},
-            "styleOverrides": {}
+            "styleOverrides": {},
         }
         for prop_name in theme[widget_name].keys():
             if prop_name == "style":
-                mui_theme["components"][widget_mui_name]["styleOverrides"].update(theme[widget_name][prop_name])
+                mui_theme["components"][widget_mui_name]["styleOverrides"].update(
+                    theme[widget_name][prop_name]
+                )
             elif prop_name == "color":
                 color_name = f"temp_{uuid4().hex}"
                 if not theme[widget_name][prop_name] in mui_theme["palette"]:
                     if theme[widget_name][prop_name] in temp_colors.keys():
-                        mui_theme["components"][widget_mui_name]["defaultProps"][prop_name] = \
-                            temp_colors[theme[widget_name][prop_name]]
+                        mui_theme["components"][widget_mui_name]["defaultProps"][
+                            prop_name
+                        ] = temp_colors[theme[widget_name][prop_name]]
                     else:
-                        mui_theme["palette"][color_name] = {"main": theme[widget_name][prop_name]}
-                        mui_theme["components"][widget_mui_name]["defaultProps"][prop_name] = color_name
+                        mui_theme["palette"][color_name] = {
+                            "main": theme[widget_name][prop_name]
+                        }
+                        mui_theme["components"][widget_mui_name]["defaultProps"][
+                            prop_name
+                        ] = color_name
                         temp_colors[theme[widget_name][prop_name]] = color_name
                 true_color = mui_theme["palette"][color_name]["main"]
                 style_override = {}
                 if widget_name == "input":
                     style_override = {
                         "underline": {
-                            "&:before": {
-                                "borderColor": true_color
-                            },
-                            "&&:hover::before": {
-                                "borderColor": true_color
-                            }
+                            "&:before": {"borderColor": true_color},
+                            "&&:hover::before": {"borderColor": true_color},
                         }
                     }
                 if widget_name == "textField":
                     style_override = {
                         "root": {
-                            "& fieldset": {
-                                "borderColor": true_color
-                            },
+                            "& fieldset": {"borderColor": true_color},
                             "&&:hover fieldset": {
                                 "border": "2px solid",  # Hmmm
-                                "borderColor": true_color
-                            }
+                                "borderColor": true_color,
+                            },
                         }
                     }
                 if style_override != {}:
-                    mui_theme["components"][widget_mui_name]["styleOverrides"].update(style_override)
+                    mui_theme["components"][widget_mui_name]["styleOverrides"].update(
+                        style_override
+                    )
             elif prop_name in __theme_style_sugar_dict.keys():
                 mui_theme["components"][widget_mui_name]["styleOverrides"].update(
                     get_full_style_from_sugar(prop_name, theme[widget_name][prop_name])
                 )
             else:
-                mui_theme["components"][widget_mui_name]["defaultProps"][prop_name] = theme[widget_name][prop_name]
+                mui_theme["components"][widget_mui_name]["defaultProps"][
+                    prop_name
+                ] = theme[widget_name][prop_name]
     return mui_theme
 
 
@@ -176,7 +176,9 @@ def parse_theme(theme: dict) -> tuple[list[str], dict, dict, dict, dict]:
 
     if "widgets" in theme:
         for type_name in theme["widgets"]:
-            list_type_name = list(type_name) if isinstance(type_name, tuple) else [type_name]
+            list_type_name = (
+                list(type_name) if isinstance(type_name, tuple) else [type_name]
+            )
             for name in list_type_name:
                 type_names.append(name)
                 type_widget_dict[name] = theme["widgets"][type_name]
@@ -189,13 +191,19 @@ def parse_theme(theme: dict) -> tuple[list[str], dict, dict, dict, dict]:
                 if "primary" in custom_palette:
                     custom_palette["primary"]["main"] = theme["props"]["basic"]["color"]
                 else:
-                    custom_palette["primary"] = {"main": theme["props"]["basic"]["color"]}
+                    custom_palette["primary"] = {
+                        "main": theme["props"]["basic"]["color"]
+                    }
                 del theme["props"]["basic"]["color"]
             if "contrastText" in theme["props"]["basic"]:
                 if "primary" in custom_palette:
-                    custom_palette["primary"]["contrastText"] = theme["props"]["basic"]["contrastText"]
+                    custom_palette["primary"]["contrastText"] = theme["props"]["basic"][
+                        "contrastText"
+                    ]
                 else:
-                    custom_palette["primary"] = {"contrastText": theme["props"]["basic"]["contrastText"]}
+                    custom_palette["primary"] = {
+                        "contrastText": theme["props"]["basic"]["contrastText"]
+                    }
                 del theme["props"]["basic"]["contrastText"]
             for basic_widget_name in basic_widgets:
                 widget_style[basic_widget_name] = deepcopy(theme["props"]["basic"])
@@ -215,7 +223,7 @@ def get_dict_theme(
     path: Optional[str] = None,
     url: Optional[str] = None,
     module: Optional[dict] = None,
-    dict_name: Optional[str] = None
+    dict_name: Optional[str] = None,
 ) -> dict:
     """
     Get the funix theme from a module(dict), path, url.
@@ -240,8 +248,10 @@ def get_dict_theme(
     # check args
     if dict_name is None:
         if module is None:
-            raise ValueError("Module must be specified when dict_name is not specified, "
-                             "if you specify path or url, must specify dict_name!")
+            raise ValueError(
+                "Module must be specified when dict_name is not specified, "
+                "if you specify path or url, must specify dict_name!"
+            )
     else:
         if path is None and url is None:
             raise ValueError("Must specify path or url when dict_name is specified!")

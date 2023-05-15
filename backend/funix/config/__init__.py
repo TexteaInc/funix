@@ -6,7 +6,7 @@ supported_basic_types_dict = {
     "int": "integer",
     "float": "number",
     "str": "string",
-    "bool": "boolean"
+    "bool": "boolean",
 }
 """
 A dict, key is the basic type name, value is the type name in frontend (and for yodas right?).
@@ -34,7 +34,15 @@ The banned function name and path.
 Reason: Funix has used these paths.
 """
 
-basic_widgets = ["slider", "input", "textField", "switch", "button", "checkbox", "radio"]
+basic_widgets = [
+    "slider",
+    "input",
+    "textField",
+    "switch",
+    "button",
+    "checkbox",
+    "radio",
+]
 """
 Basic widgets for MUI components.
 """
