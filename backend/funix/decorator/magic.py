@@ -14,6 +14,7 @@ the types of parameters, the types of return values and the rough logic.
 import json
 from inspect import Parameter
 from re import Match, search
+from typing import Any
 
 from funix.config import supported_basic_types, supported_basic_types_dict
 
@@ -124,9 +125,9 @@ def get_type_dict(annotation: any) -> dict:
 def get_type_widget_prop(
     function_arg_type_name: str,
     index: int,
-    function_arg_widget: dict,
+    function_arg_widget: list | str,
     widget_type: dict,
-    function_annotation: Parameter,
+    function_annotation: Parameter | Any,
 ) -> dict:
     """
     Mixing the five magic parameters together, you end up with RJSF-readable data.
@@ -134,9 +135,9 @@ def get_type_widget_prop(
     Parameters:
         function_arg_type_name (str): The type name of the function argument.
         index (int): Widget index (in `function_arg_widget`).
-        function_arg_widget (dict): The widget dict of the function argument.
+        function_arg_widget (list | str): The widget dict of the function argument.
         widget_type (dict): The widget type dict.
-        function_annotation (Parameter): The annotation of the function argument.
+        function_annotation (Parameter | Any): The annotation of the function argument.
 
     Returns:
         dict: The RJSF-readable data.
