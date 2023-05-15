@@ -1,0 +1,31 @@
+name: Run Backend Test
+
+on:
+  push:
+    paths:
+      - "backend/**"
+  pull_request:
+    paths:
+      - "backend/**"
+
+jobs:
+  backend-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          cache: "pip"
+      - name: Install funix
+        run: "pip install -e ."
+      - name: Run test
+        run: "python -m unittest discover . -v"
+        working-directory: backend/funix/test
+
+

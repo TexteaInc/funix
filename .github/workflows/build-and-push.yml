@@ -1,9 +1,12 @@
+# For main branch only
 name: Build Frontend and Push
 
 on:
   push:
     branches:
       - main
+    paths:
+      - "frontend/**"
 
 jobs:
   build:
