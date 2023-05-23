@@ -5,9 +5,10 @@ Handle frontend requests and start the frontend.
 from ipaddress import IPv4Address, IPv6Address
 from os.path import abspath, exists, join
 from threading import Thread
+from uuid import uuid4
 from webbrowser import open
 
-from flask import send_from_directory
+from flask import send_from_directory, session
 
 from funix.app import app
 from funix.util.network import get_compressed_ip_address_as_str, is_port_used
@@ -89,6 +90,8 @@ def start() -> None:
         Returns:
             flask.Response: The index.html file.
         """
+        if not session.get("__funix_id"):
+            session["__funix_id"] = uuid4().hex
         return send_from_directory(folder, "index.html")
 
     @app.route("/<path:path>")

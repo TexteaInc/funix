@@ -13,6 +13,7 @@ import funix.decorator as decorator
 import funix.hint as hint
 from funix.app import app
 from funix.frontend import OpenFrontend, run_open_frontend, start
+from funix.prep.global_to_session import get_new_python_file
 from funix.util.file import create_safe_tempdir
 from funix.util.module import import_module_from_file
 from funix.util.network import (
@@ -123,6 +124,7 @@ def run(
     from_git: Optional[str] = None,
     repo_dir: Optional[str] = None,
     no_debug: Optional[bool] = False,
+    transform: Optional[bool] = False,
     app_secret: Optional[str | bool] = False,
 ) -> None:
     """
@@ -141,6 +143,7 @@ def run(
         from_git (str): If you want to run the app from a git repo, default is None
         repo_dir (str): If you want to run the app from a git repo, you can specify the directory, default is None
         no_debug (bool): If you want to disable debug mode, default is False
+        transform (bool): If you want to enable transform mode, default is False
         app_secret (str | bool): If you want to set an app secret, default is False
 
     Returns:
@@ -149,6 +152,9 @@ def run(
     Raises:
         See code for more info.
     """
+    if transform and (dir_mode or package_mode):
+        raise ValueError("Transform mode is not supported for dir or package mode!")
+
     if from_git:
         tempdir = create_safe_tempdir()
         print("Please wait, cloning git repo...")
@@ -220,13 +226,22 @@ def run(
                 "This is not a Python file! You should change the file extension to `.py`."
             )
         else:
-            __prep(
-                module_or_file=file_or_module_name,
-                lazy=lazy,
-                need_path=False,
-                is_module=False,
-                need_name=False,
-            )
+            if transform:
+                __prep(
+                    module_or_file=get_new_python_file(file_or_module_name),
+                    lazy=lazy,
+                    need_path=False,
+                    is_module=False,
+                    need_name=False,
+                )
+            else:
+                __prep(
+                    module_or_file=file_or_module_name,
+                    lazy=lazy,
+                    need_path=False,
+                    is_module=False,
+                    need_name=False,
+                )
 
     parsed_ip = ip_address(host)
     parsed_port = get_unused_port_from(port, parsed_ip)

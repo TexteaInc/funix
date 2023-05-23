@@ -6,6 +6,7 @@ authors = [
 ]
 license = {file = "LICENSE"}
 description = "Building web apps without manually creating widgets"
+readme = "README.md"
 requires-python = ">=3.10"
 classifiers = [
   "Development Status :: 4 - Beta",

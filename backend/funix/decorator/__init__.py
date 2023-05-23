@@ -1,7 +1,6 @@
 """
 Funix decorator. The central logic of Funix.
 """
-
 from functools import wraps
 from importlib import import_module
 from inspect import Parameter, Signature, getsource, signature
@@ -13,7 +12,7 @@ from typing import Optional
 from urllib.request import urlopen
 from uuid import uuid4
 
-from flask import Response, request
+from flask import Response, request, session
 
 from funix.app import app
 from funix.config import (
@@ -39,6 +38,7 @@ from funix.hint import (
     InputLayout,
     LabelsType,
     OutputLayout,
+    SessionVariablesType,
     TreatAsType,
     WhitelistType,
     WidgetsType,
@@ -246,6 +246,7 @@ def funix(
     output_layout: OutputLayout = None,
     conditional_visible: ConditionalVisibleType = None,
     argument_config: ArgumentConfigType = None,
+    session_variables: SessionVariablesType = None,
     __full_module: Optional[str] = None,
 ):
     """
@@ -275,6 +276,7 @@ def funix(
         output_layout(OutputLayout): layout for output widgets
         conditional_visible(ConditionalVisibleType): conditional visibility for widgets
         argument_config(ArgumentConfigType): config for widgets
+        session_variables(SessionVariablesType): session variables for functions
         __full_module(str):
             full module path of the function, for `path` only.
             You don't need to set it unless you are funixing a directory and package.
@@ -301,6 +303,11 @@ def funix(
             Check code for details
         """
         if __wrapper_enabled:
+            if session_variables:
+                raise ValueError(
+                    "Start with `-t` or `--transform` to use session variables"
+                )
+
             function_id = str(uuid4())
 
             function_name = getattr(
@@ -935,6 +942,8 @@ def funix(
                     Any: The function's result
                 """
                 try:
+                    if not session.get("__funix_id"):
+                        session["__funix_id"] = uuid4().hex
                     function_kwargs = request.get_json()
 
                     def get_figure(figure) -> dict:
