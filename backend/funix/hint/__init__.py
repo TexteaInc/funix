@@ -147,6 +147,13 @@ The type of the `output_layout`.
 See `OutputRow` for more information.
 """
 
+DirectionType = Optional[Literal["row", "column", "row-reverse", "column-reverse"]]
+"""
+The type of the `direction`.
+
+Default: "row".
+"""
+
 
 class ConditionalVisible(TypedDict):
     """

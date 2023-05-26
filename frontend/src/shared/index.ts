@@ -123,6 +123,10 @@ export type FunctionDetail = {
    * Function source code
    */
   source: string;
+  /**
+   * Function direction
+   */
+  direction: "row" | "column" | "row-reverse" | "column-reverse";
 };
 
 export async function getParam(

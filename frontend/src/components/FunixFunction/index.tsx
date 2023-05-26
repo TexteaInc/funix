@@ -173,12 +173,16 @@ const FunixFunction: React.FC<FunctionDetailProps & FunixFunctionProps> = ({
         <></>
       )}
       <Stack spacing={2}>
-        <Grid container>
+        <Grid container direction={detail.direction}>
           <Grid
             item
-            sx={{
-              width: `calc(${width[0]} - 16px)`,
-            }}
+            sx={
+              detail.direction === "row" || detail.direction === "row-reverse"
+                ? {
+                    width: `calc(${width[0]} - 16px)`,
+                  }
+                : undefined
+            }
           >
             <InputPanel
               detail={detail}
@@ -187,49 +191,62 @@ const FunixFunction: React.FC<FunctionDetailProps & FunixFunctionProps> = ({
               preview={preview}
             />
           </Grid>
-          <Grid
-            item
-            sx={{
-              width: "16px",
-            }}
-          >
-            <Box
-              id="resize-line"
+          {detail.direction === "row" || detail.direction === "row-reverse" ? (
+            <Grid
+              item
               sx={{
-                height: "100%",
-                width: "65%",
-                margin: "0 auto",
-                backgroundColor: `${onResizing ? "grey.100" : ""}`,
-                "&:hover": {
-                  backgroundColor: "grey.100",
-                  cursor: "col-resize",
-                },
+                width: "1rem",
               }}
-              onContextMenu={(event) => {
-                event.preventDefault();
-                resetWidth();
+            >
+              <Box
+                id="resize-line"
+                sx={{
+                  height: "100%",
+                  width: "65%",
+                  margin: "0 auto",
+                  backgroundColor: `${onResizing ? "grey.100" : ""}`,
+                  "&:hover": {
+                    backgroundColor: "grey.100",
+                    cursor: "col-resize",
+                  },
+                }}
+                onContextMenu={(event) => {
+                  event.preventDefault();
+                  resetWidth();
+                }}
+                onPointerDown={(event) => {
+                  event.preventDefault();
+                  setOnResizing(true);
+                  document.body.style.cursor = "col-resize";
+                  document.body.addEventListener("pointermove", handleResize);
+                  document.body.addEventListener("pointerup", () => {
+                    document.body.style.cursor = "default";
+                    setOnResizing(false);
+                    document.body.removeEventListener(
+                      "pointermove",
+                      handleResize
+                    );
+                  });
+                }}
+              />
+            </Grid>
+          ) : (
+            <Grid
+              item
+              sx={{
+                height: "1rem",
               }}
-              onPointerDown={(event) => {
-                event.preventDefault();
-                setOnResizing(true);
-                document.body.style.cursor = "col-resize";
-                document.body.addEventListener("pointermove", handleResize);
-                document.body.addEventListener("pointerup", () => {
-                  document.body.style.cursor = "default";
-                  setOnResizing(false);
-                  document.body.removeEventListener(
-                    "pointermove",
-                    handleResize
-                  );
-                });
-              }}
-            />
-          </Grid>
+            ></Grid>
+          )}
           <Grid
             item
-            sx={{
-              width: `calc(${width[1]})`,
-            }}
+            sx={
+              detail.direction === "row" || detail.direction === "row-reverse"
+                ? {
+                    width: `calc(${width[1]})`,
+                  }
+                : undefined
+            }
           >
             <OutputPanel
               detail={detail}

@@ -410,7 +410,7 @@ const OutputPanel = (props: {
   };
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2} id="output-panel">
       <Card>
         <CardContent>
           <Stack spacing={1}>

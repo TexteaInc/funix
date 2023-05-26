@@ -34,6 +34,7 @@ from funix.hint import (
     ConditionalVisibleType,
     DecoratedFunctionListItem,
     DestinationType,
+    DirectionType,
     ExamplesType,
     InputLayout,
     LabelsType,
@@ -235,6 +236,7 @@ def funix(
     secret: bool | str = False,
     description: Optional[str] = "",
     destination: DestinationType = None,
+    direction: DirectionType = None,
     show_source: bool = False,
     theme_name: Optional[str] = None,
     widgets: WidgetsType = None,
@@ -265,6 +267,7 @@ def funix(
             if str, the function will be locked with the given password.
         description(str): description of the function, if None, the function docstring will be used
         destination(DestinationType): for yodas, no effect on funix
+        direction(DirectionType): Whether the input/output panel is aligned left/right (row) or top/bottom (column)
         show_source(bool): whether to display the code of this function in the frontend
         theme_name(str): name of the theme to use, if None, the default theme will be used
         widgets(WidgetsType): parameters to be converted to widgets
@@ -309,6 +312,8 @@ def funix(
                 )
 
             function_id = str(uuid4())
+
+            function_direction = direction if direction else "row"
 
             function_name = getattr(
                 function, "__name__"
@@ -842,6 +847,7 @@ def funix(
                 "theme": parsed_theme[4],
                 "return_type": return_type_parsed,
                 "description": function_description,
+                "direction": function_direction,
                 "schema": {
                     "title": function_title,
                     "description": function_description,
