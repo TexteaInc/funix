@@ -1,6 +1,6 @@
 [project]
 name = "funix"
-version = "0.4.1"
+version = "0.4.2"
 authors = [
   {name = "Textea Inc.", email = "bao@textea.co"}
 ]
@@ -26,6 +26,12 @@ dependencies = [
   "GitPython>=3.1.31",
 ]
 
+[project.optional-dependencies]
+plot = [
+  "matplotlib>=3.4.3",
+  "mpld3>=0.5.8",
+]
+
 [project.urls]
 homepage = "https://github.com/TexteaInc/funix"
 
@@ -34,9 +40,3 @@ funix = "funix.__main__:cli_main"
 
 [tool.setuptools.packages.find]
 where = ["backend"]
-
-[options.extras_require]
-plot = [
-  "matplotlib>=3.6.1",
-  "mpld3>=0.5.8",
-]

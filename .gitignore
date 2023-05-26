@@ -10,3 +10,4 @@ venv/
 dist/
 .nova
 .DS_Store
+.lh
