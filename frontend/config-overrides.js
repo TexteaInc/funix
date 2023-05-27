@@ -1,25 +1,17 @@
 const ProgressBarPlugin = require("progress-bar-webpack-plugin");
 const { override, addWebpackPlugin } = require("customize-cra");
+const webpack = require("webpack");
 
-
-class NoPDFWorkerPlugin {
-  apply(compiler) {
-    compiler.hooks.emit.tapAsync("NoPDFWorkerPlugin", (compilation, callback) => {
-      for (const filename in compilation.assets) {
-        if (filename.includes("pdf.worker")) {
-          delete compilation.assets[filename];
-        }
-      }
-      callback();
-    });
-  }
-}
 
 module.exports = override(
   addWebpackPlugin(
     new ProgressBarPlugin(),
   ),
   addWebpackPlugin(
-    new NoPDFWorkerPlugin(),
-  )
+    new webpack.IgnorePlugin({
+      checkResource(resource) {
+        return resource === "pdfjs-dist/build/pdf.worker.js";
+      }
+    }),
+  ),
 )

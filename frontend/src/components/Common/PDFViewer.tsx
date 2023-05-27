@@ -1,5 +1,5 @@
 import React from "react";
-import { Document, Page, pdfjs } from "react-pdf/dist/esm/entry.webpack5";
+import { Document, Page, pdfjs } from "react-pdf";
 import { Button, Grid, Stack, Typography } from "@mui/material";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
@@ -12,6 +12,15 @@ const PDFViewer = (props: { pdf: string | File }) => {
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
+  };
+
+  const onItemClick = ({ pageNumber }: { pageNumber: string }) => {
+    try {
+      const page = parseInt(pageNumber);
+      setPageNumber(page);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
@@ -44,8 +53,12 @@ const PDFViewer = (props: { pdf: string | File }) => {
         justifyContent="center"
         alignItems="center"
       >
-        <Document file={props.pdf} onLoadSuccess={onDocumentLoadSuccess}>
-          <Page pageNumber={pageNumber} />
+        <Document
+          file={props.pdf}
+          onLoadSuccess={onDocumentLoadSuccess}
+          onItemClick={onItemClick}
+        >
+          <Page pageNumber={pageNumber} scale={1.5} renderMode="canvas" />
         </Document>
       </Grid>
     </>
