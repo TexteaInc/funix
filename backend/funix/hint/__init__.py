@@ -2,7 +2,7 @@
 This file is used to define the type hint of the Funix backend.
 """
 
-from typing import Literal, NewType, Optional, TypeAlias, TypedDict
+from typing import Literal, NewType, Optional, TypeAlias, TypedDict, TypeVar, Callable
 
 from funix.hint.layout import InputRow, OutputRow
 from funix.widget import builtin
@@ -222,6 +222,26 @@ The type of the `session_variables`.
 Examples:
     ["a", "b"] -> The session variables: `a`, `b` will be saved.
 """
+
+PreFillArgumentFrom = Callable | tuple[Callable, int]
+"""
+Pre-fill argument from.
+
+Types:
+    callable: The function.
+    tuple[callable, int]: The function and the index.
+"""
+
+PreFillType = Optional[dict[str, PreFillArgumentFrom]]
+"""
+The type of the `pre_fill`.
+
+Examples:
+    {"a": "b"} -> The parameter `a` will be pre-filled from the function `b`'s result.
+    {"a": ("b", 1)} -> The parameter `a` will be pre-filled from the function `b`'s result, and the index is `1`.
+"""
+
+PreFillEmpty = TypeVar("PreFillEmpty")
 
 
 class CodeConfig(TypedDict):

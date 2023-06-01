@@ -1,6 +1,7 @@
 """
 Funix decorator. The central logic of Funix.
 """
+from copy import deepcopy
 from functools import wraps
 from importlib import import_module
 from inspect import Parameter, Signature, getsource, signature
@@ -42,10 +43,12 @@ from funix.hint import (
     SessionVariablesType,
     TreatAsType,
     WhitelistType,
-    WidgetsType,
+    WidgetsType, PreFillType, PreFillEmpty,
 )
 from funix.theme import get_dict_theme, parse_theme
 from funix.widget import generate_frontend_widget_config
+from funix.session import set_global_variable, get_global_variable
+
 
 __matplotlib_use = False
 """
@@ -111,6 +114,14 @@ App secret, for all functions.
 """
 
 mpld3: ModuleType | None = None
+"""
+The mpld3 module.
+"""
+
+pre_fill_metadata: dict[str, list[str | int | PreFillEmpty]] = {}
+"""
+A dict, key is function name, value is a list of indexes/keys of pre-fill parameters.
+"""
 
 
 def set_function_secret(secret: str, function_id: str, function_name: str) -> None:
@@ -249,6 +260,7 @@ def funix(
     conditional_visible: ConditionalVisibleType = None,
     argument_config: ArgumentConfigType = None,
     session_variables: SessionVariablesType = None,
+    pre_fill: PreFillType = None,
     __full_module: Optional[str] = None,
 ):
     """
@@ -280,6 +292,7 @@ def funix(
         conditional_visible(ConditionalVisibleType): conditional visibility for widgets
         argument_config(ArgumentConfigType): config for widgets
         session_variables(SessionVariablesType): session variables for functions
+        pre_fill(PreFillType): pre-fill values for parameters
         __full_module(str):
             full module path of the function, for `path` only.
             You don't need to set it unless you are funixing a directory and package.
@@ -290,7 +303,7 @@ def funix(
     Raises:
         Check code for details
     """
-    global __parsed_themes
+    global __parsed_themes, pre_fill_metadata
 
     def decorator(function: callable) -> callable:
         """
@@ -534,6 +547,22 @@ def funix(
                         return_output_indexes.append(row_item_done["index"])
                     row_layout.append(row_item_done)
                 return_output_layout.append(row_layout)
+
+            if pre_fill:
+                for _, from_arg_function_info in pre_fill.items():
+                    if isinstance(from_arg_function_info, tuple):
+                        from_arg_function_name = getattr(from_arg_function_info[0], "__name__")
+                        from_arg_function_index_or_key = from_arg_function_info[1]
+                        if from_arg_function_name in pre_fill_metadata:
+                            pre_fill_metadata[from_arg_function_name].append(from_arg_function_index_or_key)
+                        else:
+                            pre_fill_metadata[from_arg_function_name] = [from_arg_function_index_or_key]
+                    else:
+                        from_arg_function_name = getattr(from_arg_function_info, "__name__")
+                        if from_arg_function_name in pre_fill_metadata:
+                            pre_fill_metadata[from_arg_function_name].append(PreFillEmpty)
+                        else:
+                            pre_fill_metadata[from_arg_function_name] = [PreFillEmpty]
 
             def create_decorated_params(arg_name: str) -> None:
                 """
@@ -834,12 +863,6 @@ def funix(
             for key in delete_keys:
                 json_schema_props.pop(key)
 
-            keep_ordered_list = list(function_signature.parameters.keys())
-            keep_ordered_dict = {}
-            for key in keep_ordered_list:
-                if key in json_schema_props.keys():
-                    keep_ordered_dict[key] = json_schema_props[key]
-
             decorated_function = {
                 "id": function_id,
                 "name": function_name,
@@ -852,7 +875,7 @@ def funix(
                     "title": function_title,
                     "description": function_description,
                     "type": "object",
-                    "properties": keep_ordered_dict,
+                    "properties": json_schema_props,
                     "allOf": all_of,
                     "input_layout": return_input_layout,
                     "output_layout": return_output_layout,
@@ -876,6 +899,21 @@ def funix(
                 Returns:
                     flask.Response: The function's parameters
                 """
+                if pre_fill is not None:
+                    new_decorated_function = deepcopy(decorated_function)
+                    for argument_key, from_function_info in pre_fill.items():
+                        if isinstance(from_function_info, tuple):
+                            last_result = get_global_variable(
+                                getattr(from_function_info[0], "__name__") + f"_{from_function_info[1]}"
+                            )
+                        else:
+                            last_result = get_global_variable(
+                                getattr(from_function_info, "__name__") + "_result"
+                            )
+                        if last_result is not None:
+                            new_decorated_function["params"][argument_key]["default"] = last_result
+                            new_decorated_function["schema"]["properties"][argument_key]["default"] = last_result
+                    return Response(dumps(new_decorated_function), mimetype="application/json")
                 return Response(dumps(decorated_function), mimetype="application/json")
 
             decorated_function_param_getter.__setattr__(
@@ -990,80 +1028,89 @@ def funix(
                         """
                         # TODO: Best result handling, refactor it if possible
                         try:
+                            function_call_result = function(**wrapped_function_kwargs)
+                            function_call_name = getattr(function, "__name__")
+                            if function_call_name in pre_fill_metadata:
+                                for index_or_key in pre_fill_metadata[function_call_name]:
+                                    if index_or_key is PreFillEmpty:
+                                        set_global_variable(function_call_name + "_result", function_call_result)
+                                    else:
+                                        set_global_variable(
+                                            function_call_name + f"_{index_or_key}",
+                                            function_call_result[index_or_key]
+                                        )
                             if return_type_parsed == "Figure":
-                                fig = function(**wrapped_function_kwargs)
-                                return [get_figure(fig)]
+                                return [get_figure(function_call_result)]
                             if return_type_parsed in supported_basic_file_types:
                                 return [
-                                    get_static_uri(function(**wrapped_function_kwargs))
+                                    get_static_uri(function_call_result)
                                 ]
                             else:
-                                function_result = function(**wrapped_function_kwargs)
-                                if isinstance(function_result, list):
-                                    return [function_result]
-                                if not isinstance(function_result, (str, dict, tuple)):
-                                    function_result = dumps(function_result)
+                                if isinstance(function_call_result, list):
+                                    return [function_call_result]
+                                if not isinstance(function_call_result, (str, dict, tuple)):
+                                    function_call_result = dumps(function_call_result)
                                 if cast_to_list_flag:
-                                    function_result = list(function_result)
+                                    function_call_result = list(function_call_result)
                                 else:
-                                    if isinstance(function_result, (str, dict)):
-                                        function_result = [function_result]
-                                    if isinstance(function_result, tuple):
-                                        function_result = list(function_result)
-                                if function_result and isinstance(
-                                    function_result, list
+                                    if isinstance(function_call_result, (str, dict)):
+                                        function_call_result = [function_call_result]
+                                    if isinstance(function_call_result, tuple):
+                                        function_call_result = list(function_call_result)
+                                if function_call_result and isinstance(
+                                    function_call_result, list
                                 ):
                                     if isinstance(return_type_parsed, list):
                                         for position, single_return_type in enumerate(
                                             return_type_parsed
                                         ):
                                             if single_return_type == "Figure":
-                                                function_result[position] = get_figure(
-                                                    function_result[position]
+                                                function_call_result[position] = get_figure(
+                                                    function_call_result[position]
                                                 )
                                             if (
                                                 single_return_type
                                                 in supported_basic_file_types
                                             ):
                                                 if (
-                                                    type(function_result[position])
+                                                    type(function_call_result[position])
                                                     == "list"
                                                 ):
-                                                    function_result[position] = [
+                                                    function_call_result[position] = [
                                                         get_static_uri(single)
-                                                        for single in function_result[
+                                                        for single in function_call_result[
                                                             position
                                                         ]
                                                     ]
                                                 else:
-                                                    function_result[
+                                                    function_call_result[
                                                         position
                                                     ] = get_static_uri(
-                                                        function_result[position]
+                                                        function_call_result[position]
                                                     )
-                                        return function_result
+                                        return function_call_result
                                     else:
                                         if return_type_parsed == "Figure":
-                                            function_result = [
-                                                get_figure(function_result[0])
+                                            function_call_result = [
+                                                get_figure(function_call_result[0])
                                             ]
                                         if (
                                             return_type_parsed
                                             in supported_basic_file_types
                                         ):
-                                            if type(function_result[0]) == "list":
-                                                function_result = [
+                                            if type(function_call_result[0]) == "list":
+                                                function_call_result = [
                                                     [
                                                         get_static_uri(single)
-                                                        for single in function_result[0]
+                                                        for single in function_call_result[0]
                                                     ]
                                                 ]
                                             else:
-                                                function_result = [
-                                                    get_static_uri(function_result[0])
+                                                function_call_result = [
+                                                    get_static_uri(function_call_result[0])
                                                 ]
-                                        return function_result
-                                return function_result
+                                        return function_call_result
+                                return function_call_result
                         except:
                             return {
                                 "error_type": "function",
