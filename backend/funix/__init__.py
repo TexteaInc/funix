@@ -6,6 +6,7 @@ from os.path import dirname, exists, isdir, join
 from sys import exit, path
 from typing import Generator, Optional
 from urllib.parse import quote
+from flask import Flask
 
 from git import Repo
 
@@ -111,38 +112,26 @@ def get_python_files_in_dir(
                 yield join(base_dir, file)
             yield file[:-3]
 
-
-def run(
+def import_from_config(
     file_or_module_name: str,
-    host: Optional[str] = "0.0.0.0",
-    port: Optional[int] = 3000,
-    no_frontend: Optional[bool] = False,
-    no_browser: Optional[bool] = False,
     lazy: Optional[bool] = False,
     dir_mode: Optional[bool] = False,
     package_mode: Optional[bool] = False,
     from_git: Optional[str] = None,
     repo_dir: Optional[str] = None,
-    no_debug: Optional[bool] = False,
     transform: Optional[bool] = False,
     app_secret: Optional[str | bool] = False,
 ) -> None:
     """
-    Run the funix app.
-    For more information, `funix -h` will help you.
+    Import files, git repos and modules from the config argument.
 
     Parameters:
         file_or_module_name (str): The file or module name to run.
-        host (str): The host to run the app on, default is "0.0.0.0"
-        port (int): The port to run the app on, default is 3000
-        no_frontend (bool): If you want to disable the frontend, default is False
-        no_browser (bool): If you want to disable the browser opening, default is False
         lazy (bool): If you want to enable lazy mode, default is False
         dir_mode (bool): If you want to enable dir mode, default is False
         package_mode (bool): If you want to enable package mode, default is False
         from_git (str): If you want to run the app from a git repo, default is None
         repo_dir (str): If you want to run the app from a git repo, you can specify the directory, default is None
-        no_debug (bool): If you want to disable debug mode, default is False
         transform (bool): If you want to enable transform mode, default is False
         app_secret (str | bool): If you want to set an app secret, default is False
 
@@ -243,6 +232,99 @@ def run(
                     need_name=False,
                 )
 
+
+def get_flask_application(
+    file_or_module_name: str,
+    no_frontend: Optional[bool] = False,
+    lazy: Optional[bool] = False,
+    dir_mode: Optional[bool] = False,
+    package_mode: Optional[bool] = False,
+    from_git: Optional[str] = None,
+    repo_dir: Optional[str] = None,
+    transform: Optional[bool] = False,
+    app_secret: Optional[str | bool] = False,
+) -> Flask:
+    """
+    Get flask application for the funix app.
+
+    Parameters:
+        file_or_module_name (str): The file or module name to run.
+        no_frontend (bool): If you want to disable the frontend, default is False
+        lazy (bool): If you want to enable lazy mode, default is False
+        dir_mode (bool): If you want to enable dir mode, default is False
+        package_mode (bool): If you want to enable package mode, default is False
+        from_git (str): If you want to run the app from a git repo, default is None
+        repo_dir (str): If you want to run the app from a git repo, you can specify the directory, default is None
+        transform (bool): If you want to enable transform mode, default is False
+        app_secret (str | bool): If you want to set an app secret, default is False
+
+    Returns:
+        flask.Flask: The flask application.
+    """
+    import_from_config(
+        file_or_module_name=file_or_module_name,
+        lazy=lazy,
+        dir_mode=dir_mode,
+        package_mode=package_mode,
+        from_git=from_git,
+        repo_dir=repo_dir,
+        transform=transform,
+        app_secret=app_secret,
+    )
+
+    if not no_frontend:
+        start()
+    return app
+
+
+def run(
+    file_or_module_name: str,
+    host: Optional[str] = "0.0.0.0",
+    port: Optional[int] = 3000,
+    no_frontend: Optional[bool] = False,
+    no_browser: Optional[bool] = False,
+    lazy: Optional[bool] = False,
+    dir_mode: Optional[bool] = False,
+    package_mode: Optional[bool] = False,
+    from_git: Optional[str] = None,
+    repo_dir: Optional[str] = None,
+    no_debug: Optional[bool] = False,
+    transform: Optional[bool] = False,
+    app_secret: Optional[str | bool] = False,
+) -> None:
+    """
+    Run the funix app.
+    For more information, `funix -h` will help you.
+
+    Parameters:
+        file_or_module_name (str): The file or module name to run.
+        host (str): The host to run the app on, default is "0.0.0.0"
+        port (int): The port to run the app on, default is 3000
+        no_frontend (bool): If you want to disable the frontend, default is False
+        no_browser (bool): If you want to disable the browser opening, default is False
+        lazy (bool): If you want to enable lazy mode, default is False
+        dir_mode (bool): If you want to enable dir mode, default is False
+        package_mode (bool): If you want to enable package mode, default is False
+        from_git (str): If you want to run the app from a git repo, default is None
+        repo_dir (str): If you want to run the app from a git repo, you can specify the directory, default is None
+        no_debug (bool): If you want to disable debug mode, default is False
+        transform (bool): If you want to enable transform mode, default is False
+        app_secret (str | bool): If you want to set an app secret, default is False
+
+    Returns:
+        None
+    """
+    import_from_config(
+        file_or_module_name=file_or_module_name,
+        lazy=lazy,
+        dir_mode=dir_mode,
+        package_mode=package_mode,
+        from_git=from_git,
+        repo_dir=repo_dir,
+        transform=transform,
+        app_secret=app_secret,
+    )
+
     parsed_ip = ip_address(host)
     parsed_port = get_unused_port_from(port, parsed_ip)
 
@@ -259,11 +341,10 @@ def run(
             print("-" * 15)
 
     if not no_frontend:
+        start()
         print(f"Starting Funix at http://{host}:{parsed_port}")
     else:
         print(f"Starting Funix backend only at http://{host}:{parsed_port}")
     if not no_frontend and not no_browser:
-        start()
-        if not no_browser:
-            run_open_frontend(parsed_ip, parsed_port)
+        run_open_frontend(parsed_ip, parsed_port)
     app.run(host=host, port=parsed_port, debug=not no_debug)
