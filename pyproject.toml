@@ -1,6 +1,6 @@
 [project]
 name = "funix"
-version = "0.4.2"
+version = "0.4.3"
 authors = [
   {name = "Textea Inc.", email = "bao@textea.co"}
 ]
