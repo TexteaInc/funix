@@ -174,7 +174,8 @@ def import_from_config(
                     "Package mode is not supported for git mode, try to use dir mode!"
                 )
     else:
-        raise Exception("GitPython is not installed, please install it first!")
+        if from_git:
+            raise Exception("GitPython is not installed, please install it first!")
 
     if app_secret and isinstance(app_secret, str):
         set_app_secret(app_secret)
