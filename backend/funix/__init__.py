@@ -8,8 +8,6 @@ from typing import Generator, Optional
 from urllib.parse import quote
 from flask import Flask
 
-from git import Repo
-
 import funix.decorator as decorator
 import funix.hint as hint
 from funix.app import app
@@ -40,6 +38,18 @@ new_funix_type = hint.new_funix_type
 set_app_secret = decorator.set_app_secret
 # ---- Util ----
 # ---- Exports ----
+
+__use_git = False
+"""
+Funix uses git to clone repo, now this feature is optional.
+"""
+
+try:
+    from git import Repo
+
+    __use_git = True
+except:
+    pass
 
 
 def __prep(
@@ -112,6 +122,7 @@ def get_python_files_in_dir(
                 yield join(base_dir, file)
             yield file[:-3]
 
+
 def import_from_config(
     file_or_module_name: str,
     lazy: Optional[bool] = False,
@@ -144,23 +155,26 @@ def import_from_config(
     if transform and (dir_mode or package_mode):
         raise ValueError("Transform mode is not supported for dir or package mode!")
 
-    if from_git:
-        tempdir = create_safe_tempdir()
-        print("Please wait, cloning git repo...")
-        Repo.clone_from(url=from_git, to_path=tempdir)
-        new_path = tempdir
-        if repo_dir:
-            new_path = join(tempdir, repo_dir)
-        path.append(new_path)
+    if __use_git:
+        if from_git:
+            tempdir = create_safe_tempdir()
+            print("Please wait, cloning git repo...")
+            Repo.clone_from(url=from_git, to_path=tempdir)
+            new_path = tempdir
+            if repo_dir:
+                new_path = join(tempdir, repo_dir)
+            path.append(new_path)
 
-        if file_or_module_name:
-            pass
-        elif dir_mode:
-            file_or_module_name = new_path
-        elif package_mode:
-            raise ValueError(
-                "Package mode is not supported for git mode, try to use dir mode!"
-            )
+            if file_or_module_name:
+                pass
+            elif dir_mode:
+                file_or_module_name = new_path
+            elif package_mode:
+                raise ValueError(
+                    "Package mode is not supported for git mode, try to use dir mode!"
+                )
+    else:
+        raise Exception("GitPython is not installed, please install it first!")
 
     if app_secret and isinstance(app_secret, str):
         set_app_secret(app_secret)
