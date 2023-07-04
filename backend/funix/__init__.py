@@ -6,6 +6,7 @@ from os.path import dirname, exists, isdir, join
 from sys import exit, path
 from typing import Generator, Optional
 from urllib.parse import quote
+
 from flask import Flask
 
 import funix.decorator as decorator

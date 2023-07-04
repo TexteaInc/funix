@@ -40,15 +40,16 @@ from funix.hint import (
     InputLayout,
     LabelsType,
     OutputLayout,
+    PreFillEmpty,
+    PreFillType,
     SessionVariablesType,
     TreatAsType,
     WhitelistType,
-    WidgetsType, PreFillType, PreFillEmpty,
+    WidgetsType,
 )
+from funix.session import get_global_variable, set_global_variable
 from funix.theme import get_dict_theme, parse_theme
 from funix.widget import generate_frontend_widget_config
-from funix.session import set_global_variable, get_global_variable
-
 
 __matplotlib_use = False
 """
@@ -551,16 +552,26 @@ def funix(
             if pre_fill:
                 for _, from_arg_function_info in pre_fill.items():
                     if isinstance(from_arg_function_info, tuple):
-                        from_arg_function_name = getattr(from_arg_function_info[0], "__name__")
+                        from_arg_function_name = getattr(
+                            from_arg_function_info[0], "__name__"
+                        )
                         from_arg_function_index_or_key = from_arg_function_info[1]
                         if from_arg_function_name in pre_fill_metadata:
-                            pre_fill_metadata[from_arg_function_name].append(from_arg_function_index_or_key)
+                            pre_fill_metadata[from_arg_function_name].append(
+                                from_arg_function_index_or_key
+                            )
                         else:
-                            pre_fill_metadata[from_arg_function_name] = [from_arg_function_index_or_key]
+                            pre_fill_metadata[from_arg_function_name] = [
+                                from_arg_function_index_or_key
+                            ]
                     else:
-                        from_arg_function_name = getattr(from_arg_function_info, "__name__")
+                        from_arg_function_name = getattr(
+                            from_arg_function_info, "__name__"
+                        )
                         if from_arg_function_name in pre_fill_metadata:
-                            pre_fill_metadata[from_arg_function_name].append(PreFillEmpty)
+                            pre_fill_metadata[from_arg_function_name].append(
+                                PreFillEmpty
+                            )
                         else:
                             pre_fill_metadata[from_arg_function_name] = [PreFillEmpty]
 
@@ -904,16 +915,23 @@ def funix(
                     for argument_key, from_function_info in pre_fill.items():
                         if isinstance(from_function_info, tuple):
                             last_result = get_global_variable(
-                                getattr(from_function_info[0], "__name__") + f"_{from_function_info[1]}"
+                                getattr(from_function_info[0], "__name__")
+                                + f"_{from_function_info[1]}"
                             )
                         else:
                             last_result = get_global_variable(
                                 getattr(from_function_info, "__name__") + "_result"
                             )
                         if last_result is not None:
-                            new_decorated_function["params"][argument_key]["default"] = last_result
-                            new_decorated_function["schema"]["properties"][argument_key]["default"] = last_result
-                    return Response(dumps(new_decorated_function), mimetype="application/json")
+                            new_decorated_function["params"][argument_key][
+                                "default"
+                            ] = last_result
+                            new_decorated_function["schema"]["properties"][
+                                argument_key
+                            ]["default"] = last_result
+                    return Response(
+                        dumps(new_decorated_function), mimetype="application/json"
+                    )
                 return Response(dumps(decorated_function), mimetype="application/json")
 
             decorated_function_param_getter.__setattr__(
@@ -1031,24 +1049,29 @@ def funix(
                             function_call_result = function(**wrapped_function_kwargs)
                             function_call_name = getattr(function, "__name__")
                             if function_call_name in pre_fill_metadata:
-                                for index_or_key in pre_fill_metadata[function_call_name]:
+                                for index_or_key in pre_fill_metadata[
+                                    function_call_name
+                                ]:
                                     if index_or_key is PreFillEmpty:
-                                        set_global_variable(function_call_name + "_result", function_call_result)
+                                        set_global_variable(
+                                            function_call_name + "_result",
+                                            function_call_result,
+                                        )
                                     else:
                                         set_global_variable(
                                             function_call_name + f"_{index_or_key}",
-                                            function_call_result[index_or_key]
+                                            function_call_result[index_or_key],
                                         )
                             if return_type_parsed == "Figure":
                                 return [get_figure(function_call_result)]
                             if return_type_parsed in supported_basic_file_types:
-                                return [
-                                    get_static_uri(function_call_result)
-                                ]
+                                return [get_static_uri(function_call_result)]
                             else:
                                 if isinstance(function_call_result, list):
                                     return [function_call_result]
-                                if not isinstance(function_call_result, (str, dict, tuple)):
+                                if not isinstance(
+                                    function_call_result, (str, dict, tuple)
+                                ):
                                     function_call_result = dumps(function_call_result)
                                 if cast_to_list_flag:
                                     function_call_result = list(function_call_result)
@@ -1056,7 +1079,9 @@ def funix(
                                     if isinstance(function_call_result, (str, dict)):
                                         function_call_result = [function_call_result]
                                     if isinstance(function_call_result, tuple):
-                                        function_call_result = list(function_call_result)
+                                        function_call_result = list(
+                                            function_call_result
+                                        )
                                 if function_call_result and isinstance(
                                     function_call_result, list
                                 ):
@@ -1065,7 +1090,9 @@ def funix(
                                             return_type_parsed
                                         ):
                                             if single_return_type == "Figure":
-                                                function_call_result[position] = get_figure(
+                                                function_call_result[
+                                                    position
+                                                ] = get_figure(
                                                     function_call_result[position]
                                                 )
                                             if (
@@ -1102,12 +1129,16 @@ def funix(
                                                 function_call_result = [
                                                     [
                                                         get_static_uri(single)
-                                                        for single in function_call_result[0]
+                                                        for single in function_call_result[
+                                                            0
+                                                        ]
                                                     ]
                                                 ]
                                             else:
                                                 function_call_result = [
-                                                    get_static_uri(function_call_result[0])
+                                                    get_static_uri(
+                                                        function_call_result[0]
+                                                    )
                                                 ]
                                         return function_call_result
                                 return function_call_result

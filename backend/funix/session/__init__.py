@@ -2,8 +2,8 @@
 Control the global variables.
 """
 
-from typing import Any
 from copy import deepcopy
+from typing import Any
 
 from flask import session
 
@@ -89,7 +89,7 @@ def get_global_variable(name: str) -> Any:
     if user_id not in __funix_global_variables:
         __funix_global_variables[user_id] = {}
     if name not in __funix_global_variables[user_id]:
-        __funix_global_variables[user_id][name] = deepcopy(__funix_default_global_variables.get(
-            name, None
-        ))
+        __funix_global_variables[user_id][name] = deepcopy(
+            __funix_default_global_variables.get(name, None)
+        )
     return __funix_global_variables[user_id].get(name, None)

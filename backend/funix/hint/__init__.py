@@ -2,7 +2,7 @@
 This file is used to define the type hint of the Funix backend.
 """
 
-from typing import Literal, NewType, Optional, TypeAlias, TypedDict, TypeVar, Callable
+from typing import Callable, Literal, NewType, Optional, TypeAlias, TypedDict, TypeVar
 
 from funix.hint.layout import InputRow, OutputRow
 from funix.widget import builtin
