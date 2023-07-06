@@ -1,6 +1,7 @@
 import { PostCallResponse } from "./index";
 import * as localforage from "localforage";
 import { enqueueSnackbar } from "notistack";
+import { v4 as uuid4 } from "uuid";
 
 export type History = {
   input: Record<any, any> | null;
@@ -43,7 +44,7 @@ const useFunixHistory = () => {
           functionName,
           name: null,
           timestamp,
-          uuid: window.crypto.randomUUID(),
+          uuid: uuid4(),
         });
       }
       localforage
@@ -88,7 +89,7 @@ const useFunixHistory = () => {
           functionName,
           name: null,
           timestamp,
-          uuid: window.crypto.randomUUID(),
+          uuid: uuid4(),
         });
       }
       localforage
@@ -135,7 +136,7 @@ const useFunixHistory = () => {
           functionName,
           name: null,
           timestamp,
-          uuid: window.crypto.randomUUID(),
+          uuid: uuid4(),
         });
       }
       localforage
