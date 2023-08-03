@@ -31,7 +31,10 @@ const updateTree = (keys: string[], currentTree: Tree): Tree => {
   }
 
   if (Array.isArray(currentTree[currentKey])) {
-    currentTree[currentKey] = restKeys;
+    currentTree[currentKey] = [
+      ...(currentTree[currentKey] as string[]),
+      ...restKeys,
+    ];
   }
 
   if (restKeys.length > 0) {
