@@ -110,7 +110,7 @@ def cli_main():
 
     This function is called when you run `python -m funix` or `funix` from the command line.
     """
-    plac.call(main, version="Funix 0.3.6")
+    plac.call(main, version="Funix 0.4.6")
 
 
 if __name__ == "__main__":
