@@ -121,7 +121,8 @@ def get_python_files_in_dir(
         if file.endswith(".py") and file != "__init__.py":
             if need_full_path:
                 yield join(base_dir, file)
-            yield file[:-3]
+            else:
+                yield file[:-3]
 
 
 def import_from_config(
