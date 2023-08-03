@@ -17,6 +17,33 @@ export type FunctionListProps = {
   backend: URL;
 };
 
+interface Tree {
+  [key: string]: Tree | string[];
+}
+
+const updateTree = (keys: string[], currentTree: Tree): Tree => {
+  if (keys.length === 0) return currentTree;
+
+  const [currentKey, ...restKeys] = keys;
+
+  if (!currentTree.hasOwnProperty(currentKey)) {
+    currentTree[currentKey] = restKeys.length === 1 ? [] : {};
+  }
+
+  if (Array.isArray(currentTree[currentKey])) {
+    currentTree[currentKey] = restKeys;
+  }
+
+  if (restKeys.length > 0) {
+    currentTree[currentKey] = updateTree(
+      restKeys,
+      currentTree[currentKey] as Tree
+    );
+  }
+
+  return currentTree;
+};
+
 // Just need children
 const FunixList = (props: {
   children: React.ReactNode;
@@ -182,20 +209,16 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
     );
   }
 
-  let functionsLength = 0;
+  const functionsLength = state.length;
 
-  const tree = state.reduce((acc, f) => {
-    let current = acc;
-    for (const m of f.module ? f.module.split(".") : ["NFunix"]) {
-      if (current[m] === undefined) {
-        current[m] = [];
-      }
-      current = current[m];
-    }
-    current.push(f.name);
-    functionsLength += 1;
-    return acc;
-  }, {} as Record<string, any>);
+  let tree: Tree = {};
+
+  state.forEach((preview) => {
+    const path = preview.module ?? "";
+    const pathList = path.split(".");
+    pathList.push(preview.name);
+    tree = updateTree(pathList, tree);
+  });
 
   const renderTree = (
     tree: Record<string, any> | string[],
@@ -209,7 +232,7 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
           }}
           key={v}
           sx={{
-            paddingLeft: `${now * 2}rem`,
+            paddingLeft: `${2 + now}rem`,
           }}
         >
           <ListItemText
@@ -231,6 +254,9 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
                     ? !state[`${k}${v}`]
                     : true,
                 }));
+              }}
+              sx={{
+                paddingLeft: `${2 + now}rem`,
               }}
             >
               <ListItemText
