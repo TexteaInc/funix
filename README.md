@@ -46,7 +46,7 @@ A web app will be launched at `http://localhost:3000` and automatically opened i
 
 ![screenshots/hello.png](https://github.com/TexteaInc/funix-doc/raw/main/screenshots/hello.png)
 
-> **Note**: The `-l` flag stands for _"lazy"_ meaning that only default settings are used. It cannot be used when your function is decorated by the funix decorator `@funix()` which allows you to customize your app. See example usages below of the decorator. 
+> **Note**: The `-l` flag stands for _"lazy"_ meaning that only default settings are used. It cannot be used when your function is decorated by the funix decorator `@funix()` which allows you to customize your app. Advanced examples below use decorators. For more details of the decorator values, please refer to the [reference manual](docs/Reference.md).
 
 #### Love Funix? Give us a star
 
@@ -169,6 +169,23 @@ Besides starting Funix servers from the command line, you can also start Funix f
 ```python
 import funix 
 funix.run("localhost", 4010, "examples")
+```
+
+### Front-end
+
+Normally, Funix will start the front-end by itself. If you need to develop or debug the front-end (hopefully without scaring you) please go through the following steps:
+
+1. If you haven't finished `git clone`, clone the repo first.
+2. `cd funix/frontend`
+3. `yarn install`
+4. `yarn start`
+
+Now, local Funix is at`http://localhost:3000/`You can just use `yarn funix:start` command to open the front-end bound to port 8080 (the back-end service)
+
+### Exposing a Funix-converted app to the public
+
+```bash
+python3 -m funix [module] --host [your_server_ip]
 ```
 
 ## How to contribute
