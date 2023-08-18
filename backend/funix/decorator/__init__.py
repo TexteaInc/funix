@@ -859,8 +859,8 @@ def funix(
                     "then": {"properties": {}},
                     "required": [],
                 }
-                if_items: any = conditional_visible_item["all_if"]
-                then_items = conditional_visible_item["then"]
+                if_items: any = conditional_visible_item["when"]
+                then_items = conditional_visible_item["show"]
                 for if_item in if_items.keys():
                     config["if"]["properties"][if_item] = {"const": if_items[if_item]}
                 for then_item in then_items:

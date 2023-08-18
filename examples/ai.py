@@ -26,8 +26,8 @@ def ChatGPT(prompt: str) -> str:
         widgets={"openai_key": "password", "model": "radio",
                  "show_advanced": "checkbox", "show_verbose": "switch"},
         conditional_visible=[
-            {"if": {"show_advanced": True,}, 
-             "then": ["max_tokens", "model", "openai_key"]}
+            {"when": {"show_advanced": True,}, 
+             "show": ["max_tokens", "model", "openai_key"]}
         ],
         show_source=True 
 )
@@ -95,7 +95,7 @@ def ChatGPT_multi_turn(current_message: str)  -> funix.hint.HTML:
     "api_key": "Enter your API key", 
     "sys_env_var": "Use system environment variable"
   }, 
-  conditional_visible=[ { "if": {"sys_env_var": False}, "then": ["api_key"],  } ],
+  conditional_visible=[ { "when": {"sys_env_var": False}, "show": ["api_key"],  } ],
     show_source=True
 )
 def set(api_key: str="", sys_env_var:bool=True) -> str:
