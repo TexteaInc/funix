@@ -48,12 +48,12 @@ WidgetsValue = (
 The value of the `widgets`.
 
 Types:
-    list[AcceptableWidgets]: The value of the widgets, for example: `["sheet", "inputbox"]`. Has a hierarchical 
+    list[AcceptableWidgets]: The value of the widgets, for example: `["sheet", "inputbox"]`. Has a hierarchical
                              relationship.
-    list[tuple[AcceptableWidgets, dict]]: The value of the widgets, for example: 
+    list[tuple[AcceptableWidgets, dict]]: The value of the widgets, for example:
                                           `[("slider", {"min": 1, "max": 200, "step": 2})]`.
     AcceptableWidgets: The value of the widgets, for example: `"sheet"`. Top-level use, as a rule, stands for all.
-    tuple[AcceptableWidgets, dict]: The value of the widgets, for example: 
+    tuple[AcceptableWidgets, dict]: The value of the widgets, for example:
                                     `("slider", {"min": 1, "max": 200, "step": 2})`.
 """
 
@@ -65,7 +65,7 @@ Examples:
     {"a": "sheet"} -> The parameter `a` is a sheet.
     {"a": ["sheet", "inputbox"]} -> The parameter `a` is a sheet and the elements that inside the sheet are input boxes.
     {("a", "b"): "switch"} -> The parameter `a` and `b` are switches.
-    {("a", "b"): ["sheet", "inputbox"]} -> The parameter `a` and `b` are sheets and the elements that inside the sheets 
+    {("a", "b"): ["sheet", "inputbox"]} -> The parameter `a` and `b` are sheets and the elements that inside the sheets
                                            are input boxes.
 """
 
@@ -96,7 +96,7 @@ Types:
 
 WhitelistType = Optional[dict[Parameters, WhitelistValues]]
 """
-The type of the `whitelist`. 
+The type of the `whitelist`.
 
 Examples:
     {"a": ["a", "b"]} -> The parameter `a` has a whitelist, and the whitelist is `["a", "b"]`.
@@ -115,7 +115,7 @@ Types:
 
 ExamplesType = Optional[dict[Parameters, ExamplesValues]]
 """
-The type of the `examples`. 
+The type of the `examples`.
 
 Examples:
     {"a": ["a", "b"]} -> The parameter `a` has examples, and the examples are `"a"` and `"b"`.
@@ -160,15 +160,15 @@ class ConditionalVisible(TypedDict):
     Conditional visible.
     """
 
-    all_if: dict[str, any]
+    when: dict[str, any]
     """
     The condition.
-    
-    `str` means the parameter name, `any` means the value. If the value of the parameter is equal to the value, elements 
+
+    `str` means the parameter name, `any` means the value. If the value of the parameter is equal to the value, elements
     that in `then` will be visible.
     """
 
-    then: list[str]
+    show: list[str]
     """
     The parameters that will be visible if the condition is true.
     """
@@ -179,8 +179,8 @@ ConditionalVisibleType = Optional[list[ConditionalVisible]]
 The type of the `conditional_visible`.
 
 Examples:
-    [{"all_if": {"a": "b"}, "then": ["c"]}] -> If the value of the parameter `a` is equal to `"b"`, the parameter `c`
-                                               will be visible.
+    [{"when": {"a": "b"}, "show": ["c"]}] -> If the value of the parameter `a` is equal to `"b"`, the parameter `c`
+                                             will be visible.
 """
 
 ArgumentConfigKeys = Literal["treat_as", "whitelist", "example", "widget", "label"]
