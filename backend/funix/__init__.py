@@ -1,7 +1,7 @@
 from importlib import import_module
 from inspect import isfunction
 from ipaddress import ip_address
-from os import listdir
+from os import listdir, chdir
 from os.path import dirname, exists, isdir, join
 from sys import exit, path
 from typing import Generator, Optional
@@ -166,6 +166,7 @@ def import_from_config(
             if repo_dir:
                 new_path = join(tempdir, repo_dir)
             path.append(new_path)
+            chdir(new_path)
 
             if file_or_module_name:
                 pass
