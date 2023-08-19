@@ -222,8 +222,8 @@ def parse_theme(theme: dict) -> tuple[list[str], dict, dict, dict, dict]:
 def get_dict_theme(
     path: Optional[str] = None,
     url: Optional[str] = None,
-    module: Optional[dict] = None,
-    dict_name: Optional[str] = None,
+    theme_dict: Optional[dict] = None,
+    theme_dict_name: Optional[str] = None,
 ) -> dict:
     """
     Get the funix theme from a module(dict), path, url.
@@ -231,13 +231,13 @@ def get_dict_theme(
     Parameters:
         path (str, optional): The path of the theme file.
         url (str, optional): The url of the theme file.
-        module (dict, optional): The module(dict) of the theme. Here, module is dict.
-        dict_name (str): The name of the theme dict in the module.
+        theme_dict (dict, optional): The theme dict.
+        theme_dict_name (str): The name of the theme dict in the module.
 
     Parameter Groups:
         path, dict_name: The path and name of the theme dict.
         url, dict_name: The url and name of the theme dict.
-        module: Just the funix theme dict.
+        theme_dict: Just the funix theme dict.
 
     Returns:
         dict: The funix theme.
@@ -246,8 +246,8 @@ def get_dict_theme(
         ValueError: See the doc of the function.
     """
     # check args
-    if dict_name is None:
-        if module is None:
+    if theme_dict_name is None:
+        if theme_dict is None:
             raise ValueError(
                 "Module must be specified when dict_name is not specified, "
                 "if you specify path or url, must specify dict_name!"
@@ -271,7 +271,7 @@ def get_dict_theme(
             f.write(get(url).content)
 
         module = import_module_from_file(py_theme_path, False)
-    elif module is not None:
-        return module
-    theme = getattr(module, dict_name)
+    elif theme_dict is not None:
+        return theme_dict
+    theme = getattr(module, theme_dict_name)
     return theme

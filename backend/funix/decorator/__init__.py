@@ -195,11 +195,11 @@ def set_default_theme(alias: str) -> None:
 
 
 def import_theme(
-    alias: str,
+    alias: Optional[str] = None,
     path: Optional[str] = None,
     url: Optional[str] = None,
-    module: Optional[dict] = None,
-    dict_name: Optional[str] = None,
+    theme_dict: Optional[dict] = None,
+    theme_dict_name: Optional[str] = None,
 ) -> None:
     """
     Import a theme from path, url or module (dict).
@@ -208,8 +208,8 @@ def import_theme(
         alias (str): The theme alias.
         path (str): The path of the theme file.
         url (str): The url of the theme file.
-        module (dict): The module(dict) of the theme. Here, module is dict.
-        dict_name (str): The name of the theme dict in the module.
+        theme_dict (dict): The dict of the theme.
+        theme_dict_name (str): The name of the theme dict in the module.
 
     Raises:
         ValueError: If the theme already exists.
@@ -218,9 +218,11 @@ def import_theme(
         Check the `funix.theme.get_dict_theme` function for more information.
     """
     global __themes
-    if alias in __themes:
-        raise ValueError(f"Theme {alias} already exists")
-    __themes[alias] = get_dict_theme(path, url, module, dict_name)
+    theme = get_dict_theme(path, url, theme_dict_name, theme_dict_name)
+    name = alias if alias else theme["name"]
+    if name in __themes:
+        raise ValueError(f"Theme {name} already exists")
+    __themes[name] = theme
 
 
 def clear_default_theme() -> None:
