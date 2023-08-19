@@ -218,7 +218,7 @@ def import_theme(
         Check the `funix.theme.get_dict_theme` function for more information.
     """
     global __themes
-    theme = get_dict_theme(path, url, theme_dict_name, theme_dict_name)
+    theme = get_dict_theme(path, url, theme_dict, theme_dict_name)
     name = alias if alias else theme["name"]
     if name in __themes:
         raise ValueError(f"Theme {name} already exists")

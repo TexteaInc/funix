@@ -17,15 +17,15 @@ textbook = {
 
 hokusai = {
     "name": "hokusai",
-    "styles": {
+    "props": {
         "basic": {
-            "color": "#24415f", 
+            "color": "#24415f",
             "contrastText": "#e0e4d4"
         }
     },
     "palette": {
         "background": {
-            "default": "#f9f0d8", 
+            "default": "#f9f0d8",
             "paper": "#f9f0d8"
         },
         "text": {
