@@ -207,12 +207,14 @@ def parse_theme(theme: dict) -> tuple[list[str], dict, dict, dict, dict]:
             #         }
             #     del theme["props"]["basic_widgets"]["contrastText"]
             for basic_widget_name in basic_widgets:
-                widget_style[basic_widget_name] = deepcopy(theme["props"]["basic_widgets"])
+                widget_style[basic_widget_name] = deepcopy(
+                    theme["props"]["basic_widgets"]
+                )
             del theme["props"]["basic"]
         for widget_name in theme["props"].keys():
-            list_widget_name = list(widget_name) if isinstance(widget_name, tuple) else [
-                widget_name
-            ]
+            list_widget_name = (
+                list(widget_name) if isinstance(widget_name, tuple) else [widget_name]
+            )
             for name in list_widget_name:
                 if name in widget_style:
                     widget_style[name].update(theme["props"][widget_name])

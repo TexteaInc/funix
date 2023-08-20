@@ -42,15 +42,14 @@ from funix.hint import (
     OutputLayout,
     PreFillEmpty,
     PreFillType,
-    SessionVariablesType,
     TreatAsType,
     WhitelistType,
     WidgetsType,
 )
 from funix.session import get_global_variable, set_global_variable
 from funix.theme import get_dict_theme, parse_theme
-from funix.widget import generate_frontend_widget_config
 from funix.util.uri import is_valid_uri
+from funix.widget import generate_frontend_widget_config
 
 __matplotlib_use = False
 """
@@ -270,7 +269,6 @@ def funix(
     output_layout: OutputLayout = None,
     conditional_visible: ConditionalVisibleType = None,
     argument_config: ArgumentConfigType = None,
-    session_variables: SessionVariablesType = None,
     pre_fill: PreFillType = None,
     __full_module: Optional[str] = None,
 ):
@@ -302,7 +300,6 @@ def funix(
         output_layout(OutputLayout): layout for output widgets
         conditional_visible(ConditionalVisibleType): conditional visibility for widgets
         argument_config(ArgumentConfigType): config for widgets
-        session_variables(SessionVariablesType): session variables for functions
         pre_fill(PreFillType): pre-fill values for parameters
         __full_module(str):
             full module path of the function, for `path` only.
@@ -330,11 +327,6 @@ def funix(
             Check code for details
         """
         if __wrapper_enabled:
-            if session_variables:
-                raise ValueError(
-                    "Start with `-t` or `--transform` to use session variables"
-                )
-
             function_id = str(uuid4())
 
             function_direction = direction if direction else "row"

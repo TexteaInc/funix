@@ -215,14 +215,6 @@ Examples:
     {"a": {"widget": "sheet"}} -> The parameter `a` has a widget, and the widget is `sheet`.
 """
 
-SessionVariablesType = Optional[list[str]]
-"""
-The type of the `session_variables`.
-
-Examples:
-    ["a", "b"] -> The session variables: `a`, `b` will be saved.
-"""
-
 PreFillArgumentFrom = Callable | tuple[Callable, int]
 """
 Pre-fill argument from.

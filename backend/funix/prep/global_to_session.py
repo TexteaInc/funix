@@ -5,6 +5,7 @@ Limited application cases/not fully considered
 """
 
 from _ast import (
+    AST,
     Assign,
     Attribute,
     Call,
@@ -64,92 +65,6 @@ def add_force_import(source_code: str) -> str:
     return import_text + "\n" + source_code
 
 
-def read_and_clean_decorator_keywords(decorator: Call) -> Call:
-    """
-    Read and clean the decorator keywords. (for `session_variables`)
-
-    Parameters:
-        decorator (Call): The decorator keywords.
-
-    Returns:
-        Call: The new decorator.
-    """
-    keywords = decorator.keywords
-    need_del = -1
-    for index, keyword_ in enumerate(keywords):
-        if keyword_.arg == "session_variables":
-            assert isinstance(keyword_.value, List), "session_variables must be a list"
-            for element in keyword_.value.elts:
-                assert isinstance(
-                    element, Constant
-                ), "session_variables must be a list of string"
-                session_variables.add(element.value)
-            need_del = index
-    if need_del != -1:
-        del decorator.keywords[need_del]
-    return decorator
-
-
-class ScanSessionVariablesVisitor(NodeTransformer):
-    """
-    Only for two cases:
-
-    ```python
-    import funix  # This is the first case
-
-
-    @funix.funix(
-        session_variables=["user_word"],
-    )
-    def set_word(word: str) -> str:
-        global user_word
-        user_word = word
-        return "Success"
-    ```
-
-    ```
-    from funix import funix  # This is the second case
-
-
-    @funix(
-        session_variables=["user_word"],
-    )
-    def set_word(word: str) -> str:
-        global user_word
-        user_word = word
-        return "Success"
-    ```
-
-    No `as`, and no `a = funix` or something like that
-
-    And just `@` decorator, no `funix()(func)` or something like that,
-    the session_variables must be a list of string, and the string must be a valid python variable name
-    """
-
-    def visit_FunctionDef(self, node: FunctionDef) -> FunctionDef:
-        """
-        Visit the function definition.
-        Get all the session variables, and delete the `session_variables` keyword.
-
-        Parameters:
-            node (FunctionDef): The function definition.
-
-        Returns:
-            FunctionDef: The function definition.
-        """
-        if len(node.decorator_list) > 0:
-            for decorator in node.decorator_list:
-                if isinstance(decorator, Call):
-                    if isinstance(decorator.func, Name):
-                        if decorator.func.id == "funix":
-                            read_and_clean_decorator_keywords(decorator)
-                    if isinstance(decorator.func, Attribute):
-                        if isinstance(decorator.func.value, Name):
-                            if decorator.func.value.id == "funix":
-                                read_and_clean_decorator_keywords(decorator)
-        return node
-
-
 def change_body_assignments(nodes: Module) -> Module:
     """
     Change the body of the function to add the session variables
@@ -173,6 +88,27 @@ def change_body_assignments(nodes: Module) -> Module:
                         )
                     )
     return nodes
+
+
+class PreprocessGlobalVariables(NodeTransformer):
+    """
+    Add all global variables to the session variables.
+    """
+
+    def visit_Global(self, node: Global) -> Any:
+        """
+        Visit the global variables.
+        Add the global variables to the session variables.
+
+        Parameters:
+            node (Global): The global variables.
+
+        Returns:
+            Any: Don't care.
+        """
+        for name in node.names:
+            session_variables.add(name)
+        return node
 
 
 class EditSessionVariablesTransformer(NodeTransformer):
@@ -246,7 +182,7 @@ def do_global_to_session(source: str) -> str:
     """
     pre_add_source = add_force_import(source)
     nodes = parse(pre_add_source)
-    ScanSessionVariablesVisitor().visit(nodes)
+    PreprocessGlobalVariables().visit(nodes)
     nodes = change_body_assignments(nodes)
     EditSessionVariablesTransformer().visit(nodes)
     return unparse(nodes)
