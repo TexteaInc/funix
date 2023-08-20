@@ -186,33 +186,38 @@ def parse_theme(theme: dict) -> tuple[list[str], dict, dict, dict, dict]:
         for color_name in theme["palette"].keys():
             custom_palette[color_name] = theme["palette"][color_name]
     if "props" in theme:
-        if "basic" in theme["props"]:
-            if "color" in theme["props"]["basic"]:
-                if "primary" in custom_palette:
-                    custom_palette["primary"]["main"] = theme["props"]["basic"]["color"]
-                else:
-                    custom_palette["primary"] = {
-                        "main": theme["props"]["basic"]["color"]
-                    }
-                del theme["props"]["basic"]["color"]
-            if "contrastText" in theme["props"]["basic"]:
-                if "primary" in custom_palette:
-                    custom_palette["primary"]["contrastText"] = theme["props"]["basic"][
-                        "contrastText"
-                    ]
-                else:
-                    custom_palette["primary"] = {
-                        "contrastText": theme["props"]["basic"]["contrastText"]
-                    }
-                del theme["props"]["basic"]["contrastText"]
+        if "basic_widgets" in theme["props"]:
+            # INFO: Remove temporarily
+            # if "color" in theme["props"]["basic_widgets"]:
+            #     if "primary" in custom_palette:
+            #         custom_palette["primary"]["main"] = theme["props"]["basic_widgets"]["color"]
+            #     else:
+            #         custom_palette["primary"] = {
+            #             "main": theme["props"]["basic_widgets"]["color"]
+            #         }
+            #     del theme["props"]["basic_widgets"]["color"]
+            # if "contrastText" in theme["props"]["basic_widgets"]:
+            #     if "primary" in custom_palette:
+            #         custom_palette["primary"]["contrastText"] = theme["props"]["basic_widgets"][
+            #             "contrastText"
+            #         ]
+            #     else:
+            #         custom_palette["primary"] = {
+            #             "contrastText": theme["props"]["basic_widgets"]["contrastText"]
+            #         }
+            #     del theme["props"]["basic_widgets"]["contrastText"]
             for basic_widget_name in basic_widgets:
-                widget_style[basic_widget_name] = deepcopy(theme["props"]["basic"])
+                widget_style[basic_widget_name] = deepcopy(theme["props"]["basic_widgets"])
             del theme["props"]["basic"]
         for widget_name in theme["props"].keys():
-            if widget_name in widget_style:
-                widget_style[widget_name].update(theme["props"][widget_name])
-            else:
-                widget_style[widget_name] = theme["props"][widget_name]
+            list_widget_name = list(widget_name) if isinstance(widget_name, tuple) else [
+                widget_name
+            ]
+            for name in list_widget_name:
+                if name in widget_style:
+                    widget_style[name].update(theme["props"][widget_name])
+                else:
+                    widget_style[name] = theme["props"][widget_name]
     if "typography" in theme:
         custom_typography = theme["typography"]
     mui_theme = get_mui_theme(widget_style, custom_palette, custom_typography)
