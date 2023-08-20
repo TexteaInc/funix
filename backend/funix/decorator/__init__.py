@@ -50,6 +50,7 @@ from funix.hint import (
 from funix.session import get_global_variable, set_global_variable
 from funix.theme import get_dict_theme, parse_theme
 from funix.widget import generate_frontend_widget_config
+from funix.util.uri import is_valid_uri
 
 __matplotlib_use = False
 """
@@ -196,8 +197,7 @@ def set_default_theme(alias: str) -> None:
 
 def import_theme(
     alias: Optional[str] = None,
-    path: Optional[str] = None,
-    url: Optional[str] = None,
+    source: Optional[str] = None,
     theme_dict: Optional[dict] = None,
     theme_dict_name: Optional[str] = None,
 ) -> None:
@@ -206,8 +206,7 @@ def import_theme(
 
     Parameters:
         alias (str): The theme alias.
-        path (str): The path of the theme file.
-        url (str): The url of the theme file.
+        source (str): The path or url of the theme.
         theme_dict (dict): The dict of the theme.
         theme_dict_name (str): The name of the theme dict in the module.
 
@@ -218,8 +217,17 @@ def import_theme(
         Check the `funix.theme.get_dict_theme` function for more information.
     """
     global __themes
-    theme = get_dict_theme(path, url, theme_dict, theme_dict_name)
-    name = alias if alias else theme["name"]
+    if is_valid_uri(source):
+        theme = get_dict_theme(None, source, theme_dict, theme_dict_name)
+    else:
+        theme = get_dict_theme(source, None, theme_dict, theme_dict_name)
+    name = None
+    if theme_dict_name:
+        name = theme_dict_name
+    if alias:
+        name = alias
+    if not name:
+        raise ValueError("Please specify the theme name in the `alias` parameter")
     if name in __themes:
         raise ValueError(f"Theme {name} already exists")
     __themes[name] = theme
