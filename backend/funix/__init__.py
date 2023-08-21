@@ -29,6 +29,7 @@ funix = decorator.funix
 # ---- Decorators ----
 
 # ---- Theme ----
+set_theme = decorator.set_theme
 set_default_theme = decorator.set_default_theme
 clear_default_theme = decorator.clear_default_theme
 import_theme = decorator.import_theme

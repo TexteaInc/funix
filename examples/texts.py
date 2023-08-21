@@ -1,4 +1,4 @@
-from funix import import_theme, new_funix_type, funix
+from funix import set_theme, new_funix_type, funix
 from funix.widget import slider
 from funix.hint import StrTextarea, StrInputBox
 from typing import Literal
@@ -13,24 +13,25 @@ class NewSlider(int):
 
 inputBox = StrInputBox
 
-import_theme(alias="text", module={
-    "name": "text",
-    "widgets": {
-        "bool": "switch",
-        "Literal": "radio"
-    }
-})
-
-
-@funix(
-    theme_name="text"
+set_theme(
+    {
+        "name": "text",
+        "widgets": [
+            {"data_type": "bool", "widget_type": "switch"},
+            {"data_type": "Literal", "widget_type": "radio"},
+        ],
+    },
+    alias="text",
 )
+
+
+@funix(theme="text")
 def replace_text(
     passage: StrTextarea,
     replace: inputBox,
     replace_with: inputBox,
     replace_all: bool = True,
-    replace_styles: Literal["Regex", "Native"] = "Native"
+    replace_styles: Literal["Regex", "Native"] = "Native",
 ) -> str:
     if replace_styles == "Regex":
         if replace_all:

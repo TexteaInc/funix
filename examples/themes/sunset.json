@@ -1,0 +1,26 @@
+{
+  "name": "sunset",
+  "widgets": [
+    {
+      "data_type": "float",
+      "widget_type": "inputbox"
+    },
+    {
+      "data_type": "str",
+      "widget_type": "textarea"
+    },
+    {
+      "data_type": ["int", "float"],
+      "widget_type": ["slider", {"min": 0, "max": 120, "step": 1}]
+    },
+    {
+      "data_type": "Literal",
+      "widget_type": "radio"
+    }
+  ],
+  "palette": {
+    "background": {
+      "default": "#ff9e1b"
+    }
+  }
+}

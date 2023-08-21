@@ -1,8 +1,5 @@
-from funix import import_theme, funix
+from funix import funix
 from funix.hint import Markdown, StrCode
-
-
-import_theme(alias="oops", path="themes/dark_test.py", dict_name="theme")
 
 
 description = """
@@ -14,9 +11,18 @@ You can get this demo and theme file in funix examples
 
 
 @funix(
-    title="Theme Test & Markdown Playground",
+    title="Markdown Playground",
     description=description,
-    theme_name="oops"
+    theme="themes/dark_test.json",
 )
 def theme_test_markdown_playground(markdown: StrCode("markdown")) -> Markdown:
+    return markdown
+
+
+@funix(
+    title="Mood",
+    description="But in sunset",
+    theme="themes/sunset.json",
+)
+def theme_test_mood(markdown: StrCode("markdown"), a: int) -> Markdown:
     return markdown

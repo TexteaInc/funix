@@ -2,6 +2,7 @@
 For parsing theme.
 """
 
+import json
 from copy import deepcopy
 from os.path import join
 from typing import Optional
@@ -11,7 +12,7 @@ from requests import get
 
 from funix.config import basic_widgets
 from funix.util.file import create_safe_tempdir
-from funix.util.module import import_module_from_file
+from funix.widget import dump_frontend_config
 
 __theme_style_sugar_dict = {"fontColor": {"root": {"color": "${value}"}}}
 """
@@ -175,13 +176,24 @@ def parse_theme(theme: dict) -> tuple[list[str], dict, dict, dict, dict]:
     custom_typography = {}
 
     if "widgets" in theme:
-        for type_name in theme["widgets"]:
-            list_type_name = (
-                list(type_name) if isinstance(type_name, tuple) else [type_name]
+        # for type_name in theme["widgets"]:
+        #     list_type_name = (
+        #         list(type_name) if isinstance(type_name, tuple) else [type_name]
+        #     )
+        #     for name in list_type_name:
+        #         type_names.append(name)
+        #         type_widget_dict[name] = theme["widgets"][type_name]
+        for type_widget_group in theme["widgets"]:
+            data_types = type_widget_group["data_type"]
+            widget_type = type_widget_group["widget_type"]
+            if isinstance(widget_type, list):
+                widget_type = dump_frontend_config(widget_type[0], widget_type[1])
+            list_data_types = (
+                data_types if isinstance(data_types, list) else [data_types]
             )
-            for name in list_type_name:
-                type_names.append(name)
-                type_widget_dict[name] = theme["widgets"][type_name]
+            for data_type in list_data_types:
+                type_names.append(data_type)
+                type_widget_dict[data_type] = widget_type
     if "palette" in theme:
         for color_name in theme["palette"].keys():
             custom_palette[color_name] = theme["palette"][color_name]
@@ -229,22 +241,13 @@ def parse_theme(theme: dict) -> tuple[list[str], dict, dict, dict, dict]:
 def get_dict_theme(
     path: Optional[str] = None,
     url: Optional[str] = None,
-    theme_dict: Optional[dict] = None,
-    theme_dict_name: Optional[str] = None,
 ) -> dict:
     """
-    Get the funix theme from a module(dict), path, url.
+    Get the funix theme from a path, url.
 
     Parameters:
         path (str, optional): The path of the theme file.
         url (str, optional): The url of the theme file.
-        theme_dict (dict, optional): The theme dict.
-        theme_dict_name (str): The name of the theme dict in the module.
-
-    Parameter Groups:
-        path, dict_name: The path and name of the theme dict.
-        url, dict_name: The url and name of the theme dict.
-        theme_dict: Just the funix theme dict.
 
     Returns:
         dict: The funix theme.
@@ -252,22 +255,9 @@ def get_dict_theme(
     Raises:
         ValueError: See the doc of the function.
     """
-    # check args
-    if theme_dict_name is None:
-        if theme_dict is None:
-            raise ValueError(
-                "Module must be specified when dict_name is not specified, "
-                "if you specify path or url, must specify dict_name!"
-            )
-    else:
-        if path is None and url is None:
-            raise ValueError("Must specify path or url when dict_name is specified!")
-        elif path is not None and url is not None:
-            raise ValueError("Can't specify both path and url!")
-
-    # import theme
     if path:
-        module = import_module_from_file(path, False)
+        return json.loads(open(path, "r").read())
+        # module = import_module_from_file(path, False)
     elif url:
         name = uuid4().hex
         tempdir = create_safe_tempdir()
@@ -277,8 +267,6 @@ def get_dict_theme(
         with open(py_theme_path, "wb") as f:
             f.write(get(url).content)
 
-        module = import_module_from_file(py_theme_path, False)
-    elif theme_dict is not None:
-        return theme_dict
-    theme = getattr(module, theme_dict_name)
-    return theme
+        return json.loads(open(py_theme_path, "r").read())
+    else:
+        raise ValueError("Oops, something went wrong!")

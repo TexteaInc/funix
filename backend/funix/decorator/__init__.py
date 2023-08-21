@@ -177,37 +177,50 @@ def enable_wrapper() -> None:
         enable_file_service()
 
 
-def set_default_theme(alias: str) -> None:
+def set_default_theme(theme: str) -> None:
     """
     Set the default theme.
 
     Parameters:
-        alias (str): The theme alias.
-
-    Raises:
-        ValueError: If the theme does not exist.
+        theme (str): The theme alias, path or url.
     """
     global __default_theme, __parsed_themes, __themes
-    if alias not in __themes:
-        raise ValueError(f"Theme {alias} does not exist")
-    __default_theme = __themes[alias]
+    if theme in __themes:
+        theme_dict = __themes[theme]
+    else:
+        if is_valid_uri(theme):
+            theme_dict = get_dict_theme(None, theme)
+        else:
+            theme_dict = get_dict_theme(theme, None)
+    __default_theme = theme_dict
     __parsed_themes["__default"] = parse_theme(__default_theme)
 
 
-def import_theme(
-    alias: Optional[str] = None,
-    source: Optional[str] = None,
-    theme_dict: Optional[dict] = None,
-    theme_dict_name: Optional[str] = None,
-) -> None:
+def set_theme(theme_dict: dict, alias: Optional[str] = None) -> None:
     """
-    Import a theme from path, url or module (dict).
+    Set a theme from a dict.
 
     Parameters:
-        alias (str): The theme alias.
+        theme_dict (dict): The theme dict.
+        alias (str, optional): The theme alias.
+    """
+    global __themes
+    name = theme_dict["name"]
+    if alias is not None:
+        name = alias
+    __themes[name] = theme_dict
+
+
+def import_theme(
+    source: str,
+    alias: Optional[str],
+) -> None:
+    """
+    Import a theme from path, url.
+
+    Parameters:
         source (str): The path or url of the theme.
-        theme_dict (dict): The dict of the theme.
-        theme_dict_name (str): The name of the theme dict in the module.
+        alias (str): The theme alias.
 
     Raises:
         ValueError: If the theme already exists.
@@ -217,16 +230,12 @@ def import_theme(
     """
     global __themes
     if is_valid_uri(source):
-        theme = get_dict_theme(None, source, theme_dict, theme_dict_name)
+        theme = get_dict_theme(None, source)
     else:
-        theme = get_dict_theme(source, None, theme_dict, theme_dict_name)
-    name = None
-    if theme_dict_name:
-        name = theme_dict_name
-    if alias:
+        theme = get_dict_theme(source, None)
+    name = theme["name"]
+    if alias is not None:
         name = alias
-    if not name:
-        raise ValueError("Please specify the theme name in the `alias` parameter")
     if name in __themes:
         raise ValueError(f"Theme {name} already exists")
     __themes[name] = theme
@@ -259,7 +268,7 @@ def funix(
     destination: DestinationType = None,
     direction: DirectionType = None,
     show_source: bool = False,
-    theme_name: Optional[str] = None,
+    theme: Optional[str] = None,
     widgets: WidgetsType = None,
     treat_as: TreatAsType = None,
     whitelist: WhitelistType = None,
@@ -290,7 +299,7 @@ def funix(
         destination(DestinationType): for yodas, no effect on funix
         direction(DirectionType): Whether the input/output panel is aligned left/right (row) or top/bottom (column)
         show_source(bool): whether to display the code of this function in the frontend
-        theme_name(str): name of the theme to use, if None, the default theme will be used
+        theme(str): name, path or url of the theme to use, if None, the default theme will be used
         widgets(WidgetsType): parameters to be converted to widgets
         treat_as(TreatAsType): parameters to be treated as other types
         whitelist(WhitelistType): acceptable values for parameters
@@ -346,18 +355,23 @@ def funix(
                 if function_docstring := getattr(function, "__doc__"):
                     function_description = function_docstring
 
-            if not theme_name:
+            if not theme:
                 if "__default" in __parsed_themes:
                     parsed_theme = __parsed_themes["__default"]
                 else:
                     parsed_theme = [], {}, {}, {}, {}
             else:
-                if theme_name in __parsed_themes:
-                    parsed_theme = __parsed_themes[theme_name]
+                if theme in __parsed_themes:
+                    parsed_theme = __parsed_themes[theme]
                 else:
                     # Cache
-                    parsed_theme = parse_theme(__themes[theme_name])
-                    __parsed_themes[theme_name] = parsed_theme
+                    if theme in __themes:
+                        parsed_theme = parse_theme(__themes[theme])
+                        __parsed_themes[theme] = parsed_theme
+                    else:
+                        import_theme(theme, alias=theme)  # alias is not important here
+                        parsed_theme = parse_theme(__themes[theme])
+                        __parsed_themes[theme] = parsed_theme
 
             if not path:
                 endpoint = function_name
