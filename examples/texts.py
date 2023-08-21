@@ -16,10 +16,10 @@ inputBox = StrInputBox
 set_theme(
     {
         "name": "text",
-        "widgets": [
-            {"data_type": "bool", "widget_type": "switch"},
-            {"data_type": "Literal", "widget_type": "radio"},
-        ],
+        "widgets": {
+            "bool": "switch",
+            "Literal": "radio",
+        },
     },
     alias="text",
 )

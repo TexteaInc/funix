@@ -183,17 +183,23 @@ def parse_theme(theme: dict) -> tuple[list[str], dict, dict, dict, dict]:
         #     for name in list_type_name:
         #         type_names.append(name)
         #         type_widget_dict[name] = theme["widgets"][type_name]
-        for type_widget_group in theme["widgets"]:
-            data_types = type_widget_group["data_type"]
-            widget_type = type_widget_group["widget_type"]
-            if isinstance(widget_type, list):
-                widget_type = dump_frontend_config(widget_type[0], widget_type[1])
-            list_data_types = (
-                data_types if isinstance(data_types, list) else [data_types]
-            )
-            for data_type in list_data_types:
-                type_names.append(data_type)
-                type_widget_dict[data_type] = widget_type
+
+        # Oh sh1t, here we go again
+        # for type_widget_group in theme["widgets"]:
+        #     data_types = type_widget_group["data_type"]
+        #     widget_type = type_widget_group["widget_type"]
+        #     if isinstance(widget_type, list):
+        #         widget_type = dump_frontend_config(widget_type[0], widget_type[1])
+        #     list_data_types = (
+        #         data_types if isinstance(data_types, list) else [data_types]
+        #     )
+        #     for data_type in list_data_types:
+        #         type_names.append(data_type)
+        #         type_widget_dict[data_type] = widget_type
+
+        for type_name in theme["widgets"]:
+            type_names.append(type_name)
+            type_widget_dict[type_name] = theme["widgets"][type_name]
     if "palette" in theme:
         for color_name in theme["palette"].keys():
             custom_palette[color_name] = theme["palette"][color_name]
@@ -224,14 +230,18 @@ def parse_theme(theme: dict) -> tuple[list[str], dict, dict, dict, dict]:
                 )
             del theme["props"]["basic"]
         for widget_name in theme["props"].keys():
-            list_widget_name = (
-                list(widget_name) if isinstance(widget_name, tuple) else [widget_name]
-            )
-            for name in list_widget_name:
-                if name in widget_style:
-                    widget_style[name].update(theme["props"][widget_name])
-                else:
-                    widget_style[name] = theme["props"][widget_name]
+            # list_widget_name = (
+            #     list(widget_name) if isinstance(widget_name, tuple) else [widget_name]
+            # )
+            # for name in list_widget_name:
+            #     if name in widget_style:
+            #         widget_style[name].update(theme["props"][widget_name])
+            #     else:
+            #         widget_style[name] = theme["props"][widget_name]
+            if widget_name in widget_style:
+                widget_style[widget_name].update(theme["props"][widget_name])
+            else:
+                widget_style[widget_name] = theme["props"][widget_name]
     if "typography" in theme:
         custom_typography = theme["typography"]
     mui_theme = get_mui_theme(widget_style, custom_palette, custom_typography)

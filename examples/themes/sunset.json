@@ -1,23 +1,25 @@
 {
   "name": "sunset",
-  "widgets": [
-    {
-      "data_type": "float",
-      "widget_type": "inputbox"
-    },
-    {
-      "data_type": "str",
-      "widget_type": "textarea"
-    },
-    {
-      "data_type": ["int", "float"],
-      "widget_type": ["slider", {"min": 0, "max": 120, "step": 1}]
-    },
-    {
-      "data_type": "Literal",
-      "widget_type": "radio"
-    }
-  ],
+  "widgets": {
+    "str": "textarea",
+    "int": [
+      "slider",
+      {
+        "min": 0,
+        "max": 120,
+        "step": 1
+      }
+    ],
+    "float": [
+      "slider",
+      {
+        "min": 0.0,
+        "max": 120.0,
+        "step": 0.1
+      }
+    ],
+    "Literal": "radio"
+  },
   "palette": {
     "background": {
       "default": "#ff9e1b"
