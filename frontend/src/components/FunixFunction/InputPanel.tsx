@@ -84,17 +84,6 @@ const InputPanel = (props: {
     },
   };
 
-  const formElement = (
-    <Form
-      schema={props.detail.schema}
-      formData={form}
-      onChange={handleChange}
-      widgets={widgets}
-      uiSchema={uiSchema}
-      safeRenderCompletion
-    />
-  );
-
   const checkResponse = async () => {
     setTimeout(() => {
       setAsyncWaiting((asyncWaiting) => !asyncWaiting);
@@ -171,7 +160,14 @@ const InputPanel = (props: {
           paddingY: 1,
         }}
       >
-        {formElement}
+        <Form
+          schema={props.detail.schema}
+          formData={form}
+          onChange={handleChange}
+          widgets={widgets}
+          uiSchema={uiSchema}
+          safeRenderCompletion
+        />
         <Grid
           container
           spacing={2}

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { FunctionDetail, FunctionPreview, verifyToken } from "../../shared";
-import useSWR from "swr";
 import { Alert, AlertTitle, Box, Grid, Stack } from "@mui/material";
 import { useAtom } from "jotai";
 import { storeAtom } from "../../store";
@@ -27,9 +26,21 @@ const FunixFunction: React.FC<FunctionDetailProps & FunixFunctionProps> = ({
   leftSideBarOpen,
   rightSideBarOpen,
 }) => {
-  const { data: detail } = useSWR<FunctionDetail>(
-    new URL(`/param/${preview.path}`, backend).toString()
-  );
+  const [detail] = useState<FunctionDetail | null>(() => {
+    // no asynchronous, no cache
+    const xhr = new XMLHttpRequest();
+    xhr.open(
+      "GET",
+      new URL(`/param/${preview.path}`, backend).toString(),
+      false
+    );
+    xhr.send();
+    if (xhr.status === 200) {
+      return JSON.parse(xhr.responseText) as FunctionDetail;
+    } else {
+      return null;
+    }
+  });
   const [
     { inputOutputWidth, functionSecret, backHistory, backConsensus, appSecret },
     setStore,
