@@ -16,6 +16,11 @@ def third_action(x: int, y: int) -> dict:
     return {"x": x, "y": y}
 
 
-@funix(pre_fill={"a": first_action, "b": (second_action, -1), "c": (third_action, "x")})
+@funix(
+    pre_fill={
+        "a": first_action, 
+        "b": (second_action, -1), 
+        "c": (third_action, "x")}
+    )
 def final_action(a: int, b: str, c: int) -> str:
     return f"{a} {b} {c}"
