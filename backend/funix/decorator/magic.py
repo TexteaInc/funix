@@ -39,6 +39,9 @@ def get_type_dict(annotation: any) -> dict:
         dict: The type dict.
     """
     # TODO: String magic, refactor it if you can
+    if annotation is None:
+        # Special case for None, let frontend handle `null`
+        return {"type": None}
     if isinstance(annotation, object):  # is class
         annotation_type_class_name = getattr(type(annotation), "__name__")
         if annotation_type_class_name == "_GenericAlias":

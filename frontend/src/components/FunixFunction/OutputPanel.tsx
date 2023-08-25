@@ -12,7 +12,6 @@ import {
   Radio,
   RadioGroup,
   Stack,
-  Switch,
   Typography,
 } from "@mui/material";
 import { DataGrid, GridRowModel, GridToolbar } from "@mui/x-data-grid";
@@ -213,17 +212,9 @@ const OutputPanel = (props: {
         return <span>{response}</span>;
       case "number":
       case "integer":
-        return <code>{response}</code>;
       case "boolean":
-        return (
-          <Switch
-            checked={response}
-            value={response}
-            onChange={() => {
-              /* oh */
-            }}
-          />
-        );
+        return <code>{response}</code>;
+        return <code>{response}</code>;
       case "array":
       case "list":
       case "object":
@@ -402,6 +393,12 @@ const OutputPanel = (props: {
             {layout}
             {columns}
           </>
+        );
+      } else if (returnType === null) {
+        return (
+          <Alert severity="success">
+            The function has been successfully executed.
+          </Alert>
         );
       } else {
         return <GuessingDataView response={response} />;

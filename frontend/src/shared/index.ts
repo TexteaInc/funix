@@ -26,7 +26,8 @@ export type ReturnType =
   | "Figure"
   | "List"
   | "Dict"
-  | FunixType;
+  | FunixType
+  | null;
 
 export function matchType(type: BaseType): CellType {
   switch (type) {

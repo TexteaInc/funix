@@ -57,6 +57,9 @@ class TestGetTypeDict(TestCase):
             },
         )
 
+    def test_none(self):
+        self.assertEqual(get_type_dict(None), {"type": None})
+
 
 class TestGetTypeWidgetProp(TestCase):
     def test_single_get_type_widget_prop(self):

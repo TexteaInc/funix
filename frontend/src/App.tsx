@@ -218,13 +218,6 @@ const App = () => {
     });
   }, [backendURL]);
 
-  useEffect(() => {
-    setStore((store) => ({
-      ...store,
-      sideBarOpen: sideBarOpen,
-    }));
-  }, [sideBarOpen]);
-
   const checkURL = (url: string | undefined): boolean => {
     if (!url) return false;
     try {
