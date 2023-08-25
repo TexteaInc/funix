@@ -82,6 +82,8 @@ def __prep(
             members = reversed(dir(module))
             for member in members:
                 if isfunction(getattr(module, member)):
+                    if member.startswith("__") or member.startswith("_FUNIX_"):
+                        continue
                     if need_path:
                         funix(__full_module=f"{module.__name__}")(
                             getattr(module, member)
