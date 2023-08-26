@@ -10,7 +10,7 @@
 
 [![PyPI version](https://badge.fury.io/py/funix.svg)](https://badge.fury.io/py/funix)
 
-<h4><a href="https://youtu.be/DVIV_EUFNbw">Intro video</a> | <a href="https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md">QuickStart Guide</a> | <a href="https://textea.notion.site/Funix-Reference-Manual-452a8ce51bdf4c29b4650bed7df270f6">Reference Manual</a> | <a href="https://github.com/TexteaInc/funix/edit/main/README.md#gallery"> Gallary </a> </h4>
+<h4><a href="https://youtu.be/DVIV_EUFNbw">Intro video</a> | <a href="https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md">QuickStart Guide</a> | <a href="https://github.com/TexteaInc/funix-doc/blob/main/Reference.md">Reference Manual</a> | <a href="https://github.com/TexteaInc/funix/edit/main/README.md#gallery"> Gallary </a> </h4>
 
 https://user-images.githubusercontent.com/438579/236646521-30ed67f4-4708-4cf1-858d-33b65bc53b6a.mp4
 
