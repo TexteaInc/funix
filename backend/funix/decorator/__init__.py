@@ -559,8 +559,10 @@ def funix(
                         row_item_done["type"] = "code"
                         row_item_done["content"] = row_item_done["code"]
                         row_item_done.pop("code")
-                    elif "index" in row_item:
-                        row_item_done["type"] = "index"
+                    elif "return_index" in row_item:
+                        row_item_done["type"] = "return_index"
+                        row_item_done["index"] = row_item_done["return_index"]
+                        row_item_done.pop("return_index")
                         if isinstance(row_item_done["index"], int):
                             return_output_indexes.append(row_item_done["index"])
                         elif isinstance(row_item_done["index"], list):

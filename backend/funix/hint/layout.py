@@ -82,7 +82,7 @@ class LayoutComponentReturn(TypedDict):
     Output component
     """
 
-    index: int | list[int]
+    return_index: int | list[int]
     """
     Return index
     

@@ -353,7 +353,7 @@ const OutputPanel = (props: {
                   />
                 );
                 break;
-              case "index":
+              case "return_index":
                 if (Array.isArray(item.index)) {
                   itemElement = <></>;
                   item.index.forEach((index) => {

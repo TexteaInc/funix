@@ -1,5 +1,4 @@
 import funix
-from funix.hint import Image, File, Markdown
 
 
 @funix.funix(
@@ -19,9 +18,9 @@ from funix.hint import Image, File, Markdown
     ],
     output_layout=[
         [{"divider": "zip code is "}],
-        [{"index": 2}],
+        [{"return_index": 2}],
         [{"divider": "from the town"}],
-        [{"index": [0, 1]}],
+        [{"return_index": [0, 1]}],
     ],
 )
 def layout_shipping(
