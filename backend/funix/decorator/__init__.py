@@ -549,11 +549,11 @@ def funix(
                             row_item_done = convert_row_item(
                                 row_item, common_row_item_key
                             )
-                    if "dividing" in row_item:
-                        row_item_done["type"] = "dividing"
-                        if isinstance(row_item["dividing"], str):
-                            row_item_done["content"] = row_item_done["dividing"]
-                        row_item_done.pop("dividing")
+                    if "divider" in row_item:
+                        row_item_done["type"] = "divider"
+                        if isinstance(row_item["divider"], str):
+                            row_item_done["content"] = row_item_done["divider"]
+                        row_item_done.pop("divider")
                     elif "code" in row_item:
                         row_item_done = row_item
                         row_item_done["type"] = "code"
@@ -561,7 +561,10 @@ def funix(
                         row_item_done.pop("code")
                     elif "index" in row_item:
                         row_item_done["type"] = "index"
-                        return_output_indexes.append(row_item_done["index"])
+                        if isinstance(row_item_done["index"], int):
+                            return_output_indexes.append(row_item_done["index"])
+                        elif isinstance(row_item_done["index"], list):
+                            return_output_indexes.extend(row_item_done["index"])
                     row_layout.append(row_item_done)
                 return_output_layout.append(row_layout)
 

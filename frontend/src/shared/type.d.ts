@@ -19,7 +19,7 @@ export declare module "json-schema" {
     type:
       | "markdown"
       | "html"
-      | "dividing"
+      | "divider"
       | "images"
       | "videos"
       | "audios"
@@ -27,7 +27,7 @@ export declare module "json-schema" {
       | "code"
       | "index";
     content?: string | string[];
-    index?: number;
+    index?: number | number[];
     argument?: string;
     width?: number;
     offset?: number;

@@ -214,7 +214,6 @@ const OutputPanel = (props: {
       case "integer":
       case "boolean":
         return <code>{response}</code>;
-        return <code>{response}</code>;
       case "array":
       case "list":
       case "object":
@@ -287,6 +286,7 @@ const OutputPanel = (props: {
           const rowElements: JSX.Element[] = [];
           row.forEach((item) => {
             let itemElement: JSX.Element;
+            console.log(item);
             switch (item.type) {
               case "markdown":
                 itemElement = (
@@ -312,7 +312,7 @@ const OutputPanel = (props: {
                   />
                 );
                 break;
-              case "dividing":
+              case "divider":
                 itemElement =
                   item.content !== undefined ? (
                     <Divider textAlign={item.position || "left"}>
@@ -354,11 +354,27 @@ const OutputPanel = (props: {
                 );
                 break;
               case "index":
-                itemElement = getTypedElement(
-                  listReturnType[item.index || 0],
-                  parsedResponse[item.index || 0],
-                  item.index || 0
-                );
+                if (Array.isArray(item.index)) {
+                  itemElement = <></>;
+                  item.index.forEach((index) => {
+                    itemElement = (
+                      <>
+                        {itemElement}
+                        {getTypedElement(
+                          listReturnType[index],
+                          parsedResponse[index],
+                          index
+                        )}
+                      </>
+                    );
+                  });
+                } else {
+                  itemElement = getTypedElement(
+                    listReturnType[item.index || 0],
+                    parsedResponse[item.index || 0],
+                    item.index || 0
+                  );
+                }
                 break;
               default:
                 itemElement = <code>{item.content ?? ""}</code>;
