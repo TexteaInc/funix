@@ -529,7 +529,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
             </>
           );
           break;
-        case "dividing":
+        case "divider":
           rowElement =
             rowItem.content !== undefined ? (
               <Divider

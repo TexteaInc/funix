@@ -520,11 +520,11 @@ def funix(
                             decorated_params[row_item["argument"]] = {}
                         decorated_params[row_item["argument"]]["customLayout"] = True
                         row_item_done["type"] = "argument"
-                    elif "dividing" in row_item:
-                        row_item_done["type"] = "dividing"
-                        if isinstance(row_item["dividing"], str):
-                            row_item_done["content"] = row_item_done["dividing"]
-                        row_item_done.pop("dividing")
+                    elif "divider" in row_item:
+                        row_item_done["type"] = "divider"
+                        if isinstance(row_item["divider"], str):
+                            row_item_done["content"] = row_item_done["divider"]
+                        row_item_done.pop("divider")
                     row_layout.append(row_item_done)
                 return_input_layout.append(row_layout)
 

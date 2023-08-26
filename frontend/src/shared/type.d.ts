@@ -7,7 +7,7 @@ export declare global {
 
 export declare module "json-schema" {
   type inputRowItem = {
-    type: "markdown" | "argument" | "dividing" | "html";
+    type: "markdown" | "argument" | "divider" | "html";
     content?: string;
     argument?: string;
     width?: number;
