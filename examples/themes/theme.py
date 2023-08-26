@@ -13,7 +13,7 @@ You can get this demo and theme file in funix examples
 @funix(
     title="Markdown Playground",
     description=description,
-    theme="themes/dark_test.json",
+    theme="./dark_test.json",
 )
 def theme_test_markdown_playground(markdown: StrCode("markdown")) -> Markdown:
     return markdown
@@ -22,7 +22,7 @@ def theme_test_markdown_playground(markdown: StrCode("markdown")) -> Markdown:
 @funix(
     title="Mood",
     description="But in sunset",
-    theme="themes/sunset.json",
+    theme="./sunset.json",
 )
 def theme_test_mood(markdown: StrCode("markdown"), a: int) -> Markdown:
     return markdown

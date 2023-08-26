@@ -6,9 +6,9 @@ from typing import Literal
 import re
 
 
-@new_funix_type("slider", slider)
-class NewSlider(int):
-    pass
+# @new_funix_type("slider", slider)
+# class NewSlider(int):
+#     pass
 
 
 inputBox = StrInputBox
