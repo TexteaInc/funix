@@ -355,10 +355,10 @@ openai.api_key = os.environ.get("OPENAI_KEY")
     widgets={"openai_key": "password"},
     conditional_visible=[
         {
-            "all_if": {
+            "when": {
                 "show_advanced": True,
             },
-            "then": ["openai_key"],
+            "show": ["openai_key"],
         }
     ],
     show_source=True,
@@ -391,10 +391,10 @@ def dalle(
     },
     conditional_visible=[
         {
-            "all_if": {
+            "when": {
                 "show_advanced": True,
             },
-            "then": ["max_tokens", "model", "openai_key"],
+            "show": ["max_tokens", "model", "openai_key"],
         }
     ],
     show_source=True,
