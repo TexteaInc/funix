@@ -115,7 +115,7 @@ def test():
     return search_telomeres(sRNAs, repeat)
 # %%
 
-@funix(
+@funix.funix(
     description = "A telomere is a region of repetitive DNA sequences at the end of a chromosome. "
                 "Find the belongings of a repeat unit.",
     # destination = "column",
@@ -138,7 +138,17 @@ def test():
         }
     }
 )
-def bioinfo_telomere_check(sRNAs: List[str], repeat_unit: str) -> typing.List[bool]:
+def bioinfo_telomere_check(
+    sRNAs: typing.List[str]=
+        [
+        "CCCTAAACCCTAAACCCTAT",  # False
+        "CCCTAAACCCTAAACCCTAA",  # True, 20-nt
+        "CCCTAAACCCTAAACCC",  # False, too short
+        "CCCTAAACCCTAAACCCTAAAC",  # True, 22-nt
+        "CTAAACCCTAAACCCTAAACCCT"  # True, 25-nt
+    ]
+    , repeat_unit: str="CCCTAAA"
+    ) -> typing.List[bool]:
     check_result = search_telomeres(sRNAs, repeat_unit)
     return check_result
 
