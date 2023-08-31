@@ -198,8 +198,11 @@ def parse_theme(theme: dict) -> tuple[list[str], dict, dict, dict, dict]:
         #         type_widget_dict[data_type] = widget_type
 
         for type_name in theme["widgets"]:
+            widget = theme["widgets"][type_name]
+            if isinstance(widget, list):
+                widget = dump_frontend_config(widget[0], widget[1])
             type_names.append(type_name)
-            type_widget_dict[type_name] = theme["widgets"][type_name]
+            type_widget_dict[type_name] = widget
     if "palette" in theme:
         for color_name in theme["palette"].keys():
             custom_palette[color_name] = theme["palette"][color_name]

@@ -196,30 +196,15 @@ def set_default_theme(theme: str) -> None:
     __parsed_themes["__default"] = parse_theme(__default_theme)
 
 
-def set_theme(theme_dict: dict, alias: Optional[str] = None) -> None:
-    """
-    Set a theme from a dict.
-
-    Parameters:
-        theme_dict (dict): The theme dict.
-        alias (str, optional): The theme alias.
-    """
-    global __themes
-    name = theme_dict["name"]
-    if alias is not None:
-        name = alias
-    __themes[name] = theme_dict
-
-
 def import_theme(
-    source: str,
+    source: str | dict,
     alias: Optional[str],
 ) -> None:
     """
-    Import a theme from path, url.
+    Import a theme from path, url or dict.
 
     Parameters:
-        source (str): The path or url of the theme.
+        source (str | dict): The path, url or dict of the theme.
         alias (str): The theme alias.
 
     Raises:
@@ -229,10 +214,13 @@ def import_theme(
         Check the `funix.theme.get_dict_theme` function for more information.
     """
     global __themes
-    if is_valid_uri(source):
-        theme = get_dict_theme(None, source)
+    if isinstance(source, str):
+        if is_valid_uri(source):
+            theme = get_dict_theme(None, source)
+        else:
+            theme = get_dict_theme(source, None)
     else:
-        theme = get_dict_theme(source, None)
+        theme = source
     name = theme["name"]
     if alias is not None:
         name = alias

@@ -1,0 +1,12 @@
+{
+  "name": "pink",
+  "palette": {
+    "primary": {
+      "main": "#F596AA",
+      "contrastText": "#FCFAF2"
+    },
+    "background": {
+      "default": "#F8C3CD"
+    }
+  }
+}

@@ -1,7 +1,6 @@
 {
   "name": "sunset",
   "widgets": {
-    "str": "textarea",
     "int": [
       "slider",
       {

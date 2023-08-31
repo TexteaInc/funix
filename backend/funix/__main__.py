@@ -20,7 +20,7 @@ from funix import run
 @plac.flg("lazy", "Load functions without decorator", abbrev="l")
 @plac.flg("recursive", "Enable directory mode", abbrev="R")
 @plac.flg("package", "Enable package mode", abbrev="P")
-@plac.flg("no_debug", "Disable debug mode", abbrev="D")
+@plac.flg("dev", "Enable development mode", abbrev="d")
 @plac.flg("transform", "Transform the globals to a session variables", abbrev="t")
 @plac.opt("from_git", "Import module from git", abbrev="g")
 @plac.opt("repo_dir", "The directories in the repo that need to be used", abbrev="r")
@@ -34,7 +34,7 @@ def main(
     lazy=False,
     recursive=False,
     package=False,
-    no_debug=False,
+    dev=False,
     transform=False,
     from_git=None,
     repo_dir=None,
@@ -72,7 +72,7 @@ def main(
     parsed_package_mode: bool = os.getenv("FUNIX_PACKAGE_MODE", package)
     parsed_from_git: str = os.getenv("FUNIX_FROM_GIT", from_git)
     parsed_repo_dir: str = os.getenv("FUNIX_REPO_DIR", repo_dir)
-    parsed_no_debug: bool = os.getenv("FUNIX_NO_DEBUG", no_debug)
+    parsed_dev: bool = os.getenv("FUNIX_NO_DEV", dev)
     parsed_transform: bool = os.getenv("FUNIX_TRANSFORM", transform)
     parsed_secret: bool | str = os.getenv("FUNIX_SECRET", secret)
 
@@ -98,7 +98,7 @@ def main(
         package_mode=parsed_package_mode,
         from_git=parsed_from_git,
         repo_dir=parsed_repo_dir,
-        no_debug=parsed_no_debug,
+        dev=parsed_dev,
         transform=parsed_transform,
         app_secret=parsed_secret,
     )

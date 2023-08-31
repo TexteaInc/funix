@@ -29,7 +29,6 @@ funix = decorator.funix
 # ---- Decorators ----
 
 # ---- Theme ----
-set_theme = decorator.set_theme
 set_default_theme = decorator.set_default_theme
 clear_default_theme = decorator.clear_default_theme
 import_theme = decorator.import_theme
@@ -309,7 +308,7 @@ def run(
     package_mode: Optional[bool] = False,
     from_git: Optional[str] = None,
     repo_dir: Optional[str] = None,
-    no_debug: Optional[bool] = False,
+    dev: Optional[bool] = False,
     transform: Optional[bool] = False,
     app_secret: Optional[str | bool] = False,
 ) -> None:
@@ -328,7 +327,7 @@ def run(
         package_mode (bool): If you want to enable package mode, default is False
         from_git (str): If you want to run the app from a git repo, default is None
         repo_dir (str): If you want to run the app from a git repo, you can specify the directory, default is None
-        no_debug (bool): If you want to disable debug mode, default is False
+        dev (bool): If you want to enable development mode, default is True
         transform (bool): If you want to enable transform mode, default is False
         app_secret (str | bool): If you want to set an app secret, default is False
 
@@ -368,4 +367,4 @@ def run(
         print(f"Starting Funix backend only at http://{host}:{parsed_port}")
     if not no_frontend and not no_browser:
         run_open_frontend(parsed_ip, parsed_port)
-    app.run(host=host, port=parsed_port, debug=not no_debug)
+    app.run(host=host, port=parsed_port, debug=dev)
