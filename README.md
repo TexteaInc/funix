@@ -10,7 +10,7 @@
 
 [![PyPI version](https://badge.fury.io/py/funix.svg)](https://badge.fury.io/py/funix)
 
-<h4><a href="https://youtu.be/DVIV_EUFNbw">Intro video</a> | <a href="https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md">QuickStart Guide</a> | <a href="https://github.com/TexteaInc/funix-doc/blob/main/Reference.md">Reference Manual</a> | <a href="https://github.com/TexteaInc/funix/edit/main/README.md#gallery"> Gallary </a> </h4>
+<h4><a href="https://youtu.be/DVIV_EUFNbw">Intro video</a> | <a href="https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md">QuickStart Guide</a> | <a href="https://github.com/TexteaInc/funix-doc/blob/main/Reference.md">Reference Manual</a> | <a href="https://github.com/TexteaInc/funix/edit/main/README.md#gallery"> Gallery </a> </h4>
 
 https://user-images.githubusercontent.com/438579/236646521-30ed67f4-4708-4cf1-858d-33b65bc53b6a.mp4
 
@@ -25,7 +25,8 @@ Funix is designed for an algorithm/ML engineer to build apps without writing cod
 * **Declarative**: All non-default controls, including UI customization, via Python dictionaries. 
 * **Non-intrusive**: You can still run or debug your Python code locally as usual.
 
-> **WIP**: Funix is still under development. If you have any questions, please feel free to [open an issue](https://github.com/TexteaInc/funix/issues/new).
+You can further bring your function-turned app to the cloud via  [Funix-Deploy](https://github.com/TexteaInc/funix-deploy). 
+
 
 ## Hello, world in Funix 
 
@@ -46,7 +47,56 @@ A web app will be launched at `http://localhost:3000` and automatically opened i
 
 ![screenshots/hello.png](https://github.com/TexteaInc/funix-doc/raw/main/screenshots/hello.png)
 
-> **Note**: The `-l` flag stands for _"lazy"_ meaning that only default settings are used. It cannot be used when your function is decorated by the funix decorator `@funix()` which allows you to customize your app. Advanced examples below use decorators. For more details of the decorator values, please refer to the [reference manual](docs/Reference.md).
+> **Note**: The `-l` flag stands for _"lazy"_ meaning that only default settings are used. It cannot be used when your function is decorated by the funix decorator `@funix()` which allows you to customize your app. For more details, please refer to the [reference manual](docs/Reference.md).
+
+
+## The types become widgets automatically
+
+The Zen of Funix is to choose widgets for function I/Os based on their types. 
+
+```python
+import typing 
+
+import funix
+
+def my_chatbot(
+    prompt: str, 
+    advanced_features: bool = False,
+    model: typing.Literal[
+        'GPT-3.5', 'GPT-4.0', 
+        'Llama-2', 'Falcon-7B']= 'GPT-4.0',
+    max_token: range(100, 200, 20)=140,
+    )  -> str:      
+    pass
+```
+
+![four input types](https://raw.githubusercontent.com/TexteaInc/funix-doc/main/screenshots/input_widgets.png)
+
+## Themes: more than colors and fonts 
+
+A Funix theme defines the mapping from data types to widgets. It further exposes the `props` of the UI components that embody the widgets in JSON so you can control the UI without knowing Javascript.
+
+For example, below is an example theme configure. 
+
+```jsonc
+{
+  "name": "test_theme",
+  "widgets": {    // dict, map types to widgets
+    "str": "inputbox",
+    "int": "slider[0,100,2]",
+    "float": ["slider", { "min": 0, "max": 100, "step": 2 }],
+    "Literal": "radio"
+  },
+  "props": {  // exposing props of UI components
+    "slider": { // Funix' sliders are MUI's Sliders
+      "color": "#99ff00" // an MUI's Slider has a prop called color
+    },
+    "radio": { // Funix' radio are MUI's radiobuttons
+      "size": "medium" // an MUI's radiobutton has a prop called size
+    }
+  },
+}
+```
 
 #### Love Funix? Give us a star
 
