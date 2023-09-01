@@ -15,7 +15,7 @@ def ChatGPT_advanced(prompt: str,
         show_advanced: bool = False,
         model : typing.Literal['gpt-3.5-turbo', 'gpt-3.5-turbo-0301']= 'gpt-3.5-turbo',
         max_tokens: range(100, 200, 20)=140,
-        openai_key: str = "",)  -> str:      
+        openai_key: funix.hint.StrPassword = "",)  -> str:      
 
     completion = openai.ChatCompletion.create(
         messages=[{"role": "user", "content": prompt}],

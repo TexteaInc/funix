@@ -78,9 +78,50 @@ More examples in <a href="https://github.com/TexteaInc/funix-doc/blob/main/Quick
 
 ### ChatGPT, multi-turn
 
-Code [here](https://github.com/TexteaInc/funix-examples/blob/main/AI/chatGPT_multi_turn.py). Just 77 lines including the HTML layout code and tip messages. 
+<details>
+  <summary>Click me for source code. Just 40 lines! No non-Python-native widget needed. </summary>
 
-![Multiturn chat](https://raw.githubusercontent.com/TexteaInc/funix-examples/main/screenshots/AI/chatGPT_multi_turn.png)
+  ```python
+    import os
+    import openai 
+    openai.api_key = os.environ.get("OPENAI_KEY")
+
+    messages  = []  # list of dicts, dict keys: role, content, system 
+
+    def print_messages_html(messages):
+        printout = ""
+        for message in messages:
+            if message["role"] == "user":
+                align, left, name = "left", "0%", "You"
+            elif message["role"] == "assistant":
+                align, left, name = "right", "30%", "ChatGPT"
+            printout += f'<div style="position: relative; left: {left}; width: 70%"><b>{name}</b>: {message["content"]}</div>'
+        return printout
+
+    import funix 
+    @funix.funix(
+        direction="column-reverse",
+    )
+    def ChatGPT_multi_turn(current_message: str)  -> funix.hint.HTML:
+        current_message = current_message.strip()
+        messages.append({"role": "user", "content": current_message})
+        completion = openai.ChatCompletion.create(
+            messages=messages,
+            model='gpt-3.5-turbo', 
+            max_tokens=100,
+        )
+        chatgpt_response = completion["choices"][0]["message"]["content"]
+        messages.append({"role": "assistant", "content": chatgpt_response})
+
+        # return print_messages_markdown(messages)
+        return print_messages_html(messages)
+
+  ```
+
+</details>
+
+
+![Multiturn chat](./docs/screenshots/chatGPT_multiturn.png)
 
 ### Shortest Dall-E web app in Python
 
@@ -99,6 +140,13 @@ def dalle(prompt: str = "a cat") -> Image:
 
 ![Dalle demo](https://github.com/TexteaInc/funix-doc/raw/main/screenshots/dalle.jpg)
 
+### Gradio vs. Funix
+
+Funix.io can get the same job done in half the amount of code required by Gradio, by exploiting the Python language as much as possible. Here, state/session is maintained using a global variable, while the order of the returns defines the return layout. 
+
+![hangman gradio vs. funix source code](./docs/screenshots/hangman_gradio_vs_funix.png)
+
+![hangman gradio vs. funix screenshot](./docs/screenshots/hangman.png)
 
     
 ### Compound UIs
