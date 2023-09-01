@@ -121,7 +121,7 @@ More examples in <a href="https://github.com/TexteaInc/funix-doc/blob/main/Quick
 </details>
 
 
-![Multiturn chat](./docs/screenshots/chatGPT_multiturn.png)
+![Multiturn chat](https://github.com/TexteaInc/funix-doc/raw/main/screenshots/chatGPT_multiturn.png)
 
 ### Shortest Dall-E web app in Python
 
@@ -144,9 +144,9 @@ def dalle(prompt: str = "a cat") -> Image:
 
 Funix.io can get the same job done in half the amount of code required by Gradio, by exploiting the Python language as much as possible. Here, state/session is maintained using a global variable, while the order of the returns defines the return layout. 
 
-![hangman gradio vs. funix source code](./docs/screenshots/hangman_gradio_vs_funix.png)
+![hangman gradio vs. funix source code](https://github.com/TexteaInc/funix-doc/raw/main/screenshots/hangman_gradio_vs_funix.png)
 
-![hangman gradio vs. funix screenshot](./docs/screenshots/hangman.png)
+![hangman gradio vs. funix screenshot](https://github.com/TexteaInc/funix-doc/raw/main/screenshots/hangman.png)
 
     
 ### Compound UIs
