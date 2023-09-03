@@ -1,8 +1,8 @@
-import os
-import openai 
-# openai.api_key = os.environ.get("OPENAI_KEY")
-
+import os, json
 import typing 
+
+import requests
+import openai 
 
 import funix
 from funix.session import get_global_variable, set_global_variable#, set_default_global_variable
@@ -10,24 +10,31 @@ from funix.session import get_global_variable, set_global_variable#, set_default
 # BUG: The set_global_variable() call does not effectively change the value of openai.api_key,
 # though get_global_variable(openai.api_key) returns sessionized key value. 
 # The value of openai.api_key remains None unless set via the environment variable OPENAI_KEY. 
+# As a workaround, we use the POST method to demo. 
 
+# openai.api_key = os.environ.get("OPENAI_KEY")
+openai_key = os.environ.get("OPENAI_KEY")
 
 @funix.funix( # Funix.io, the laziest way to build web apps in Python
   title="Set OpenAI key",
   argument_labels={
     "api_key": "Enter your API key", 
-    "sys_env_var": "Use system environment variable"
+    "use_sys_env_var": "Use system environment variable"
   }, 
-  conditional_visible=[ { "when": {"sys_env_var": False}, "show": ["api_key"],  } ],
+  conditional_visible=[ { "when": {"use_sys_env_var": False}, "show": ["api_key"],  } ],
     show_source=True
 )
-def set_openAI_key(api_key: str="", sys_env_var:bool=True) -> str:
-    if sys_env_var:
+def set_openAI_key(api_key: str="", use_sys_env_var:bool=True) -> str:
+    if use_sys_env_var:
         return "OpenAI API key is set in your environment variable. Nothing changes."
     else:
         if api_key == "":
             return "You entered an empty string. Try again."
         else:
+            global openai_key
+            openai_key = api_key
+            return f"Your openAI key has been set to: {openai_key}"
+
             # openai.api_key = api_key 
             set_global_variable(openai.api_key, api_key)
             return "OpenAI API key has been set via the web form! If it was set via an environment variable before, it's now overwritten."
@@ -35,12 +42,24 @@ def set_openAI_key(api_key: str="", sys_env_var:bool=True) -> str:
 @funix.funix()
 def get_openAI_key()->str:
     # return f"Your openAI key has been set to: {openai.api_key}" 
-    return f"Your openAI key has been set to: {get_global_variable(openai.api_key)}" 
-
-
-print (openai.api_key)
+    # return f"Your openAI key has been set to: {get_global_variable(openai.api_key)}" 
+    return f"Your openAI key has been set to: {openai_key}"
 
 @funix.funix()
+def ChatGPT_POST(prompt: str) -> str:
+    header = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {openai_key}"
+    }
+    payload = {
+        'model': 'gpt-3.5-turbo',
+        'messages': [{"role": "user", "content": f"{prompt}"}],
+    }
+    response = requests.post('https://api.openai.com/v1/chat/completions', 
+                             headers=header, json=payload)
+    return response.json()["choices"][0]["message"]["content"]
+
+# @funix.funix()
 def ChatGPT(prompt: str) -> str:
     completion = openai.ChatCompletion.create(
         messages=[{"role": "user", "content": prompt}],
@@ -49,6 +68,17 @@ def ChatGPT(prompt: str) -> str:
     return completion["choices"][0]["message"]["content"]
 
 @funix.funix()
+def dalle_POST(prompt: str) -> funix.hint.Image:
+    header = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {openai_key}"
+    }
+    payload = {'prompt': f'{prompt}'}
+    response = requests.post('https://api.openai.com/v1/images/generations',
+                             headers=header, json=payload)
+    return response.json()["data"][0]["url"]
+
+# @funix.funix()
 def dalle(Prompt: str) -> funix.hint.Image:
     response = openai.Image.create(prompt=Prompt)
     return response["data"][0]["url"]
