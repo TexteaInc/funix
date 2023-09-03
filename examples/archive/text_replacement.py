@@ -1,7 +1,10 @@
-from funix import set_theme, new_funix_type, funix
-from funix.widget import slider
+
+# from funix import import_theme, new_funix_type, funix
+import funix 
+# from funix.widget import slider
 from funix.hint import StrTextarea, StrInputBox
-from typing import Literal
+# from typing import Literal
+import typing 
 
 import re
 
@@ -11,9 +14,9 @@ import re
 #     pass
 
 
-inputBox = StrInputBox
+# inputBox = StrInputBox
 
-set_theme(
+funix.import_theme(
     {
         "name": "text",
         "widgets": {
@@ -25,13 +28,13 @@ set_theme(
 )
 
 
-@funix(theme="text")
+@funix.funix(theme="text")
 def replace_text(
-    passage: StrTextarea,
-    replace: inputBox,
-    replace_with: inputBox,
+    passage: funix.hint.StrTextarea,
+    replace: str,
+    replace_with: str,
     replace_all: bool = True,
-    replace_styles: Literal["Regex", "Native"] = "Native",
+    replace_styles: typing.Literal["Regex", "Native"] = "Native",
 ) -> str:
     if replace_styles == "Regex":
         if replace_all:

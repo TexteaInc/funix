@@ -2,7 +2,7 @@ from funix import funix
 from funix.session import get_global_variable, set_global_variable, set_default_global_variable
 
 
-set_default_global_variable("user_word", "https://peps.python.org/pep-0339/")
+set_default_global_variable("user_word", "Funix.io rocks! ")
 
 
 @funix()

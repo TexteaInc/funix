@@ -1,3 +1,5 @@
+# This example shows how to change display labels for arguments 
+
 import funix
 
 @funix.funix(

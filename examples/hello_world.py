@@ -1,4 +1,4 @@
-def hello(name: str) -> str:
+def hello(name: str="Funix") -> str:
     return f"Hello {name}!"
 
 
