@@ -28,7 +28,6 @@ def gen_telomeres_forward(repeat, length:int=21):
     repeat: str, the sequence whose shifted repeats become a telomere
     length: int, the length of shifted repeats
     """
-
     
     cycles = length // len(repeat) + 2
     base_string = repeat * cycles 
@@ -97,8 +96,9 @@ def search_telomeres(sRNAs:typing.List[str], repeat:str, include_reverse:bool=Tr
 
     func_search_one_pattern = functools.partial(search_string_hash, telomere_hash_dict=telomere_hash_dict)
 
-    with multiprocessing.Pool() as pool:
-        result = pool.map(func_search_one_pattern, sRNAs)
+    # with multiprocessing.Pool() as pool:
+    #     result = pool.map(func_search_one_pattern, sRNAs)
+    result = list(map(func_search_one_pattern, sRNAs))
 
     return result
 
@@ -121,16 +121,7 @@ def test():
     # destination = "column",
     argument_config = {
         "sRNAs": {
-            # "treat_as": "column",
-            "example": [
-                [
-                    "CCCTAAACCCTAAACCCTAT",  # False
-                    "CCCTAAACCCTAAACCCTAA",  # True, 20-nt
-                    "CCCTAAACCCTAAACCC",  # False, too short
-                    "CCCTAAACCCTAAACCCTAAAC",  # True, 22-nt
-                    "CTAAACCCTAAACCCTAAACCCT"  # True, 25-nt
-                ]
-            ]
+            "widget" : "sheet"
         },
         "repeat_unit": {
             # "treat_as": "config",
@@ -148,9 +139,10 @@ def bioinfo_telomere_check(
         "CTAAACCCTAAACCCTAAACCCT"  # True, 25-nt
     ]
     , repeat_unit: str="CCCTAAA"
-    ) -> typing.List[bool]:
+    ) -> dict:
+    # ) -> typing.Dict[str, bool]: 
     check_result = search_telomeres(sRNAs, repeat_unit)
-    return check_result
+    return {"sRNAs":sRNAs, "Is it a telemere?":check_result }
 
 
 if __name__ == '__main__':
