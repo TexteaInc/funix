@@ -3,6 +3,7 @@
 import funix
 
 @funix.funix(
+    title="BMI Calculator",
     description = "**Calculate** _your_ BMI", 
     argument_labels = {
         "weight": "Weight (kg)", 

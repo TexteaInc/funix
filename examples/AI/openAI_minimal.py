@@ -24,7 +24,7 @@ openai_key = os.environ.get("OPENAI_KEY")
   conditional_visible=[ { "when": {"use_sys_env_var": False}, "show": ["api_key"],  } ],
     show_source=True
 )
-def set_openAI_key(api_key: str="", use_sys_env_var:bool=True) -> str:
+def set_openAI_key(api_key: str="", use_sys_env_var:bool=False) -> str:
     if use_sys_env_var:
         return "OpenAI API key is set in your environment variable. Nothing changes."
     else:

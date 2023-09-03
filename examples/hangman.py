@@ -1,3 +1,5 @@
+# The hangman game with funix
+
 import funix 
 
 secret_word = "funix"
