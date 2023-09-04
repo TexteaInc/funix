@@ -233,21 +233,47 @@ Code [here](https://github.com/TexteaInc/funix/blob/main/examples/shipping.py)
 ### Command line 
 
 ```text
-funix [-h] [-H 127.0.0.1] [-p 3000] [-F] [-B] 
+usage: funix [-h] [-H 0.0.0.0] [-p 3000] [-F] [-B] [-l] [-R] [-P] [-d] [-t]
+             [-g None] [-r None] [-s None] [--version]
+             [file_or_module_name]
 
 Funix: Building web apps without manually creating widgets
 
+    Funix turns your Python function into a web app
+    by building the UI from the function's signature,
+    based on the mapping from variable types to UI widgets,
+    customizable per-widget or kept consistent across apps via themes.
+
+    Just write your core logic and leave the rest to Funix.
+    Visit us at http://funix.io
+
 positional arguments:
-  main_class            The Python module containing functions 
-                        to be turned into web apps by Funix 
+  file_or_module_name   The Python module containing functions to be turned
+                        into web apps by Funix. For example, if your
+                        functions are in the file `hello.py`, you should pass
+                        `hello.py` here.if you want to turn a module called
+                        `hello` into a web app, you should pass `hello` here.
 
 options:
   -h, --help            show this help message and exit
-  -H 127.0.0.1, --host 127.0.0.1
-                        Host of frontend and backend
-  -p 3000, --port 3000  Port of frontend and backend
+  -H 0.0.0.0, --host 0.0.0.0
+                        Host of Funix
+  -p 3000, --port 3000  Port of Funix
   -F, --no-frontend     Disable frontend server
   -B, --no-browser      Disable auto open browser
+  -l, --lazy            Load functions without decorator
+  -R, --recursive       Enable directory mode
+  -P, --package         Enable package mode
+  -d, --dev             Enable development mode
+  -t, --transform       Transform the globals to a session variables
+  -g None, --from-git None
+                        Import module from git
+  -r None, --repo-dir None
+                        The directories in the repo that need to be used
+  -s None, --secret None
+                        The secret key for the full app
+  --version, -v         show program's version number and exit
+
 ```
 
 The command `funix` above is equivalent to `python -m funix` if you have installed Funix. 
@@ -285,6 +311,16 @@ Now, local Funix is at`http://localhost:3000/`You can just use `yarn funix:start
 ```bash
 python3 -m funix [module] --host [your_server_ip]
 ```
+
+### With MUI Pro
+
+If you want to use `DataGridPro` and you have a MUI Pro license:
+
+1. Install Node.js and Yarn;
+2. Create a file called `.env` in the `frontend` folder;
+3. Add `MUI_PRO_LICENSE_KEY=[your_key]` to the file;
+4. Run `yarn funix:build` to build the frontend;
+5. Done!
 
 ## How to contribute
 
