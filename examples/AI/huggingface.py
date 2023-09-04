@@ -3,6 +3,9 @@
 # Copyleft 2023 Forrest Sheng Bao http://forrestbao.github.io 
 # The purpose of this code is to demonstrate the use of Funix to turn a simple API call function to a web app. 
 
+# To turn this code into a web app, run the following command in the terminal:
+# funix huggingface.py -l # the -l flag is very important. It tells Funix to load the function as a web app.
+
 import os, json, typing # Python's native 
 import requests # pip install requests
 
