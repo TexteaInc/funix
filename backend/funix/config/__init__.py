@@ -46,3 +46,12 @@ basic_widgets = [
 """
 Basic widgets for MUI components.
 """
+
+builtin_widgets = {
+    "Literal": "radio",
+}
+"""
+A dict, key is the type name, value is the MUI component name.
+
+This is the funix builtin widgets.
+"""
