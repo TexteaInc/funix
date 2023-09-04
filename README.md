@@ -10,7 +10,7 @@
 
 [![PyPI version](https://badge.fury.io/py/funix.svg)](https://badge.fury.io/py/funix)
 
-<h4><a href="https://youtu.be/DVIV_EUFNbw">Intro video</a> | <a href="https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md">QuickStart Guide</a> | <a href="https://github.com/TexteaInc/funix-doc/blob/main/Reference.md">Reference Manual</a> | <a href="https://github.com/TexteaInc/funix/edit/main/README.md#gallery"> Gallery </a> </h4>
+<h4><a href="https://youtu.be/DVIV_EUFNbw">Intro video</a> | <a href="https://github.com/TexteaInc/funix-doc/blob/main/Reference.md">Reference Manual</a> | <a href="https://github.com/TexteaInc/funix/edit/main/README.md#gallery"> Gallery </a> </h4>
 
 https://user-images.githubusercontent.com/438579/236646521-30ed67f4-4708-4cf1-858d-33b65bc53b6a.mp4
 
@@ -18,17 +18,20 @@ https://user-images.githubusercontent.com/438579/236646521-30ed67f4-4708-4cf1-85
 
 ## Features
 
-Funix is designed for an algorithm/ML engineer to build apps without writing code related to the UI, not even selecting a widget and passing it to or calling it in a Python function. 
+Funix is designed for a data/ML engineer to build apps without writing UI-related code, not even selecting a widget, passing it to a Python function or link it to a call-back function. UI-related stuff should be left to a style file designed by the UI team. 
 
 * **Minimalist**: Automatic UI generation. No manual widget selection.
 * **Centralized styling**: Type-to-widget mapping stored in themes for cross-app UI consistency. 
-* **Declarative**: All non-default controls, including UI customization, via Python dictionaries. 
+* **Declarative**: All controls done via JSON strings. 
 * **Non-intrusive**: You can still run or debug your Python code locally as usual.
+
+Funix fully supports common built-in data types of Python, and major scientific types such as `matplotlib`'s `Figure` or `Jaxtyping`. 
+
+The widgets are built on top of popular UI frameworks such as Material UI, and exposes major `props` for users to configure without knowing React or JavaScript.
 
 You can further bring your function-turned app to the cloud via  [Funix-Deploy](https://github.com/TexteaInc/funix-deploy). 
 
-
-## Hello, world in Funix 
+## Hello, world! 
 
 Building a web app in Funix is super easy. Just have a type-hinted Python function: 
 
@@ -43,16 +46,20 @@ Save in a file (say `hello.py`) and pass to Funix:
 funix -l hello.py
 ```
 
-A web app will be launched at `http://localhost:3000` and automatically opened in a browser window.
+A web app will be launched at `http://localhost:3000` and automatically opened in a browser window like below: 
 
 ![screenshots/hello.png](https://github.com/TexteaInc/funix-doc/raw/main/screenshots/hello.png)
 
-> **Note**: The `-l` flag stands for _"lazy"_ meaning that only default settings are used. It cannot be used when your function is decorated by the funix decorator `@funix()` which allows you to customize your app. For more details, please refer to the [reference manual](docs/Reference.md).
+> **Note**: The `-l` flag stands for _"lazy"_ meaning that only default settings are used. It cannot be used when your function is decorated by the funix decorator `@funix()` which allows you to customize your app. For more details, please refer to the [reference manual]([docs/Reference.md](https://github.com/TexteaInc/funix-doc/blob/main/Reference.md)).
 
 
-## The types become widgets automatically
+## Zen: The types become widgets automatically
 
-The Zen of Funix is to choose widgets for function I/Os based on their types. 
+The Zen of Funix is to choose widgets for function I/Os based on their types, instead of picking a widget for each I/O. In this sense, **Funix to Python is like CSS to HTML or a `.sty` file to LaTeX**. Ideally, a Data Scientist or a Machine Learning Engineer should NOT touch anything UI -- s/he should leave all that to the UI team. 
+
+The manual widget creating approach that other frameworks are redundant and inefficient. The same function I/O needs to appear twice: once in the function's signature, and the other time in the widget creation code. If you modify the interface of the function, you have to modify the widget creation code as well. 
+
+The example below shows how different Python's built-in data types are mapped to different widgets. 
 
 ```python
 import typing 
@@ -71,6 +78,40 @@ def my_chatbot(
 ```
 
 ![four input types](https://raw.githubusercontent.com/TexteaInc/funix-doc/main/screenshots/input_widgets.png)
+
+You can define your own types and associate widgets to them. For example, the `str` type is mapped to a single-line text input box where the text is displayed as you type by default. But you can create a new type for passwords which are replaced with asterisks. Thus, you can do something like this (coming soon!): 
+
+```python 
+import funix
+
+@funix.new_funix_type(
+    widget=[
+        "@mui/material/TextField", # the component in MUI
+        {"type":"password"}   # props of TextField in MUI
+    ]
+) 
+class password(str):  # the new type 
+    pass
+
+@funix.funix()
+def foo(
+    x: password,  # string hidden as asterisks
+    y: str        # normal string
+    ) -> None: 
+    pass
+```
+
+The type-to-widget principle allows you to write much shorter code in Funix than in other frameworks. In many cases, you only need the core logic of your app -- which also means you don't have to read any documentation of Funix. 
+
+For example, you can wrap chatGPT API  ....
+
+As another example, below is a comparison of implementing the hangman game in Funix and Gradio, respectively. In the Funix case (left), the only thing besides the core function is adding a friendly prompt to the argument `letter`, which cannot be done using Python's native syntax. In addition, Funix tries to leverage as much of Python's native syntax as possible. Here, we use a `global` variable to maintain the state/session instead of using an additional data type. 
+
+![Gradio vs. Funix](https://raw.githubusercontent.com/TexteaInc/funix-doc/main/screenshots/hangman_gradio_vs_funix.png)
+
+The UI made in Funix looks like below. By leveraging the Markdown syntax, the output layout can be done easily. 
+
+![Hangman in Funix](https://raw.githubusercontent.com/TexteaInc/funix-doc/main/screenshots/hangman.png)
 
 ## Themes: more than colors and fonts 
 
@@ -124,7 +165,7 @@ For example, below is an example theme configure.
  
 ## Gallery
 
-More examples in <a href="https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md">QuickStart Guide</a> or the <code>examples</code> folder.
+More examples in <a href="https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md">QuickStart Guide</a>, <a href="https://github.com/TexteaInc/funix-doc/blob/main/Reference.md">Reference Manual</a>, or the <code>./examples</code> folder.
 
 ### ChatGPT, multi-turn
 
@@ -170,7 +211,6 @@ More examples in <a href="https://github.com/TexteaInc/funix-doc/blob/main/Quick
 
 </details>
 
-
 ![Multiturn chat](https://github.com/TexteaInc/funix-doc/raw/main/screenshots/chatGPT_multiturn.png)
 
 ### Shortest Dall-E web app in Python
@@ -190,15 +230,36 @@ def dalle(prompt: str = "a cat") -> Image:
 
 ![Dalle demo](https://github.com/TexteaInc/funix-doc/raw/main/screenshots/dalle.jpg)
 
-### Gradio vs. Funix
+<!-- Funix.io can get the same job done in half the amount of code required by Gradio, by exploiting the Python language as much as possible. Here, state/session is maintained using a global variable, while the order of the returns defines the return layout.  -->
 
-Funix.io can get the same job done in half the amount of code required by Gradio, by exploiting the Python language as much as possible. Here, state/session is maintained using a global variable, while the order of the returns defines the return layout. 
+### Web UI for LLMs hosted on HuggingFace
 
-![hangman gradio vs. funix source code](https://github.com/TexteaInc/funix-doc/raw/main/screenshots/hangman_gradio_vs_funix.png)
+```python
+import os, json, typing # Python's native 
+import requests # pip install requests
 
-![hangman gradio vs. funix screenshot](https://github.com/TexteaInc/funix-doc/raw/main/screenshots/hangman.png)
+API_TOKEN = os.getenv("HF_TOKEN") # "Please set your API token as an environment variable named HF_TOKEN. You can get your token from https://huggingface.co/settings/token"
 
-    
+def huggingface_(
+    model_name: typing.Literal[
+        "gpt2", 
+        "bigcode/starcoder", 
+        "google/flan-t5-large"] = "gpt2", 
+    prompt: str = "Who is Einstein?") -> str: 
+
+    payload = {"inputs": prompt} # not all models use this query  and output formats.  Hence, we limit the models above. 
+
+    API_URL = f"https://api-inference.huggingface.co/models/{model_name}"
+    headers = {"Authorization": f"Bearer {API_TOKEN}"}
+
+    response = requests.post(API_URL, headers=headers, json=payload)
+
+    if "error" in response.json(): 
+        return response.json()["error"]
+    else:
+        return response.json()[0]["generated_text"]
+```
+
 ### Compound UIs
 
 ```python
