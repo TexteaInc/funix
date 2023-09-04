@@ -12,3 +12,4 @@ dist/
 .DS_Store
 .lh
 .env
+backend/funix/build
