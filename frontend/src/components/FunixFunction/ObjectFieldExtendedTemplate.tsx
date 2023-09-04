@@ -20,7 +20,6 @@ import {
 import React, { SyntheticEvent, useEffect, useRef, useState } from "react";
 import SchemaField from "@rjsf/core/lib/components/fields/SchemaField";
 import {
-  DataGrid,
   GridCellEditCommitParams,
   GridCellParams,
   GridColDef,
@@ -56,6 +55,7 @@ import { sliderWidgetParser } from "../Common/SliderWidgetParser";
 import FileUploadWidget from "./FileUploadWidget";
 import { useAtom } from "jotai";
 import { storeAtom } from "../../store";
+import { DataGrid } from "../../Key";
 
 let rowIdCounter = 0;
 

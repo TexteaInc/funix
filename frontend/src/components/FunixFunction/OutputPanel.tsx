@@ -14,7 +14,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { DataGrid, GridRowModel, GridToolbar } from "@mui/x-data-grid";
+import { GridRowModel, GridToolbar } from "@mui/x-data-grid";
 import React from "react";
 import { BaseType, FunctionDetail, ReturnType } from "../../shared";
 import OutputError from "./OutputComponents/OutputError";
@@ -29,6 +29,7 @@ import { useAtom } from "jotai";
 import { storeAtom } from "../../store";
 import { ExpandMore } from "@mui/icons-material";
 import ThemeReactJson from "../Common/ThemeReactJson";
+import { DataGrid } from "../../Key";
 
 const OutputPanel = (props: {
   detail: FunctionDetail;

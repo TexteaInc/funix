@@ -1,17 +1,21 @@
 const ProgressBarPlugin = require("progress-bar-webpack-plugin");
-const { override, addWebpackPlugin } = require("customize-cra");
 const webpack = require("webpack");
 
-
-module.exports = override(
-  addWebpackPlugin(
+module.exports = function override(config) {
+  if (process.env.MUI_PRO_LICENSE_KEY) {
+    config.plugins.push(
+      new webpack.DefinePlugin({
+        "process.env.REACT_APP_MUI_PRO_LICENSE_KEY": JSON.stringify(process.env.MUI_PRO_LICENSE_KEY)
+      })
+    )
+  }
+  config.plugins.push(
     new ProgressBarPlugin(),
-  ),
-  addWebpackPlugin(
     new webpack.IgnorePlugin({
       checkResource(resource) {
         return resource === "pdfjs-dist/build/pdf.worker.js";
       }
     }),
-  ),
-)
+  )
+  return config;
+}

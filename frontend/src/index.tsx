@@ -7,10 +7,14 @@ import { BrowserRouter } from "react-router-dom";
 import { closeSnackbar, SnackbarProvider } from "notistack";
 import { IconButton } from "@mui/material";
 import { Close } from "@mui/icons-material";
+import { registerLicense } from "./Key";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
+
+registerLicense();
+
 root.render(
   <React.StrictMode>
     <SWRConfig
