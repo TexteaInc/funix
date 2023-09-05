@@ -11,11 +11,11 @@ import requests # pip install requests
 
 API_TOKEN = os.getenv("HF_TOKEN") # "Please set your API token as an environment variable named HF_TOKEN. You can get your token from https://huggingface.co/settings/token"
 
-def huggingface_(
+def huggingface(
     model_name: typing.Literal[
         "gpt2", 
         "bigcode/starcoder", 
-        "google/flan-t5-large"] = "gpt2", 
+        "google/flan-t5-base"] = "gpt2", 
     prompt: str = "Who is Einstein?") -> str: 
 
     payload = {"inputs": prompt} # not all models use this query  and output formats.  Hence, we limit the models above. 
