@@ -13,7 +13,7 @@
 
 <h4><a href="https://youtu.be/DVIV_EUFNbw">Intro video</a> | <a href="https://github.com/TexteaInc/funix-doc/blob/main/Reference.md">Reference Manual</a> | <a href="https://github.com/TexteaInc/funix/edit/main/README.md#gallery"> Gallery </a> </h4>
 
-https://user-images.githubusercontent.com/438579/236646521-30ed67f4-4708-4cf1-858d-33b65bc53b6a.mp4
+https://github.com/TexteaInc/funix/assets/438579/ebb3adfd-7743-45dc-9171-6bc777f7c0bf
 
 </div>
 
