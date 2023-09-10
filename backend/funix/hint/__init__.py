@@ -334,7 +334,7 @@ or just a string like "print('hello world')"
 """
 
 
-# ---- Built-in Output Widgets ----
+# ---- Built-in Input Widgets ----
 IntInputBox: TypeAlias = builtin.IntInputBox
 IntSlider = builtin.IntSlider
 FloatInputBox: TypeAlias = builtin.FloatInputBox
@@ -349,7 +349,7 @@ BytesImage: TypeAlias = builtin.BytesImage
 BytesVideo: TypeAlias = builtin.BytesVideo
 BytesAudio: TypeAlias = builtin.BytesAudio
 BytesFile: TypeAlias = builtin.BytesFile
-# ---- Built-in Output Widgets ----
+# ---- Built-in Input Widgets ----
 
 
 # ---- Decorator ----

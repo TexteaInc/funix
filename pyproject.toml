@@ -33,10 +33,14 @@ plot = [
 git = [
   "GitPython>=3.1.31",
 ]
+ipython = [
+  "IPython>=8.14.0",
+]
 all = [
   "matplotlib>=3.4.3",
   "mpld3>=0.5.8",
   "GitPython>=3.1.31",
+  "IPython>=8.14.0",
 ]
 
 [project.urls]

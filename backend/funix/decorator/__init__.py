@@ -66,6 +66,21 @@ except:
     pass
 
 
+__ipython_use = False
+"""
+Whether Funix can handle IPython-related logic
+"""
+
+__ipython_display: None | ModuleType = None
+
+try:
+    __ipython_display = import_module("IPython.display")
+
+    __ipython_use = True
+except:
+    pass
+
+
 __decorated_functions_list: list[DecoratedFunctionListItem] = []
 """
 A list, each element is a dict, record the information of the decorated function.
@@ -454,14 +469,37 @@ def funix(
                                 ):
                                     return_type_parsed = "Figure"
                                 else:
-                                    return_type_parsed = {}
-                                    for (
-                                        return_type_key,
-                                        return_type_value,
-                                    ) in return_type_raw.items():
-                                        return_type_parsed[return_type_key] = str(
-                                            return_type_value
+                                    if hasattr(
+                                        function_signature.return_annotation,
+                                        "__module__",
+                                    ):
+                                        full_name = (
+                                            getattr(
+                                                function_signature.return_annotation,
+                                                "__module__",
+                                            )
+                                            + "."
+                                            + getattr(
+                                                function_signature.return_annotation,
+                                                "__name__",
+                                            )
                                         )
+                                        if full_name == "IPython.core.display.Markdown":
+                                            return_type_parsed = "Markdown"
+                                        elif full_name == "IPython.core.display.HTML":
+                                            return_type_parsed = "HTML"
+                                        else:
+                                            # TODO
+                                            return_type_parsed = "str"
+                                    else:
+                                        return_type_parsed = {}
+                                        for (
+                                            return_type_key,
+                                            return_type_value,
+                                        ) in return_type_raw.items():
+                                            return_type_parsed[return_type_key] = str(
+                                                return_type_value
+                                            )
                             else:
                                 return_type_parsed = str(return_type_raw)
                         else:
@@ -1000,6 +1038,8 @@ def funix(
                 verify_secret_endpoint(verify_secret)
                 verify_secret_id(verify_secret)
 
+            @app.post(f"/call/{endpoint}")
+            @app.post(f"/call/{function_id}")
             @wraps(function)
             def wrapper():
                 """
@@ -1078,6 +1118,13 @@ def funix(
                             else:
                                 if isinstance(function_call_result, list):
                                     return [function_call_result]
+                                if __ipython_use:
+                                    if isinstance(
+                                        function_call_result,
+                                        __ipython_display.HTML
+                                        | __ipython_display.Markdown,
+                                    ):
+                                        function_call_result = function_call_result.data
                                 if not isinstance(
                                     function_call_result, (str, dict, tuple)
                                 ):
@@ -1098,6 +1145,21 @@ def funix(
                                         for position, single_return_type in enumerate(
                                             return_type_parsed
                                         ):
+                                            if __ipython_use:
+                                                if (
+                                                    function_call_result[position]
+                                                    is not None
+                                                ):
+                                                    if isinstance(
+                                                        function_call_result[position],
+                                                        __ipython_display.HTML
+                                                        | __ipython_display.Markdown,
+                                                    ):
+                                                        function_call_result[
+                                                            position
+                                                        ] = function_call_result[
+                                                            position
+                                                        ].data
                                             if single_return_type == "Figure":
                                                 function_call_result[
                                                     position
@@ -1254,10 +1316,6 @@ def funix(
                 except:
                     return {"error_type": "wrapper", "error_body": format_exc()}
 
-            post_wrapper = app.post(f"/call/{function_id}")
-            post_wrapper(wrapper)
-            post_wrapper = app.post(f"/call/{endpoint}")
-            post_wrapper(wrapper)
             wrapper._decorator_name_ = "funix"
         return function
 
