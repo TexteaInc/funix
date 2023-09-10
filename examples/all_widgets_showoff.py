@@ -1,6 +1,6 @@
-
 import typing, random
 import matplotlib.figure, matplotlib.pyplot
+import IPython
 import funix 
 
 def calc(
@@ -50,18 +50,18 @@ def widget_showoff(
     Y: typing.List[float] = [3.141, 2.718, 6.626, 2.997],
     Z: typing.List[str] = ["Pi", "e", "Planck", "Speed of light"],
 ) -> typing.Tuple[
-    funix.hint.Markdown,
+    IPython.display.Markdown,
     str,
-    funix.hint.Markdown,
+    IPython.display.Markdown,
     funix.hint.Audio,
     funix.hint.File, 
     typing.List[funix.hint.Video],
-    funix.hint.HTML,
+    IPython.display.HTML,
     dict,
     funix.hint.Image,
-    funix.hint.Markdown,
+    IPython.display.Markdown,
     dict,
-    funix.hint.Markdown,
+    IPython.display.Markdown,
     matplotlib.figure.Figure,
     funix.hint.Code,
 ]:

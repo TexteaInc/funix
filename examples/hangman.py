@@ -1,4 +1,5 @@
 # The hangman game with funix
+import IPython
 
 import funix 
 
@@ -17,7 +18,7 @@ used_letters = []
         "letter": "Enter letter"
     }
 )
-def guess_letter(letter: str) -> funix.hint.Markdown:
+def guess_letter(letter: str) -> IPython.display.Markdown:
     global used_letters # state/session as global
     used_letters.append(letter)
     answer = "".join([
