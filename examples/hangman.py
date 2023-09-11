@@ -12,13 +12,13 @@ used_letters = [] # a global variable
 
 
 
-@funix.funix(
-    # argument_labels={
-    #     "letter": "Enter letter"
-    # }
-)
-def guess_letter(enter_letter: str) -> IPython.display.Markdown:
-    letter = enter_letter # rename
+
+
+
+
+
+def guess_letter(Enter_a_letter: str) -> Markdown:
+    letter = Enter_a_letter # rename
     global used_letters # state/session as global
     used_letters.append(letter)
     answer = "".join([
