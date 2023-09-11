@@ -797,6 +797,11 @@ def funix(
                     function_arg_name
                 ].get("treat_as", "config")
 
+                if "_" in function_arg_name:
+                    decorated_params[function_arg_name]["title"] = decorated_params[
+                        function_arg_name
+                    ].get("title", function_arg_name.replace("_", " "))
+
                 function_arg_type_dict = get_type_dict(function_param.annotation)
                 decorated_params[function_arg_name].update(function_arg_type_dict)
                 default_example = function_param.default
