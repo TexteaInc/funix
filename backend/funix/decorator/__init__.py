@@ -23,7 +23,11 @@ from funix.config import (
     supported_basic_types_dict,
     supported_upload_widgets,
 )
-from funix.decorator.file import enable_file_service, get_static_uri
+from funix.decorator.file import (
+    enable_file_service,
+    get_static_uri,
+    handle_ipython_audio_image_video,
+)
 from funix.decorator.magic import (
     convert_row_item,
     function_param_to_widget,
@@ -79,6 +83,23 @@ try:
     __ipython_use = True
 except:
     pass
+
+
+__ipython_type_convert_dict = {
+    "IPython.core.display.Markdown": "Markdown",
+    "IPython.lib.display.Markdown": "Markdown",
+    "IPython.core.display.HTML": "HTML",
+    "IPython.lib.display.HTML": "HTML",
+    "IPython.core.display.Image": "Images",
+    "IPython.lib.display.Image": "Images",
+    "IPython.core.display.Audio": "Audios",
+    "IPython.lib.display.Audio": "Audios",
+    "IPython.core.display.Video": "Videos",
+    "IPython.lib.display.Video": "Videos",
+}
+"""
+A dict, key is the IPython type name, value is the Funix type name.
+"""
 
 
 __decorated_functions_list: list[DecoratedFunctionListItem] = []
@@ -438,6 +459,11 @@ def funix(
                             return_annotation_type_name = getattr(
                                 return_annotation_type, "__name__"
                             )
+                            full_type_name = (
+                                getattr(return_annotation_type, "__module__")
+                                + "."
+                                + return_annotation_type_name
+                            )
                             if return_annotation_type_name in supported_basic_types:
                                 return_annotation_type_name = (
                                     supported_basic_types_dict[
@@ -451,6 +477,10 @@ def funix(
                                 )
                                 if list_type_name in supported_basic_file_types:
                                     return_annotation_type_name = list_type_name
+                            if full_type_name in __ipython_type_convert_dict:
+                                return_annotation_type_name = (
+                                    __ipython_type_convert_dict[full_type_name]
+                                )
                             parsed_return_annotation_list.append(
                                 return_annotation_type_name
                             )
@@ -484,13 +514,13 @@ def funix(
                                                 "__name__",
                                             )
                                         )
-                                        if full_name == "IPython.core.display.Markdown":
-                                            return_type_parsed = "Markdown"
-                                        elif full_name == "IPython.core.display.HTML":
-                                            return_type_parsed = "HTML"
+                                        if full_name in __ipython_type_convert_dict:
+                                            return_type_parsed = (
+                                                __ipython_type_convert_dict[full_name]
+                                            )
                                         else:
-                                            # TODO
-                                            return_type_parsed = "str"
+                                            # TODO: DO MORE
+                                            return_type_parsed = None
                                     else:
                                         return_type_parsed = {}
                                         for (
@@ -1119,6 +1149,18 @@ def funix(
                             if return_type_parsed == "Figure":
                                 return [get_figure(function_call_result)]
                             if return_type_parsed in supported_basic_file_types:
+                                if __ipython_use:
+                                    if isinstance(
+                                        function_call_result,
+                                        __ipython_display.Audio
+                                        | __ipython_display.Video
+                                        | __ipython_display.Image,
+                                    ):
+                                        return [
+                                            handle_ipython_audio_image_video(
+                                                function_call_result
+                                            )
+                                        ]
                                 return [get_static_uri(function_call_result)]
                             else:
                                 if isinstance(function_call_result, list):
@@ -1130,6 +1172,7 @@ def funix(
                                         | __ipython_display.Markdown,
                                     ):
                                         function_call_result = function_call_result.data
+
                                 if not isinstance(
                                     function_call_result, (str, dict, tuple)
                                 ):
@@ -1165,6 +1208,19 @@ def funix(
                                                         ] = function_call_result[
                                                             position
                                                         ].data
+                                                    if isinstance(
+                                                        function_call_result[position],
+                                                        __ipython_display.Audio
+                                                        | __ipython_display.Video
+                                                        | __ipython_display.Image,
+                                                    ):
+                                                        function_call_result[
+                                                            position
+                                                        ] = handle_ipython_audio_image_video(
+                                                            function_call_result[
+                                                                position
+                                                            ]
+                                                        )
                                             if single_return_type == "Figure":
                                                 function_call_result[
                                                     position
@@ -1180,16 +1236,44 @@ def funix(
                                                     == "list"
                                                 ):
                                                     function_call_result[position] = [
-                                                        get_static_uri(single)
+                                                        handle_ipython_audio_image_video(
+                                                            single
+                                                        )
+                                                        if isinstance(
+                                                            single,
+                                                            (
+                                                                __ipython_display.Audio
+                                                                | __ipython_display.Video
+                                                                | __ipython_display.Image
+                                                            ),
+                                                        )
+                                                        else get_static_uri(single)
                                                         for single in function_call_result[
                                                             position
                                                         ]
                                                     ]
                                                 else:
-                                                    function_call_result[
-                                                        position
-                                                    ] = get_static_uri(
-                                                        function_call_result[position]
+                                                    function_call_result[position] = (
+                                                        handle_ipython_audio_image_video(
+                                                            function_call_result[
+                                                                position
+                                                            ]
+                                                        )
+                                                        if isinstance(
+                                                            function_call_result[
+                                                                position
+                                                            ],
+                                                            (
+                                                                __ipython_display.Audio
+                                                                | __ipython_display.Video
+                                                                | __ipython_display.Image
+                                                            ),
+                                                        )
+                                                        else get_static_uri(
+                                                            function_call_result[
+                                                                position
+                                                            ]
+                                                        )
                                                     )
                                         return function_call_result
                                     else:
@@ -1204,7 +1288,18 @@ def funix(
                                             if type(function_call_result[0]) == "list":
                                                 function_call_result = [
                                                     [
-                                                        get_static_uri(single)
+                                                        handle_ipython_audio_image_video(
+                                                            single
+                                                        )
+                                                        if isinstance(
+                                                            single,
+                                                            (
+                                                                __ipython_display.Audio
+                                                                | __ipython_display.Video
+                                                                | __ipython_display.Image
+                                                            ),
+                                                        )
+                                                        else get_static_uri(single)
                                                         for single in function_call_result[
                                                             0
                                                         ]
@@ -1212,7 +1307,18 @@ def funix(
                                                 ]
                                             else:
                                                 function_call_result = [
-                                                    get_static_uri(
+                                                    handle_ipython_audio_image_video(
+                                                        function_call_result[0]
+                                                    )
+                                                    if isinstance(
+                                                        function_call_result[0],
+                                                        (
+                                                            __ipython_display.Audio
+                                                            | __ipython_display.Video
+                                                            | __ipython_display.Image
+                                                        ),
+                                                    )
+                                                    else get_static_uri(
                                                         function_call_result[0]
                                                     )
                                                 ]

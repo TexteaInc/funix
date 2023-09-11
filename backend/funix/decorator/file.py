@@ -4,6 +4,7 @@ HTTP File service for funix.
 
 from io import BytesIO
 from os.path import abspath, splitext
+from typing import Any
 from uuid import uuid4
 
 from flask import abort, send_file
@@ -66,7 +67,12 @@ def get_static_uri(path: str | list[str | bytes] | bytes) -> str | list[str]:
     Returns:
         str | list[str]: The funix relative URI(s).
     """
-    if isinstance(path, (str, bytes)):
+    if isinstance(path, str):
+        if path.startswith("/file/"):
+            return path
+        else:
+            return get_real_uri(path)
+    if isinstance(path, bytes):
         return get_real_uri(path)
     elif isinstance(path, list):
         uris = [get_real_uri(uri) for uri in path]
@@ -102,3 +108,54 @@ def enable_file_service():
                 )
         else:
             return abort(404)
+
+
+def handle_ipython_audio_image_video(obj: Any) -> str:
+    """
+    Handle IPython audio, image and video.
+
+    Parameters:
+        obj (Any): The object.
+
+    Returns:
+        str: The funix relative URI.
+
+    Raises:
+        RuntimeError: If the data, url, filename is not found.
+        RuntimeError: If the data type is not supported.
+    """
+    class_ = getattr(obj, "__class__")
+    full_name = f"{class_.__module__}.{class_.__name__}"
+    if full_name in [
+        "IPython.core.display.Audio",
+        "IPython.lib.display.Audio",
+        "IPython.core.display.Image",
+        "IPython.lib.display.Audio",
+        "IPython.core.display.Video",
+        "IPython.lib.display.Video",
+    ]:
+        # data, url, filename
+        if hasattr(obj, "data") and obj.data is not None:
+            if full_name in [
+                "IPython.core.display.Audio",
+                "IPython.lib.display.Audio",
+            ]:
+                data_class = getattr(obj.data, "__class__")
+                if f"{data_class.__module__}.{data_class.__name__}" == "numpy.ndarray":
+                    return get_static_uri(obj.data.tobytes())
+                elif isinstance(obj.data, (str, bytes)):
+                    return get_static_uri(obj.data)
+                elif isinstance(obj.data, list):
+                    return get_static_uri(bytes(obj.data))
+                else:
+                    raise RuntimeError("Unsupported data type in Audio")
+            else:
+                return get_static_uri(obj.data)
+        elif hasattr(obj, "url") and obj.url is not None:
+            return get_static_uri(obj.url)
+        elif hasattr(obj, "filename") and obj.filename is not None:
+            return get_static_uri(obj.filename)
+        else:
+            raise RuntimeError("No data, url, filename found!")
+    else:
+        raise RuntimeError("Unsupported type")
