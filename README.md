@@ -11,9 +11,9 @@
 [![PyPI version](https://badge.fury.io/py/funix.svg)](https://badge.fury.io/py/funix)
 [![](https://dcbadge.vercel.app/api/server/JyANAMUAHM?style=flat)](https://discord.gg/JyANAMUAHM)
 
-<h4><a href="https://youtu.be/DVIV_EUFNbw">Intro video</a> | <a href="https://github.com/TexteaInc/funix-doc/blob/main/Reference.md">Reference Manual</a> | <a href="https://github.com/TexteaInc/funix/edit/main/README.md#gallery"> Gallery </a> </h4>
+<h4><a href="https://youtu.be/qDkzXS270Zo">Intro video</a> | <a href="https://github.com/TexteaInc/funix-doc/blob/main/Reference.md">Reference Manual</a> | <a href="https://github.com/TexteaInc/funix/edit/main/README.md#gallery"> Gallery </a> </h4>
 
-https://github.com/TexteaInc/funix/assets/438579/ebb3adfd-7743-45dc-9171-6bc777f7c0bf
+https://github.com/TexteaInc/funix/assets/438579/86868ab5-ed6e-46e5-8dc5-9e3e4a3cdc3f
 
 </div>
 
