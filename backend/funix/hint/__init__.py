@@ -2,7 +2,16 @@
 This file is used to define the type hint of the Funix backend.
 """
 
-from typing import Callable, Literal, NewType, Optional, TypeAlias, TypedDict, TypeVar
+from typing import (
+    Callable,
+    Literal,
+    NewType,
+    Optional,
+    TypeAlias,
+    TypedDict,
+    TypeVar,
+    Any,
+)
 
 from funix.hint.layout import InputRow, OutputRow
 from funix.widget import builtin
@@ -160,11 +169,11 @@ class ConditionalVisible(TypedDict):
     Conditional visible.
     """
 
-    when: dict[str, any]
+    when: dict[str, Any]
     """
     The condition.
 
-    `str` means the parameter name, `any` means the value. If the value of the parameter is equal to the value, elements
+    `str` means the parameter name, `Any` means the value. If the value of the parameter is equal to the value, elements
     that in `then` will be visible.
     """
 
@@ -190,8 +199,8 @@ The keys of `argument_config[widget]`.
 
 
 ArgumentTreatAsType = str
-ArgumentWhitelistType = list[any]  # Same as the widget type
-ArgumentExampleType = list[any]  # Same as the widget type
+ArgumentWhitelistType = list[Any]  # Same as the widget type
+ArgumentExampleType = list[Any]  # Same as the widget type
 ArgumentWidgetType = str
 ArgumentLabelType = str
 
@@ -382,7 +391,9 @@ class DecoratedFunctionListItem(TypedDict):
 # ---- Decorator ----
 
 
-def new_funix_type(widget: str, config_func: Optional[callable] = None) -> callable:
+def new_funix_type_with_config_func(
+    widget: str, config_func: Optional[callable] = None
+) -> callable:
     """
     Decorator for creating new funix types.
 
@@ -394,15 +405,15 @@ def new_funix_type(widget: str, config_func: Optional[callable] = None) -> calla
         callable: The decorator.
     """
 
-    def decorator(cls) -> any:
+    def decorator(cls) -> Any:
         """
         Creates a new funix type.
 
         Parameters:
-            cls (any): The class to decorate.
+            cls (Any): The class to decorate.
 
         Returns:
-            any: The decorated class or getting the new funix type function.
+            Any: The decorated class or getting the new funix type function.
         """
         if config_func is None:
             cls.__funix__ = True
@@ -420,7 +431,7 @@ def new_funix_type(widget: str, config_func: Optional[callable] = None) -> calla
                     **kwargs: The keyword arguments to pass to the config function.
 
                 Returns:
-                    any: The decorated class.
+                    Any: The decorated class.
                 """
                 cls.__funix__ = True
                 cls.__funix_widget__ = widget
@@ -429,5 +440,45 @@ def new_funix_type(widget: str, config_func: Optional[callable] = None) -> calla
                 return cls
 
             return new_cls_func
+
+    return decorator
+
+
+class NewFunixWidgetType(TypedDict):
+    """
+    New Funix widget type.
+
+    For new funix typing.
+    """
+
+    name: str
+    """
+    The name of the widget.
+    """
+
+    config: dict
+    """
+    The config of the widget.
+    """
+
+
+def new_funix_type(widget: NewFunixWidgetType) -> callable:
+    """
+    Decorator for creating new funix types.
+
+    Parameters:
+        widget (NewFunixWidgetType): The widget to use for the new type.
+
+    Returns:
+        callable: The decorator.
+    """
+
+    def decorator(cls) -> Any:
+        cls.__funix__ = True
+        cls.__funix_widget__ = widget["name"]
+        cls.__funix_base__ = cls.__base__
+        cls.__funix_config__ = widget["config"]
+
+        return cls
 
     return decorator

@@ -35,6 +35,7 @@ import_theme = decorator.import_theme
 # ---- Theme ----
 
 # ---- Util ----
+new_funix_type_with_config_func = hint.new_funix_type_with_config_func
 new_funix_type = hint.new_funix_type
 set_app_secret = decorator.set_app_secret
 # ---- Util ----
