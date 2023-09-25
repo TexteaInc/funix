@@ -154,6 +154,74 @@ def code(language: str = "plaintext") -> (str, CodeConfig):
     return "code", {"language": language}
 
 
+class MultilineTextboxConfig(TypedDict):
+    """
+    The config of the multiline textbox widget.
+    """
+
+    rows: int
+    """
+    The number of rows of the textbox.
+
+    (Fix mode)
+    """
+    min: int | None
+    """
+    When upgrade to 3.11, use `NotRequired`
+    
+    The minimum number of rows of the textbox.
+    """
+    max: int | None
+    """
+    When upgrade to 3.11, use `NotRequired`
+    
+    The maximum number of rows of the textbox.
+    """
+
+
+def textarea(*args, **kwargs) -> (str, MultilineTextboxConfig):
+    """
+    Create a multiline textbox widget config.
+
+    Parameters:
+        *args: The config of the slider widget. The order is `min`, `max`, `step`.
+        **kwargs: The config of the multiline textbox widget. The key is `rows`, `min`, `max`.
+
+    Returns:
+        (str, MultilineTextboxConfig): The config of the multiline textbox widget.
+            str: Widget name, always `textarea`.
+            MultilineTextboxConfig: The config of the multiline textbox widget.
+
+    Raises:
+        TypeError: If the first arg is not int.
+
+    """
+    if args:
+        if isinstance(args[0], int):
+            return "textarea", {"rows": args[0]}
+        else:
+            raise TypeError("The arg must be int.")
+    elif kwargs:
+        config: MultilineTextboxConfig = kwargs
+        if "rows" in config:
+            return "textarea", {"rows": config["rows"]}
+        if "min" in config and "max" in config:
+            return "textarea", {
+                "min": config["min"],
+                "max": config["max"],
+            }
+        if "min" in config:
+            return "textarea", {"rows": config["min"]}
+        elif "max" in config:
+            return "textarea", {"rows": config["max"]}
+        else:
+            raise TypeError("You must provide `rows` or (`min` or `max`).")
+    else:
+        raise TypeError(
+            "You must provide `rows` or (`min` or `max`) or just a int for rows."
+        )
+
+
 def generate_frontend_widget_config(config: tuple[str, TypedDict] | str) -> str:
     """
     Generate the frontend widget config.

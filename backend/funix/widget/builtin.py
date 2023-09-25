@@ -2,7 +2,9 @@
 This file contains all the built-in widget types.
 """
 
-from funix.widget import code, slider
+from typing import Any
+
+from funix.widget import code, slider, textarea
 
 
 def new_built_in_type(widget: str) -> callable:
@@ -16,14 +18,14 @@ def new_built_in_type(widget: str) -> callable:
         The decorator.
     """
 
-    def decorator(cls: any) -> object:
+    def decorator(cls: Any) -> object:
         """
         Decorator for define a new built-in type.
         Will modify the class and add some attributes.
         Funix will know this is a funix-built-in type.
 
         Parameters:
-            cls(any): The class.
+            cls(Any): The class.
 
         Returns:
             The modified class.
@@ -50,13 +52,13 @@ def attach_config(widget: callable, *args, **kwargs):
         The decorator.
     """
 
-    def decorator(cls: any) -> object:
+    def decorator(cls: Any) -> object:
         """
         Decorator for put the config generator to the class.
         Will modify the class and add `__funix_config__` attribute.
 
         Parameters:
-            cls(any): The class.
+            cls(Any): The class.
 
         Returns:
             The modified class.
@@ -79,7 +81,7 @@ class IntInputBox(int):
     pass
 
 
-def int_slider(*args, **kwargs) -> any:
+def int_slider(*args, **kwargs) -> Any:
     """
     The built-in int type's slider.
     For input.
@@ -163,16 +165,34 @@ class StrInputBox(str):
     pass
 
 
-@new_built_in_type("textarea")
-class StrTextarea(str):
+def str_textarea(*args, **kwargs) -> Any:
     """
-    The built-in str type's textarea.
+    Tht built-in str type's textarea.
     For input.
 
-    Base Class: str
+    Parameters:
+        *args: The args.
+        **kwargs: The kwargs.
+
+    Returns:
+        class: The class.
     """
 
-    pass
+    @new_built_in_type("textarea")
+    @attach_config(textarea, *args, **kwargs)
+    class _StrTextarea(str):
+        """
+        The built-in str type's textarea class.
+
+        Base Class: str
+        """
+
+        pass
+
+    return _StrTextarea
+
+
+StrTextarea = str_textarea
 
 
 @new_built_in_type("password")
@@ -261,7 +281,7 @@ class BytesFile(bytes):
     pass
 
 
-def str_code(*args, **kwargs) -> any:
+def str_code(*args, **kwargs) -> Any:
     """
     The built-in str type's code.
     For input.

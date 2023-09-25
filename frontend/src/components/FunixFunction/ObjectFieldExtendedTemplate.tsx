@@ -51,7 +51,7 @@ import { castValue, getInitValue } from "../Common/ValueOperation";
 import { GridRowModel } from "@mui/x-data-grid/models/gridRows";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import MarkdownDiv from "../Common/MarkdownDiv";
-import { sliderWidgetParser } from "../Common/SliderWidgetParser";
+import { sliderWidgetParser } from "../Common/WidgetSyntaxParser";
 import FileUploadWidget from "./FileUploadWidget";
 import { useAtom } from "jotai";
 import { storeAtom } from "../../store";

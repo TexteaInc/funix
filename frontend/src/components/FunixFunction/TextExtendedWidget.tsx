@@ -20,13 +20,23 @@ import {
   useTheme,
 } from "@mui/material";
 import SliderValueLabel from "../Common/SliderValueLabel";
-import { sliderWidgetParser } from "../Common/SliderWidgetParser";
+import {
+  sliderWidgetParser,
+  textareaWidgetParser,
+} from "../Common/WidgetSyntaxParser";
 import { castValue } from "../Common/ValueOperation";
 import MarkdownDiv from "../Common/MarkdownDiv";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import Editor from "@monaco-editor/react";
 
 const { getDisplayLabel } = utils;
+
+type MultilineProps = {
+  multiline?: boolean;
+  rows?: number;
+  maxRows?: number;
+  minRows?: number;
+};
 
 const TextExtendedWidget = ({
   id,
@@ -292,12 +302,35 @@ const TextExtendedWidget = ({
 
   const freeSolo: boolean = contentPolicy != ContentPolicy.Whitelist;
 
+  const multilineConfig: MultilineProps = {};
+
+  if (schema.widget) {
+    const widget = schema.widget;
+
+    if (schema.widget.indexOf("textarea") !== -1) {
+      multilineConfig.multiline = true;
+      const parseResult = textareaWidgetParser(widget);
+
+      if (parseResult === "default") {
+        multilineConfig.rows = 5;
+      } else if (parseResult.length === 1) {
+        multilineConfig.rows = parseResult[0];
+      } else if (parseResult.length === 2) {
+        multilineConfig.minRows = parseResult[0];
+        multilineConfig.maxRows = parseResult[1];
+      } else {
+        console.warn("Invalid widget syntax for textarea");
+        multilineConfig.rows = parseResult[0];
+      }
+    }
+  }
+
   return (
     <Autocomplete
       disableClearable={
         inputType === "number" ||
         inputType === "integer" ||
-        schema.widget === "textarea"
+        schema.widget?.indexOf("textarea") !== -1
       }
       size="small"
       value={value || value === 0 ? value : ""}
@@ -325,8 +358,7 @@ const TextExtendedWidget = ({
         }
         return (
           <TextField
-            multiline={schema.widget === "textarea"}
-            rows={schema.widget === "textarea" ? 5 : 1}
+            {...multilineConfig}
             {...newParams}
             id={id}
             placeholder={placeholder}
