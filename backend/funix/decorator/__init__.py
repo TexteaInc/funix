@@ -9,7 +9,7 @@ from json import dumps
 from secrets import token_hex
 from traceback import format_exc
 from types import ModuleType
-from typing import Optional
+from typing import Optional, Any
 from urllib.request import urlopen
 from uuid import uuid4
 
@@ -158,6 +158,11 @@ The mpld3 module.
 pre_fill_metadata: dict[str, list[str | int | PreFillEmpty]] = {}
 """
 A dict, key is function name, value is a list of indexes/keys of pre-fill parameters.
+"""
+
+parse_type_metadata: dict[str, dict[str, Any]] = {}
+"""
+A dict, key is function name, value is a map of parameter name to type.
 """
 
 
@@ -344,7 +349,7 @@ def funix(
     Raises:
         Check code for details
     """
-    global __parsed_themes, pre_fill_metadata
+    global __parsed_themes, pre_fill_metadata, parse_type_metadata
 
     def decorator(function: callable) -> callable:
         """
@@ -361,6 +366,8 @@ def funix(
         """
         if __wrapper_enabled:
             function_id = str(uuid4())
+
+            parse_type_metadata[function_id] = {}
 
             function_direction = direction if direction else "row"
 
@@ -663,7 +670,7 @@ def funix(
                     decorated_params[arg_name] = {}
 
             def put_props_in_params(
-                arg_name: str, prop_name: str, prop_value: any
+                arg_name: str, prop_name: str, prop_value: Any
             ) -> None:
                 """
                 Puts the given prop_name and prop_value in the decorated_params entry for the given arg_name
@@ -671,7 +678,7 @@ def funix(
                 Parameters:
                     arg_name (str): The name of the argument
                     prop_name (str): The name of the prop
-                    prop_value (any): The value of the prop
+                    prop_value (Any): The value of the prop
                 """
                 create_decorated_params(arg_name)
                 decorated_params[arg_name][prop_name] = prop_value
@@ -819,6 +826,9 @@ def funix(
                         )
 
             for _, function_param in function_params.items():
+                parse_type_metadata[function_id][
+                    function_param.name
+                ] = function_param.annotation
                 function_arg_name = function_param.name
                 decorated_params[function_arg_name] = decorated_params.get(
                     function_arg_name, {}
@@ -941,7 +951,7 @@ def funix(
                     "then": {"properties": {}},
                     "required": [],
                 }
-                if_items: any = conditional_visible_item["when"]
+                if_items: Any = conditional_visible_item["when"]
                 then_items = conditional_visible_item["show"]
                 for if_item in if_items.keys():
                     config["if"]["properties"][if_item] = {"const": if_items[if_item]}
@@ -1091,6 +1101,14 @@ def funix(
                     if not session.get("__funix_id"):
                         session["__funix_id"] = uuid4().hex
                     function_kwargs = request.get_json()
+                    if function_id in parse_type_metadata:
+                        for func_arg, func_arg_type_class in parse_type_metadata[
+                            function_id
+                        ].items():
+                            if func_arg in function_kwargs:
+                                function_kwargs[func_arg] = func_arg_type_class(
+                                    function_kwargs[func_arg]
+                                )
 
                     def get_figure(figure) -> dict:
                         """

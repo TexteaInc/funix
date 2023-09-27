@@ -456,7 +456,7 @@ class NewFunixWidgetType(TypedDict):
     The name of the widget.
     """
 
-    config: dict
+    config: Optional[dict]
     """
     The config of the widget.
     """
@@ -477,8 +477,8 @@ def new_funix_type(widget: NewFunixWidgetType) -> callable:
         cls.__funix__ = True
         cls.__funix_widget__ = widget["name"]
         cls.__funix_base__ = cls.__base__
-        cls.__funix_config__ = widget["config"]
-
+        if "config" in widget and widget["config"] is not None:
+            cls.__funix_config__ = widget["config"]
         return cls
 
     return decorator
