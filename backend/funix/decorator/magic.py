@@ -21,6 +21,7 @@ from funix.config import (
     supported_basic_types,
     supported_basic_types_dict,
 )
+from funix.decorator import analyze
 
 
 def get_type_dict(annotation: any) -> dict:
@@ -43,6 +44,9 @@ def get_type_dict(annotation: any) -> dict:
         dict: The type dict.
     """
     # TODO: String magic, refactor it if you can
+    anal_result = analyze(annotation)
+    if anal_result:
+        return anal_result
     if annotation is None:
         # Special case for None, let frontend handle `null`
         return {"type": None}
@@ -150,6 +154,7 @@ def get_type_widget_prop(
         dict: The RJSF-readable data.
     """
     # Basic and List only
+    anal_result = analyze(function_annotation)
     if isinstance(function_arg_widget, str):
         widget = function_arg_widget
     elif isinstance(function_arg_widget, list):
@@ -168,6 +173,11 @@ def get_type_widget_prop(
     if not widget:
         if function_annotation.__name__ in builtin_widgets:
             widget = builtin_widgets[function_annotation.__name__]
+    if widget and anal_result:
+        anal_result["widget"] = widget
+
+    if anal_result:
+        return anal_result
     if function_arg_type_name in supported_basic_types:
         return {
             "type": supported_basic_types_dict[function_arg_type_name],

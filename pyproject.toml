@@ -35,6 +35,7 @@ git = [
 ]
 ipython = [
   "IPython>=8.14.0",
+  "ipywidgets>=8.0.7",
 ]
 all = [
   "matplotlib>=3.4.3",

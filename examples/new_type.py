@@ -1,15 +1,16 @@
 from funix import funix, new_funix_type
+import ipywidgets
 
 
 @new_funix_type({"name": "password", "config": None})
-class NewPassword(str):
+class NewPassword(ipywidgets.Password):
     def check_safe(self) -> bool:
         if (
-            len(self) > 12
-            and any(char.isdigit() for char in self)
-            and any(char.isalpha() for char in self)
-            and any(char.isupper() for char in self)
-            and any(char.islower() for char in self)
+            len(self.value) > 12
+            and any(char.isdigit() for char in self.value)
+            and any(char.isalpha() for char in self.value)
+            and any(char.isupper() for char in self.value)
+            and any(char.islower() for char in self.value)
         ):
             return True
         return False

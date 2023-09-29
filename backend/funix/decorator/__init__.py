@@ -23,6 +23,7 @@ from funix.config import (
     supported_basic_types_dict,
     supported_upload_widgets,
 )
+from funix.decorator.annnotation_analyzer import analyze, register_ipywidgets
 from funix.decorator.file import (
     enable_file_service,
     get_static_uri,
@@ -100,6 +101,18 @@ __ipython_type_convert_dict = {
 """
 A dict, key is the IPython type name, value is the Funix type name.
 """
+
+__ipywidgets_use = False
+"""
+Whether Funix can handle ipywidgets-related logic
+"""
+
+try:
+    register_ipywidgets()
+
+    __ipywidgets_use = True
+except:
+    pass
 
 
 __decorated_functions_list: list[DecoratedFunctionListItem] = []
