@@ -23,7 +23,11 @@ from funix.config import (
     supported_basic_types_dict,
     supported_upload_widgets,
 )
-from funix.decorator.annnotation_analyzer import analyze, register_ipywidgets
+from funix.decorator.annnotation_analyzer import (
+    analyze,
+    register_ipywidgets,
+    register_pandera,
+)
 from funix.decorator.file import (
     enable_file_service,
     get_static_uri,
@@ -115,6 +119,24 @@ except:
     pass
 
 
+__pandas_use = False
+"""
+Whether Funix can handle pandas or pandera-related logic
+"""
+
+__pandas_module: None | ModuleType = None
+__pandera_module: None | ModuleType = None
+
+try:
+    __pandas_module = import_module("pandas")
+    __pandera_module = import_module("pandera")
+
+    register_pandera()
+
+    __pandas_use = True
+except:
+    pass
+
 __decorated_functions_list: list[DecoratedFunctionListItem] = []
 """
 A list, each element is a dict, record the information of the decorated function.
@@ -170,12 +192,17 @@ The mpld3 module.
 
 pre_fill_metadata: dict[str, list[str | int | PreFillEmpty]] = {}
 """
-A dict, key is function name, value is a list of indexes/keys of pre-fill parameters.
+A dict, key is function name/ID, value is a list of indexes/keys of pre-fill parameters.
 """
 
 parse_type_metadata: dict[str, dict[str, Any]] = {}
 """
-A dict, key is function name, value is a map of parameter name to type.
+A dict, key is function name/ID, value is a map of parameter name to type.
+"""
+
+dataframe_parse_metadata: dict[str, dict[str, list[str]]] = {}
+"""
+A dict, key is function name/ID, value is a map of parameter name to type.
 """
 
 
@@ -839,6 +866,67 @@ def funix(
                         )
 
             for _, function_param in function_params.items():
+                if __pandas_use:
+                    if (
+                        function_param.annotation
+                        is __pandas_module.core.frame.DataFrame
+                    ):
+                        raise Exception(
+                            f"{function_name}: pandas DataFrame is not supported, "
+                            f"please use pandera.typing.DataFrame instead"
+                        )
+                    if (
+                        hasattr(function_param.annotation, "__origin__")
+                        and getattr(function_param.annotation, "__origin__")
+                        is __pandera_module.typing.pandas.DataFrame
+                    ):
+                        anno = function_param.annotation
+                        default = (
+                            {}
+                            if function_param.default is Parameter.empty
+                            else function_param.default
+                        )
+                        if hasattr(anno, "__args__"):
+                            model_class = getattr(anno, "__args__")[0]
+                            schema_columns = model_class.to_schema().columns
+                            dataframe_parse_metadata[
+                                function_id
+                            ] = dataframe_parse_metadata.get(function_id, {})
+                            column_names = []
+                            for name, column in schema_columns.items():
+                                if name in default:
+                                    column_default = list(default[name])
+                                else:
+                                    column_default = None
+                                d_type = column.dtype
+                                items = analyze(type(d_type))
+                                items["widget"] = "sheet"
+                                column_names.append(name)
+                                anal = {
+                                    "type": "array",
+                                    "widget": "sheet",
+                                    "items": items,
+                                    "customLayout": False,
+                                    "treat_as": "config",
+                                }
+                                dec_param = {
+                                    "widget": "sheet",
+                                    "treat_as": "config",
+                                    "type": f"<mock>list[{items['type']}]</mock>",
+                                }
+                                if column_default:
+                                    anal["default"] = column_default
+                                    dec_param["default"] = column_default
+                                json_schema_props[name] = anal
+                                decorated_params[name] = dec_param
+                            dataframe_parse_metadata[function_id][
+                                function_param.name
+                            ] = column_names
+                        else:
+                            raise Exception(
+                                "Please give a schema with pandera.DataFrameModel for DataFrame"
+                            )
+                        continue
                 parse_type_metadata[function_id][
                     function_param.name
                 ] = function_param.annotation
@@ -1114,6 +1202,21 @@ def funix(
                     if not session.get("__funix_id"):
                         session["__funix_id"] = uuid4().hex
                     function_kwargs = request.get_json()
+                    if __pandas_use:
+                        if function_id in dataframe_parse_metadata:
+                            for need_argument in dataframe_parse_metadata[function_id]:
+                                big_dict = {}
+                                get_args = dataframe_parse_metadata[function_id][
+                                    need_argument
+                                ]
+                                for get_arg in get_args:
+                                    big_dict[get_arg] = deepcopy(
+                                        function_kwargs[get_arg]
+                                    )
+                                    del function_kwargs[get_arg]
+                                function_kwargs[
+                                    need_argument
+                                ] = __pandas_module.DataFrame(big_dict)
                     if function_id in parse_type_metadata:
                         for func_arg, func_arg_type_class in parse_type_metadata[
                             function_id
