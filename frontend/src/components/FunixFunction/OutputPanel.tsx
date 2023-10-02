@@ -30,6 +30,7 @@ import { storeAtom } from "../../store";
 import { ExpandMore } from "@mui/icons-material";
 import ThemeReactJson from "../Common/ThemeReactJson";
 import { DataGrid } from "../../Key";
+import OutputDataframe from "./OutputComponents/OutputDataframe";
 
 const OutputPanel = (props: {
   detail: FunctionDetail;
@@ -208,6 +209,8 @@ const OutputPanel = (props: {
             indexId={index.toString()}
           />
         );
+      case "Dataframe":
+        return <OutputDataframe dataframe={response} />;
       case "string":
       case "text":
         return <span>{response}</span>;

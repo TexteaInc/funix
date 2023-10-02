@@ -24,6 +24,7 @@ export type ReturnType =
   | "object"
   | "dict"
   | "Figure"
+  | "Dataframe"
   | "List"
   | "Dict"
   | FunixType

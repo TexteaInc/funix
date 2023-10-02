@@ -19,13 +19,28 @@ class InputSchema(pandera.DataFrameModel):
     male: pandera.typing.Series[float]
 
 
+class OutputSchema(pandera.DataFrameModel):
+    age_group: pandera.typing.Series[str]
+    average: pandera.typing.Series[float]
+
+
+def get_mean(array_1: list[float], array_2: list[float]) -> list[float]:
+    return [(array_1[i] + array_2[i]) / 2 for i in range(len(array_1))]
+
+
 @funix()
 def input_test(
     data: pandera.typing.DataFrame[InputSchema] = pandas.DataFrame(
         sexual_repression_data
     ),
-) -> Figure:
+) -> (Figure, pandas.DataFrame):
     fig = pyplot.figure()
+    data_frame = pandas.DataFrame(
+        {
+            "age_group": data["age_group"],
+            "average": get_mean(data["female"], data["male"]),
+        }
+    )
     pyplot.plot(data["age_group"], data["female"], label="female")
     pyplot.plot(data["age_group"], data["male"], label="male")
-    return fig
+    return fig, data_frame

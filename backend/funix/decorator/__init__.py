@@ -5,7 +5,7 @@ from copy import deepcopy
 from functools import wraps
 from importlib import import_module
 from inspect import Parameter, Signature, getsource, signature
-from json import dumps
+from json import dumps, loads
 from secrets import token_hex
 from traceback import format_exc
 from types import ModuleType
@@ -104,6 +104,14 @@ __ipython_type_convert_dict = {
 }
 """
 A dict, key is the IPython type name, value is the Funix type name.
+"""
+
+__dataframe_convert_dict = {
+    "pandera.typing.pandas.DataFrame": "Dataframe",
+    "pandas.core.frame.DataFrame": "Dataframe",
+}
+"""
+A dict, key is the dataframe type name, value is the Funix type name.
 """
 
 __ipywidgets_use = False
@@ -528,6 +536,10 @@ def funix(
                                 return_annotation_type_name = (
                                     __ipython_type_convert_dict[full_type_name]
                                 )
+                            elif full_type_name in __dataframe_convert_dict:
+                                return_annotation_type_name = __dataframe_convert_dict[
+                                    full_type_name
+                                ]
                             parsed_return_annotation_list.append(
                                 return_annotation_type_name
                             )
@@ -564,6 +576,10 @@ def funix(
                                         if full_name in __ipython_type_convert_dict:
                                             return_type_parsed = (
                                                 __ipython_type_convert_dict[full_name]
+                                            )
+                                        elif full_name in __dataframe_convert_dict:
+                                            return_type_parsed = (
+                                                __dataframe_convert_dict[full_name]
                                             )
                                         else:
                                             # TODO: DO MORE
@@ -1257,6 +1273,18 @@ def funix(
                         else:
                             raise Exception("Install matplotlib to use this function")
 
+                    def get_dataframe_json(dataframe) -> dict:
+                        """
+                        Converts a pandas dataframe to a dictionary for drawing on the frontend
+
+                        Parameters:
+                            dataframe (pandas.DataFrame | pandera.typing.DataFrame): The dataframe to convert
+
+                        Returns:
+                            dict: The converted dataframe
+                        """
+                        return loads(dataframe.to_json(orient="records"))
+
                     @wraps(function)
                     def wrapped_function(**wrapped_function_kwargs):
                         """
@@ -1282,6 +1310,8 @@ def funix(
                                         )
                             if return_type_parsed == "Figure":
                                 return [get_figure(function_call_result)]
+                            if return_type_parsed == "Dataframe":
+                                return [get_dataframe_json(function_call_result)]
                             if return_type_parsed in supported_basic_file_types:
                                 if __ipython_use:
                                     if isinstance(
@@ -1361,6 +1391,12 @@ def funix(
                                                 ] = get_figure(
                                                     function_call_result[position]
                                                 )
+                                            if single_return_type == "Dataframe":
+                                                function_call_result[
+                                                    position
+                                                ] = get_dataframe_json(
+                                                    function_call_result[position]
+                                                )
                                             if (
                                                 single_return_type
                                                 in supported_basic_file_types
@@ -1414,6 +1450,12 @@ def funix(
                                         if return_type_parsed == "Figure":
                                             function_call_result = [
                                                 get_figure(function_call_result[0])
+                                            ]
+                                        if return_type_parsed == "Dataframe":
+                                            function_call_result = [
+                                                get_dataframe_json(
+                                                    function_call_result[0]
+                                                )
                                             ]
                                         if (
                                             return_type_parsed
