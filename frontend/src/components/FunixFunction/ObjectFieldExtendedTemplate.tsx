@@ -583,7 +583,50 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
     fields.push(column.field);
   });
 
-  const [rows, setRows] = React.useState<GridRowsProp>([]);
+  type defaultSheetValues = {
+    key: string;
+    default: any[];
+    type: string;
+  };
+
+  const getDefaultValues = () => {
+    let maxLength = 0;
+    const defaultValues: defaultSheetValues[] = arrayElementsInSheet.map(
+      (element) => {
+        if ("default" in element.props.schema) {
+          if (element.props.schema.default.length > maxLength) {
+            maxLength = element.props.schema.default.length;
+          }
+          return {
+            key: element.key,
+            default: element.props.schema.default,
+            type: element.props.schema.items.type,
+          };
+        } else {
+          return {
+            key: element.key,
+            default: [],
+            type: element.props.schema.items.type,
+          };
+        }
+      }
+    );
+    const newRows = [];
+    for (let i = 0; i < maxLength; i++) {
+      const newRow: { [key: string]: any } = { id: rowIdCounter++ };
+      defaultValues.forEach((value) => {
+        if (value.default.length > i) {
+          newRow[value.key] = value.default[i];
+        } else {
+          newRow[value.key] = getInitValue(value.type);
+        }
+      });
+      newRows.push(newRow);
+    }
+    return newRows;
+  };
+
+  const [rows, setRows] = React.useState<GridRowsProp>(getDefaultValues());
 
   useEffect(() => {
     updateRJSFObjectField().then(() => null);
@@ -667,6 +710,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
             props.formData[arrayElementWithKey.key] !==
             gridData[arrayElementWithKey.key];
           setTimeout(async () => {
+            // What is that?
             if (
               currentOpId === updateRJSFObjectFieldOpIdCounter &&
               !checkIfFormDataSynced()
@@ -841,48 +885,6 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
     }
   };
 
-  type defaultSheetValues = {
-    key: string;
-    default: any[];
-    type: string;
-  };
-
-  const pushDefaultValuesToSheet = () => {
-    let maxLength = 0;
-    const defaultValues: defaultSheetValues[] = arrayElementsInSheet.map(
-      (element) => {
-        if ("default" in element.props.schema) {
-          if (element.props.schema.default.length > maxLength) {
-            maxLength = element.props.schema.default.length;
-          }
-          return {
-            key: element.key,
-            default: element.props.schema.default,
-            type: element.props.schema.items.type,
-          };
-        } else {
-          return {
-            key: element.key,
-            default: [],
-            type: element.props.schema.items.type,
-          };
-        }
-      }
-    );
-
-    for (let i = 0; i < maxLength; i++) {
-      const newRow: { [key: string]: any } = { id: rowIdCounter++ };
-      defaultValues.forEach((value) => {
-        if (value.default.length > i) {
-          newRow[value.key] = value.default[i];
-        } else {
-          newRow[value.key] = getInitValue(value.type);
-        }
-      });
-      setRows((prevRows) => [...prevRows, newRow]);
-    }
-  };
-
   const getNewDataGridElementIfAvailable = () => {
     const [{ backHistory }] = useAtom(storeAtom);
 
@@ -995,7 +997,6 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
     if (arrayElementsInSheet.length !== 0) {
       pushDone.current = true;
       rowIdCounter = 0;
-      pushDefaultValuesToSheet();
     }
   }, []);
 

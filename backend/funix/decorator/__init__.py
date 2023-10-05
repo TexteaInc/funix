@@ -1238,9 +1238,13 @@ def funix(
                             function_id
                         ].items():
                             if func_arg in function_kwargs:
-                                function_kwargs[func_arg] = func_arg_type_class(
-                                    function_kwargs[func_arg]
-                                )
+                                try:
+                                    function_kwargs[func_arg] = func_arg_type_class(
+                                        function_kwargs[func_arg]
+                                    )
+                                except:
+                                    # Oh, my `typing`
+                                    continue
 
                     def get_figure(figure) -> dict:
                         """
