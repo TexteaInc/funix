@@ -215,12 +215,17 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
   const functionsLength = state.length;
 
   let tree: Tree = {};
+  const mainPages: string[] = [];
 
   state.forEach((preview) => {
     const path = preview.module ?? "";
-    const pathList = path.split(".");
-    pathList.push(preview.name);
-    tree = updateTree(pathList, tree);
+    if (path === "") {
+      mainPages.push(preview.name);
+    } else {
+      const pathList = path.split(".");
+      pathList.push(preview.name);
+      tree = updateTree(pathList, tree);
+    }
   });
 
   const renderTree = (
@@ -295,6 +300,20 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
   };
   return (
     <FunixList functionLength={functionsLength}>
+      {mainPages.map((v) => (
+        <ListItemButton
+          onClick={() => {
+            changeRadioGroupValue(v);
+          }}
+          key={v}
+          sx={{ paddingLeft: "2rem" }}
+        >
+          <ListItemText
+            primary={<MarkdownDiv markdown={v} isRenderInline={true} />}
+            disableTypography
+          />
+        </ListItemButton>
+      ))}
       {renderTree(tree, 0)}
     </FunixList>
   );
