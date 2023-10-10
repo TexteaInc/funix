@@ -2,7 +2,7 @@ from importlib import import_module
 from inspect import isfunction
 from ipaddress import ip_address
 from os import chdir, listdir
-from os.path import dirname, exists, isdir, join
+from os.path import dirname, exists, isdir, join, normpath, sep
 from sys import exit, path
 from typing import Generator, Optional
 from urllib.parse import quote
@@ -54,12 +54,33 @@ except:
     pass
 
 
+def get_path_difference(base_dir: str, target_dir: str) -> str | None:
+    base_components = normpath(base_dir).split(sep)
+    target_components = normpath(target_dir).split(sep)
+
+    if not target_dir.startswith(base_dir):
+        raise ValueError("The base directory is not a prefix of the target directory.")
+
+    if base_components == target_components:
+        return None
+
+    path_diff = []
+    for i in range(len(base_components) - 1, len(target_components)):
+        path_diff.append(target_components[i])
+
+    if not path_diff:
+        return None
+
+    return ".".join(path_diff)
+
+
 def __prep(
     module_or_file: Optional[str],
     lazy: bool,
     need_path: bool,
     is_module: bool,
     need_name: bool,
+    base_dir: Optional[str] = None,
 ) -> None:
     """
     Prepare the module or file. Import and wrap the functions if needed.
@@ -71,13 +92,24 @@ def __prep(
         need_path (bool): If the path is needed.
         is_module (bool): Pass `True` if the module_or_file is a module, `False` if it is a file.
         need_name (bool): For the module, if the name is needed.
+        base_dir (str): The base director, only for dir mode.
     """
     decorator.enable_wrapper()
+    path_difference: str | None = None
+    if base_dir:
+        # dir mode
+        path_difference = get_path_difference(
+            base_dir, sep.join(module_or_file.split(sep)[0:-1])
+        )
     if module_or_file:
         if is_module:
             module = import_module(module_or_file)
         else:
+            if base_dir and not lazy:
+                decorator.set_now_module(path_difference)
             module = import_module_from_file(module_or_file, need_name)
+            if base_dir and not lazy:
+                decorator.clear_now_module()
         if lazy:
             members = reversed(dir(module))
             for member in members:
@@ -85,9 +117,10 @@ def __prep(
                     if member.startswith("__") or member.startswith("_FUNIX_"):
                         continue
                     if need_path:
-                        funix(__full_module=f"{module.__name__}")(
-                            getattr(module, member)
-                        )
+                        if base_dir:
+                            funix(menu=path_difference)(getattr(module, member))
+                        else:
+                            funix(menu=f"{module.__name__}")(getattr(module, member))
                     else:
                         funix()(getattr(module, member))
     else:
@@ -188,8 +221,9 @@ def import_from_config(
 
     if dir_mode:
         if exists(file_or_module_name) and isdir(file_or_module_name):
+            base_dir = file_or_module_name
             for single_file in get_python_files_in_dir(
-                base_dir=file_or_module_name, add_to_sys_path=False, need_full_path=True
+                base_dir=base_dir, add_to_sys_path=False, need_full_path=True
             ):
                 __prep(
                     module_or_file=single_file,
@@ -197,6 +231,7 @@ def import_from_config(
                     need_path=True,
                     is_module=False,
                     need_name=True,
+                    base_dir=base_dir,
                 )
         else:
             raise RuntimeError(

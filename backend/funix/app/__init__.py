@@ -20,4 +20,5 @@ def funix_auto_cors(response: flask.Response) -> flask.Response:
     response.headers[
         "Access-Control-Allow-Methods"
     ] = "GET, HEAD, POST, OPTIONS, PUT, PATCH, DELETE"
+    response.headers["Access-Control-Allow-Headers"] = "*"
     return response

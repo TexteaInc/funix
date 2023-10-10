@@ -213,6 +213,11 @@ dataframe_parse_metadata: dict[str, dict[str, list[str]]] = {}
 A dict, key is function name/ID, value is a map of parameter name to type.
 """
 
+now_module: str | None = None
+"""
+External passes to module, recorded here, are used to help funix decoration override config.
+"""
+
 
 def set_function_secret(secret: str, function_id: str, function_name: str) -> None:
     """
@@ -237,6 +242,25 @@ def set_app_secret(secret: str) -> None:
     """
     global __app_secret
     __app_secret = secret
+
+
+def set_now_module(module: str) -> None:
+    """
+    Set the now module.
+
+    Parameters:
+        module (str): The module.
+    """
+    global now_module
+    now_module = module
+
+
+def clear_now_module() -> None:
+    """
+    Clear the now module.
+    """
+    global now_module
+    now_module = None
 
 
 def enable_wrapper() -> None:
@@ -356,7 +380,7 @@ def funix(
     conditional_visible: ConditionalVisibleType = None,
     argument_config: ArgumentConfigType = None,
     pre_fill: PreFillType = None,
-    __full_module: Optional[str] = None,
+    menu: Optional[str] = None,
 ):
     """
     Decorator for functions to convert them to web apps
@@ -387,7 +411,7 @@ def funix(
         conditional_visible(ConditionalVisibleType): conditional visibility for widgets
         argument_config(ArgumentConfigType): config for widgets
         pre_fill(PreFillType): pre-fill values for parameters
-        __full_module(str):
+        menu(str):
             full module path of the function, for `path` only.
             You don't need to set it unless you are funixing a directory and package.
 
@@ -472,12 +496,20 @@ def funix(
 
             secret_key = __decorated_secret_functions_dict.get(function_id, None)
 
+            replace_module = None
+
+            if now_module:
+                replace_module = now_module
+
+            if menu:
+                replace_module = menu
+
             __decorated_functions_names_list.append(function_title)
             __decorated_functions_list.append(
                 {
                     "name": function_title,
                     "path": endpoint,
-                    "module": __full_module,
+                    "module": replace_module,
                     "secret": secret_key,
                 }
             )

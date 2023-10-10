@@ -17,34 +17,39 @@ export type FunctionListProps = {
   backend: URL;
 };
 
-interface Tree {
-  [key: string]: Tree | string[];
+interface TreeNode {
+  [key: string]: TreeNode | string[];
 }
 
-const updateTree = (keys: string[], currentTree: Tree): Tree => {
-  if (keys.length === 0) return currentTree;
+const addFileToTree = (tree: TreeNode, parts: string[]) => {
+  let currentNode = tree;
 
-  const [currentKey, ...restKeys] = keys;
+  for (const part of parts) {
+    if (!currentNode[part]) {
+      currentNode[part] = {};
+    }
+    currentNode = currentNode[part] as TreeNode;
+  }
+};
 
-  if (!currentTree.hasOwnProperty(currentKey)) {
-    currentTree[currentKey] = restKeys.length === 1 ? [] : {};
+const treeToList = (tree: TreeNode): any[] => {
+  const list: any[] = [];
+
+  for (const key in tree) {
+    if (Array.isArray(tree[key])) {
+      const asList = tree[key] as string[];
+      list.push(...asList);
+    } else {
+      const nestedList = treeToList(tree[key] as TreeNode);
+      if (nestedList.length > 0) {
+        list.push({ [key]: nestedList });
+      } else {
+        list.push(key);
+      }
+    }
   }
 
-  if (Array.isArray(currentTree[currentKey])) {
-    currentTree[currentKey] = [
-      ...(currentTree[currentKey] as string[]),
-      ...restKeys,
-    ];
-  }
-
-  if (restKeys.length > 0) {
-    currentTree[currentKey] = updateTree(
-      restKeys,
-      currentTree[currentKey] as Tree
-    );
-  }
-
-  return currentTree;
+  return list;
 };
 
 // Just need children
@@ -213,108 +218,93 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
   }
 
   const functionsLength = state.length;
-
-  let tree: Tree = {};
-  const mainPages: string[] = [];
+  const fileTree: TreeNode = {};
 
   state.forEach((preview) => {
     const path = preview.module ?? "";
-    if (path === "") {
-      mainPages.push(preview.name);
-    } else {
-      const pathList = path.split(".");
-      pathList.push(preview.name);
-      tree = updateTree(pathList, tree);
-    }
+    const pathList = path.split(".");
+    pathList.push(preview.name);
+    addFileToTree(fileTree, pathList);
   });
 
-  const renderTree = (
-    tree: Record<string, any> | string[],
-    now: number
-  ): any => {
-    if (Array.isArray(tree)) {
-      return tree.map((v) => (
+  const treeList = treeToList(fileTree);
+
+  const renderNodeString = (node: string, now: number) => (
+    <ListItemButton
+      onClick={() => {
+        changeRadioGroupValue(node);
+      }}
+      key={node}
+      selected={radioGroupValue === node}
+      sx={{
+        paddingLeft: `${2 + now}rem`,
+      }}
+    >
+      <ListItemText
+        primary={<MarkdownDiv markdown={node} isRenderInline={true} />}
+        disableTypography
+      />
+    </ListItemButton>
+  );
+
+  const renderNode = (node: any, now: number) => {
+    if (typeof node === "string") {
+      return renderNodeString(node, now);
+    }
+
+    const [k, v] = Object.entries(node)[0];
+    if (k == "") {
+      return (v as string[]).map((element) => renderNodeString(element, now));
+    }
+    return (
+      <React.Fragment key={k}>
         <ListItemButton
           onClick={() => {
-            changeRadioGroupValue(v);
+            setTreeState((state) => ({
+              ...state,
+              [`${k}${v}`]: state.hasOwnProperty(`${k}${v}`)
+                ? !state[`${k}${v}`]
+                : true,
+            }));
           }}
-          key={v}
           sx={{
             paddingLeft: `${2 + now}rem`,
           }}
         >
           <ListItemText
-            primary={<MarkdownDiv markdown={v} isRenderInline={true} />}
+            primary={<MarkdownDiv markdown={k} isRenderInline={true} />}
             disableTypography
           />
+          {treeState.hasOwnProperty(`${k}${v}`) ? (
+            treeState[`${k}${v}`] ? (
+              <ExpandLess />
+            ) : (
+              <ExpandMore />
+            )
+          ) : (
+            <ExpandMore />
+          )}
         </ListItemButton>
-      ));
-    }
-    return Object.entries(tree).map(([k, v]) => {
-      if (typeof v === "object") {
-        return (
-          <>
-            <ListItemButton
-              onClick={() => {
-                setTreeState((state) => ({
-                  ...state,
-                  [`${k}${v}`]: state.hasOwnProperty(`${k}${v}`)
-                    ? !state[`${k}${v}`]
-                    : true,
-                }));
-              }}
-              sx={{
-                paddingLeft: `${2 + now}rem`,
-              }}
-            >
-              <ListItemText
-                primary={<MarkdownDiv markdown={k} isRenderInline={true} />}
-                disableTypography
-              />
-              {treeState.hasOwnProperty(`${k}${v}`) ? (
-                treeState[`${k}${v}`] ? (
-                  <ExpandLess />
-                ) : (
-                  <ExpandMore />
-                )
-              ) : (
-                <ExpandMore />
-              )}
-            </ListItemButton>
-            <Collapse
-              in={
-                treeState.hasOwnProperty(`${k}${v}`)
-                  ? treeState[`${k}${v}`]
-                  : false
-              }
-              timeout="auto"
-              unmountOnExit
-            >
-              <List>{renderTree(v, now + 1)}</List>
-            </Collapse>
-          </>
-        );
-      }
-      return <></>;
-    });
+        <Collapse
+          in={
+            treeState.hasOwnProperty(`${k}${v}`) ? treeState[`${k}${v}`] : false
+          }
+          timeout="auto"
+          unmountOnExit
+        >
+          <List>{renderRoot(v as any[], now + 1)}</List>
+        </Collapse>
+      </React.Fragment>
+    );
   };
+
+  const renderRoot = (tree: any[], now: number) => {
+    return tree.map((element) => renderNode(element, now));
+  };
+
   return (
     <FunixList functionLength={functionsLength}>
-      {mainPages.map((v) => (
-        <ListItemButton
-          onClick={() => {
-            changeRadioGroupValue(v);
-          }}
-          key={v}
-          sx={{ paddingLeft: "2rem" }}
-        >
-          <ListItemText
-            primary={<MarkdownDiv markdown={v} isRenderInline={true} />}
-            disableTypography
-          />
-        </ListItemButton>
-      ))}
-      {renderTree(tree, 0)}
+      {renderRoot(treeList, 0)}
     </FunixList>
   );
 };
