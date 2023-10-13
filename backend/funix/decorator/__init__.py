@@ -6,6 +6,7 @@ from functools import wraps
 from importlib import import_module
 from inspect import Parameter, Signature, getsource, signature
 from json import dumps, loads
+from requests import post
 from secrets import token_hex
 from traceback import format_exc
 from types import ModuleType
@@ -218,6 +219,29 @@ now_module: str | None = None
 External passes to module, recorded here, are used to help funix decoration override config.
 """
 
+kumo_callback_url: str | None = None
+"""
+Kumo callback url. For kumo only, only record the call numbers.
+"""
+
+kumo_callback_token: str | None = None
+"""
+Kumo callback token.
+"""
+
+
+def set_kumo_info(url: str, token: str) -> None:
+    """
+    Set the kumo info.
+
+    Parameters:
+        url (str): The url.
+        token (str): The token.
+    """
+    global kumo_callback_url, kumo_callback_token
+    kumo_callback_url = url
+    kumo_callback_token = token
+
 
 def set_function_secret(secret: str, function_id: str, function_name: str) -> None:
     """
@@ -359,6 +383,20 @@ def export_secrets():
     for function_id, secret in __decorated_secret_functions_dict.items():
         __new_dict[__decorated_id_to_function_dict[function_id]] = secret
     return __new_dict
+
+
+def kumo_callback():
+    """
+    Kumo callback.
+    """
+    global kumo_callback_url, kumo_callback_token
+    if kumo_callback_url and kumo_callback_token:
+        post(
+            kumo_callback_url,
+            json={
+                "token": kumo_callback_token,
+            },
+        )
 
 
 def funix(
@@ -1250,6 +1288,7 @@ def funix(
                     if not session.get("__funix_id"):
                         session["__funix_id"] = uuid4().hex
                     function_kwargs = request.get_json()
+                    kumo_callback()
                     if __pandas_use:
                         if function_id in dataframe_parse_metadata:
                             for need_argument in dataframe_parse_metadata[function_id]:

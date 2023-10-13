@@ -299,6 +299,8 @@ def get_flask_application(
     repo_dir: Optional[str] = None,
     transform: Optional[bool] = False,
     app_secret: Optional[str | bool] = False,
+    __kumo_callback_url: Optional[str] = None,
+    __kumo_callback_token: Optional[str] = None,
 ) -> Flask:
     """
     Get flask application for the funix app.
@@ -313,10 +315,14 @@ def get_flask_application(
         repo_dir (str): If you want to run the app from a git repo, you can specify the directory, default is None
         transform (bool): If you want to enable transform mode, default is False
         app_secret (str | bool): If you want to set an app secret, default is False
+        __kumo_callback_url (str): The Kumo callback url, default is None, do not set it if you don't know what it is.
+        __kumo_callback_token (str): The Kumo callback token, default is None, do not set it if you don't know what
+                                     it is.
 
     Returns:
         flask.Flask: The flask application.
     """
+    decorator.set_kumo_info(__kumo_callback_url, __kumo_callback_token)
     import_from_config(
         file_or_module_name=file_or_module_name,
         lazy=lazy,
