@@ -391,12 +391,16 @@ def kumo_callback():
     """
     global kumo_callback_url, kumo_callback_token
     if kumo_callback_url and kumo_callback_token:
-        post(
-            kumo_callback_url,
-            json={
-                "token": kumo_callback_token,
-            },
-        )
+        try:
+            post(
+                kumo_callback_url,
+                json={
+                    "token": kumo_callback_token,
+                },
+                timeout=1,
+            )
+        except:
+            pass
 
 
 def funix(
