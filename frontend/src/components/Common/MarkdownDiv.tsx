@@ -167,6 +167,7 @@ const MarkdownImage = (props: {
           width: "auto",
           height: "auto",
           margin: "auto",
+          maxWidth: "100%",
         }}
       />
     </Card>
