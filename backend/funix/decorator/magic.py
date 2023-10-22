@@ -167,12 +167,14 @@ def get_type_widget_prop(
     if function_arg_type_name in widget_type:
         widget = widget_type[function_arg_type_name]
     for single_widget_type in widget_type:
-        if function_annotation.__name__ == single_widget_type:
-            widget = widget_type[single_widget_type]
-            break
+        if hasattr(function_annotation, "__name__"):
+            if getattr(function_annotation, "__name__") == single_widget_type:
+                widget = widget_type[single_widget_type]
+                break
     if not widget:
-        if function_annotation.__name__ in builtin_widgets:
-            widget = builtin_widgets[function_annotation.__name__]
+        if hasattr(function_annotation, "__name__"):
+            if getattr(function_annotation, "__name__") in builtin_widgets:
+                widget = builtin_widgets[getattr(function_annotation, "__name__")]
     if widget and anal_result:
         anal_result["widget"] = widget
 
