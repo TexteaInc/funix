@@ -1,7 +1,7 @@
 from importlib import import_module
 from inspect import isfunction
 from ipaddress import ip_address
-from os import chdir, listdir
+from os import chdir, listdir, getcwd
 from os.path import dirname, exists, isdir, join, normpath, sep
 from sys import exit, path
 from typing import Generator, Optional
@@ -44,6 +44,11 @@ set_app_secret = decorator.set_app_secret
 __use_git = False
 """
 Funix uses git to clone repo, now this feature is optional.
+"""
+
+__now_path = getcwd()
+"""
+The current path. For switching the path.
 """
 
 try:
@@ -105,11 +110,17 @@ def __prep(
         if is_module:
             module = import_module(module_or_file)
         else:
+            folder = sep.join(module_or_file.split(sep)[0:-1])
+            if folder:
+                chdir(folder)
             if base_dir and not lazy:
                 decorator.set_now_module(path_difference)
-            module = import_module_from_file(module_or_file, need_name)
+            module = import_module_from_file(
+                join(__now_path, module_or_file), need_name
+            )
             if base_dir and not lazy:
                 decorator.clear_now_module()
+            chdir(__now_path)
         if lazy:
             members = reversed(dir(module))
             for member in members:
