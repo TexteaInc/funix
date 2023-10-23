@@ -101,7 +101,7 @@ const HistoryDialog = (props: {
   open: boolean;
   setOpen: (open: boolean) => void;
 }) => {
-  const { getHistories, clearHistory, removeHistory, setHistoryName } =
+  const { getHistories, clearHistory, removeHistory, setHistoryNameAndPath } =
     useFunixHistory();
   const [{ functions }, setStore] = useAtom(storeAtom);
   const [isAscending, setAscending] = React.useState(true);
@@ -210,7 +210,11 @@ const HistoryDialog = (props: {
           <Button
             onClick={() => {
               if (selectedHistory !== null) {
-                setHistoryName(selectedHistory.timestamp, tempRename);
+                setHistoryNameAndPath(
+                  selectedHistory.timestamp,
+                  tempRename,
+                  selectedHistory.functionPath
+                );
               }
               setRenameDialogOpen(false);
               setSelectedHistory(null);

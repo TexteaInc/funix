@@ -112,7 +112,7 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
       setTree(list.some((f) => typeof f.module === "string"));
       if (list.length === 1) {
         handleFetchFunctionDetail(list[0]);
-        setRadioGroupValue(list[0].name);
+        setRadioGroupValue(list[0].path);
       }
     }
     queryData().then();
@@ -121,7 +121,7 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
 
   useEffect(() => {
     if (backHistory === null) return;
-    changeRadioGroupValue(backHistory.functionName);
+    changeRadioGroupValueByPath(backHistory.functionPath);
     setStore((store) => {
       const newBackConsensus = [...store.backConsensus];
       newBackConsensus[0] = true;
@@ -142,16 +142,29 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
     }
   }, [backConsensus]);
 
-  const changeRadioGroupValue = (functionName: string) => {
+  const changeRadioGroupValueById = (functionId: string) => {
     const selectedFunctionPreview = state.filter(
-      (preview) => preview.name === functionName
+      (preview) => preview.id === functionId
     );
     if (selectedFunctionPreview.length !== 1) {
       setRadioGroupValue(null);
     } else {
-      navigate(`/${selectedFunctionPreview[0].name}`);
+      navigate(`/${selectedFunctionPreview[0].path}`);
       handleFetchFunctionDetail(selectedFunctionPreview[0]);
-      setRadioGroupValue(functionName);
+      setRadioGroupValue(selectedFunctionPreview[0].path);
+    }
+  };
+
+  const changeRadioGroupValueByPath = (functionPath: string) => {
+    const selectedFunctionPreview = state.filter(
+      (preview) => preview.path === functionPath
+    );
+    if (selectedFunctionPreview.length !== 1) {
+      setRadioGroupValue(null);
+    } else {
+      navigate(`/${selectedFunctionPreview[0].path}`);
+      handleFetchFunctionDetail(selectedFunctionPreview[0]);
+      setRadioGroupValue(functionPath);
     }
   };
 
@@ -162,16 +175,16 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
       state.length !== 0 &&
       pathParams[0] !== radioGroupValue
     ) {
-      const functionName = decodeURIComponent(pathParams[0]);
+      const functionPath = decodeURIComponent(pathParams[0]);
       const selectedFunctionPreview = state.filter(
-        (preview) => preview.name === functionName
+        (preview) => preview.path === functionPath
       );
       if (selectedFunctionPreview.length !== 0) {
         setStore((store) => ({
           ...store,
           selectedFunction: selectedFunctionPreview[0],
         }));
-        setRadioGroupValue(functionName);
+        setRadioGroupValue(functionPath);
       }
     }
   }, [pathname, state]);
@@ -197,10 +210,10 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
         {state.map((functionPreview) => (
           <ListItemButton
             onClick={() => {
-              changeRadioGroupValue(functionPreview.name);
+              changeRadioGroupValueById(functionPreview.id);
             }}
             key={functionPreview.name}
-            selected={radioGroupValue === functionPreview.name}
+            selected={radioGroupValue === functionPreview.path}
           >
             <ListItemText
               primary={
@@ -223,29 +236,33 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
   state.forEach((preview) => {
     const path = preview.module ?? "";
     const pathList = path.split(".");
-    pathList.push(preview.name);
+    pathList.push(`${preview.name}#${preview.path}`);
     addFileToTree(fileTree, pathList);
   });
 
   const treeList = treeToList(fileTree);
 
-  const renderNodeString = (node: string, now: number) => (
-    <ListItemButton
-      onClick={() => {
-        changeRadioGroupValue(node);
-      }}
-      key={node}
-      selected={radioGroupValue === node}
-      sx={{
-        paddingLeft: `${2 + now}rem`,
-      }}
-    >
-      <ListItemText
-        primary={<MarkdownDiv markdown={node} isRenderInline={true} />}
-        disableTypography
-      />
-    </ListItemButton>
-  );
+  const renderNodeString = (node: string, now: number) => {
+    const [name, path] = node.split("#");
+
+    return (
+      <ListItemButton
+        onClick={() => {
+          changeRadioGroupValueByPath(path);
+        }}
+        key={node}
+        selected={radioGroupValue === path}
+        sx={{
+          paddingLeft: `${2 + now}rem`,
+        }}
+      >
+        <ListItemText
+          primary={<MarkdownDiv markdown={name} isRenderInline={true} />}
+          disableTypography
+        />
+      </ListItemButton>
+    );
+  };
 
   const renderNode = (node: any, now: number) => {
     if (typeof node === "string") {

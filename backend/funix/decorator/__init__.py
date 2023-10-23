@@ -59,6 +59,7 @@ from funix.hint import (
 from funix.session import get_global_variable, set_global_variable
 from funix.theme import get_dict_theme, parse_theme
 from funix.util.uri import is_valid_uri
+from funix.util.module import funix_menu_to_safe_function_name
 from funix.widget import generate_frontend_widget_config
 
 __matplotlib_use = False
@@ -201,17 +202,17 @@ The mpld3 module.
 
 pre_fill_metadata: dict[str, list[str | int | PreFillEmpty]] = {}
 """
-A dict, key is function name/ID, value is a list of indexes/keys of pre-fill parameters.
+A dict, key is function ID, value is a list of indexes/keys of pre-fill parameters.
 """
 
 parse_type_metadata: dict[str, dict[str, Any]] = {}
 """
-A dict, key is function name/ID, value is a map of parameter name to type.
+A dict, key is function ID, value is a map of parameter name to type.
 """
 
 dataframe_parse_metadata: dict[str, dict[str, list[str]]] = {}
 """
-A dict, key is function name/ID, value is a map of parameter name to type.
+A dict, key is function ID, value is a map of parameter name to type.
 """
 
 now_module: str | None = None
@@ -250,7 +251,7 @@ def set_function_secret(secret: str, function_id: str, function_name: str) -> No
     Parameters:
         secret (str): The secret.
         function_id (str): The function id.
-        function_name (str): The function name.
+        function_name (str): The function name (or with path).
     """
     global __decorated_secret_functions_dict, __decorated_id_to_function_dict
     __decorated_secret_functions_dict[function_id] = secret
@@ -481,13 +482,29 @@ def funix(
         if __wrapper_enabled:
             function_id = str(uuid4())
 
+            safe_module_now = now_module
+
+            if safe_module_now:
+                safe_module_now = funix_menu_to_safe_function_name(safe_module_now)
+
             parse_type_metadata[function_id] = {}
 
             function_direction = direction if direction else "row"
 
-            function_name = getattr(
-                function, "__name__"
-            )  # function name as id to retrieve function info
+            function_name = getattr(function, "__name__")
+            """
+            function name as id to retrieve function info
+            now don't use function name as id, use function id instead
+
+            Rest In Peace: f765733; Jul 9, 2022 - Oct 23, 2023
+            """
+
+            unique_function_name: str | None = None  # Don't use it as id,
+            # only when funix starts with `-R`, it will be not None
+
+            if safe_module_now:
+                unique_function_name = safe_module_now + "_AnD_" + function_name
+
             if function_name in banned_function_name_and_path:
                 raise ValueError(
                     f"{function_name} is not allowed, banned names: {banned_function_name_and_path}"
@@ -519,14 +536,26 @@ def funix(
                         __parsed_themes[theme] = parsed_theme
 
             if not path:
-                endpoint = function_name
+                if unique_function_name:
+                    endpoint = unique_function_name
+                else:
+                    endpoint = function_name
             else:
                 if path in banned_function_name_and_path:
                     raise Exception(f"{function_name}'s path: {path} is not allowed")
                 endpoint = path.strip("/")
 
-            if function_title in __decorated_functions_names_list:
-                raise ValueError(f"Function with name {function_title} already exists")
+            if unique_function_name:
+                if unique_function_name in __decorated_functions_names_list:
+                    raise ValueError(
+                        f"Function with name {function_name} already exists, you better check other files, they may "
+                        f"have the same function name"
+                    )
+                else:
+                    if function_title in __decorated_functions_names_list:
+                        raise ValueError(
+                            f"Function with name {function_title} already exists"
+                        )
 
             if __app_secret is not None:
                 set_function_secret(__app_secret, function_id, function_title)
@@ -546,13 +575,18 @@ def funix(
             if menu:
                 replace_module = menu
 
-            __decorated_functions_names_list.append(function_title)
+            if unique_function_name:
+                __decorated_functions_names_list.append(unique_function_name)
+            else:
+                __decorated_functions_names_list.append(function_title)
+
             __decorated_functions_list.append(
                 {
                     "name": function_title,
                     "path": endpoint,
                     "module": replace_module,
                     "secret": secret_key,
+                    "id": function_id,
                 }
             )
 
@@ -766,28 +800,26 @@ def funix(
             if pre_fill:
                 for _, from_arg_function_info in pre_fill.items():
                     if isinstance(from_arg_function_info, tuple):
-                        from_arg_function_name = getattr(
-                            from_arg_function_info[0], "__name__"
-                        )
+                        from_arg_function_address = str(id(from_arg_function_info[0]))
                         from_arg_function_index_or_key = from_arg_function_info[1]
-                        if from_arg_function_name in pre_fill_metadata:
-                            pre_fill_metadata[from_arg_function_name].append(
+                        if from_arg_function_address in pre_fill_metadata:
+                            pre_fill_metadata[from_arg_function_address].append(
                                 from_arg_function_index_or_key
                             )
                         else:
-                            pre_fill_metadata[from_arg_function_name] = [
+                            pre_fill_metadata[from_arg_function_address] = [
                                 from_arg_function_index_or_key
                             ]
                     else:
-                        from_arg_function_name = getattr(
-                            from_arg_function_info, "__name__"
-                        )
-                        if from_arg_function_name in pre_fill_metadata:
-                            pre_fill_metadata[from_arg_function_name].append(
+                        from_arg_function_address = str(id(from_arg_function_info))
+                        if from_arg_function_address in pre_fill_metadata:
+                            pre_fill_metadata[from_arg_function_address].append(
                                 PreFillEmpty
                             )
                         else:
-                            pre_fill_metadata[from_arg_function_name] = [PreFillEmpty]
+                            pre_fill_metadata[from_arg_function_address] = [
+                                PreFillEmpty
+                            ]
 
             def create_decorated_params(arg_name: str) -> None:
                 """
@@ -1179,7 +1211,6 @@ def funix(
                 "source": source_code,
             }
 
-            get_wrapper_endpoint = app.get(f"/param/{endpoint}")
             get_wrapper_id = app.get(f"/param/{function_id}")
 
             def decorated_function_param_getter():
@@ -1198,12 +1229,12 @@ def funix(
                     for argument_key, from_function_info in pre_fill.items():
                         if isinstance(from_function_info, tuple):
                             last_result = get_global_variable(
-                                getattr(from_function_info[0], "__name__")
+                                str(id(from_function_info[0]))
                                 + f"_{from_function_info[1]}"
                             )
                         else:
                             last_result = get_global_variable(
-                                getattr(from_function_info, "__name__") + "_result"
+                                str(id(from_function_info)) + "_result"
                             )
                         if last_result is not None:
                             new_decorated_function["params"][argument_key][
@@ -1217,14 +1248,24 @@ def funix(
                     )
                 return Response(dumps(decorated_function), mimetype="application/json")
 
+            decorated_function_param_getter_name = f"{function_name}_param_getter"
+
+            if safe_module_now:
+                decorated_function_param_getter_name = (
+                    f"{safe_module_now}_{decorated_function_param_getter_name}"
+                )
+
             decorated_function_param_getter.__setattr__(
-                "__name__", f"{function_name}_param_getter"
+                "__name__", f"{decorated_function_param_getter_name}"
             )
-            get_wrapper_endpoint(decorated_function_param_getter)
+
             get_wrapper_id(decorated_function_param_getter)
 
+            if not safe_module_now:
+                get_wrapper_endpoint = app.get(f"/param/{endpoint}")
+                get_wrapper_endpoint(decorated_function_param_getter)
+
             if secret_key:
-                verify_secret_endpoint = app.post(f"/verify/{endpoint}")
                 verify_secret_id = app.post(f"/verify/{function_id}")
 
                 def verify_secret():
@@ -1270,12 +1311,22 @@ def funix(
                     else:
                         return failed_data
 
-                verify_secret.__setattr__("__name__", f"{function_name}_verify_secret")
-                verify_secret_endpoint(verify_secret)
+                decorated_function_verify_secret_name = f"{function_name}_verify_secret"
+
+                if safe_module_now:
+                    decorated_function_verify_secret_name = (
+                        f"{safe_module_now}_{decorated_function_verify_secret_name}"
+                    )
+
+                verify_secret.__setattr__(
+                    "__name__", decorated_function_verify_secret_name
+                )
+                if not safe_module_now:
+                    verify_secret_endpoint = app.post(f"/verify/{endpoint}")
+                    verify_secret_endpoint(verify_secret)
+
                 verify_secret_id(verify_secret)
 
-            @app.post(f"/call/{endpoint}")
-            @app.post(f"/call/{function_id}")
             @wraps(function)
             def wrapper():
                 """
@@ -1372,19 +1423,19 @@ def funix(
                         # TODO: Best result handling, refactor it if possible
                         try:
                             function_call_result = function(**wrapped_function_kwargs)
-                            function_call_name = getattr(function, "__name__")
-                            if function_call_name in pre_fill_metadata:
+                            function_call_address = str(id(function))
+                            if function_call_address in pre_fill_metadata:
                                 for index_or_key in pre_fill_metadata[
-                                    function_call_name
+                                    function_call_address
                                 ]:
                                     if index_or_key is PreFillEmpty:
                                         set_global_variable(
-                                            function_call_name + "_result",
+                                            function_call_address + "_result",
                                             function_call_result,
                                         )
                                     else:
                                         set_global_variable(
-                                            function_call_name + f"_{index_or_key}",
+                                            function_call_address + f"_{index_or_key}",
                                             function_call_result[index_or_key],
                                         )
                             if return_type_parsed == "Figure":
@@ -1683,6 +1734,13 @@ def funix(
                     return {"error_type": "wrapper", "error_body": format_exc()}
 
             wrapper._decorator_name_ = "funix"
+
+            if safe_module_now:
+                wrapper.__setattr__("__name__", safe_module_now + "_" + function_name)
+
+            if not safe_module_now:
+                app.post(f"/call/{endpoint}")(wrapper)
+            app.post(f"/call/{function_id}")(wrapper)
         return function
 
     return decorator
