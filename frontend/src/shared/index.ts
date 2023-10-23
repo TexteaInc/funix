@@ -64,6 +64,10 @@ export type FunctionPreview = {
    * Is this function protected by token
    */
   secret: boolean;
+  /**
+   * ID of the function, please use this
+   */
+  id: string;
 };
 
 export type GetListResponse = {

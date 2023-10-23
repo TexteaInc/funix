@@ -29,11 +29,7 @@ const FunixFunction: React.FC<FunctionDetailProps & FunixFunctionProps> = ({
   const [detail] = useState<FunctionDetail | null>(() => {
     // no asynchronous, no cache
     const xhr = new XMLHttpRequest();
-    xhr.open(
-      "GET",
-      new URL(`/param/${preview.path}`, backend).toString(),
-      false
-    );
+    xhr.open("GET", new URL(`/param/${preview.id}`, backend).toString(), false);
     xhr.send();
     if (xhr.status === 200) {
       return JSON.parse(xhr.responseText) as FunctionDetail;
@@ -54,11 +50,11 @@ const FunixFunction: React.FC<FunctionDetailProps & FunixFunctionProps> = ({
     if (preview.secret) {
       const token =
         preview.name in functionSecret
-          ? functionSecret[preview.name]
+          ? functionSecret[preview.path]
           : appSecret !== null
           ? appSecret
           : "";
-      verifyToken(new URL(`/verify/${preview.path}`, backend), token || "")
+      verifyToken(new URL(`/verify/${preview.id}`, backend), token || "")
         .then((result) => {
           setVerified(result);
         })
@@ -74,7 +70,7 @@ const FunixFunction: React.FC<FunctionDetailProps & FunixFunctionProps> = ({
       if ("__funix_secret" in backHistory.input) {
         setStore((store) => {
           const newFunctionSecret = store.functionSecret;
-          newFunctionSecret[backHistory.functionName] = backHistory.input
+          newFunctionSecret[backHistory.functionPath] = backHistory.input
             ? backHistory.input["__funix_secret"]
             : null;
           return {
@@ -159,7 +155,7 @@ const FunixFunction: React.FC<FunctionDetailProps & FunixFunctionProps> = ({
   return (
     <>
       {needSecret ? (
-        functionSecret[preview.name] == null && appSecret == null ? (
+        functionSecret[preview.path] == null && appSecret == null ? (
           <Alert severity="warning">
             <AlertTitle>Secret required</AlertTitle>
             <InlineBox>

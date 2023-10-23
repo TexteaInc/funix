@@ -179,8 +179,8 @@ const App = () => {
 
   const funixBackend: string | undefined = process.env.REACT_APP_FUNIX_BACKEND;
   const selectedFunctionSecret: string | null = selectedFunction?.secret
-    ? selectedFunction?.name in functionSecret
-      ? functionSecret[selectedFunction?.name]
+    ? selectedFunction?.path in functionSecret
+      ? functionSecret[selectedFunction?.path]
       : appSecret
     : null;
   const [backend, setBackend] = useState(funixBackend);
@@ -266,7 +266,7 @@ const App = () => {
                   ...store,
                   functionSecret: {
                     ...store.functionSecret,
-                    [selectedFunction.name]: tempSecret,
+                    [selectedFunction.path]: tempSecret,
                   },
                 }));
               }
