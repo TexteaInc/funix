@@ -103,9 +103,10 @@ def __prep(
     path_difference: str | None = None
     if base_dir:
         # dir mode
-        path_difference = get_path_difference(
-            base_dir, sep.join(module_or_file.split(sep)[0:-1])
-        )
+        module = module_or_file.split(sep)
+        module[-1] = module[-1][:-3]  # remove .py
+        module = sep.join(module)
+        path_difference = get_path_difference(base_dir, module)
     if module_or_file:
         if is_module:
             module = import_module(module_or_file)

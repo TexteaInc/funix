@@ -503,7 +503,9 @@ def funix(
             # only when funix starts with `-R`, it will be not None
 
             if safe_module_now:
-                unique_function_name = safe_module_now + "_AnD_" + function_name
+                unique_function_name = (
+                    now_module.replace(".", "/") + "/" + function_name
+                )
 
             if function_name in banned_function_name_and_path:
                 raise ValueError(
@@ -1212,6 +1214,7 @@ def funix(
             }
 
             get_wrapper_id = app.get(f"/param/{function_id}")
+            get_wrapper_endpoint = app.get(f"/param/{endpoint}")
 
             def decorated_function_param_getter():
                 """
@@ -1260,13 +1263,11 @@ def funix(
             )
 
             get_wrapper_id(decorated_function_param_getter)
-
-            if not safe_module_now:
-                get_wrapper_endpoint = app.get(f"/param/{endpoint}")
-                get_wrapper_endpoint(decorated_function_param_getter)
+            get_wrapper_endpoint(decorated_function_param_getter)
 
             if secret_key:
                 verify_secret_id = app.post(f"/verify/{function_id}")
+                verify_secret_endpoint = app.post(f"/verify/{endpoint}")
 
                 def verify_secret():
                     """
@@ -1321,10 +1322,8 @@ def funix(
                 verify_secret.__setattr__(
                     "__name__", decorated_function_verify_secret_name
                 )
-                if not safe_module_now:
-                    verify_secret_endpoint = app.post(f"/verify/{endpoint}")
-                    verify_secret_endpoint(verify_secret)
 
+                verify_secret_endpoint(verify_secret)
                 verify_secret_id(verify_secret)
 
             @wraps(function)
@@ -1738,8 +1737,7 @@ def funix(
             if safe_module_now:
                 wrapper.__setattr__("__name__", safe_module_now + "_" + function_name)
 
-            if not safe_module_now:
-                app.post(f"/call/{endpoint}")(wrapper)
+            app.post(f"/call/{endpoint}")(wrapper)
             app.post(f"/call/{function_id}")(wrapper)
         return function
 

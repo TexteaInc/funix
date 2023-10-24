@@ -169,13 +169,10 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
   };
 
   useEffect(() => {
-    const pathParams = pathname.split("/").filter((value) => value !== "");
-    if (
-      pathParams.length !== 0 &&
-      state.length !== 0 &&
-      pathParams[0] !== radioGroupValue
-    ) {
-      const functionPath = decodeURIComponent(pathParams[0]);
+    const pathParam = pathname.substring(1);
+    console.log(pathParam);
+    if (pathParam !== radioGroupValue) {
+      const functionPath = decodeURIComponent(pathParam);
       const selectedFunctionPreview = state.filter(
         (preview) => preview.path === functionPath
       );
@@ -290,7 +287,9 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
         >
           <ListItemText
             primary={<MarkdownDiv markdown={k} isRenderInline={true} />}
-            disableTypography
+            sx={{
+              wordWrap: "break-word",
+            }}
           />
           {treeState.hasOwnProperty(`${k}${v}`) ? (
             treeState[`${k}${v}`] ? (
