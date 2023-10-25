@@ -3,6 +3,8 @@ import os
 import openai  # pip install openai
 openai.api_key = os.environ.get("OPENAI_KEY")
 
+import IPython.display
+
 import funix 
 
 @funix.funix(  # Funix.io, the laziest way to build web apps in Python
@@ -14,7 +16,7 @@ import funix
 def dalle(
     Prompt: str = "a cat on a red jeep",
     openai_key: str = "using environment variable",
-) -> funix.hint.Image:
+) -> IPython.display.Image:
     if openai_key != "using environment variable":
         openai.api_key = openai_key
 
