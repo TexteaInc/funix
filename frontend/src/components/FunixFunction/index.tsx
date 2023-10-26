@@ -200,10 +200,16 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
                   height: "100%",
                   width: "65%",
                   margin: "0 auto",
-                  backgroundColor: `${onResizing ? "grey.100" : ""}`,
+                  backgroundColor: (theme) =>
+                    `${
+                      theme.palette.mode === "dark" && onResizing && "grey.900"
+                    }`,
                   "&:hover": {
-                    backgroundColor: "grey.100",
-                    cursor: "col-resize",
+                    backgroundColor: (theme) =>
+                      `${
+                        theme.palette.mode === "dark" ? "grey.900" : "grey.100"
+                      }`,
+                    cursor: "ew-resize",
                   },
                 }}
                 onContextMenu={(event) => {

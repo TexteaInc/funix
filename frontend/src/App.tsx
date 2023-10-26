@@ -516,9 +516,11 @@ const App = () => {
             width: ".75rem",
             height: "100%",
             margin: "0 auto",
-            backgroundColor: `${onResizing ? "grey.100" : ""}`,
+            backgroundColor: (theme) =>
+              `${theme.palette.mode === "dark" && onResizing && "grey.900"}`,
             "&:hover": {
-              backgroundColor: "grey.100",
+              backgroundColor: (theme) =>
+                `${theme.palette.mode === "dark" ? "grey.900" : "grey.100"}`,
               cursor: "ew-resize",
             },
             position: "absolute",

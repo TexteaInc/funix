@@ -161,6 +161,16 @@ export type PostCallResponseError = {
 
 export type PostCallResponse = PostCallResponseSuccess | PostCallResponseError;
 
+export type MixedObject =
+  | string
+  | number
+  | boolean
+  | Record<
+      string,
+      string | number | boolean | Record<string, any> | MixedObject[]
+    >
+  | MixedObject[];
+
 export async function callFunction(
   url: URL,
   body: CallBody,
@@ -235,4 +245,34 @@ export function exportHistory(history: History) {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
+}
+
+export function recursiveSort(obj: MixedObject): MixedObject {
+  if (Array.isArray(obj)) {
+    return obj.map(recursiveSort).sort((a, b) => {
+      if (typeof a === "object" && typeof b === "object") {
+        if (Object.keys(a)[0] === "") {
+          return 1;
+        }
+
+        if (Object.keys(b)[0] === "") {
+          return -1;
+        }
+        return JSON.stringify(a) > JSON.stringify(b) ? 1 : -1;
+      } else {
+        return a > b ? 1 : -1;
+      }
+    });
+  } else if (typeof obj === "object" && obj !== null) {
+    const sortedObj: Record<string, MixedObject> = {};
+
+    Object.keys(obj)
+      .sort()
+      .forEach((key) => {
+        sortedObj[key] = recursiveSort(obj[key]);
+      });
+    return sortedObj;
+  } else {
+    return obj;
+  }
 }

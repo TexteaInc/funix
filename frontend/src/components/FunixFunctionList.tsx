@@ -8,7 +8,12 @@ import {
 } from "@mui/material";
 import { storeAtom } from "../store";
 import { useAtom } from "jotai";
-import { FunctionPreview, getList } from "../shared";
+import {
+  FunctionPreview,
+  getList,
+  MixedObject,
+  recursiveSort,
+} from "../shared";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import MarkdownDiv from "./Common/MarkdownDiv";
@@ -170,7 +175,6 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
 
   useEffect(() => {
     const pathParam = pathname.substring(1);
-    console.log(pathParam);
     if (pathParam !== radioGroupValue) {
       const functionPath = decodeURIComponent(pathParam);
       const selectedFunctionPreview = state.filter(
@@ -255,7 +259,9 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
       >
         <ListItemText
           primary={<MarkdownDiv markdown={name} isRenderInline={true} />}
-          disableTypography
+          sx={{
+            wordWrap: "break-word",
+          }}
         />
       </ListItemButton>
     );
@@ -320,7 +326,10 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
 
   return (
     <FunixList functionLength={functionsLength}>
-      {renderRoot(treeList, 0)}
+      {renderRoot(
+        recursiveSort(treeList as unknown as MixedObject) as any[],
+        0
+      )}
     </FunixList>
   );
 };

@@ -290,7 +290,6 @@ const OutputPanel = (props: {
           const rowElements: JSX.Element[] = [];
           row.forEach((item) => {
             let itemElement: JSX.Element;
-            console.log(item);
             switch (item.type) {
               case "markdown":
                 itemElement = (
