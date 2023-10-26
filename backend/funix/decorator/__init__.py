@@ -553,11 +553,11 @@ def funix(
                         f"Function with name {function_name} already exists, you better check other files, they may "
                         f"have the same function name"
                     )
-                else:
-                    if function_title in __decorated_functions_names_list:
-                        raise ValueError(
-                            f"Function with name {function_title} already exists"
-                        )
+            else:
+                if function_title in __decorated_functions_names_list:
+                    raise ValueError(
+                        f"Function with name {function_title} already exists"
+                    )
 
             if __app_secret is not None:
                 set_function_secret(__app_secret, function_id, function_title)
