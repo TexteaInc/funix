@@ -76,6 +76,9 @@ def get_path_difference(base_dir: str, target_dir: str) -> str | None:
     if not path_diff:
         return None
 
+    for _ in range(len(base_components)):
+        path_diff.pop(0)
+
     return ".".join(path_diff)
 
 
@@ -103,10 +106,9 @@ def __prep(
     path_difference: str | None = None
     if base_dir:
         # dir mode
-        module = module_or_file.split(sep)
-        module[-1] = module[-1][:-3]  # remove .py
-        module = sep.join(module)
-        path_difference = get_path_difference(base_dir, module)
+        path_difference = get_path_difference(
+            base_dir, sep.join(module_or_file.split(sep)[0:-1])
+        )
     if module_or_file:
         if is_module:
             module = import_module(module_or_file)
