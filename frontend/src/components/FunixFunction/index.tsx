@@ -15,17 +15,7 @@ export type FunctionDetailProps = {
   backend: URL;
 };
 
-export type FunixFunctionProps = {
-  leftSideBarOpen: boolean;
-  rightSideBarOpen: boolean;
-};
-
-const FunixFunction: React.FC<FunctionDetailProps & FunixFunctionProps> = ({
-  preview,
-  backend,
-  leftSideBarOpen,
-  rightSideBarOpen,
-}) => {
+const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
   const [detail] = useState<FunctionDetail | null>(() => {
     // no asynchronous, no cache
     const xhr = new XMLHttpRequest();
@@ -131,12 +121,11 @@ const FunixFunction: React.FC<FunctionDetailProps & FunixFunctionProps> = ({
   const needSecret = preview.secret;
 
   const handleResize = (event: PointerEvent) => {
-    event.preventDefault();
-    const newLeftWidth =
-      event.clientX /
-      (document.body.clientWidth +
-        Number(leftSideBarOpen) * 240 -
-        Number(rightSideBarOpen) * 240);
+    const mainWidth = document.getElementById("funix-stack")?.offsetWidth || 1;
+    const mainLeftOffset =
+      document.getElementById("funix-stack")?.offsetLeft || 1;
+    const newLeftWidth = (event.pageX - mainLeftOffset) / mainWidth;
+
     const newRightWidth = 1 - newLeftWidth;
     setWidth([
       `${(newLeftWidth * 100).toFixed(3)}%`,
@@ -225,13 +214,18 @@ const FunixFunction: React.FC<FunctionDetailProps & FunixFunctionProps> = ({
                   event.preventDefault();
                   setOnResizing(true);
                   document.body.style.cursor = "col-resize";
-                  document.body.addEventListener("pointermove", handleResize);
+                  document.body.addEventListener(
+                    "pointermove",
+                    handleResize,
+                    true
+                  );
                   document.body.addEventListener("pointerup", () => {
                     document.body.style.cursor = "default";
                     setOnResizing(false);
                     document.body.removeEventListener(
                       "pointermove",
-                      handleResize
+                      handleResize,
+                      true
                     );
                   });
                 }}
