@@ -220,6 +220,16 @@ now_module: str | None = None
 External passes to module, recorded here, are used to help funix decoration override config.
 """
 
+module_functions_counter: dict[str, int] = {}
+"""
+A dict, key is module name, value is the number of functions in the module.
+"""
+
+cached_list_functions: list[dict] = []
+"""
+Cached list functions. For `/list` route.
+"""
+
 kumo_callback_url: str | None = None
 """
 Kumo callback url. For kumo only, only record the call numbers.
@@ -288,11 +298,29 @@ def clear_now_module() -> None:
     now_module = None
 
 
+def make_decorated_functions_happy() -> list[dict]:
+    """
+    Make the decorated functions happy,
+    """
+    global cached_list_functions, __decorated_functions_list
+    if cached_list_functions:
+        return cached_list_functions
+    new_decorated_functions_list = []
+    for i in __decorated_functions_list:
+        if i["module"] in module_functions_counter:
+            if module_functions_counter[i["module"]] == 1:
+                if "." in i["module"]:
+                    i["module"] = ".".join(i["module"].split(".")[0:-1])
+        new_decorated_functions_list.append(i)
+    cached_list_functions = new_decorated_functions_list
+    return new_decorated_functions_list
+
+
 def enable_wrapper() -> None:
     """
     Enable the wrapper, this will add the list and file path to the app.
     """
-    global __wrapper_enabled, __decorated_functions_list
+    global __wrapper_enabled
     if not __wrapper_enabled:
         __wrapper_enabled = True
 
@@ -309,7 +337,7 @@ def enable_wrapper() -> None:
                 dict: The function list.
             """
             return {
-                "list": __decorated_functions_list,
+                "list": make_decorated_functions_happy(),
             }
 
         enable_file_service()
@@ -480,6 +508,19 @@ def funix(
             Check code for details
         """
         if __wrapper_enabled:
+            if menu:
+                module_functions_counter[menu] = (
+                    module_functions_counter.get(menu, 0) + 1
+                )
+            elif now_module:
+                module_functions_counter[now_module] = (
+                    module_functions_counter.get(now_module, 0) + 1
+                )
+            else:
+                module_functions_counter["$Funix_Main"] = (
+                    module_functions_counter.get("$Funix_Main", 0) + 1
+                )
+
             function_id = str(uuid4())
 
             safe_module_now = now_module
