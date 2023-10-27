@@ -18,7 +18,8 @@ def print_messages_html(messages):
 
 import funix 
 @funix.funix(
-    description="""Multi-turn chat with ChatGPT. **Note:** An OpenAI key needs to be set in the environment variable OPENAI_KEY.""",
+    description="""Multi-turn chat with ChatGPT in [Funix](http://funix.io), the minimalist way to build apps in Python. An OpenAI key needs to be set. A rate limit is applied. """,
+    rate_limit=funix.decorator.Limiter.session(max_calls=3, time_frame=60*60*24),
     direction="column-reverse") # input is below log
 def ChatGPT_multi_turn(current_message: str)  -> IPython.display.HTML:
     current_message = current_message.strip()

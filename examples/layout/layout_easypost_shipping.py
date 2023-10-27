@@ -8,9 +8,9 @@ easypost.api_key = os.getenv("EASYPOST_API_KEY")
 
 import funix
 
-
 @funix.funix(
     argument_labels={
+        "EASYPOST_API_KEY": "EasyPost API key. Do NOT use your production key here. ",
         "from_who": "Sender name",
         "from_address_1": "Sender address 1",
         "from_address_2": "Sender address 2",
@@ -30,7 +30,6 @@ import funix
         "value": "value ($)",
         "package": "package type",
     },
-    widgets={"EASYPOST_API_KEY": "password"},
     input_layout=[
         [
             {"markdown": "Your EASYPOST API key"},
@@ -68,7 +67,7 @@ import funix
     ],
 )
 def easypost_demo(
-    EASYPOST_API_KEY: str = "123456",
+    EASYPOST_API_KEY: ipywidgets.Password = "123456",
     from_who: str = "Funix Rocks",
     from_address_1: str = "1 Freedom Way",
     from_address_2: str = "",

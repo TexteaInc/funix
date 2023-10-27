@@ -33,5 +33,5 @@ funix.set_default_theme("my_new_theme")
 @funix.funix(
     # theme="my_new_theme",  # This line not needed if set_default_theme above
 )
-def foo(x: long_str = "\n".join(map(str, range(8))), y: int = 40) -> str:
+def on_the_fly_theme(x: long_str = "\n".join(map(str, range(8))), y: int = 40) -> str:
     return f"{x} {y}"

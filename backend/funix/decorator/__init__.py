@@ -1454,7 +1454,7 @@ def funix(
                 verify_secret_endpoint(verify_secret)
                 verify_secret_id(verify_secret)
 
-            limiters: Optional[list[Limiter]] = None
+            limiters: Optional[list[Limiter]] = list() # was a none
 
             if isinstance(rate_limit, Limiter):
                 limiters = list()

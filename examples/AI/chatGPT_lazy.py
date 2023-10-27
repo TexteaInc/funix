@@ -1,10 +1,14 @@
-# Turn this function to a web app using the command: 
-# funix chatGPT_lazy.py -l # -l flag must be there. 
-
 import os # Python's native 
 import openai  # you cannot skip it 
 
 openai.api_key = os.environ.get("OPENAI_KEY")
+
+import funix
+@funix.funix(rate_limit=funix.decorator.Limiter.session(max_calls=2, time_frame=60*60*24))
+
+# If in lazy model, the two lines above should be commented out. 
+# Lazy model means run this command
+# $ funix -l chatGPT_lazy.py
 
 def ChatGPT(prompt: str) -> str:
     completion = openai.ChatCompletion.create(

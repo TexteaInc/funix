@@ -8,22 +8,28 @@
 
 import os, json, typing # Python's native 
 import requests # pip install requests
+import ipywidgets
 
-API_TOKEN = os.getenv("HF_TOKEN") # "Please set your API token as an environment variable named HF_TOKEN. You can get your token from https://huggingface.co/settings/token"
+# API_TOKEN = os.getenv("HF_TOKEN") # "Please set your API token as an environment variable named HF_TOKEN. You can get your token from https://huggingface.co/settings/token"
 
 import funix
 
 @funix.funix(
     description="""Talk to LLMs hosted at HuggingFace. A HuggingFace token needs to be set in the environment variable HF_TOKEN.""",
+    # rate_limit=funix.decorator.Limiter.session(max_calls=20, time_frame=60*60*24),
 )
 def huggingface(
     model_name: typing.Literal[
         "gpt2", 
         "bigcode/starcoder", 
         "google/flan-t5-base"] = "gpt2", 
-    prompt: str = "Who is Einstein?") -> str: 
+    prompt: str = "Who is Einstein?", 
+    # API_TOKEN: ipywidgets.Password = None
+    # BUG: If API_TOKEN is ipywidgets.Password, its value cannot be passed to the inside of the huggingface function. 
+    API_TOKEN: str = None
+    ) -> str: 
 
-    payload = {"inputs": prompt} # not all models use this query  and output formats.  Hence, we limit the models above. 
+    payload = {"inputs": prompt, "max_tokens":200} # not all models use this query  and output formats.  Hence, we limit the models above. 
 
     API_URL = f"https://api-inference.huggingface.co/models/{model_name}"
     headers = {"Authorization": f"Bearer {API_TOKEN}"}

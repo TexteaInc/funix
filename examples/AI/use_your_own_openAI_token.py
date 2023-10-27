@@ -2,13 +2,16 @@ import os, json
 import typing
 
 import requests
+import IPython
+
 import openai
 
 import funix
 from funix.session import get_global_variable, set_global_variable
 
 # openai.api_key = os.environ.get("OPENAI_KEY")
-openai_key = os.environ.get("OPENAI_KEY")
+# openai_key = os.environ.get("OPENAI_KEY")
+openai_key = ""
 
 
 @funix.funix(  # Funix.io, the laziest way to build web apps in Python
@@ -25,21 +28,18 @@ openai_key = os.environ.get("OPENAI_KEY")
     ],
     show_source=True,
 )
-def set_openAI_key(api_key: str = "", use_sys_env_var: bool = False) -> str:
-    if use_sys_env_var:
-        return "OpenAI API key is set in your environment variable. Nothing changes."
+def set_openAI_key(api_key: str = "") -> str:
+    if api_key == "":
+        return "You entered an empty string. Try again."
     else:
-        if api_key == "":
-            return "You entered an empty string. Try again."
-        else:
-            global openai_key
-            openai_key = api_key
-            return f"Your openAI key has been set to: {openai_key}"
+        global openai_key
+        openai_key = api_key
+        return f"Your openAI key has been set to: {openai_key}"
 
-            # openai.api_key = api_key
-            # set_global_variable(openai.api_key, api_key)
-            # FIXME: The two lines above are both useless to change openai.api_key. That's why we have to use POST method below to query all OpenAI endpoints. This is something to be fixed after grand opening.
-            return "OpenAI API key has been set via the web form! If it was set via an environment variable before, it's now overwritten."
+        # openai.api_key = api_key
+        # set_global_variable(openai.api_key, api_key)
+        # FIXME: The two lines above are both useless to change openai.api_key. That's why we have to use POST method below to query all OpenAI endpoints. This is something to be fixed after grand opening.
+        return "OpenAI API key has been set via the web form! If it was set via an environment variable before, it's now overwritten."
 
 
 @funix.funix()
@@ -60,7 +60,11 @@ def ChatGPT_POST(prompt: str) -> str:
     response = requests.post(
         "https://api.openai.com/v1/chat/completions", headers=header, json=payload
     )
-    return response.json()["choices"][0]["message"]["content"]
+
+    if "error" in response.json(): 
+        return response.json()["error"]["message"]
+    else:
+        return response.json()["choices"][0]["message"]["content"]
 
 
 # @funix.funix()
@@ -72,7 +76,7 @@ def ChatGPT(prompt: str) -> str:
 
 
 @funix.funix()
-def dalle_POST(prompt: str) -> funix.hint.Image:
+def dalle_POST(prompt: str) -> (str, IPython.display.Image):
     header = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {openai_key}",
@@ -81,7 +85,10 @@ def dalle_POST(prompt: str) -> funix.hint.Image:
     response = requests.post(
         "https://api.openai.com/v1/images/generations", headers=header, json=payload
     )
-    return response.json()["data"][0]["url"]
+    if "error" in response.json(): 
+        return response.json()["error"]["message"], "https://picsum.photos/200/300" 
+    else:
+        return "here is your picture", response.json()["data"][0]["url"]
 
 
 # @funix.funix()
