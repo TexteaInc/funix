@@ -161,16 +161,6 @@ export type PostCallResponseError = {
 
 export type PostCallResponse = PostCallResponseSuccess | PostCallResponseError;
 
-export type MixedObject =
-  | string
-  | number
-  | boolean
-  | Record<
-      string,
-      string | number | boolean | Record<string, any> | MixedObject[]
-    >
-  | MixedObject[];
-
 export async function callFunction(
   url: URL,
   body: CallBody,
@@ -247,32 +237,65 @@ export function exportHistory(history: History) {
   document.body.removeChild(a);
 }
 
-export function recursiveSort(obj: MixedObject): MixedObject {
-  if (Array.isArray(obj)) {
-    return obj.map(recursiveSort).sort((a, b) => {
-      if (typeof a === "object" && typeof b === "object") {
-        if (Object.keys(a)[0] === "") {
-          return 1;
-        }
+function recursiveSort(arr: (string | object)[]): (string | object)[] {
+  function compare(a: string | object, b: string | object): number {
+    if (typeof a === "string" && typeof b === "string") {
+      return a.localeCompare(b);
+    } else if (typeof a === "string" && typeof b === "object") {
+      return 1;
+    } else if (typeof a === "object" && typeof b === "string") {
+      return -1;
+    } else {
+      const keyA = Object.keys(a)[0];
+      const keyB = Object.keys(b)[0];
+      return keyA.localeCompare(keyB);
+    }
+  }
+  console.log(arr);
+  arr.sort((a, b) => compare(a, b));
 
-        if (Object.keys(b)[0] === "") {
-          return -1;
-        }
-        return JSON.stringify(a) > JSON.stringify(b) ? 1 : -1;
-      } else {
-        return a > b ? 1 : -1;
+  for (const item of arr) {
+    if (typeof item === "object") {
+      const key = Object.keys(item)[0];
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      item[key] = recursiveSort(item[key]);
+    }
+  }
+
+  return arr;
+}
+
+export function objArraySort(obj: object[]): object[] {
+  const result: object[] = [];
+  const topLevelArray = {
+    "": (
+      (
+        obj.filter(
+          (item) =>
+            Object.keys(item).length === 1 && Object.keys(item)[0] === ""
+        )[0] as any
+      )[""] as string[]
+    ).sort((a, b) => a.localeCompare(b)),
+  };
+
+  obj
+    .sort((a, b) => {
+      return Object.keys(a)[0].localeCompare(Object.keys(b)[0]);
+    })
+    .forEach((item) => {
+      if (Object.keys(item).length === 1 && Object.keys(item)[0] !== "") {
+        const key = Object.keys(item)[0];
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const value = item[key];
+        result.push({
+          [key]: recursiveSort(value),
+        });
       }
     });
-  } else if (typeof obj === "object" && obj !== null) {
-    const sortedObj: Record<string, MixedObject> = {};
 
-    Object.keys(obj)
-      .sort()
-      .forEach((key) => {
-        sortedObj[key] = recursiveSort(obj[key]);
-      });
-    return sortedObj;
-  } else {
-    return obj;
-  }
+  result.push(topLevelArray);
+
+  return result;
 }

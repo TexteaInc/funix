@@ -8,12 +8,7 @@ import {
 } from "@mui/material";
 import { storeAtom } from "../store";
 import { useAtom } from "jotai";
-import {
-  FunctionPreview,
-  getList,
-  MixedObject,
-  recursiveSort,
-} from "../shared";
+import { FunctionPreview, getList, objArraySort } from "../shared";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import MarkdownDiv from "./Common/MarkdownDiv";
@@ -326,10 +321,7 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
 
   return (
     <FunixList functionLength={functionsLength}>
-      {renderRoot(
-        recursiveSort(treeList as unknown as MixedObject) as any[],
-        0
-      )}
+      {renderRoot(objArraySort(treeList as any) as any[], 0)}
     </FunixList>
   );
 };
