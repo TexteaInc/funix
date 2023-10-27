@@ -4,9 +4,9 @@ Handle module
 
 from importlib.util import module_from_spec, spec_from_file_location
 from os.path import basename
+from string import ascii_letters, digits
 from types import ModuleType
 from uuid import uuid4
-from string import digits, ascii_letters
 
 
 def import_module_from_file(path: str, need_name: bool) -> ModuleType:

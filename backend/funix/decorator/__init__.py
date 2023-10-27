@@ -6,15 +6,15 @@ from functools import wraps
 from importlib import import_module
 from inspect import Parameter, Signature, getsource, signature
 from json import dumps, loads
-from requests import post
 from secrets import token_hex
 from traceback import format_exc
 from types import ModuleType
-from typing import Optional, Any
+from typing import Any, Optional
 from urllib.request import urlopen
 from uuid import uuid4
 
 from flask import Response, request, session
+from requests import post
 
 from funix.app import app
 from funix.config import (
@@ -58,8 +58,8 @@ from funix.hint import (
 )
 from funix.session import get_global_variable, set_global_variable
 from funix.theme import get_dict_theme, parse_theme
-from funix.util.uri import is_valid_uri
 from funix.util.module import funix_menu_to_safe_function_name
+from funix.util.uri import is_valid_uri
 from funix.widget import generate_frontend_widget_config
 
 __matplotlib_use = False

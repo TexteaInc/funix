@@ -1,15 +1,16 @@
 from importlib import import_module
 from inspect import isfunction
 from ipaddress import ip_address
-from os import chdir, listdir, getcwd
+from os import chdir, getcwd, listdir
 from os.path import dirname, exists, isdir, join, normpath, sep
 from sys import exit, path
 from typing import Generator, Optional
 from urllib.parse import quote
 
+from flask import Flask
+
 import funix.decorator as decorator
 import funix.hint as hint
-from flask import Flask
 from funix.app import app, enable_funix_host_checker
 from funix.frontend import OpenFrontend, run_open_frontend, start
 from funix.prep.global_to_session import get_new_python_file
@@ -82,12 +83,12 @@ def get_path_difference(base_dir: str, target_dir: str) -> str | None:
 
 
 def __prep(
-        module_or_file: Optional[str],
-        lazy: bool,
-        need_path: bool,
-        is_module: bool,
-        need_name: bool,
-        base_dir: Optional[str] = None,
+    module_or_file: Optional[str],
+    lazy: bool,
+    need_path: bool,
+    is_module: bool,
+    need_name: bool,
+    base_dir: Optional[str] = None,
 ) -> None:
     """
     Prepare the module or file. Import and wrap the functions if needed.
@@ -147,7 +148,7 @@ def __prep(
 
 
 def get_python_files_in_dir(
-        base_dir: str, add_to_sys_path: bool, need_full_path: bool
+    base_dir: str, add_to_sys_path: bool, need_full_path: bool
 ) -> Generator[str, None, None]:
     """
     Get all the Python files in a directory.
@@ -176,14 +177,14 @@ def get_python_files_in_dir(
 
 
 def import_from_config(
-        file_or_module_name: str,
-        lazy: Optional[bool] = False,
-        dir_mode: Optional[bool] = False,
-        package_mode: Optional[bool] = False,
-        from_git: Optional[str] = None,
-        repo_dir: Optional[str] = None,
-        transform: Optional[bool] = False,
-        app_secret: Optional[str | bool] = False,
+    file_or_module_name: str,
+    lazy: Optional[bool] = False,
+    dir_mode: Optional[bool] = False,
+    package_mode: Optional[bool] = False,
+    from_git: Optional[str] = None,
+    repo_dir: Optional[str] = None,
+    transform: Optional[bool] = False,
+    app_secret: Optional[str | bool] = False,
 ) -> None:
     """
     Import files, git repos and modules from the config argument.
@@ -237,7 +238,7 @@ def import_from_config(
         if exists(file_or_module_name) and isdir(file_or_module_name):
             base_dir = file_or_module_name
             for single_file in get_python_files_in_dir(
-                    base_dir=base_dir, add_to_sys_path=False, need_full_path=True
+                base_dir=base_dir, add_to_sys_path=False, need_full_path=True
             ):
                 __prep(
                     module_or_file=single_file,
@@ -261,7 +262,7 @@ def import_from_config(
                 f"`__init__.py`  is not found inside module path: {module_path}!"
             )
         for module in get_python_files_in_dir(
-                base_dir=dirname(module_path), add_to_sys_path=True, need_full_path=False
+            base_dir=dirname(module_path), add_to_sys_path=True, need_full_path=False
         ):
             __prep(
                 module_or_file=module,
@@ -304,18 +305,18 @@ def import_from_config(
 
 
 def get_flask_application(
-        file_or_module_name: str,
-        no_frontend: Optional[bool] = False,
-        lazy: Optional[bool] = False,
-        dir_mode: Optional[bool] = False,
-        package_mode: Optional[bool] = False,
-        from_git: Optional[str] = None,
-        repo_dir: Optional[str] = None,
-        transform: Optional[bool] = False,
-        app_secret: Optional[str | bool] = False,
-        __kumo_callback_url: Optional[str] = None,
-        __kumo_callback_token: Optional[str] = None,
-        __host_regex: Optional[str] = None,
+    file_or_module_name: str,
+    no_frontend: Optional[bool] = False,
+    lazy: Optional[bool] = False,
+    dir_mode: Optional[bool] = False,
+    package_mode: Optional[bool] = False,
+    from_git: Optional[str] = None,
+    repo_dir: Optional[str] = None,
+    transform: Optional[bool] = False,
+    app_secret: Optional[str | bool] = False,
+    __kumo_callback_url: Optional[str] = None,
+    __kumo_callback_token: Optional[str] = None,
+    __host_regex: Optional[str] = None,
 ) -> Flask:
     """
     Get flask application for the funix app.
@@ -359,19 +360,19 @@ def get_flask_application(
 
 
 def run(
-        file_or_module_name: str,
-        host: Optional[str] = "0.0.0.0",
-        port: Optional[int] = 3000,
-        no_frontend: Optional[bool] = False,
-        no_browser: Optional[bool] = False,
-        lazy: Optional[bool] = False,
-        dir_mode: Optional[bool] = False,
-        package_mode: Optional[bool] = False,
-        from_git: Optional[str] = None,
-        repo_dir: Optional[str] = None,
-        dev: Optional[bool] = False,
-        transform: Optional[bool] = False,
-        app_secret: Optional[str | bool] = False,
+    file_or_module_name: str,
+    host: Optional[str] = "0.0.0.0",
+    port: Optional[int] = 3000,
+    no_frontend: Optional[bool] = False,
+    no_browser: Optional[bool] = False,
+    lazy: Optional[bool] = False,
+    dir_mode: Optional[bool] = False,
+    package_mode: Optional[bool] = False,
+    from_git: Optional[str] = None,
+    repo_dir: Optional[str] = None,
+    dev: Optional[bool] = False,
+    transform: Optional[bool] = False,
+    app_secret: Optional[str | bool] = False,
 ) -> None:
     """
     Run the funix app.

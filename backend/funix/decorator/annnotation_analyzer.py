@@ -4,11 +4,10 @@ For funix annotation analyzer.
 Better version of magic, hope replace it in the future.
 """
 
-from typing import Callable, Any
 from enum import Enum
-from inspect import Parameter
 from functools import wraps
-
+from inspect import Parameter
+from typing import Any, Callable
 
 __registered__: dict[Parameter.annotation, Callable[[Parameter], dict]] = {}
 """
@@ -98,7 +97,7 @@ def register_pandera():
     Register pandera type
     """
     from pandera import dtypes
-    from pandera.engines import pandas_engine, numpy_engine
+    from pandera.engines import numpy_engine, pandas_engine
 
     @register(dtypes.Bool, Step.FRONTEND)
     @register(pandas_engine.BOOL, Step.FRONTEND)

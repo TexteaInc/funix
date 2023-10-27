@@ -26,6 +26,7 @@ def funix_auto_cors(response: flask.Response) -> flask.Response:
 
 regex_string = None
 
+
 def enable_funix_host_checker(regex: str):
     global regex_string
     regex_string = regex

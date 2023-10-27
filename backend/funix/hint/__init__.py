@@ -3,6 +3,7 @@ This file is used to define the type hint of the Funix backend.
 """
 
 from typing import (
+    Any,
     Callable,
     Literal,
     NewType,
@@ -10,7 +11,6 @@ from typing import (
     TypeAlias,
     TypedDict,
     TypeVar,
-    Any,
 )
 
 from funix.hint.layout import InputRow, OutputRow
