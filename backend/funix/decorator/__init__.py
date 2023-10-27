@@ -12,6 +12,8 @@ from types import ModuleType
 from typing import Any, Optional
 from urllib.request import urlopen
 from uuid import uuid4
+from collections import deque
+import time
 
 from flask import Response, request, session
 from requests import post
@@ -240,6 +242,11 @@ kumo_callback_token: str | None = None
 Kumo callback token.
 """
 
+call_history: dict = {}
+"""
+Rate limit call history
+"""
+
 
 def set_kumo_info(url: str, token: str) -> None:
     """
@@ -452,6 +459,8 @@ def funix(
     argument_config: ArgumentConfigType = None,
     pre_fill: PreFillType = None,
     menu: Optional[str] = None,
+    max_calls: Optional[int] = None,
+    time_frame: Optional[int] = None,
 ):
     """
     Decorator for functions to convert them to web apps
@@ -485,6 +494,8 @@ def funix(
         menu(str):
             full module path of the function, for `path` only.
             You don't need to set it unless you are funixing a directory and package.
+        max_calls(int): How many calls client can send between each interval set by `time_frame`
+        time_frame(int): Max call interval time, in seconds
 
     Returns:
         function: the decorated function
@@ -1379,6 +1390,38 @@ def funix(
                 Returns:
                     Any: The function's result
                 """
+
+                global call_history
+
+                if max_calls is not None or time_frame is not None:
+                    new_time_frame = 60
+                    new_max_calls = 5
+                    if time_frame:
+                        new_time_frame = time_frame
+                    if max_calls:
+                        new_max_calls = max_calls
+
+                    ip = request.remote_addr
+
+                    if ip not in call_history:
+                        call_history[ip] = deque()
+
+                    queue = call_history[ip]
+                    current_time = time.time()
+
+                    while len(queue) > 0 and current_time - queue[0] > new_time_frame:
+                        queue.popleft()
+
+                    if len(queue) >= new_max_calls:
+                        time_passed = current_time - queue[0]
+                        time_to_wait = int(new_time_frame - time_passed)
+                        error_message = f"Rate limit exceeded. Please try again in {time_to_wait} seconds."
+                        return Response(
+                            error_message, status=429, mimetype="text/plain"
+                        )
+
+                    queue.append(current_time)
+
                 try:
                     if not session.get("__funix_id"):
                         session["__funix_id"] = uuid4().hex

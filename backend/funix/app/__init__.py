@@ -4,9 +4,9 @@ Save the app instance here
 import re
 from secrets import token_hex
 
-import flask
+from flask import Flask, Response, request, abort
 
-app = flask.Flask(__name__)
+app = Flask(__name__)
 app.secret_key = token_hex(16)
 app.config.update(
     SESSION_COOKIE_PATH="/",
@@ -15,7 +15,7 @@ app.config.update(
 
 
 @app.after_request
-def funix_auto_cors(response: flask.Response) -> flask.Response:
+def funix_auto_cors(response: Response) -> Response:
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers[
         "Access-Control-Allow-Methods"
@@ -33,5 +33,5 @@ def enable_funix_host_checker(regex: str):
 
     @app.before_request
     def funix_host_check():
-        if len(re.findall(regex_string, flask.request.host)) == 0:
-            flask.abort(403)
+        if len(re.findall(regex_string, request.host)) == 0:
+            abort(403)
