@@ -1,5 +1,6 @@
 import typing, os, json
 
+import IPython
 import ipywidgets
 
 import easypost
@@ -67,7 +68,6 @@ import funix
     ],
 )
 def easypost_demo(
-    EASYPOST_API_KEY: ipywidgets.Password = "123456",
     from_who: str = "Funix Rocks",
     from_address_1: str = "1 Freedom Way",
     from_address_2: str = "",
@@ -86,7 +86,7 @@ def easypost_demo(
     H: float = 0.4,
     value: float = 5,
     package: typing.Literal["Parcel", "Flat", "Letter"] = "Flat",
-) -> typing.Tuple[funix.hint.Markdown, funix.hint.HTML, funix.hint.Image, dict]:
+) -> typing.Tuple[IPython.display.Markdown, IPython.display.HTML, IPython.display.Image, dict]:
     from_address = {
         "name": from_who,
         "street1": from_address_1,
@@ -116,9 +116,6 @@ def easypost_demo(
         "weight": weight,
         "predefined_package": package,
     }
-
-    if os.getenv("EASYPOST_API_KEY") == None or EASYPOST_API_KEY != "":
-        easypost.api_key = EASYPOST_API_KEY
 
     shipment = easypost.Shipment.create(
         to_address=to_address, from_address=from_address, parcel=parcel

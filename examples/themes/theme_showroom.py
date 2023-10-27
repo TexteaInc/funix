@@ -1,5 +1,6 @@
 from funix import funix
-from funix.hint import Markdown, StrCode, StrTextarea
+from funix.hint import StrCode, StrTextarea
+import IPython
 
 
 description = """
@@ -12,7 +13,7 @@ This a markdown playground in the {theme} mode theme. You can write markdown her
     theme="./dark_test.json",
     show_source=True
 )
-def theme_test_markdown_playground(markdown: StrCode("markdown")) -> Markdown:
+def theme_test_markdown_playground(markdown: StrCode("markdown")) -> IPython.display.Markdown:
     return markdown
 
 
@@ -22,7 +23,7 @@ def theme_test_markdown_playground(markdown: StrCode("markdown")) -> Markdown:
     theme="./sunset.json",
     show_source=True
 )
-def theme_sunset(markdown: StrCode("markdown")) -> Markdown:
+def theme_sunset(markdown: StrCode("markdown")) -> IPython.display.Markdown:
     return markdown
 
 
@@ -32,7 +33,7 @@ def theme_sunset(markdown: StrCode("markdown")) -> Markdown:
     theme="./pink.json",
     show_source=True
     )
-def theme_test_pink(markdown: StrCode("markdown")) -> Markdown:
+def theme_test_pink(markdown: StrCode("markdown")) -> IPython.display.Markdown:
     return markdown
 
 
@@ -42,7 +43,7 @@ def theme_test_pink(markdown: StrCode("markdown")) -> Markdown:
     theme="./comic_sans.json",
     show_source=True
 )
-def theme_comic_sans(markdown: StrCode("markdown")) -> Markdown:
+def theme_comic_sans(markdown: StrCode("markdown")) -> IPython.display.Markdown:
     return markdown
 
 
@@ -52,5 +53,5 @@ def theme_comic_sans(markdown: StrCode("markdown")) -> Markdown:
     theme="./kanagawa.json",
     show_source=True
 )
-def theme_kanagawa(markdown: StrCode("markdown")) -> Markdown:
+def theme_kanagawa(markdown: StrCode("markdown")) -> IPython.display.Markdown:
     return markdown

@@ -92,7 +92,7 @@ def dalle_POST(prompt: str) -> (str, IPython.display.Image):
 
 
 # @funix.funix()
-def dalle(Prompt: str) -> funix.hint.Image:
+def dalle(Prompt: str) -> IPython.display.Image:
     response = openai.Image.create(prompt=Prompt)
     return response["data"][0]["url"]
 

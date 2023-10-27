@@ -1,5 +1,6 @@
 import funix 
-from funix.hint import Image, File, Markdown
+from funix.hint import File
+import IPython
 
 # layout
 @funix.funix(
@@ -26,7 +27,7 @@ from funix.hint import Image, File, Markdown
 )
 def layout_example(
     user_name: str = "texteainc", repo_name: str = "funix"
-) -> (Image, File, Markdown):
+) -> (IPython.display.Image, File, IPython.display.Markdown):
     url = f"https://github.com/{user_name}/{repo_name}"
     author = url.split("/")[3]
     name = url.split("/")[4]

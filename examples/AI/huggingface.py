@@ -24,15 +24,13 @@ def huggingface(
         "bigcode/starcoder", 
         "google/flan-t5-base"] = "gpt2", 
     prompt: str = "Who is Einstein?", 
-    # API_TOKEN: ipywidgets.Password = None
-    # BUG: If API_TOKEN is ipywidgets.Password, its value cannot be passed to the inside of the huggingface function. 
-    API_TOKEN: str = None
+    API_TOKEN: ipywidgets.Password = None
     ) -> str: 
 
     payload = {"inputs": prompt, "max_tokens":200} # not all models use this query  and output formats.  Hence, we limit the models above. 
 
     API_URL = f"https://api-inference.huggingface.co/models/{model_name}"
-    headers = {"Authorization": f"Bearer {API_TOKEN}"}
+    headers = {"Authorization": f"Bearer {API_TOKEN.value}"}
 
     response = requests.post(API_URL, headers=headers, json=payload)
 

@@ -23,11 +23,4 @@ def conditional_visible(
     max_tokens: range(100, 200, 20) = 140,
     openai_key: ipywidgets.Password = "",
 ) -> str:
-    import openai
-
-    completion = openai.ChatCompletion.create(
-        messages=[{"role": "user", "content": prompt}],
-        model=model,
-        max_tokens=max_tokens,
-    )
-    return completion["choices"][0]["message"]["content"]
+    return "This is a dummy function."
