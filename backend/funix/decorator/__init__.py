@@ -318,6 +318,8 @@ def make_decorated_functions_happy() -> list[dict]:
             if module_functions_counter[i["module"]] == 1:
                 if "." in i["module"]:
                     i["module"] = ".".join(i["module"].split(".")[0:-1])
+                else:
+                    i["module"] = None
         new_decorated_functions_list.append(i)
     cached_list_functions = new_decorated_functions_list
     return new_decorated_functions_list
