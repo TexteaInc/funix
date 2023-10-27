@@ -66,15 +66,7 @@ def get_path_difference(base_dir: str, target_dir: str) -> str | None:
     if not target_dir.startswith(base_dir):
         raise ValueError("The base directory is not a prefix of the target directory.")
 
-    if base_components == target_components:
-        return None
-
-    path_diff = []
-    for i in range(len(base_components) - 1, len(target_components)):
-        path_diff.append(target_components[i])
-
-    if not path_diff:
-        return None
+    path_diff = target_components
 
     for _ in range(len(base_components)):
         path_diff.pop(0)
