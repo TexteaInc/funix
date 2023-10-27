@@ -1453,7 +1453,8 @@ def funix(
             limiters: Optional[list[Limiter]] = None
 
             if isinstance(rate_limit, Limiter):
-                limiters = list(rate_limit)
+                limiters = list()
+                limiters.append(rate_limit)
             elif isinstance(rate_limit, dict):
                 converted = CaseInsensitiveDict(rate_limit)
 
