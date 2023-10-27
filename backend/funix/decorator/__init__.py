@@ -284,12 +284,16 @@ class Limiter:
         self.call_history = {}
 
     @staticmethod
-    def ip(max_calls: int):
-        return Limiter(max_calls=max_calls, source=LimitSource.IP)
+    def ip(max_calls: int, time_frame: int = 60):
+        return Limiter(
+            max_calls=max_calls, time_frame=time_frame, source=LimitSource.IP
+        )
 
     @staticmethod
-    def session(max_calls: int):
-        return Limiter(max_calls=max_calls, source=LimitSource.SESSION)
+    def session(max_calls: int, time_frame: int = 60):
+        return Limiter(
+            max_calls=max_calls, time_frame=time_frame, source=LimitSource.SESSION
+        )
 
     def rate_limit(self) -> Optional[Response]:
         call_history = self.call_history
