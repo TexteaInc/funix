@@ -1,7 +1,7 @@
 """
 Save the app instance here
 """
-
+import re
 from secrets import token_hex
 
 import flask
@@ -22,3 +22,15 @@ def funix_auto_cors(response: flask.Response) -> flask.Response:
     ] = "GET, HEAD, POST, OPTIONS, PUT, PATCH, DELETE"
     response.headers["Access-Control-Allow-Headers"] = "*"
     return response
+
+
+regex_string = None
+
+def enable_funix_host_checker(regex: str):
+    global regex_string
+    regex_string = regex
+
+    @app.before_request
+    def funix_host_check():
+        if len(re.findall(regex_string, flask.request.host)) == 0:
+            flask.abort(403)
