@@ -33,6 +33,11 @@ class Step(Enum):
     The parsed data provided to the frontend.
     """
 
+    BOTH = 2
+    """
+    The parsed data provided to both the magic and the frontend.
+    """
+
 
 def register(annotation: Parameter.annotation, step: Step) -> callable:
     """
@@ -87,9 +92,9 @@ def register_ipywidgets():
     """
     import ipywidgets
 
-    @register(ipywidgets.Password, Step.MAGIC)
+    @register(ipywidgets.Password, Step.BOTH)
     def _ipywidgets(_: ipywidgets.Password) -> dict:
-        return {"type": "str", "widget": "password"}
+        return {"type": "string", "widget": "password"}
 
 
 def register_pandera():

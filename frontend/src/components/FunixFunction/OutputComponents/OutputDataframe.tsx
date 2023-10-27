@@ -12,17 +12,23 @@ export default function OutputDataframe(props: {
   const row = props.dataframe[0];
 
   if (!hasId) {
-    columns.push({ field: "id", editable: false, headerName: "ID" });
+    columns.push({
+      field: "id",
+      editable: false,
+      headerName: "ID",
+    });
   }
 
-  Object.keys(row).forEach((key) => {
-    columns.push({
-      field: key,
-      headerName: key,
-      width: 150,
-      editable: false,
+  Object.keys(row)
+    .reverse()
+    .forEach((key) => {
+      columns.push({
+        field: key,
+        headerName: key,
+        width: 150,
+        editable: false,
+      });
     });
-  });
 
   props.dataframe.forEach((row, index) => {
     if (!hasId) {
@@ -44,6 +50,13 @@ export default function OutputDataframe(props: {
           Toolbar: GridToolbar,
         }}
         checkboxSelection
+        initialState={{
+          columns: {
+            columnVisibilityModel: {
+              id: false,
+            },
+          },
+        }}
       />
     </Box>
   );

@@ -4,9 +4,11 @@ import typing
 import ipywidgets
 
 import openai
+
 openai.api_key = os.environ.get("OPENAI_KEY")
 
 import funix
+
 
 @funix.new_funix_type(
     {
@@ -31,8 +33,7 @@ cfg = {  # declarative configuration, all in one place
     },
     "widgets": {"openai_key": "password"},
     "conditional_visible": [
-        {"when": {"show_advanced": True}, 
-        "show": ["max_tokens", "model", "openai_key"]}
+        {"when": {"show_advanced": True}, "show": ["max_tokens", "model", "openai_key"]}
     ],
 }
 
@@ -43,9 +44,8 @@ def ChatGPT_advanced(
     show_advanced: bool = False,
     model: typing.Literal["gpt-3.5-turbo", "gpt-3.5-turbo-0301"] = "gpt-3.5-turbo",
     max_tokens: range(100, 500, 50) = 150,
-    # openai_key: ipywidgets.Password = "use environment variable",
-    # BUG: Conditional visible will not work if openai_key's type is ipywidgets.Password. Works if it's str. 
-    openai_key: str = "use environment variable",
+    openai_key: ipywidgets.Password = "use environment variable",
+    # openai_key: str = "use environment variable",
 ) -> str:
     if openai_key != "use environment variable":
         openai.api_key = openai_key
