@@ -18,6 +18,7 @@ from uuid import uuid4
 
 from flask import Response, request, session
 from requests import post
+from requests.structures import CaseInsensitiveDict
 
 from funix.app import app
 from funix.config import (
@@ -270,6 +271,13 @@ class Limiter:
         time_frame: int = 60,
         source: LimitSource = LimitSource.SESSION,
     ):
+        if type(max_calls) is not int:
+            raise TypeError("type of `max_calls` is not int")
+        if type(time_frame) is not int:
+            raise TypeError("type of `time_frame` is not int")
+        if type(source) is not LimitSource:
+            raise TypeError("type of `source` is not LimitSource")
+
         self.source = source
         self.max_calls = max_calls
         self.time_frame = time_frame
@@ -525,7 +533,7 @@ def funix(
     argument_config: ArgumentConfigType = None,
     pre_fill: PreFillType = None,
     menu: Optional[str] = None,
-    rate_limit: Limiter | list[Limiter] = list(),
+    rate_limit: Limiter | list[Limiter] | dict[str, any] = list(),
 ):
     """
     Decorator for functions to convert them to web apps
@@ -1442,6 +1450,42 @@ def funix(
                 verify_secret_endpoint(verify_secret)
                 verify_secret_id(verify_secret)
 
+            limiters: Optional[list[Limiter]] = None
+
+            if isinstance(rate_limit, Limiter):
+                limiters = list(rate_limit)
+            elif isinstance(rate_limit, dict):
+                converted = CaseInsensitiveDict(rate_limit)
+
+                def get_int(key: str) -> Optional[int]:
+                    if not key in converted:
+                        return None
+                    value = converted[key]
+                    if isinstance(value, int):
+                        return value
+                    if isinstance(value, str):
+                        return int(value)
+                    raise ValueError(
+                        f"The value of key `{key}` is `{value}`, cannot parse to integer"
+                    )
+
+                per_ip = get_int("per_ip")
+                per_session = get_int("per_browser")
+                limiters = list()
+                if per_ip:
+                    limiters.append(Limiter.ip(per_ip))
+                if per_session:
+                    limiters.append(Limiter.ip(per_session))
+                if len(limiters) == 0:
+                    raise TypeError(
+                        f"Dict passed for `rate_limit` but no limiters are provided, something wrong."
+                    )
+
+            elif isinstance(rate_limit, list):
+                pass
+            else:
+                raise TypeError(f"Invalid arguments, unsupported type for `rate_limit`")
+
             @wraps(function)
             def wrapper():
                 """
@@ -1455,13 +1499,8 @@ def funix(
                     Any: The function's result
                 """
 
-                if isinstance(rate_limit, Limiter):
-                    limit_result = rate_limit.rate_limit()
-                    if limit_result is not None:
-                        return limit_result
-                else:
-                    for limiter in rate_limit:
-                        limit_result = limiter.rate_limit()
+                for limiter in limiters:
+                    limit_result = limiter.rate_limit()
                     if limit_result is not None:
                         return limit_result
 
