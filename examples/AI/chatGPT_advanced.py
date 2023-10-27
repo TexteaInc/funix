@@ -1,12 +1,12 @@
 import os
 import typing
 
-import openai
+import ipywidgets
 
+import openai
 openai.api_key = os.environ.get("OPENAI_KEY")
 
 import funix
-
 
 @funix.new_funix_type(
     {
@@ -21,7 +21,7 @@ class PromptBox(str):
 
 
 cfg = {  # declarative configuration, all in one place
-    "description": """Try the **ChatGPT** app in [Funix](http://funix.io)""",
+    "description": """Try the **ChatGPT** app in [Funix](http://funix.io). **Note: An OpenAI key needs to be set in the environment variable OPENAI_KEY.""",
     "argument_labels": {
         "prompt": "_What do you wanna ask?_",
         "max_tokens": "**Length** of the answer",
@@ -29,9 +29,10 @@ cfg = {  # declarative configuration, all in one place
         "openai_key": "Use your own OpenAI key",
         "model": "Choose a model",
     },
-    "widgets": {"openai_key": "password", "model": "radio"},
+    "widgets": {"openai_key": "password"},
     "conditional_visible": [
-        {"when": {"show_advanced": True}, "show": ["max_tokens", "model", "openai_key"]}
+        {"when": {"show_advanced": True}, 
+        "show": ["max_tokens", "model", "openai_key"]}
     ],
 }
 
@@ -42,6 +43,8 @@ def ChatGPT_advanced(
     show_advanced: bool = False,
     model: typing.Literal["gpt-3.5-turbo", "gpt-3.5-turbo-0301"] = "gpt-3.5-turbo",
     max_tokens: range(100, 500, 50) = 150,
+    # openai_key: ipywidgets.Password = "use environment variable",
+    # BUG: Conditional visible will not work if openai_key's type is ipywidgets.Password. Works if it's str. 
     openai_key: str = "use environment variable",
 ) -> str:
     if openai_key != "use environment variable":

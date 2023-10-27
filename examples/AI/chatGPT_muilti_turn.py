@@ -17,7 +17,9 @@ def print_messages_html(messages):
     return printout
 
 import funix 
-@funix.funix(direction="column-reverse") # input is below log
+@funix.funix(
+    description="""Multi-turn chat with ChatGPT. **Note:** An OpenAI key needs to be set in the environment variable OPENAI_KEY.""",
+    direction="column-reverse") # input is below log
 def ChatGPT_multi_turn(current_message: str)  -> IPython.display.HTML:
     current_message = current_message.strip()
     messages.append({"role": "user", "content": current_message})

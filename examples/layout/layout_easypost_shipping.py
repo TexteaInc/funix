@@ -1,5 +1,7 @@
 import typing, os, json
 
+import ipywidgets
+
 import easypost
 easypost.api_key = os.getenv("EASYPOST_API_KEY")
 
@@ -26,19 +28,19 @@ import funix
         "value": "value ($)",
         "package": "package type",
     },
-    widgets={"package": "radio", "EASYPOST_API_KEY": "password"},
+    widgets={"EASYPOST_API_KEY": "password"},
     input_layout=[
-        [{"markdown": "Your EASYPOST API key (optional)"}, {"argument":"EASYPOST_API_KEY", "width": 6}],
+        [{"markdown": "Your EASYPOST API key"}, {"argument":"EASYPOST_API_KEY", "width": 6}],
         [{"markdown": "### Sender information"}], 
         [{"argument": "from_who", "width": 4}], 
         [{"argument": "from_address_1", "width": 6}],
         [{"argument": "from_address_2", "width": 6}],
-        [{"argument": "from_city", "width": 2}, {"argument": "from_state", "width": 2}, {"argument": "from_zip", "width": 2}],
+        [{"argument": "from_city", "width": 3}, {"argument": "from_state", "width": 2.5}, {"argument": "from_zip", "width": 3}],
         [{"markdown": "### Receiver information"}],
         [{"argument": "to_who", "width": 4}],
         [{"argument": "to_address_1", "width": 6}],
         [{"argument": "to_address_2", "width": 6}],
-        [{"argument": "to_city", "width": 2}, {"argument": "to_state", "width": 2}, {"argument": "to_zip", "width": 2}],
+        [{"argument": "to_city", "width": 3}, {"argument": "to_state", "width": 2}, {"argument": "to_zip", "width": 3}],
         [{"markdown": "### Package information"}],
         [{"markdown":"Dimension: ", "width":2}, {"argument": "L", "width": 2}, {"markdown":"x", "width": 0.5}, {"argument": "W", "width": 2}, {"markdown":"x", "width":0.5}, {"argument": "H", "width": 2}],
         [{"argument": "weight", "width": 2}, {"argument": "value", "width": 2}],
@@ -46,15 +48,16 @@ import funix
         ],
 )
 def easypost_demo(
-    EASYPOST_API_KEY: str = "",
-    from_who: str = "Forrest Bao", 
-    from_address_1: str = "2500 Broadway", 
+    EASYPOST_API_KEY: str = "123456",
+    # BUG: if I replace the type to ipywidgets.Password, I will get an error at the frontend: Unsupported field schema for field root_EASYPOST_API_KEY: Unknown field type str.
+    from_who: str = "Funix Rocks", 
+    from_address_1: str = "1 Freedom Way", 
     from_address_2: str = "",
     from_city: str = "Lubbock", 
     from_state: str = "TX", 
     from_zip: str = "79409",
-    to_who: str = "Forrest Bao",
-    to_address_1: str = "2434 Osborn Drive", 
+    to_who: str = "Funix Sounds",
+    to_address_1: str = "1 Python Drive", 
     to_address_2: str = "",
     to_city: str = "Ames", 
     to_state: str = "IA", 

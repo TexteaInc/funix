@@ -1,7 +1,6 @@
 # Turn this function to a web app using the command: 
 # funix chatGPT_lazy.py -l # -l flag must be there. 
 
-
 import os # Python's native 
 import openai  # you cannot skip it 
 

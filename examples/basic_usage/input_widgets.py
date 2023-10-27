@@ -8,6 +8,7 @@ import funix
 #     }
 # )
 
+@funix.funix()
 def input_types(
     prompt: str, 
     advanced_features: bool = False,

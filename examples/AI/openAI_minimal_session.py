@@ -5,12 +5,7 @@ import requests
 import openai 
 
 import funix
-from funix.session import get_global_variable, set_global_variable#, set_default_global_variable
-
-# BUG: The set_global_variable() call does not effectively change the value of openai.api_key,
-# though get_global_variable(openai.api_key) returns sessionized key value. 
-# The value of openai.api_key remains None unless set via the environment variable OPENAI_KEY. 
-# As a workaround, we use the POST method to demo. 
+from funix.session import get_global_variable, set_global_variable
 
 # openai.api_key = os.environ.get("OPENAI_KEY")
 openai_key = os.environ.get("OPENAI_KEY")
@@ -36,13 +31,12 @@ def set_openAI_key(api_key: str="", use_sys_env_var:bool=False) -> str:
             return f"Your openAI key has been set to: {openai_key}"
 
             # openai.api_key = api_key 
-            set_global_variable(openai.api_key, api_key)
+            # set_global_variable(openai.api_key, api_key)
+            # FIXME: The two lines above are both useless to change openai.api_key. That's why we have to use POST method below to query all OpenAI endpoints. This is something to be fixed after grand opening. 
             return "OpenAI API key has been set via the web form! If it was set via an environment variable before, it's now overwritten."
 
 @funix.funix()
 def get_openAI_key()->str:
-    # return f"Your openAI key has been set to: {openai.api_key}" 
-    # return f"Your openAI key has been set to: {get_global_variable(openai.api_key)}" 
     return f"Your openAI key has been set to: {openai_key}"
 
 @funix.funix()

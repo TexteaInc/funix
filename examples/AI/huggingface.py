@@ -11,6 +11,11 @@ import requests # pip install requests
 
 API_TOKEN = os.getenv("HF_TOKEN") # "Please set your API token as an environment variable named HF_TOKEN. You can get your token from https://huggingface.co/settings/token"
 
+import funix
+
+@funix.funix(
+    description="""Talk to LLMs hosted at HuggingFace. A HuggingFace token needs to be set in the environment variable HF_TOKEN.""",
+)
 def huggingface(
     model_name: typing.Literal[
         "gpt2", 

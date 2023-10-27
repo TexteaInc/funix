@@ -5,7 +5,7 @@ from funix.hint import BytesFile
 
 
 @funix(
-    title="Get Files SHA256",
+    title="Get File's SHA256",
 )
 def hashit(datas: List[BytesFile]) -> list:
     results = []

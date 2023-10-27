@@ -1,5 +1,12 @@
 {
   "name": "dark_test",
+  "typography": {
+    "fontFamily": "Courier New, monospace",
+    "fontSize": 14,
+    "fontWeightLight": 300,
+    "fontWeightRegular": 400,
+    "fontWeightMedium": 500
+  },
   "palette": {
     "mode": "dark"
   }

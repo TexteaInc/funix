@@ -6,13 +6,15 @@ import typing
 import functools
 import multiprocessing
 
+import pandas, pandera
+
 import funix 
 
-#%% 
-def remove_3_prime_adapter(
-    sRNA:str="AAGCTCAGGAGGGATAGCGCCTCGTATGCCGTCTTCTGCTT", 
+
+def remove_3_prime_adapter_one(
+    sRNA: str="AAGCTCAGGAGGGATAGCGCCTCGTATGCCGTCTTCTGCTT", 
     adapter_3_prime:str =         "TCGTATGCCGTCTTCTGCTT", 
-    minimal_match_length=0, 
+    minimal_match_length:int=0, 
     verbose_level:int=1):
     """Use reverse shift to match the sRNA with the 3' adapter
     minimal_match_length: the sRNA needs at least that much matchness 
@@ -59,24 +61,24 @@ def remove_3_prime_adapter_vectorized(
         "AAGCTCAGGAGGGATAGCGCCGTATG", # no match at all
     ],     
     adapter_3_prime: str =   "TCGTATGCCGTCTTCTGCTT", 
-    minimal_match_length=8, 
-    verbose_level = 1):
+    minimal_match_length:int =8, 
+    verbose_level:int  = 1):
 
-    func_remove_3_prime_adapter_partial = functools.partial(remove_3_prime_adapter, 
+    # print (adapter_3_prime)
+
+    func_remove_3_prime_adapter_partial = functools.partial(remove_3_prime_adapter_one, 
     adapter_3_prime=adapter_3_prime, minimal_match_length=minimal_match_length,
     verbose_level=1)
 
     # with multiprocessing.Pool() as pool:
     #     result = pool.map(func_remove_3_prime_adapter_partial, sRNAs)
+    # BUG: Not a priority. Funix cannot work with multiprocessing. The two lines above will throw an error. But there is no problem to run this script locally. 
     result = list(map(func_remove_3_prime_adapter_partial, sRNAs))
-
-    print (result)
+    
     returns =  list(zip(*result))
     # print (returns)
     [return_codes, return_seqs] = returns
     
-    print (return_seqs)
-
     return return_codes, return_seqs
 
 def test():
@@ -84,48 +86,39 @@ def test():
     for code, seq in zip(return_codes, return_seqs):
         print (code, ":", seq)
 
+class InputSchema(pandera.DataFrameModel):
+    sRNAs: pandera.typing.Series[str]
+
+class OutputSchema(pandera.DataFrameModel):
+    original_sRNA: pandera.typing.Series[str]
+    adapter_removed: pandera.typing.Series[str]
 
 @funix.funix(
-    path = "bioinfo_remove_3_prime_adapter",
     description = "Remove 3' prime adapter from the end of an RNA-seq",
-    argument_config = {
-        "sRNAs": {
-            "widget" : "sheet" 
-        },
-        "adapter_3_prime": {
-            "treat_as": "config",
-            "examples": ["TCGTATGCCGTCTTCTGCTT"]
-        },
-        "minimal_match_length": {
-            "treat_as": "config",
-            "examples": [6]
-        }
-    }
 )
-def bioinfo_remove_3_prime_adapter(
-    adapter_3_prime: str="TCGTATGCCGTCTTCTGCTT",
+def remove_3_prime_adapter(
+    # adapter_3_prime: str="TCGTATGCCGTCTTCTGCTT",
+    adapter_3_prime: str="TCGTA",
     minimal_match_length: int=8, 
-    sRNAs: typing.List[str]=[
-                        "AAGCTCAGGAGGGATAGCGCCTCGTATGCCGTCTTCTGC",  # shorter than full 3' adapter
-                    "AAGCTCAGGAGGGATAGCGCCTCGTATGCCGTCTTCTGCTT",  # full 3' adapter
-                    # additional seq after 3' adapter,
-                    "AAGCTCAGGAGGGATAGCGCCTCGTATGCCGTCTTCTGCTTCTGAATTAATT",
-                    "AAGCTCAGGAGGGATAGCGCCTCGTATG",  # <8 nt io 3' adapter
-                    "AAGCTCAGGAGGGATAGCGCCGTATG"  # no match at all
-    ],
-# ) -> remove_3_prime_adapter_return:
-# ) -> typing.List[str]: 
-) -> dict:
+    sRNAs: pandera.typing.DataFrame[InputSchema]=
+        pandas.DataFrame({"sRNAs":
+        [
+        "AAGCTCAGGAGGGATAGCGCCTCGTATGCCGTCTTCTGC",  # shorter than full 3' adapter
+        "AAGCTCAGGAGGGATAGCGCCTCGTATGCCGTCTTCTGCTT",  # full 3' adapter
+        # additional seq after 3' adapter,
+        "AAGCTCAGGAGGGATAGCGCCTCGTATGCCGTCTTCTGCTTCTGAATTAATT",
+        "AAGCTCAGGAGGGATAGCGCCTCGTATG",  # <8 nt io 3' adapter
+        "AAGCTCAGGAGGGATAGCGCCGTATG"  # no match at all
+    ]}),
+# ) -> pandera.typing.DataFrame[OutputSchema]:
+) -> pandas.DataFrame:
     return_codes, return_seqs = remove_3_prime_adapter_vectorized(
-        sRNAs=sRNAs,
+        sRNAs=sRNAs["sRNAs"].tolist(), 
         adapter_3_prime=adapter_3_prime,
         minimal_match_length=minimal_match_length)
-    return {"original sRNA": sRNAs, "adapter removal result": return_seqs}
-    # return {"removal_result_code": return_codes, "removal_result_sequence":return_seqs}
-    # return return_seqs
+    return pandas.DataFrame({"original sRNA": sRNAs["sRNAs"], "adapter removed": list(return_seqs)})
+    # FIXME: the order of columns in the sheet at our frontend is not the same as the order of columns in the dataframe returned by this function. The order at the frontend is "adapter removed" and then "original sRNA", which should have been flipped.
 
 
 if __name__ == "__main__":
     test()
-
-# %%
