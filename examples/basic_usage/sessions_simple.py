@@ -19,7 +19,7 @@ Another example is OpenAI demos where OpenAI key is set in one page while DallE 
 def set_y(x: str="123") -> str:
     global y
     y = x 
-    return "Y has been changed. Now check it in the get_y() page."
+    return "Y has been changed. Now check it in the `Session/State: get` page."
 
 
 @funix.funix(
