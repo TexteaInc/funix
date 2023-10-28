@@ -1,6 +1,7 @@
 import typing, random
 import matplotlib.figure, matplotlib.pyplot
-import IPython
+import IPython, ipywidgets
+
 import funix 
 
 def calc(
@@ -46,6 +47,7 @@ def widget_showoff(
             of Judea due to the Lex Julia Majestatis, which disallows\
             access to resources hosted on servers deemed to be\
             operated by the People's Front of Jude",
+    str_input_password: ipywidgets.Password = "password",
     X: typing.List[int] = [1919, 1949, 1979, 2019],
     Y: typing.List[float] = [3.141, 2.718, 6.626, 2.997],
     Z: typing.List[str] = ["Pi", "e", "Planck", "Speed of light"],

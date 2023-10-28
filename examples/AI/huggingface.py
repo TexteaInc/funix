@@ -21,18 +21,17 @@ import funix
 )
 def huggingface(
     model_name: typing.Literal[
-        "gpt2", "bigcode/starcoder", "google/flan-t5-base"
-    ] = "gpt2",
-    prompt: str = "Who is Einstein?",
-    API_TOKEN: ipywidgets.Password = None,
-) -> str:
-    payload = {
-        "inputs": prompt,
-        "max_tokens": 200,
-    }  # not all models use this query  and output formats.  Hence, we limit the models above.
+        "gpt2", 
+        "bigcode/starcoder", 
+        "google/flan-t5-base"] = "gpt2", 
+    prompt: str = "Who is Einstein?", 
+    HuggingFace_API_TOKEN: ipywidgets.Password = None
+    ) -> str: 
+
+    payload = {"inputs": prompt, "max_tokens":200} # not all models use this query  and output formats.  Hence, we limit the models above. 
 
     API_URL = f"https://api-inference.huggingface.co/models/{model_name}"
-    headers = {"Authorization": f"Bearer {API_TOKEN.value}"}
+    headers = {"Authorization": f"Bearer {HuggingFace_API_TOKEN.value}"}
 
     response = requests.post(API_URL, headers=headers, json=payload)
 

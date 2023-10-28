@@ -9,7 +9,8 @@ import funix
         "weight": "Weight (kg)", 
         "height": "Height (m)"
     }
+    show_source=True,
 )
 def BMI(weight: float, height: float) -> str:
     bmi = weight / (height**2)
-    return f"Your BMI is: {bmi:.2f}"
+    return f"## Your BMI is: \n ###{bmi:.2f}"
