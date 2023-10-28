@@ -1,6 +1,7 @@
 """
 Funix decorator. The central logic of Funix.
 """
+import dataclasses
 import time
 from collections import deque
 from copy import deepcopy
@@ -257,6 +258,7 @@ class LimitSource(Enum):
     IP = auto()
 
 
+@dataclasses.dataclass
 class Limiter:
     call_history: dict
     # How many calls client can send between each interval set by `period`
@@ -290,6 +292,42 @@ class Limiter:
     @staticmethod
     def session(max_calls: int, period: int = 60):
         return Limiter(max_calls=max_calls, period=period, source=LimitSource.SESSION)
+
+    @staticmethod
+    def _dict_get_int(dictionary: dict, key: str) -> Optional[int]:
+        if not key in dictionary:
+            return None
+        value = dictionary[key]
+        if isinstance(value, int):
+            return value
+        if isinstance(value, str):
+            return int(value)
+        raise ValueError(
+            f"The value of key `{key}` is `{value}`, cannot parse to integer"
+        )
+
+    @staticmethod
+    def from_dict(dictionary: dict):
+        converted = CaseInsensitiveDict(dictionary)
+        ip = Limiter._dict_get_int(converted, "per_ip")
+        session = Limiter._dict_get_int(converted, "per_browser")
+
+        if ip is not None and session is not None:
+            raise TypeError(
+                "`per_ip` and `per_browser` are conflicting options in a single dict"
+            )
+
+        if ip is None and session is None:
+            raise TypeError("`per_ip` or `per_browser` is required")
+
+        max_calls = ip or session
+        if ip is not None:
+            source = LimitSource.IP
+        if session is not None:
+            source = LimitSource.SESSION
+        period = Limiter._dict_get_int(converted, "period") or 60
+
+        return Limiter(max_calls=max_calls, period=period, source=source)
 
     def rate_limit(self) -> Optional[Response]:
         call_history = self.call_history
@@ -533,7 +571,7 @@ def funix(
     argument_config: ArgumentConfigType = None,
     pre_fill: PreFillType = None,
     menu: Optional[str] = None,
-    rate_limit: Limiter | list[Limiter] | dict[str, any] = list(),
+    rate_limit: Limiter | list | dict = list(),
 ):
     """
     Decorator for functions to convert them to web apps
@@ -1458,20 +1496,8 @@ def funix(
             elif isinstance(rate_limit, dict):
                 converted = CaseInsensitiveDict(rate_limit)
 
-                def get_int(key: str) -> Optional[int]:
-                    if not key in converted:
-                        return None
-                    value = converted[key]
-                    if isinstance(value, int):
-                        return value
-                    if isinstance(value, str):
-                        return int(value)
-                    raise ValueError(
-                        f"The value of key `{key}` is `{value}`, cannot parse to integer"
-                    )
-
-                per_ip = get_int("per_ip")
-                per_session = get_int("per_browser")
+                per_ip = Limiter._dict_get_int(converted, "per_ip")
+                per_session = Limiter._dict_get_int(converted, "per_browser")
                 limiters = list()
                 if per_ip:
                     limiters.append(Limiter.ip(per_ip))
@@ -1483,7 +1509,17 @@ def funix(
                     )
 
             elif isinstance(rate_limit, list):
-                pass
+                limiters = list()
+                for element in rate_limit:
+                    if isinstance(element, Limiter):
+                        limiters.append(element)
+                    elif isinstance(element, dict):
+                        limiters.append(Limiter.from_dict(element))
+                    else:
+                        raise TypeError(
+                            f"Invalid arguments, unsupported type for `rate_limit`"
+                        )
+
             else:
                 raise TypeError(f"Invalid arguments, unsupported type for `rate_limit`")
 
