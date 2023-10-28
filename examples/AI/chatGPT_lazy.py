@@ -5,7 +5,7 @@ openai.api_key = os.environ.get("OPENAI_KEY")
 
 import funix
 @funix.funix(
-    rate_limit=funix.decorator.Limiter.session(max_calls=2, time_frame=60*60*24),
+    rate_limit=funix.decorator.Limiter.session(max_calls=2, period=60*60*24),
     show_source=True
 )
 
@@ -14,7 +14,7 @@ import funix
 # $ funix -l chatGPT_lazy.py
 
 
-def ChatGPT(prompt: str) -> str:
+def ChatGPT_simplest(prompt: str) -> str:
     completion = openai.ChatCompletion.create(
         messages=[{"role": "user", "content": prompt}], model="gpt-3.5-turbo"
     )

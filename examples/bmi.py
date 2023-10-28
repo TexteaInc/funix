@@ -8,7 +8,7 @@ import funix
     argument_labels = {
         "weight": "Weight (kg)", 
         "height": "Height (m)"
-    }
+    }, 
     show_source=True,
 )
 def BMI(weight: float, height: float) -> str:
