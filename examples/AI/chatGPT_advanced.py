@@ -6,7 +6,7 @@ import ipywidgets
 import openai
 
 # openai.api_key = os.environ.get("OPENAI_KEY")
-# Disable this app from being called in public hosted examples 
+# Disable this app from being called in public hosted examples
 
 import funix
 
@@ -32,7 +32,7 @@ cfg = {  # declarative configuration, all in one place
     "conditional_visible": [
         {"when": {"show_advanced_options": True}, "show": ["max_tokens", "model"]}
     ],
-    "rate_limit": funix.decorator.Limiter.session(max_calls=2, time_frame=60*60*24),
+    "rate_limit": funix.decorator.Limiter.session(max_calls=2, period=60 * 60 * 24),
 }
 
 

@@ -259,41 +259,37 @@ class LimitSource(Enum):
 
 class Limiter:
     call_history: dict
-    # How many calls client can send between each interval set by `time_frame`
+    # How many calls client can send between each interval set by `period`
     max_calls: int
     # Max call interval time, in seconds
-    time_frame: int
+    period: int
     source: LimitSource
 
     def __init__(
         self,
         max_calls: int = 10,
-        time_frame: int = 60,
+        period: int = 60,
         source: LimitSource = LimitSource.SESSION,
     ):
         if type(max_calls) is not int:
             raise TypeError("type of `max_calls` is not int")
-        if type(time_frame) is not int:
-            raise TypeError("type of `time_frame` is not int")
+        if type(period) is not int:
+            raise TypeError("type of `period` is not int")
         if type(source) is not LimitSource:
             raise TypeError("type of `source` is not LimitSource")
 
         self.source = source
         self.max_calls = max_calls
-        self.time_frame = time_frame
+        self.period = period
         self.call_history = {}
 
     @staticmethod
-    def ip(max_calls: int, time_frame: int = 60):
-        return Limiter(
-            max_calls=max_calls, time_frame=time_frame, source=LimitSource.IP
-        )
+    def ip(max_calls: int, period: int = 60):
+        return Limiter(max_calls=max_calls, period=period, source=LimitSource.IP)
 
     @staticmethod
-    def session(max_calls: int, time_frame: int = 60):
-        return Limiter(
-            max_calls=max_calls, time_frame=time_frame, source=LimitSource.SESSION
-        )
+    def session(max_calls: int, period: int = 60):
+        return Limiter(max_calls=max_calls, period=period, source=LimitSource.SESSION)
 
     def rate_limit(self) -> Optional[Response]:
         call_history = self.call_history
@@ -309,12 +305,12 @@ class Limiter:
         queue = call_history[source]
         current_time = time.time()
 
-        while len(queue) > 0 and current_time - queue[0] > self.time_frame:
+        while len(queue) > 0 and current_time - queue[0] > self.period:
             queue.popleft()
 
         if len(queue) >= self.max_calls:
             time_passed = current_time - queue[0]
-            time_to_wait = int(self.time_frame - time_passed)
+            time_to_wait = int(self.period - time_passed)
             error_message = (
                 f"Rate limit exceeded. Please try again in {time_to_wait} seconds."
             )
@@ -1454,7 +1450,7 @@ def funix(
                 verify_secret_endpoint(verify_secret)
                 verify_secret_id(verify_secret)
 
-            limiters: Optional[list[Limiter]] = list() # was a none
+            limiters: Optional[list[Limiter]] = list()  # was a none
 
             if isinstance(rate_limit, Limiter):
                 limiters = list()
