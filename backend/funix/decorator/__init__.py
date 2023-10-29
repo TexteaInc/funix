@@ -577,7 +577,7 @@ def funix(
     argument_config: ArgumentConfigType = None,
     pre_fill: PreFillType = None,
     menu: Optional[str] = None,
-    is_default: bool = False,
+    default: bool = False,
     rate_limit: Limiter | list | dict = list(),
 ):
     """
@@ -612,7 +612,7 @@ def funix(
         menu(str):
             full module path of the function, for `path` only.
             You don't need to set it unless you are funixing a directory and package.
-        is_default(bool): whether this function is the default function
+        default(bool): whether this function is the default function
         rate_limit(Limiter | list[Limiter]): rate limiters, an object or a list
 
     Returns:
@@ -653,7 +653,7 @@ def funix(
 
             function_id = str(uuid4())
 
-            if is_default:
+            if default:
                 default_function = function_id
 
             safe_module_now = now_module
@@ -1179,7 +1179,7 @@ def funix(
                         is __pandera_module.typing.pandas.DataFrame
                     ):
                         anno = function_param.annotation
-                        default = (
+                        default_values = (
                             {}
                             if function_param.default is Parameter.empty
                             else function_param.default
@@ -1192,8 +1192,8 @@ def funix(
                             ] = dataframe_parse_metadata.get(function_id, {})
                             column_names = []
                             for name, column in schema_columns.items():
-                                if name in default:
-                                    column_default = list(default[name])
+                                if name in default_values:
+                                    column_default = list(default_values[name])
                                 else:
                                     column_default = None
                                 d_type = column.dtype
