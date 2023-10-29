@@ -2,12 +2,13 @@ from importlib import import_module
 from inspect import isfunction
 from ipaddress import ip_address
 from os import chdir, getcwd, listdir
-from os.path import dirname, exists, isdir, join, normpath, sep
+from os.path import dirname, exists, isdir, join, normpath, sep, abspath
 from sys import exit, path
 from typing import Generator, Optional
 from urllib.parse import quote
 
 from flask import Flask
+from gitignore_parser import parse_gitignore
 
 import funix.decorator as decorator
 import funix.hint as hint
@@ -140,7 +141,7 @@ def __prep(
 
 
 def get_python_files_in_dir(
-    base_dir: str, add_to_sys_path: bool, need_full_path: bool
+    base_dir: str, add_to_sys_path: bool, need_full_path: bool, is_dir: bool
 ) -> Generator[str, None, None]:
     """
     Get all the Python files in a directory.
@@ -149,23 +150,32 @@ def get_python_files_in_dir(
         base_dir (str): The path.
         add_to_sys_path (bool): If the path should be added to sys.path.
         need_full_path (bool): If the full path is needed.
+        is_dir (bool): If mode is dir mode.
 
     Returns:
         Generator[str, None, None]: The Python files.
     """
     if add_to_sys_path:
         path.append(base_dir)
+    ignore_file = join(base_dir, ".funixignore")
+    matches = None
+    if exists(ignore_file):
+        matches = parse_gitignore(abspath(ignore_file))
     files = listdir(base_dir)
     for file in files:
         if isdir(join(base_dir, file)):
             yield from get_python_files_in_dir(
-                join(base_dir, file), add_to_sys_path, need_full_path
+                join(base_dir, file), add_to_sys_path, need_full_path, is_dir
             )
         if file.endswith(".py") and file != "__init__.py":
-            if need_full_path:
-                yield join(base_dir, file)
-            else:
-                yield file[:-3]
+            full_path = join(base_dir, file)
+            abs_full_path = abspath(full_path)
+            if matches:
+                if not matches(abs_full_path):
+                    if need_full_path:
+                        yield join(base_dir, file)
+                    else:
+                        yield file[:-3]
 
 
 def import_from_config(
@@ -230,7 +240,10 @@ def import_from_config(
         if exists(file_or_module_name) and isdir(file_or_module_name):
             base_dir = file_or_module_name
             for single_file in get_python_files_in_dir(
-                base_dir=base_dir, add_to_sys_path=False, need_full_path=True
+                base_dir=base_dir,
+                add_to_sys_path=False,
+                need_full_path=True,
+                is_dir=True,
             ):
                 __prep(
                     module_or_file=single_file,
@@ -254,7 +267,10 @@ def import_from_config(
                 f"`__init__.py`  is not found inside module path: {module_path}!"
             )
         for module in get_python_files_in_dir(
-            base_dir=dirname(module_path), add_to_sys_path=True, need_full_path=False
+            base_dir=dirname(module_path),
+            add_to_sys_path=True,
+            need_full_path=False,
+            is_dir=False,
         ):
             __prep(
                 module_or_file=module,
