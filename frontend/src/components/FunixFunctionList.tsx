@@ -103,7 +103,9 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
       selectedFunction: null,
     }));
     async function queryData() {
-      const { list } = await getList(new URL("/list", backend));
+      const { list, default_function } = await getList(
+        new URL("/list", backend)
+      );
       setState(list);
       setStore((store) => ({
         ...store,
@@ -113,6 +115,16 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
       if (list.length === 1) {
         handleFetchFunctionDetail(list[0]);
         setRadioGroupValue(list[0].path);
+      } else {
+        if (default_function !== null) {
+          const preview = list.filter(
+            (preview) => preview.id === default_function
+          );
+          if (preview.length === 1) {
+            handleFetchFunctionDetail(preview[0]);
+            setRadioGroupValue(preview[0].path);
+          }
+        }
       }
     }
     queryData().then();

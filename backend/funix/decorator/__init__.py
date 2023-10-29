@@ -230,6 +230,11 @@ module_functions_counter: dict[str, int] = {}
 A dict, key is module name, value is the number of functions in the module.
 """
 
+default_function: str | None = None
+"""
+Default function id.
+"""
+
 cached_list_functions: list[dict] = []
 """
 Cached list functions. For `/list` route.
@@ -439,7 +444,7 @@ def enable_wrapper() -> None:
     """
     Enable the wrapper, this will add the list and file path to the app.
     """
-    global __wrapper_enabled
+    global __wrapper_enabled, default_function
     if not __wrapper_enabled:
         __wrapper_enabled = True
 
@@ -457,6 +462,7 @@ def enable_wrapper() -> None:
             """
             return {
                 "list": make_decorated_functions_happy(),
+                "default_function": default_function,
             }
 
         enable_file_service()
@@ -571,6 +577,7 @@ def funix(
     argument_config: ArgumentConfigType = None,
     pre_fill: PreFillType = None,
     menu: Optional[str] = None,
+    is_default: bool = False,
     rate_limit: Limiter | list | dict = list(),
 ):
     """
@@ -605,6 +612,7 @@ def funix(
         menu(str):
             full module path of the function, for `path` only.
             You don't need to set it unless you are funixing a directory and package.
+        is_default(bool): whether this function is the default function
         rate_limit(Limiter | list[Limiter]): rate limiters, an object or a list
 
     Returns:
@@ -628,6 +636,7 @@ def funix(
         Raises:
             Check code for details
         """
+        global default_function
         if __wrapper_enabled:
             if menu:
                 module_functions_counter[menu] = (
@@ -643,6 +652,9 @@ def funix(
                 )
 
             function_id = str(uuid4())
+
+            if is_default:
+                default_function = function_id
 
             safe_module_now = now_module
 

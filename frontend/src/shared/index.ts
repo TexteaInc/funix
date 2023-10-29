@@ -71,6 +71,7 @@ export type FunctionPreview = {
 };
 
 export type GetListResponse = {
+  default_function: null | string;
   list: FunctionPreview[];
 };
 
@@ -251,7 +252,6 @@ function recursiveSort(arr: (string | object)[]): (string | object)[] {
       return keyA.localeCompare(keyB);
     }
   }
-  console.log(arr);
   arr.sort((a, b) => compare(a, b));
 
   for (const item of arr) {
