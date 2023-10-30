@@ -29,6 +29,8 @@ from funix.util.network import (
 funix = decorator.funix
 # ---- Decorators ----
 
+Limiter = decorator.Limiter
+
 # ---- Theme ----
 set_default_theme = decorator.set_default_theme
 clear_default_theme = decorator.clear_default_theme
@@ -322,6 +324,7 @@ def get_flask_application(
     repo_dir: Optional[str] = None,
     transform: Optional[bool] = False,
     app_secret: Optional[str | bool] = False,
+    global_rate_limit: decorator.Limiter | list | dict = [],
     __kumo_callback_url: Optional[str] = None,
     __kumo_callback_token: Optional[str] = None,
     __host_regex: Optional[str] = None,
@@ -339,6 +342,8 @@ def get_flask_application(
         repo_dir (str): If you want to run the app from a git repo, you can specify the directory, default is None
         transform (bool): If you want to enable transform mode, default is False
         app_secret (str | bool): If you want to set an app secret, default is False
+        global_rate_limit (decorator.Limiter | list | dict): If you want to rate limit all API endpoints,
+            default is an empty list
         __kumo_callback_url (str): The Kumo callback url, default is None, do not set it if you don't know what it is.
         __kumo_callback_token (str): The Kumo callback token, default is None, do not set it if you don't know what
                                      it is.
@@ -348,6 +353,9 @@ def get_flask_application(
         flask.Flask: The flask application.
     """
     decorator.set_kumo_info(__kumo_callback_url, __kumo_callback_token)
+    decorator.set_rate_limiters(
+        decorator.parse_limiter_args(global_rate_limit, "global_rate_limit")
+    )
     if __host_regex:
         enable_funix_host_checker(__host_regex)
 

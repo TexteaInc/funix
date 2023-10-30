@@ -362,6 +362,47 @@ class Limiter:
         queue.append(current_time)
         return None
 
+def parse_limiter_args(rate_limit: Limiter | list | dict, arg_name: str = "rate_limit"):
+    limiters: Optional[list[Limiter]] = []
+
+    if isinstance(rate_limit, Limiter):
+        limiters = []
+        limiters.append(rate_limit)
+    elif isinstance(rate_limit, dict):
+        converted = CaseInsensitiveDict(rate_limit)
+
+        per_ip = Limiter._dict_get_int(converted, "per_ip")
+        per_session = Limiter._dict_get_int(converted, "per_browser")
+        limiters = []
+        if per_ip:
+            limiters.append(Limiter.ip(per_ip))
+        if per_session:
+            limiters.append(Limiter.ip(per_session))
+        if len(limiters) == 0:
+            raise TypeError(
+                f"Dict passed for `{arg_name}` but no limiters are provided, something wrong."
+            )
+
+    elif isinstance(rate_limit, list):
+        limiters = []
+        for element in rate_limit:
+            if isinstance(element, Limiter):
+                limiters.append(element)
+            elif isinstance(element, dict):
+                limiters.append(Limiter.from_dict(element))
+            else:
+                raise TypeError(
+                    f"Invalid arguments, unsupported type for `{arg_name}`"
+                )
+
+    else:
+        raise TypeError(f"Invalid arguments, unsupported type for `{arg_name}`")
+
+    return limiters
+
+
+global_rate_limiters: list[Limiter] = []
+
 
 def set_kumo_info(url: str, token: str) -> None:
     """
@@ -374,6 +415,11 @@ def set_kumo_info(url: str, token: str) -> None:
     global kumo_callback_url, kumo_callback_token
     kumo_callback_url = url
     kumo_callback_token = token
+
+
+def set_rate_limiters(limiters: list[Limiter]):
+    global global_rate_limiters
+    global_rate_limiters = limiters
 
 
 def set_function_secret(secret: str, function_id: str, function_name: str) -> None:
@@ -578,7 +624,7 @@ def funix(
     pre_fill: PreFillType = None,
     menu: Optional[str] = None,
     default: bool = False,
-    rate_limit: Limiter | list | dict = list(),
+    rate_limit: Limiter | list | dict = [],
 ):
     """
     Decorator for functions to convert them to web apps
@@ -1500,40 +1546,7 @@ def funix(
                 verify_secret_endpoint(verify_secret)
                 verify_secret_id(verify_secret)
 
-            limiters: Optional[list[Limiter]] = list()  # was a none
-
-            if isinstance(rate_limit, Limiter):
-                limiters = list()
-                limiters.append(rate_limit)
-            elif isinstance(rate_limit, dict):
-                converted = CaseInsensitiveDict(rate_limit)
-
-                per_ip = Limiter._dict_get_int(converted, "per_ip")
-                per_session = Limiter._dict_get_int(converted, "per_browser")
-                limiters = list()
-                if per_ip:
-                    limiters.append(Limiter.ip(per_ip))
-                if per_session:
-                    limiters.append(Limiter.ip(per_session))
-                if len(limiters) == 0:
-                    raise TypeError(
-                        f"Dict passed for `rate_limit` but no limiters are provided, something wrong."
-                    )
-
-            elif isinstance(rate_limit, list):
-                limiters = list()
-                for element in rate_limit:
-                    if isinstance(element, Limiter):
-                        limiters.append(element)
-                    elif isinstance(element, dict):
-                        limiters.append(Limiter.from_dict(element))
-                    else:
-                        raise TypeError(
-                            f"Invalid arguments, unsupported type for `rate_limit`"
-                        )
-
-            else:
-                raise TypeError(f"Invalid arguments, unsupported type for `rate_limit`")
+            limiters = parse_limiter_args(rate_limit)
 
             @wraps(function)
             def wrapper():
@@ -1548,7 +1561,7 @@ def funix(
                     Any: The function's result
                 """
 
-                for limiter in limiters:
+                for limiter in global_rate_limiters + limiters:
                     limit_result = limiter.rate_limit()
                     if limit_result is not None:
                         return limit_result
