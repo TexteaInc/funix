@@ -114,7 +114,17 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
       setTree(list.some((f) => typeof f.module === "string"));
       if (list.length === 1) {
         handleFetchFunctionDetail(list[0]);
-        setRadioGroupValue(list[0].name);
+        setRadioGroupValue(list[0].path);
+      } else {
+        if (default_function !== null) {
+          const preview = list.filter(
+            (preview) => preview.id === default_function
+          );
+          if (preview.length === 1) {
+            handleFetchFunctionDetail(preview[0]);
+            setRadioGroupValue(preview[0].path);
+          }
+        }
       }
     }
     queryData().then();
@@ -171,13 +181,9 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
   };
 
   useEffect(() => {
-    const pathParams = pathname.split("/").filter((value) => value !== "");
-    if (
-      pathParams.length !== 0 &&
-      state.length !== 0 &&
-      pathParams[0] !== radioGroupValue
-    ) {
-      const functionName = decodeURIComponent(pathParams[0]);
+    const pathParam = pathname.substring(1);
+    if (pathParam !== radioGroupValue) {
+      const functionPath = decodeURIComponent(pathParam);
       const selectedFunctionPreview = state.filter(
         (preview) => preview.path === functionPath
       );
@@ -244,23 +250,29 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
 
   const treeList = treeToList(fileTree);
 
-  const renderNodeString = (node: string, now: number) => (
-    <ListItemButton
-      onClick={() => {
-        changeRadioGroupValue(node);
-      }}
-      key={node}
-      selected={radioGroupValue === node}
-      sx={{
-        paddingLeft: `${2 + now}rem`,
-      }}
-    >
-      <ListItemText
-        primary={<MarkdownDiv markdown={node} isRenderInline={true} />}
-        disableTypography
-      />
-    </ListItemButton>
-  );
+  const renderNodeString = (node: string, now: number) => {
+    const [name, path] = node.split("#");
+
+    return (
+      <ListItemButton
+        onClick={() => {
+          changeRadioGroupValueByPath(path);
+        }}
+        key={node}
+        selected={radioGroupValue === path}
+        sx={{
+          paddingLeft: `${2 + now}rem`,
+        }}
+      >
+        <ListItemText
+          primary={<MarkdownDiv markdown={name} isRenderInline={true} />}
+          sx={{
+            wordWrap: "break-word",
+          }}
+        />
+      </ListItemButton>
+    );
+  };
 
   const renderNode = (node: any, now: number) => {
     if (typeof node === "string") {
