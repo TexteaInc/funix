@@ -4,9 +4,7 @@ import openai  # pip install openai
 
 openai.api_key = os.environ.get("OPENAI_KEY")
 
-import IPython.display
-
-import funix
+import funix 
 
 
 @funix.funix(  # Funix.io, the laziest way to build web apps in Python
@@ -15,8 +13,14 @@ import funix
     rate_limit=funix.decorator.Limiter.session(max_calls=1, period=60 * 60 * 24),
     show_source=True,
 )
-def dalle(Prompt: str = "a cat on a red jeep") -> IPython.display.Image:
-    response = openai.Image.create(prompt=Prompt, size="256x256")
+def dalle(
+    Prompt: str = "a cat on a red jeep",
+    openai_key: str = "using environment variable",
+) -> funix.hint.Image:
+    if openai_key != "using environment variable":
+        openai.api_key = openai_key
+
+    response = openai.Image.create(prompt=Prompt)
     return response["data"][0]["url"]
 
 
