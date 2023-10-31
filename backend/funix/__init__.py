@@ -1,17 +1,18 @@
 from importlib import import_module
 from inspect import isfunction
 from ipaddress import ip_address
-from os import chdir, listdir, getcwd
-from os.path import dirname, exists, isdir, join, normpath, sep
+from os import chdir, getcwd, listdir
+from os.path import dirname, exists, isdir, join, normpath, sep, abspath
 from sys import exit, path
-from typing import Generator, Optional
+from typing import Generator, Optional, Any
 from urllib.parse import quote
 
 from flask import Flask
+from gitignore_parser import parse_gitignore
 
 import funix.decorator as decorator
 import funix.hint as hint
-from funix.app import app
+from funix.app import app, enable_funix_host_checker
 from funix.frontend import OpenFrontend, run_open_frontend, start
 from funix.prep.global_to_session import get_new_python_file
 from funix.util.file import create_safe_tempdir
@@ -27,6 +28,8 @@ from funix.util.network import (
 # ---- Decorators ----
 funix = decorator.funix
 # ---- Decorators ----
+
+Limiter = decorator.Limiter
 
 # ---- Theme ----
 set_default_theme = decorator.set_default_theme
@@ -66,15 +69,10 @@ def get_path_difference(base_dir: str, target_dir: str) -> str | None:
     if not target_dir.startswith(base_dir):
         raise ValueError("The base directory is not a prefix of the target directory.")
 
-    if base_components == target_components:
-        return None
+    path_diff = target_components
 
-    path_diff = []
-    for i in range(len(base_components) - 1, len(target_components)):
-        path_diff.append(target_components[i])
-
-    if not path_diff:
-        return None
+    for _ in range(len(base_components)):
+        path_diff.pop(0)
 
     return ".".join(path_diff)
 
@@ -86,6 +84,7 @@ def __prep(
     is_module: bool,
     need_name: bool,
     base_dir: Optional[str] = None,
+    default: Optional[str] = None,
 ) -> None:
     """
     Prepare the module or file. Import and wrap the functions if needed.
@@ -98,16 +97,20 @@ def __prep(
         is_module (bool): Pass `True` if the module_or_file is a module, `False` if it is a file.
         need_name (bool): For the module, if the name is needed.
         base_dir (str): The base director, only for dir mode.
+        default (str): Default function name
     """
     decorator.enable_wrapper()
     path_difference: str | None = None
     if base_dir:
         # dir mode
-        path_difference = get_path_difference(
-            base_dir, sep.join(module_or_file.split(sep)[0:-1])
-        )
+        module = module_or_file.split(sep)
+        module[-1] = module[-1][:-3]  # remove .py
+        module = sep.join(module)
+        path_difference = get_path_difference(base_dir, module)
     if module_or_file:
         if is_module:
+            if default:
+                decorator.set_default_function_name(default)
             module = import_module(module_or_file)
         else:
             folder = sep.join(module_or_file.split(sep)[0:-1])
@@ -115,6 +118,14 @@ def __prep(
                 chdir(folder)
             if base_dir and not lazy:
                 decorator.set_now_module(path_difference)
+                if default:
+                    python_file, function_name = default.strip().split(":")
+                    if abspath(join(__now_path, module_or_file)) == abspath(
+                        join(__now_path, base_dir, python_file)
+                    ):
+                        decorator.set_dir_mode_default_info((True, function_name))
+                    else:
+                        decorator.set_dir_mode_default_info((False, None))
             module = import_module_from_file(
                 join(__now_path, module_or_file), need_name
             )
@@ -144,7 +155,11 @@ def __prep(
 
 
 def get_python_files_in_dir(
-    base_dir: str, add_to_sys_path: bool, need_full_path: bool
+    base_dir: str,
+    add_to_sys_path: bool,
+    need_full_path: bool,
+    is_dir: bool,
+    matches: Any,
 ) -> Generator[str, None, None]:
     """
     Get all the Python files in a directory.
@@ -153,6 +168,8 @@ def get_python_files_in_dir(
         base_dir (str): The path.
         add_to_sys_path (bool): If the path should be added to sys.path.
         need_full_path (bool): If the full path is needed.
+        is_dir (bool): If mode is dir mode.
+        matches (Any): The matches.
 
     Returns:
         Generator[str, None, None]: The Python files.
@@ -163,9 +180,13 @@ def get_python_files_in_dir(
     for file in files:
         if isdir(join(base_dir, file)):
             yield from get_python_files_in_dir(
-                join(base_dir, file), add_to_sys_path, need_full_path
+                join(base_dir, file), add_to_sys_path, need_full_path, is_dir, matches
             )
         if file.endswith(".py") and file != "__init__.py":
+            full_path = join(base_dir, file)
+            if matches:
+                if matches(abspath(full_path)):
+                    continue
             if need_full_path:
                 yield join(base_dir, file)
             else:
@@ -181,6 +202,7 @@ def import_from_config(
     repo_dir: Optional[str] = None,
     transform: Optional[bool] = False,
     app_secret: Optional[str | bool] = False,
+    default: Optional[str] = None,
 ) -> None:
     """
     Import files, git repos and modules from the config argument.
@@ -194,6 +216,7 @@ def import_from_config(
         repo_dir (str): If you want to run the app from a git repo, you can specify the directory, default is None
         transform (bool): If you want to enable transform mode, default is False
         app_secret (str | bool): If you want to set an app secret, default is False
+        default (str): Default function name, default is None
 
     Returns:
         None
@@ -233,8 +256,22 @@ def import_from_config(
     if dir_mode:
         if exists(file_or_module_name) and isdir(file_or_module_name):
             base_dir = file_or_module_name
+            if default and ":" not in default:
+                raise ValueError(
+                    "Default function name should be in the format of `file:func` in dir mode!"
+                )
+            ignore_file = join(base_dir, ".funixignore")
+            matches = None
+            if exists(ignore_file):
+                matches = parse_gitignore(
+                    abspath(ignore_file), base_dir=abspath(base_dir)
+                )
             for single_file in get_python_files_in_dir(
-                base_dir=base_dir, add_to_sys_path=False, need_full_path=True
+                base_dir=base_dir,
+                add_to_sys_path=False,
+                need_full_path=True,
+                is_dir=True,
+                matches=matches,
             ):
                 __prep(
                     module_or_file=single_file,
@@ -243,6 +280,7 @@ def import_from_config(
                     is_module=False,
                     need_name=True,
                     base_dir=base_dir,
+                    default=default,
                 )
         else:
             raise RuntimeError(
@@ -251,6 +289,10 @@ def import_from_config(
                 "if you want to use file mode, please use remove --recursive/-R option."
             )
     elif package_mode:
+        if default or transform:
+            print(
+                "WARNING: Default mode and transform mode is not supported for package mode!"
+            )
         module = import_module(file_or_module_name)
         module_path = module.__file__
         if module_path is None:
@@ -258,7 +300,10 @@ def import_from_config(
                 f"`__init__.py`  is not found inside module path: {module_path}!"
             )
         for module in get_python_files_in_dir(
-            base_dir=dirname(module_path), add_to_sys_path=True, need_full_path=False
+            base_dir=dirname(module_path),
+            add_to_sys_path=True,
+            need_full_path=False,
+            is_dir=False,
         ):
             __prep(
                 module_or_file=module,
@@ -282,6 +327,10 @@ def import_from_config(
                 "This is not a Python file! You should change the file extension to `.py`."
             )
         else:
+            if default and ":" in default:
+                raise ValueError(
+                    "Default function name should be in the format of `func` in file mode!"
+                )
             if transform:
                 __prep(
                     module_or_file=get_new_python_file(file_or_module_name),
@@ -310,8 +359,11 @@ def get_flask_application(
     repo_dir: Optional[str] = None,
     transform: Optional[bool] = False,
     app_secret: Optional[str | bool] = False,
+    global_rate_limit: decorator.Limiter | list | dict = [],
+    ip_headers: Optional[list[str]] = None,
     __kumo_callback_url: Optional[str] = None,
     __kumo_callback_token: Optional[str] = None,
+    __host_regex: Optional[str] = None,
 ) -> Flask:
     """
     Get flask application for the funix app.
@@ -326,14 +378,26 @@ def get_flask_application(
         repo_dir (str): If you want to run the app from a git repo, you can specify the directory, default is None
         transform (bool): If you want to enable transform mode, default is False
         app_secret (str | bool): If you want to set an app secret, default is False
+        global_rate_limit (decorator.Limiter | list | dict): If you want to rate limit all API endpoints,
+            default is an empty list
+        ip_headers (list[str] | None): IP headers for extraction instead of peer IP, useful for applications
+            behind reverse proxies
         __kumo_callback_url (str): The Kumo callback url, default is None, do not set it if you don't know what it is.
         __kumo_callback_token (str): The Kumo callback token, default is None, do not set it if you don't know what
                                      it is.
+        __host_regex (str): The host checker regex, default is None.
 
     Returns:
         flask.Flask: The flask application.
     """
     decorator.set_kumo_info(__kumo_callback_url, __kumo_callback_token)
+    decorator.set_rate_limiters(
+        decorator.parse_limiter_args(global_rate_limit, "global_rate_limit")
+    )
+    decorator.set_ip_header(ip_headers)
+    if __host_regex:
+        enable_funix_host_checker(__host_regex)
+
     import_from_config(
         file_or_module_name=file_or_module_name,
         lazy=lazy,
@@ -364,6 +428,7 @@ def run(
     dev: Optional[bool] = False,
     transform: Optional[bool] = False,
     app_secret: Optional[str | bool] = False,
+    default: Optional[str] = None,
 ) -> None:
     """
     Run the funix app.
@@ -383,6 +448,7 @@ def run(
         dev (bool): If you want to enable development mode, default is True
         transform (bool): If you want to enable transform mode, default is False
         app_secret (str | bool): If you want to set an app secret, default is False
+        default (str): Default function name, default is None
 
     Returns:
         None
@@ -396,6 +462,7 @@ def run(
         repo_dir=repo_dir,
         transform=transform,
         app_secret=app_secret,
+        default=default,
     )
 
     parsed_ip = ip_address(host)

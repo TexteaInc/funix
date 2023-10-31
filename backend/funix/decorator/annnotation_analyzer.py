@@ -4,11 +4,10 @@ For funix annotation analyzer.
 Better version of magic, hope replace it in the future.
 """
 
-from typing import Callable, Any
 from enum import Enum
-from inspect import Parameter
 from functools import wraps
-
+from inspect import Parameter
+from typing import Any, Callable
 
 __registered__: dict[Parameter.annotation, Callable[[Parameter], dict]] = {}
 """
@@ -32,6 +31,11 @@ class Step(Enum):
     FRONTEND = 1
     """
     The parsed data provided to the frontend.
+    """
+
+    BOTH = 2
+    """
+    The parsed data provided to both the magic and the frontend.
     """
 
 
@@ -88,9 +92,9 @@ def register_ipywidgets():
     """
     import ipywidgets
 
-    @register(ipywidgets.Password, Step.MAGIC)
+    @register(ipywidgets.Password, Step.BOTH)
     def _ipywidgets(_: ipywidgets.Password) -> dict:
-        return {"type": "str", "widget": "password"}
+        return {"type": "string", "widget": "password"}
 
 
 def register_pandera():
@@ -98,7 +102,7 @@ def register_pandera():
     Register pandera type
     """
     from pandera import dtypes
-    from pandera.engines import pandas_engine, numpy_engine
+    from pandera.engines import numpy_engine, pandas_engine
 
     @register(dtypes.Bool, Step.FRONTEND)
     @register(pandas_engine.BOOL, Step.FRONTEND)

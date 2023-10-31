@@ -94,10 +94,10 @@ const InputPanel = (props: {
     const now = new Date().getTime();
     const newForm = props.preview.secret
       ? props.preview.name in functionSecret &&
-        functionSecret[props.preview.name] !== null
+        functionSecret[props.preview.path] !== null
         ? {
             ...form,
-            __funix_secret: functionSecret[props.preview.name],
+            __funix_secret: functionSecret[props.preview.path],
           }
         : appSecret !== null
         ? {
@@ -109,7 +109,7 @@ const InputPanel = (props: {
 
     if (saveHistory) {
       try {
-        await setInput(now, props.preview.name, newForm);
+        await setInput(now, props.preview.name, props.preview.path, newForm);
       } catch (error) {
         enqueueSnackbar(
           "Cannot save input to history, check your console for more information",
@@ -130,7 +130,7 @@ const InputPanel = (props: {
     );
     if (saveHistory) {
       try {
-        await setOutput(now, props.preview.name, response);
+        await setOutput(now, props.preview.name, props.preview.path, response);
       } catch (error) {
         enqueueSnackbar(
           "Cannot save output to history, check your console for more information",

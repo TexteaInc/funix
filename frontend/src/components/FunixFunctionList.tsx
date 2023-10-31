@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import { storeAtom } from "../store";
 import { useAtom } from "jotai";
-import { FunctionPreview, getList } from "../shared";
+import { FunctionPreview, getList, objArraySort } from "../shared";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import MarkdownDiv from "./Common/MarkdownDiv";
@@ -103,7 +103,9 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
       selectedFunction: null,
     }));
     async function queryData() {
-      const { list } = await getList(new URL("/list", backend));
+      const { list, default_function } = await getList(
+        new URL("/list", backend)
+      );
       setState(list);
       setStore((store) => ({
         ...store,
@@ -121,7 +123,7 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
 
   useEffect(() => {
     if (backHistory === null) return;
-    changeRadioGroupValue(backHistory.functionName);
+    changeRadioGroupValueByPath(backHistory.functionPath);
     setStore((store) => {
       const newBackConsensus = [...store.backConsensus];
       newBackConsensus[0] = true;
@@ -142,16 +144,29 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
     }
   }, [backConsensus]);
 
-  const changeRadioGroupValue = (functionName: string) => {
+  const changeRadioGroupValueById = (functionId: string) => {
     const selectedFunctionPreview = state.filter(
-      (preview) => preview.name === functionName
+      (preview) => preview.id === functionId
     );
     if (selectedFunctionPreview.length !== 1) {
       setRadioGroupValue(null);
     } else {
-      navigate(`/${selectedFunctionPreview[0].name}`);
+      navigate(`/${selectedFunctionPreview[0].path}`);
       handleFetchFunctionDetail(selectedFunctionPreview[0]);
-      setRadioGroupValue(functionName);
+      setRadioGroupValue(selectedFunctionPreview[0].path);
+    }
+  };
+
+  const changeRadioGroupValueByPath = (functionPath: string) => {
+    const selectedFunctionPreview = state.filter(
+      (preview) => preview.path === functionPath
+    );
+    if (selectedFunctionPreview.length !== 1) {
+      setRadioGroupValue(null);
+    } else {
+      navigate(`/${selectedFunctionPreview[0].path}`);
+      handleFetchFunctionDetail(selectedFunctionPreview[0]);
+      setRadioGroupValue(functionPath);
     }
   };
 
@@ -164,14 +179,14 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
     ) {
       const functionName = decodeURIComponent(pathParams[0]);
       const selectedFunctionPreview = state.filter(
-        (preview) => preview.name === functionName
+        (preview) => preview.path === functionPath
       );
       if (selectedFunctionPreview.length !== 0) {
         setStore((store) => ({
           ...store,
           selectedFunction: selectedFunctionPreview[0],
         }));
-        setRadioGroupValue(functionName);
+        setRadioGroupValue(functionPath);
       }
     }
   }, [pathname, state]);
@@ -197,10 +212,10 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
         {state.map((functionPreview) => (
           <ListItemButton
             onClick={() => {
-              changeRadioGroupValue(functionPreview.name);
+              changeRadioGroupValueById(functionPreview.id);
             }}
             key={functionPreview.name}
-            selected={radioGroupValue === functionPreview.name}
+            selected={radioGroupValue === functionPreview.path}
           >
             <ListItemText
               primary={
@@ -223,7 +238,7 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
   state.forEach((preview) => {
     const path = preview.module ?? "";
     const pathList = path.split(".");
-    pathList.push(preview.name);
+    pathList.push(`${preview.name}#${preview.path}`);
     addFileToTree(fileTree, pathList);
   });
 
@@ -273,7 +288,9 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
         >
           <ListItemText
             primary={<MarkdownDiv markdown={k} isRenderInline={true} />}
-            disableTypography
+            sx={{
+              wordWrap: "break-word",
+            }}
           />
           {treeState.hasOwnProperty(`${k}${v}`) ? (
             treeState[`${k}${v}`] ? (
@@ -304,7 +321,7 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
 
   return (
     <FunixList functionLength={functionsLength}>
-      {renderRoot(treeList, 0)}
+      {renderRoot(objArraySort(treeList as any) as any[], 0)}
     </FunixList>
   );
 };

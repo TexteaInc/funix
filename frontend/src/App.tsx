@@ -42,7 +42,7 @@ import {
   Sick,
   Token,
 } from "@mui/icons-material";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { storeAtom } from "./store";
 import { useAtom } from "jotai";
 import { getList } from "./shared";
@@ -54,24 +54,31 @@ import HistoryList from "./components/History/HistoryList";
 import MarkdownDiv from "./components/Common/MarkdownDiv";
 import InlineBox from "./components/Common/InlineBox";
 
-// From MUI docs
 const drawerWidth = 240;
 
 const calcDrawerWidth = (
   leftOpen: boolean | undefined,
-  rightOpen: boolean | undefined
+  rightOpen: boolean | undefined,
+  functionListWidth: number
 ) => {
-  return (Number(!!leftOpen) + Number(!!rightOpen)) * drawerWidth;
+  return (
+    Number(!!leftOpen) * functionListWidth + Number(!!rightOpen) * drawerWidth
+  );
 };
 
 const Main = styled("main", {
   shouldForwardProp: (prop) => {
-    return prop !== "leftOpen" && prop !== "rightOpen";
+    return (
+      prop !== "leftOpen" &&
+      prop !== "rightOpen" &&
+      prop !== "functionListWidth"
+    );
   },
 })<{
   leftOpen?: boolean;
   rightOpen?: boolean;
-}>(({ theme, leftOpen, rightOpen }) => ({
+  functionListWidth: number;
+}>(({ theme, leftOpen, rightOpen, functionListWidth }) => ({
   flexGrow: 1,
   paddingTop: theme.spacing(2),
   transition: theme.transitions.create("margin", {
@@ -83,7 +90,7 @@ const Main = styled("main", {
       easing: theme.transitions.easing.easeOut,
       duration: theme.transitions.duration.enteringScreen,
     }),
-    marginLeft: `${drawerWidth}px`,
+    marginLeft: `${functionListWidth}px`,
   }),
   ...(rightOpen && {
     transition: theme.transitions.create("margin", {
@@ -97,32 +104,46 @@ const Main = styled("main", {
 interface AppBarProps extends MuiAppBarProps {
   leftOpen?: boolean;
   rightOpen?: boolean;
+  functionListWidth: number;
 }
 
 interface PaperProps extends MuiPaperProps {
   leftOpen?: boolean;
   rightOpen?: boolean;
+  functionListWidth: number;
 }
 
 const AppBar = styled(MuiAppBar, {
   shouldForwardProp: (prop) => {
-    return prop !== "leftOpen" && prop !== "rightOpen";
+    return (
+      prop !== "leftOpen" &&
+      prop !== "rightOpen" &&
+      prop !== "functionListWidth"
+    );
   },
-})<AppBarProps>(({ theme, leftOpen, rightOpen }) => ({
+})<AppBarProps>(({ theme, leftOpen, rightOpen, functionListWidth }) => ({
   transition: theme.transitions.create(["margin", "width"], {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
   ...(leftOpen && {
-    width: `calc(100% - ${calcDrawerWidth(leftOpen, rightOpen)}px)`,
-    marginLeft: `${drawerWidth}px`,
+    width: `calc(100% - ${calcDrawerWidth(
+      leftOpen,
+      rightOpen,
+      functionListWidth
+    )}px)`,
+    marginLeft: `${functionListWidth}px`,
     transition: theme.transitions.create(["margin", "width"], {
       easing: theme.transitions.easing.easeOut,
       duration: theme.transitions.duration.enteringScreen,
     }),
   }),
   ...(rightOpen && {
-    width: `calc(100% - ${calcDrawerWidth(leftOpen, rightOpen)}px)`,
+    width: `calc(100% - ${calcDrawerWidth(
+      leftOpen,
+      rightOpen,
+      functionListWidth
+    )}px)`,
     marginRight: `${drawerWidth}px`,
     transition: theme.transitions.create(["margin", "width"], {
       easing: theme.transitions.easing.easeOut,
@@ -133,9 +154,13 @@ const AppBar = styled(MuiAppBar, {
 
 const TransitionFooter = styled(MuiPaper, {
   shouldForwardProp: (prop) => {
-    return prop !== "leftOpen" && prop !== "rightOpen";
+    return (
+      prop !== "leftOpen" &&
+      prop !== "rightOpen" &&
+      prop !== "functionListWidth"
+    );
   },
-})<PaperProps>(({ theme, leftOpen, rightOpen }) => ({
+})<PaperProps>(({ theme, leftOpen, rightOpen, functionListWidth }) => ({
   transition: theme.transitions.create("width", {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
@@ -146,7 +171,11 @@ const TransitionFooter = styled(MuiPaper, {
   zIndex: 100,
   width: "100%",
   ...((leftOpen || rightOpen) && {
-    width: `calc(100% - ${calcDrawerWidth(leftOpen, rightOpen)}px)`,
+    width: `calc(100% - ${calcDrawerWidth(
+      leftOpen,
+      rightOpen,
+      functionListWidth
+    )}px)`,
     transition: theme.transitions.create("width", {
       easing: theme.transitions.easing.easeOut,
       duration: theme.transitions.duration.enteringScreen,
@@ -179,8 +208,8 @@ const App = () => {
 
   const funixBackend: string | undefined = process.env.REACT_APP_FUNIX_BACKEND;
   const selectedFunctionSecret: string | null = selectedFunction?.secret
-    ? selectedFunction?.name in functionSecret
-      ? functionSecret[selectedFunction?.name]
+    ? selectedFunction?.path in functionSecret
+      ? functionSecret[selectedFunction?.path]
       : appSecret
     : null;
   const [backend, setBackend] = useState(funixBackend);
@@ -195,6 +224,32 @@ const App = () => {
   const [historySideBarOpen, setHistorySideBarOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [tempAppSecret, setTempAppSecret] = useState(appSecret);
+  const [functionListWidth, setFunctionListWidth] = useState(drawerWidth);
+  const [onResizing, setOnResizing] = useState(false);
+
+  const handlePointerMoveLeftSidebar = useCallback((e: PointerEvent | any) => {
+    setFunctionListWidth(e.clientX - document.body.offsetLeft);
+  }, []);
+
+  const handlePointerUpLeftSidebar = () => {
+    setOnResizing(false);
+    document.removeEventListener(
+      "pointermove",
+      handlePointerMoveLeftSidebar,
+      true
+    );
+    document.removeEventListener("pointerup", handlePointerUpLeftSidebar, true);
+  };
+
+  const handlePointerDownLeftSidebar = () => {
+    setOnResizing(true);
+    document.addEventListener(
+      "pointermove",
+      handlePointerMoveLeftSidebar,
+      true
+    );
+    document.addEventListener("pointerup", handlePointerUpLeftSidebar, true);
+  };
 
   useEffect(() => {
     getList(new URL("/list", window.location.origin))
@@ -266,7 +321,7 @@ const App = () => {
                   ...store,
                   functionSecret: {
                     ...store.functionSecret,
-                    [selectedFunction.name]: tempSecret,
+                    [selectedFunction.path]: tempSecret,
                   },
                 }));
               }
@@ -358,6 +413,7 @@ const App = () => {
         position="fixed"
         leftOpen={sideBarOpen}
         rightOpen={historySideBarOpen}
+        functionListWidth={functionListWidth}
       >
         <Toolbar>
           <IconButton
@@ -416,16 +472,19 @@ const App = () => {
       </AppBar>
       <Drawer
         sx={{
-          width: drawerWidth,
+          width: functionListWidth,
           flexShrink: 0,
           "& .MuiDrawer-paper": {
-            width: drawerWidth,
+            width: functionListWidth,
             boxSizing: "border-box",
           },
         }}
         variant="persistent"
         anchor="left"
         open={sideBarOpen}
+        ModalProps={{
+          keepMounted: true,
+        }}
       >
         <DrawerHeader>
           <ListItem>
@@ -451,8 +510,37 @@ const App = () => {
             </ListItem>
           </List>
         )}
+        <Box
+          component="div"
+          sx={{
+            width: ".75rem",
+            height: "100%",
+            margin: "0 auto",
+            backgroundColor: (theme) =>
+              `${theme.palette.mode === "dark" && onResizing && "grey.900"}`,
+            "&:hover": {
+              backgroundColor: (theme) =>
+                `${theme.palette.mode === "dark" ? "grey.900" : "grey.100"}`,
+              cursor: "ew-resize",
+            },
+            position: "absolute",
+            top: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 100,
+          }}
+          onMouseDown={handlePointerDownLeftSidebar}
+          onContextMenu={(event) => {
+            event.preventDefault();
+            setFunctionListWidth(drawerWidth);
+          }}
+        />
       </Drawer>
-      <Main leftOpen={sideBarOpen} rightOpen={historySideBarOpen}>
+      <Main
+        leftOpen={sideBarOpen}
+        rightOpen={historySideBarOpen}
+        functionListWidth={functionListWidth}
+      >
         <Container sx={{ paddingTop: 10, paddingBottom: 8 }} maxWidth={false}>
           {backendURL ? (
             <Stack
@@ -460,11 +548,7 @@ const App = () => {
               sx={{ width: "100%", margin: "0 auto" }}
               id="funix-stack"
             >
-              <FunixFunctionSelected
-                backend={backendURL}
-                leftSideBarOpen={sideBarOpen}
-                rightSideBarOpen={historySideBarOpen}
-              />
+              <FunixFunctionSelected backend={backendURL} />
             </Stack>
           ) : (
             <Alert severity="error">
@@ -479,7 +563,11 @@ const App = () => {
             </Alert>
           )}
         </Container>
-        <TransitionFooter leftOpen={sideBarOpen} rightOpen={historySideBarOpen}>
+        <TransitionFooter
+          leftOpen={sideBarOpen}
+          rightOpen={historySideBarOpen}
+          functionListWidth={functionListWidth}
+        >
           <Container maxWidth={false}>
             <Stack
               direction="row"
@@ -524,6 +612,9 @@ const App = () => {
         variant="persistent"
         anchor="right"
         open={historySideBarOpen}
+        ModalProps={{
+          keepMounted: true,
+        }}
       >
         <DrawerHeader>
           <ListItem>

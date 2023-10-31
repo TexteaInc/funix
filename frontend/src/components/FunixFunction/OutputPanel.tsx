@@ -274,6 +274,10 @@ const OutputPanel = (props: {
           button at the bottom of the left, input panel.
         </Alert>
       );
+    } else if (
+      response.startsWith("Rate limit exceeded. Please try again in ")
+    ) {
+      return <Alert severity="error">{response}</Alert>;
     } else {
       if (
         typeof returnType !== undefined &&
@@ -290,7 +294,6 @@ const OutputPanel = (props: {
           const rowElements: JSX.Element[] = [];
           row.forEach((item) => {
             let itemElement: JSX.Element;
-            console.log(item);
             switch (item.type) {
               case "markdown":
                 itemElement = (

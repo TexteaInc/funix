@@ -30,7 +30,8 @@ import React, { useEffect, useState } from "react";
 import { exportHistory } from "../../shared";
 
 const HistoryList = () => {
-  const { getHistories, setHistoryName, removeHistory } = useFunixHistory();
+  const { getHistories, setHistoryNameAndPath, removeHistory } =
+    useFunixHistory();
   const [{ selectedFunction }, setStore] = useAtom(storeAtom);
   const [selectedHistoryTimestamp, setSelectedHistoryTimestamp] = useState(-1);
   const [selectedHistory, setSelectedHistory] = useState<null | History>(null);
@@ -72,7 +73,9 @@ const HistoryList = () => {
   }
 
   const filteredHistories = histories.filter(
-    (history) => history.functionName === selectedFunction.name
+    (history) =>
+      history.functionName === selectedFunction.name &&
+      history.functionPath === selectedFunction.path
   );
 
   const handleRenameDialogClose = () => {
@@ -99,7 +102,11 @@ const HistoryList = () => {
           <Button
             onClick={() => {
               if (selectedHistory !== null) {
-                setHistoryName(selectedHistory.timestamp, tempRename);
+                setHistoryNameAndPath(
+                  selectedHistory.timestamp,
+                  tempRename,
+                  selectedHistory.functionPath
+                );
               }
               handleRenameDialogClose();
             }}

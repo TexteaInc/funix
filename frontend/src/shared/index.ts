@@ -64,9 +64,14 @@ export type FunctionPreview = {
    * Is this function protected by token
    */
   secret: boolean;
+  /**
+   * ID of the function, please use this
+   */
+  id: string;
 };
 
 export type GetListResponse = {
+  default_function: null | string;
   list: FunctionPreview[];
 };
 
@@ -231,4 +236,66 @@ export function exportHistory(history: History) {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
+}
+
+function recursiveSort(arr: (string | object)[]): (string | object)[] {
+  function compare(a: string | object, b: string | object): number {
+    if (typeof a === "string" && typeof b === "string") {
+      return a.localeCompare(b);
+    } else if (typeof a === "string" && typeof b === "object") {
+      return 1;
+    } else if (typeof a === "object" && typeof b === "string") {
+      return -1;
+    } else {
+      const keyA = Object.keys(a)[0];
+      const keyB = Object.keys(b)[0];
+      return keyA.localeCompare(keyB);
+    }
+  }
+  arr.sort((a, b) => compare(a, b));
+
+  for (const item of arr) {
+    if (typeof item === "object") {
+      const key = Object.keys(item)[0];
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      item[key] = recursiveSort(item[key]);
+    }
+  }
+
+  return arr;
+}
+
+export function objArraySort(obj: object[]): object[] {
+  const result: object[] = [];
+  const topLevelArray = {
+    "": (
+      (
+        obj.filter(
+          (item) =>
+            Object.keys(item).length === 1 && Object.keys(item)[0] === ""
+        )[0] as any
+      )[""] as string[]
+    ).sort((a, b) => a.localeCompare(b)),
+  };
+
+  obj
+    .sort((a, b) => {
+      return Object.keys(a)[0].localeCompare(Object.keys(b)[0]);
+    })
+    .forEach((item) => {
+      if (Object.keys(item).length === 1 && Object.keys(item)[0] !== "") {
+        const key = Object.keys(item)[0];
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const value = item[key];
+        result.push({
+          [key]: recursiveSort(value),
+        });
+      }
+    });
+
+  result.push(topLevelArray);
+
+  return result;
 }

@@ -15,25 +15,11 @@ export type FunctionDetailProps = {
   backend: URL;
 };
 
-export type FunixFunctionProps = {
-  leftSideBarOpen: boolean;
-  rightSideBarOpen: boolean;
-};
-
-const FunixFunction: React.FC<FunctionDetailProps & FunixFunctionProps> = ({
-  preview,
-  backend,
-  leftSideBarOpen,
-  rightSideBarOpen,
-}) => {
+const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
   const [detail] = useState<FunctionDetail | null>(() => {
     // no asynchronous, no cache
     const xhr = new XMLHttpRequest();
-    xhr.open(
-      "GET",
-      new URL(`/param/${preview.path}`, backend).toString(),
-      false
-    );
+    xhr.open("GET", new URL(`/param/${preview.id}`, backend).toString(), false);
     xhr.send();
     if (xhr.status === 200) {
       return JSON.parse(xhr.responseText) as FunctionDetail;
@@ -54,11 +40,11 @@ const FunixFunction: React.FC<FunctionDetailProps & FunixFunctionProps> = ({
     if (preview.secret) {
       const token =
         preview.name in functionSecret
-          ? functionSecret[preview.name]
+          ? functionSecret[preview.path]
           : appSecret !== null
           ? appSecret
           : "";
-      verifyToken(new URL(`/verify/${preview.path}`, backend), token || "")
+      verifyToken(new URL(`/verify/${preview.id}`, backend), token || "")
         .then((result) => {
           setVerified(result);
         })
@@ -74,7 +60,7 @@ const FunixFunction: React.FC<FunctionDetailProps & FunixFunctionProps> = ({
       if ("__funix_secret" in backHistory.input) {
         setStore((store) => {
           const newFunctionSecret = store.functionSecret;
-          newFunctionSecret[backHistory.functionName] = backHistory.input
+          newFunctionSecret[backHistory.functionPath] = backHistory.input
             ? backHistory.input["__funix_secret"]
             : null;
           return {
@@ -135,12 +121,11 @@ const FunixFunction: React.FC<FunctionDetailProps & FunixFunctionProps> = ({
   const needSecret = preview.secret;
 
   const handleResize = (event: PointerEvent) => {
-    event.preventDefault();
-    const newLeftWidth =
-      event.clientX /
-      (document.body.clientWidth +
-        Number(leftSideBarOpen) * 240 -
-        Number(rightSideBarOpen) * 240);
+    const mainWidth = document.getElementById("funix-stack")?.offsetWidth || 1;
+    const mainLeftOffset =
+      document.getElementById("funix-stack")?.offsetLeft || 1;
+    const newLeftWidth = (event.pageX - mainLeftOffset) / mainWidth;
+
     const newRightWidth = 1 - newLeftWidth;
     setWidth([
       `${(newLeftWidth * 100).toFixed(3)}%`,
@@ -159,7 +144,7 @@ const FunixFunction: React.FC<FunctionDetailProps & FunixFunctionProps> = ({
   return (
     <>
       {needSecret ? (
-        functionSecret[preview.name] == null && appSecret == null ? (
+        functionSecret[preview.path] == null && appSecret == null ? (
           <Alert severity="warning">
             <AlertTitle>Secret required</AlertTitle>
             <InlineBox>
@@ -215,10 +200,16 @@ const FunixFunction: React.FC<FunctionDetailProps & FunixFunctionProps> = ({
                   height: "100%",
                   width: "65%",
                   margin: "0 auto",
-                  backgroundColor: `${onResizing ? "grey.100" : ""}`,
+                  backgroundColor: (theme) =>
+                    `${
+                      theme.palette.mode === "dark" && onResizing && "grey.900"
+                    }`,
                   "&:hover": {
-                    backgroundColor: "grey.100",
-                    cursor: "col-resize",
+                    backgroundColor: (theme) =>
+                      `${
+                        theme.palette.mode === "dark" ? "grey.900" : "grey.100"
+                      }`,
+                    cursor: "ew-resize",
                   },
                 }}
                 onContextMenu={(event) => {
@@ -229,13 +220,18 @@ const FunixFunction: React.FC<FunctionDetailProps & FunixFunctionProps> = ({
                   event.preventDefault();
                   setOnResizing(true);
                   document.body.style.cursor = "col-resize";
-                  document.body.addEventListener("pointermove", handleResize);
+                  document.body.addEventListener(
+                    "pointermove",
+                    handleResize,
+                    true
+                  );
                   document.body.addEventListener("pointerup", () => {
                     document.body.style.cursor = "default";
                     setOnResizing(false);
                     document.body.removeEventListener(
                       "pointermove",
-                      handleResize
+                      handleResize,
+                      true
                     );
                   });
                 }}

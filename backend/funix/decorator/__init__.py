@@ -1,20 +1,25 @@
 """
 Funix decorator. The central logic of Funix.
 """
+import dataclasses
+import time
+from collections import deque
 from copy import deepcopy
+from enum import Enum, auto
 from functools import wraps
 from importlib import import_module
 from inspect import Parameter, Signature, getsource, signature
 from json import dumps, loads
-from requests import post
 from secrets import token_hex
 from traceback import format_exc
 from types import ModuleType
-from typing import Optional, Any
+from typing import Any, Optional
 from urllib.request import urlopen
 from uuid import uuid4
 
 from flask import Response, request, session
+from requests import post
+from requests.structures import CaseInsensitiveDict
 
 from funix.app import app
 from funix.config import (
@@ -58,6 +63,7 @@ from funix.hint import (
 )
 from funix.session import get_global_variable, set_global_variable
 from funix.theme import get_dict_theme, parse_theme
+from funix.util.module import funix_menu_to_safe_function_name
 from funix.util.uri import is_valid_uri
 from funix.widget import generate_frontend_widget_config
 
@@ -201,22 +207,37 @@ The mpld3 module.
 
 pre_fill_metadata: dict[str, list[str | int | PreFillEmpty]] = {}
 """
-A dict, key is function name/ID, value is a list of indexes/keys of pre-fill parameters.
+A dict, key is function ID, value is a list of indexes/keys of pre-fill parameters.
 """
 
 parse_type_metadata: dict[str, dict[str, Any]] = {}
 """
-A dict, key is function name/ID, value is a map of parameter name to type.
+A dict, key is function ID, value is a map of parameter name to type.
 """
 
 dataframe_parse_metadata: dict[str, dict[str, list[str]]] = {}
 """
-A dict, key is function name/ID, value is a map of parameter name to type.
+A dict, key is function ID, value is a map of parameter name to type.
 """
 
 now_module: str | None = None
 """
 External passes to module, recorded here, are used to help funix decoration override config.
+"""
+
+module_functions_counter: dict[str, int] = {}
+"""
+A dict, key is module name, value is the number of functions in the module.
+"""
+
+default_function: str | None = None
+"""
+Default function id.
+"""
+
+cached_list_functions: list[dict] = []
+"""
+Cached list functions. For `/list` route.
 """
 
 kumo_callback_url: str | None = None
@@ -228,6 +249,195 @@ kumo_callback_token: str | None = None
 """
 Kumo callback token.
 """
+
+dir_mode_default_info: tuple[bool, str | None] = (False, None)
+"""
+Default dir mode info.
+"""
+
+default_function_name: str | None = None
+"""
+Default function name.
+"""
+
+
+ip_headers: list[str] = []
+"""
+IP headers for extraction, useful for applications behind reverse proxies
+
+e.g. `X-Forwarded-For`, `X-Real-Ip` e.t.c
+"""
+
+
+class LimitSource(Enum):
+    """
+    rate limit based on what value
+    """
+
+    # Based on browser session
+    SESSION = auto()
+
+    # Based on IP
+    IP = auto()
+
+
+@dataclasses.dataclass
+class Limiter:
+    call_history: dict
+    # How many calls client can send between each interval set by `period`
+    max_calls: int
+    # Max call interval time, in seconds
+    period: int
+    source: LimitSource
+
+    def __init__(
+        self,
+        max_calls: int = 10,
+        period: int = 60,
+        source: LimitSource = LimitSource.SESSION,
+    ):
+        if type(max_calls) is not int:
+            raise TypeError("type of `max_calls` is not int")
+        if type(period) is not int:
+            raise TypeError("type of `period` is not int")
+        if type(source) is not LimitSource:
+            raise TypeError("type of `source` is not LimitSource")
+
+        self.source = source
+        self.max_calls = max_calls
+        self.period = period
+        self.call_history = {}
+
+    @staticmethod
+    def ip(max_calls: int, period: int = 60):
+        return Limiter(max_calls=max_calls, period=period, source=LimitSource.IP)
+
+    @staticmethod
+    def session(max_calls: int, period: int = 60):
+        return Limiter(max_calls=max_calls, period=period, source=LimitSource.SESSION)
+
+    @staticmethod
+    def _dict_get_int(dictionary: dict, key: str) -> Optional[int]:
+        if not key in dictionary:
+            return None
+        value = dictionary[key]
+        if isinstance(value, int):
+            return value
+        if isinstance(value, str):
+            return int(value)
+        raise ValueError(
+            f"The value of key `{key}` is `{value}`, cannot parse to integer"
+        )
+
+    @staticmethod
+    def from_dict(dictionary: dict):
+        converted = CaseInsensitiveDict(dictionary)
+        ip = Limiter._dict_get_int(converted, "per_ip")
+        session = Limiter._dict_get_int(converted, "per_browser")
+
+        if ip is not None and session is not None:
+            raise TypeError(
+                "`per_ip` and `per_browser` are conflicting options in a single dict"
+            )
+
+        if ip is None and session is None:
+            raise TypeError("`per_ip` or `per_browser` is required")
+
+        max_calls = ip or session
+        if ip is not None:
+            source = LimitSource.IP
+        if session is not None:
+            source = LimitSource.SESSION
+        period = Limiter._dict_get_int(converted, "period") or 60
+
+        return Limiter(max_calls=max_calls, period=period, source=source)
+
+    def rate_limit(self) -> Optional[Response]:
+        call_history = self.call_history
+        match self.source:
+            case LimitSource.IP:
+                source: Optional[str] = None
+                for header in ip_headers:
+                    if header in request.headers:
+                        source = request.headers[header]
+                        break
+
+                if source is None:
+                    source = request.remote_addr
+
+            case LimitSource.SESSION:
+                source = session.get("__funix_id")
+
+        if source not in call_history:
+            call_history[source] = deque()
+
+        queue = call_history[source]
+        current_time = time.time()
+
+        while len(queue) > 0 and current_time - queue[0] > self.period:
+            queue.popleft()
+
+        if len(queue) >= self.max_calls:
+            time_passed = current_time - queue[0]
+            time_to_wait = int(self.period - time_passed)
+            error_message = (
+                f"Rate limit exceeded. Please try again in {time_to_wait} seconds."
+            )
+            return Response(error_message, status=429, mimetype="text/plain")
+
+        queue.append(current_time)
+        return None
+
+
+def set_ip_header(headers: Optional[list[str]]):
+    global ip_headers
+    if headers is None:
+        return
+
+    if len(headers) == 0:
+        return
+
+    ip_headers = headers
+
+
+def parse_limiter_args(rate_limit: Limiter | list | dict, arg_name: str = "rate_limit"):
+    limiters: Optional[list[Limiter]] = []
+
+    if isinstance(rate_limit, Limiter):
+        limiters = []
+        limiters.append(rate_limit)
+    elif isinstance(rate_limit, dict):
+        converted = CaseInsensitiveDict(rate_limit)
+
+        per_ip = Limiter._dict_get_int(converted, "per_ip")
+        per_session = Limiter._dict_get_int(converted, "per_browser")
+        limiters = []
+        if per_ip:
+            limiters.append(Limiter.ip(per_ip))
+        if per_session:
+            limiters.append(Limiter.ip(per_session))
+        if len(limiters) == 0:
+            raise TypeError(
+                f"Dict passed for `{arg_name}` but no limiters are provided, something wrong."
+            )
+
+    elif isinstance(rate_limit, list):
+        limiters = []
+        for element in rate_limit:
+            if isinstance(element, Limiter):
+                limiters.append(element)
+            elif isinstance(element, dict):
+                limiters.append(Limiter.from_dict(element))
+            else:
+                raise TypeError(f"Invalid arguments, unsupported type for `{arg_name}`")
+
+    else:
+        raise TypeError(f"Invalid arguments, unsupported type for `{arg_name}`")
+
+    return limiters
+
+
+global_rate_limiters: list[Limiter] = []
 
 
 def set_kumo_info(url: str, token: str) -> None:
@@ -243,6 +453,11 @@ def set_kumo_info(url: str, token: str) -> None:
     kumo_callback_token = token
 
 
+def set_rate_limiters(limiters: list[Limiter]):
+    global global_rate_limiters
+    global_rate_limiters = limiters
+
+
 def set_function_secret(secret: str, function_id: str, function_name: str) -> None:
     """
     Set the secret of a function.
@@ -250,7 +465,7 @@ def set_function_secret(secret: str, function_id: str, function_name: str) -> No
     Parameters:
         secret (str): The secret.
         function_id (str): The function id.
-        function_name (str): The function name.
+        function_name (str): The function name (or with path).
     """
     global __decorated_secret_functions_dict, __decorated_id_to_function_dict
     __decorated_secret_functions_dict[function_id] = secret
@@ -287,11 +502,47 @@ def clear_now_module() -> None:
     now_module = None
 
 
+def set_dir_mode_default_info(info: tuple[bool, str | None]) -> None:
+    """
+    Set this function as default.
+    """
+    global dir_mode_default_info
+    dir_mode_default_info = info
+
+
+def set_default_function_name(name: str) -> None:
+    """
+    Set this function as default.
+    """
+    global default_function_name
+    default_function_name = name
+
+
+def make_decorated_functions_happy() -> list[dict]:
+    """
+    Make the decorated functions happy,
+    """
+    global cached_list_functions, __decorated_functions_list
+    if cached_list_functions:
+        return cached_list_functions
+    new_decorated_functions_list = []
+    for i in __decorated_functions_list:
+        if i["module"] in module_functions_counter:
+            if module_functions_counter[i["module"]] == 1:
+                if "." in i["module"]:
+                    i["module"] = ".".join(i["module"].split(".")[0:-1])
+                else:
+                    i["module"] = None
+        new_decorated_functions_list.append(i)
+    cached_list_functions = new_decorated_functions_list
+    return new_decorated_functions_list
+
+
 def enable_wrapper() -> None:
     """
     Enable the wrapper, this will add the list and file path to the app.
     """
-    global __wrapper_enabled, __decorated_functions_list
+    global __wrapper_enabled, default_function
     if not __wrapper_enabled:
         __wrapper_enabled = True
 
@@ -308,7 +559,8 @@ def enable_wrapper() -> None:
                 dict: The function list.
             """
             return {
-                "list": __decorated_functions_list,
+                "list": make_decorated_functions_happy(),
+                "default_function": default_function,
             }
 
         enable_file_service()
@@ -423,6 +675,8 @@ def funix(
     argument_config: ArgumentConfigType = None,
     pre_fill: PreFillType = None,
     menu: Optional[str] = None,
+    default: bool = False,
+    rate_limit: Limiter | list | dict = [],
 ):
     """
     Decorator for functions to convert them to web apps
@@ -456,6 +710,8 @@ def funix(
         menu(str):
             full module path of the function, for `path` only.
             You don't need to set it unless you are funixing a directory and package.
+        default(bool): whether this function is the default function
+        rate_limit(Limiter | list[Limiter]): rate limiters, an object or a list
 
     Returns:
         function: the decorated function
@@ -478,16 +734,58 @@ def funix(
         Raises:
             Check code for details
         """
+        global default_function
         if __wrapper_enabled:
+            if menu:
+                module_functions_counter[menu] = (
+                    module_functions_counter.get(menu, 0) + 1
+                )
+            elif now_module:
+                module_functions_counter[now_module] = (
+                    module_functions_counter.get(now_module, 0) + 1
+                )
+            else:
+                module_functions_counter["$Funix_Main"] = (
+                    module_functions_counter.get("$Funix_Main", 0) + 1
+                )
+
             function_id = str(uuid4())
+
+            if default:
+                default_function = function_id
+
+            safe_module_now = now_module
+
+            if safe_module_now:
+                safe_module_now = funix_menu_to_safe_function_name(safe_module_now)
 
             parse_type_metadata[function_id] = {}
 
             function_direction = direction if direction else "row"
 
-            function_name = getattr(
-                function, "__name__"
-            )  # function name as id to retrieve function info
+            function_name = getattr(function, "__name__")
+            """
+            function name as id to retrieve function info
+            now don't use function name as id, use function id instead
+
+            Rest In Peace: f765733; Jul 9, 2022 - Oct 23, 2023
+            """
+
+            if dir_mode_default_info[0]:
+                if function_name == dir_mode_default_info[1]:
+                    default_function = function_id
+            elif default_function_name:
+                if function_name == default_function_name:
+                    default_function = function_id
+
+            unique_function_name: str | None = None  # Don't use it as id,
+            # only when funix starts with `-R`, it will be not None
+
+            if safe_module_now:
+                unique_function_name = (
+                    now_module.replace(".", "/") + "/" + function_name
+                )
+
             if function_name in banned_function_name_and_path:
                 raise ValueError(
                     f"{function_name} is not allowed, banned names: {banned_function_name_and_path}"
@@ -519,14 +817,26 @@ def funix(
                         __parsed_themes[theme] = parsed_theme
 
             if not path:
-                endpoint = function_name
+                if unique_function_name:
+                    endpoint = unique_function_name
+                else:
+                    endpoint = function_name
             else:
                 if path in banned_function_name_and_path:
                     raise Exception(f"{function_name}'s path: {path} is not allowed")
                 endpoint = path.strip("/")
 
-            if function_title in __decorated_functions_names_list:
-                raise ValueError(f"Function with name {function_title} already exists")
+            if unique_function_name:
+                if unique_function_name in __decorated_functions_names_list:
+                    raise ValueError(
+                        f"Function with name {function_name} already exists, you better check other files, they may "
+                        f"have the same function name"
+                    )
+            else:
+                if function_title in __decorated_functions_names_list:
+                    raise ValueError(
+                        f"Function with name {function_title} already exists"
+                    )
 
             if __app_secret is not None:
                 set_function_secret(__app_secret, function_id, function_title)
@@ -546,13 +856,18 @@ def funix(
             if menu:
                 replace_module = menu
 
-            __decorated_functions_names_list.append(function_title)
+            if unique_function_name:
+                __decorated_functions_names_list.append(unique_function_name)
+            else:
+                __decorated_functions_names_list.append(function_title)
+
             __decorated_functions_list.append(
                 {
                     "name": function_title,
                     "path": endpoint,
                     "module": replace_module,
                     "secret": secret_key,
+                    "id": function_id,
                 }
             )
 
@@ -766,28 +1081,26 @@ def funix(
             if pre_fill:
                 for _, from_arg_function_info in pre_fill.items():
                     if isinstance(from_arg_function_info, tuple):
-                        from_arg_function_name = getattr(
-                            from_arg_function_info[0], "__name__"
-                        )
+                        from_arg_function_address = str(id(from_arg_function_info[0]))
                         from_arg_function_index_or_key = from_arg_function_info[1]
-                        if from_arg_function_name in pre_fill_metadata:
-                            pre_fill_metadata[from_arg_function_name].append(
+                        if from_arg_function_address in pre_fill_metadata:
+                            pre_fill_metadata[from_arg_function_address].append(
                                 from_arg_function_index_or_key
                             )
                         else:
-                            pre_fill_metadata[from_arg_function_name] = [
+                            pre_fill_metadata[from_arg_function_address] = [
                                 from_arg_function_index_or_key
                             ]
                     else:
-                        from_arg_function_name = getattr(
-                            from_arg_function_info, "__name__"
-                        )
-                        if from_arg_function_name in pre_fill_metadata:
-                            pre_fill_metadata[from_arg_function_name].append(
+                        from_arg_function_address = str(id(from_arg_function_info))
+                        if from_arg_function_address in pre_fill_metadata:
+                            pre_fill_metadata[from_arg_function_address].append(
                                 PreFillEmpty
                             )
                         else:
-                            pre_fill_metadata[from_arg_function_name] = [PreFillEmpty]
+                            pre_fill_metadata[from_arg_function_address] = [
+                                PreFillEmpty
+                            ]
 
             def create_decorated_params(arg_name: str) -> None:
                 """
@@ -971,7 +1284,7 @@ def funix(
                         is __pandera_module.typing.pandas.DataFrame
                     ):
                         anno = function_param.annotation
-                        default = (
+                        default_values = (
                             {}
                             if function_param.default is Parameter.empty
                             else function_param.default
@@ -984,8 +1297,8 @@ def funix(
                             ] = dataframe_parse_metadata.get(function_id, {})
                             column_names = []
                             for name, column in schema_columns.items():
-                                if name in default:
-                                    column_default = list(default[name])
+                                if name in default_values:
+                                    column_default = list(default_values[name])
                                 else:
                                     column_default = None
                                 d_type = column.dtype
@@ -1179,8 +1492,8 @@ def funix(
                 "source": source_code,
             }
 
-            get_wrapper_endpoint = app.get(f"/param/{endpoint}")
             get_wrapper_id = app.get(f"/param/{function_id}")
+            get_wrapper_endpoint = app.get(f"/param/{endpoint}")
 
             def decorated_function_param_getter():
                 """
@@ -1198,12 +1511,12 @@ def funix(
                     for argument_key, from_function_info in pre_fill.items():
                         if isinstance(from_function_info, tuple):
                             last_result = get_global_variable(
-                                getattr(from_function_info[0], "__name__")
+                                str(id(from_function_info[0]))
                                 + f"_{from_function_info[1]}"
                             )
                         else:
                             last_result = get_global_variable(
-                                getattr(from_function_info, "__name__") + "_result"
+                                str(id(from_function_info)) + "_result"
                             )
                         if last_result is not None:
                             new_decorated_function["params"][argument_key][
@@ -1217,15 +1530,22 @@ def funix(
                     )
                 return Response(dumps(decorated_function), mimetype="application/json")
 
+            decorated_function_param_getter_name = f"{function_name}_param_getter"
+
+            if safe_module_now:
+                decorated_function_param_getter_name = (
+                    f"{safe_module_now}_{decorated_function_param_getter_name}"
+                )
+
             decorated_function_param_getter.__setattr__(
-                "__name__", f"{function_name}_param_getter"
+                "__name__", f"{decorated_function_param_getter_name}"
             )
             get_wrapper_endpoint(decorated_function_param_getter)
             get_wrapper_id(decorated_function_param_getter)
 
             if secret_key:
-                verify_secret_endpoint = app.post(f"/verify/{endpoint}")
                 verify_secret_id = app.post(f"/verify/{function_id}")
+                verify_secret_endpoint = app.post(f"/verify/{endpoint}")
 
                 def verify_secret():
                     """
@@ -1288,6 +1608,12 @@ def funix(
                 Returns:
                     Any: The function's result
                 """
+
+                for limiter in global_rate_limiters + limiters:
+                    limit_result = limiter.rate_limit()
+                    if limit_result is not None:
+                        return limit_result
+
                 try:
                     if not session.get("__funix_id"):
                         session["__funix_id"] = uuid4().hex
@@ -1372,19 +1698,19 @@ def funix(
                         # TODO: Best result handling, refactor it if possible
                         try:
                             function_call_result = function(**wrapped_function_kwargs)
-                            function_call_name = getattr(function, "__name__")
-                            if function_call_name in pre_fill_metadata:
+                            function_call_address = str(id(function))
+                            if function_call_address in pre_fill_metadata:
                                 for index_or_key in pre_fill_metadata[
-                                    function_call_name
+                                    function_call_address
                                 ]:
                                     if index_or_key is PreFillEmpty:
                                         set_global_variable(
-                                            function_call_name + "_result",
+                                            function_call_address + "_result",
                                             function_call_result,
                                         )
                                     else:
                                         set_global_variable(
-                                            function_call_name + f"_{index_or_key}",
+                                            function_call_address + f"_{index_or_key}",
                                             function_call_result[index_or_key],
                                         )
                             if return_type_parsed == "Figure":

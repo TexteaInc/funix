@@ -11,6 +11,8 @@ import typing
 import functools
 import multiprocessing
 
+import pandas, pandera
+
 import funix
 
 #%%
@@ -92,6 +94,8 @@ def search_telomeres(sRNAs:typing.List[str], repeat:str, include_reverse:bool=Tr
     """Determine whether a list of strings are telomers of the given repeat 
     """
 
+    print (sRNAs)
+
     telomere_hash_dict = get_telomere_hash_dict(repeat, include_reverse=include_reverse)
 
     func_search_one_pattern = functools.partial(search_string_hash, telomere_hash_dict=telomere_hash_dict)
@@ -99,6 +103,8 @@ def search_telomeres(sRNAs:typing.List[str], repeat:str, include_reverse:bool=Tr
     # with multiprocessing.Pool() as pool:
     #     result = pool.map(func_search_one_pattern, sRNAs)
     result = list(map(func_search_one_pattern, sRNAs))
+
+    print (result )
 
     return result
 
@@ -113,36 +119,51 @@ def test():
     repeat = "CCCTAAA"
 
     return search_telomeres(sRNAs, repeat)
-# %%
+
+
+class InputSchema(pandera.DataFrameModel):
+    sRNAs: pandera.typing.Series[str]
+
 
 @funix.funix(
-    description = "A telomere is a region of repetitive DNA sequences at the end of a chromosome. "
-                "Find the belongings of a repeat unit.",
+    description = "A telomere is a region of repetitive DNA sequences at the end of a chromosome. Enter a repeating unit, and a list of sRNAs in the table below, this telomere checker will tell whether each of the sRNAs is a telomere.",
     # destination = "column",
-    argument_config = {
-        "sRNAs": {
-            "widget" : "sheet"
-        },
-        "repeat_unit": {
-            # "treat_as": "config",
-            "examples": ["CCCTAAA"]
-        }
-    }
+    # argument_config = {
+    #     "sRNAs": {
+    #         "widget" : "sheet"
+    #     },    
+    #     "repeat_unit": {
+    #         # "treat_as": "config",
+    #         "examples": ["CCCTAAA"]
+    #     }
+    # }
 )
-def bioinfo_telomere_check(
-    sRNAs: typing.List[str]=
+def telomere_check(
+    # sRNAs: typing.List[str] = [
+    #     "CCCTAAACCCTAAACCCTAT",  # False
+    #     "CCCTAAACCCTAAACCCTAA",  # True, 20-nt
+    #     "CCCTAAACCCTAAACCC",  # False, too short
+    #     "CCCTAAACCCTAAACCCTAAAC",  # True, 22-nt
+    #     "CTAAACCCTAAACCCTAAACCCT"  # True, 25-nt
+    # ],    
+    sRNAs: pandera.typing.DataFrame[InputSchema] =
+        pandas.DataFrame({"sRNAs": 
         [
-        "CCCTAAACCCTAAACCCTAT",  # False
-        "CCCTAAACCCTAAACCCTAA",  # True, 20-nt
-        "CCCTAAACCCTAAACCC",  # False, too short
-        "CCCTAAACCCTAAACCCTAAAC",  # True, 22-nt
-        "CTAAACCCTAAACCCTAAACCCT"  # True, 25-nt
-    ]
-    , repeat_unit: str="CCCTAAA"
-    ) -> dict:
+            "CCCTAAACCCTAAACCCTAT",  # False
+            "CCCTAAACCCTAAACCCTAA",  # True, 20-nt
+            "CCCTAAACCCTAAACCC",  # False, too short
+            "CCCTAAACCCTAAACCCTAAAC",  # True, 22-nt
+            "CTAAACCCTAAACCCTAAACCCT"  # True, 25-nt
+        ]
+        }),
+    repeat_unit: str="CCCTAAA"
     # ) -> typing.Dict[str, bool]: 
-    check_result = search_telomeres(sRNAs, repeat_unit)
-    return {"sRNAs":sRNAs, "Is it a telemere?":check_result }
+    # check_result = search_telomeres(sRNAs, repeat_unit)
+    # return {"sRNAs":sRNAs, "Is it a telemere?":check_result }
+
+    ) -> pandas.DataFrame:
+    check_result = search_telomeres(sRNAs["sRNAs"].tolist(), repeat_unit)
+    return pandas.DataFrame({"sRNAs":sRNAs["sRNAs"], "Is it a telemere?":check_result })
 
 
 if __name__ == '__main__':

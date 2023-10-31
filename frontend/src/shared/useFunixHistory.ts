@@ -7,6 +7,7 @@ export type History = {
   input: Record<any, any> | null;
   output: PostCallResponse | string | object | null;
   functionName: string;
+  functionPath: string;
   name: string | null;
   timestamp: number;
   uuid: string;
@@ -31,6 +32,7 @@ const useFunixHistory = () => {
   const setInput = async (
     timestamp: number,
     functionName: string,
+    functionPath: string,
     input: Record<any, any>
   ) => {
     getHistories().then((histories) => {
@@ -42,6 +44,7 @@ const useFunixHistory = () => {
           input,
           output: null,
           functionName,
+          functionPath,
           name: null,
           timestamp,
           uuid: uuid4(),
@@ -68,6 +71,7 @@ const useFunixHistory = () => {
   const setOutput = async (
     timestamp: number,
     functionName: string,
+    functionPath: string,
     output: PostCallResponse | string
   ) => {
     getHistories().then((histories) => {
@@ -87,6 +91,7 @@ const useFunixHistory = () => {
           input: null,
           output: newOutput,
           functionName,
+          functionPath,
           name: null,
           timestamp,
           uuid: uuid4(),
@@ -113,6 +118,7 @@ const useFunixHistory = () => {
   const setInputOutput = (
     timestamp: number,
     functionName: string,
+    functionPath: string,
     input: Record<any, any>,
     output: string | PostCallResponse
   ) => {
@@ -134,6 +140,7 @@ const useFunixHistory = () => {
           input,
           output: newOutput,
           functionName,
+          functionPath,
           name: null,
           timestamp,
           uuid: uuid4(),
@@ -170,11 +177,16 @@ const useFunixHistory = () => {
     });
   };
 
-  const setHistoryName = (timestamp: number, name: string) => {
+  const setHistoryNameAndPath = (
+    timestamp: number,
+    name: string,
+    path: string
+  ) => {
     getHistories().then((histories) => {
       const index = histories.findIndex((h) => h.timestamp === timestamp);
       if (index !== -1) {
         histories[index].name = name;
+        histories[index].functionPath = path;
       }
       localforage
         .setItem("funix-history", JSON.stringify(histories))
@@ -196,7 +208,7 @@ const useFunixHistory = () => {
     setInputOutput,
     removeHistory,
     clearHistory,
-    setHistoryName,
+    setHistoryNameAndPath,
     getHistories,
   };
 };
