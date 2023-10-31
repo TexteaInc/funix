@@ -122,7 +122,6 @@ def easypost_demo(
     # header = {
     #     "Content-Type": "application/json", 
     #     "Authorization": f"Basic {EASYPOST_API_KEY.value}",
-    #     # EZTKcc447c394f5640d08193d88779185491hjr0KcWaKXLcCz2LMegntw
     #     }
 
     # payload = {
