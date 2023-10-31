@@ -1540,9 +1540,8 @@ def funix(
             decorated_function_param_getter.__setattr__(
                 "__name__", f"{decorated_function_param_getter_name}"
             )
-
-            get_wrapper_id(decorated_function_param_getter)
             get_wrapper_endpoint(decorated_function_param_getter)
+            get_wrapper_id(decorated_function_param_getter)
 
             if secret_key:
                 verify_secret_id = app.post(f"/verify/{function_id}")
@@ -1591,22 +1590,12 @@ def funix(
                     else:
                         return failed_data
 
-                decorated_function_verify_secret_name = f"{function_name}_verify_secret"
-
-                if safe_module_now:
-                    decorated_function_verify_secret_name = (
-                        f"{safe_module_now}_{decorated_function_verify_secret_name}"
-                    )
-
-                verify_secret.__setattr__(
-                    "__name__", decorated_function_verify_secret_name
-                )
-
+                verify_secret.__setattr__("__name__", f"{function_name}_verify_secret")
                 verify_secret_endpoint(verify_secret)
                 verify_secret_id(verify_secret)
 
-            limiters = parse_limiter_args(rate_limit)
-
+            @app.post(f"/call/{endpoint}")
+            @app.post(f"/call/{function_id}")
             @wraps(function)
             def wrapper():
                 """
@@ -2020,12 +2009,6 @@ def funix(
                     return {"error_type": "wrapper", "error_body": format_exc()}
 
             wrapper._decorator_name_ = "funix"
-
-            if safe_module_now:
-                wrapper.__setattr__("__name__", safe_module_now + "_" + function_name)
-
-            app.post(f"/call/{endpoint}")(wrapper)
-            app.post(f"/call/{function_id}")(wrapper)
         return function
 
     return decorator
