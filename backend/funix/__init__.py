@@ -360,6 +360,7 @@ def get_flask_application(
     transform: Optional[bool] = False,
     app_secret: Optional[str | bool] = False,
     global_rate_limit: decorator.Limiter | list | dict = [],
+    ip_headers: Optional[list[str]] = None,
     __kumo_callback_url: Optional[str] = None,
     __kumo_callback_token: Optional[str] = None,
     __host_regex: Optional[str] = None,
@@ -379,6 +380,8 @@ def get_flask_application(
         app_secret (str | bool): If you want to set an app secret, default is False
         global_rate_limit (decorator.Limiter | list | dict): If you want to rate limit all API endpoints,
             default is an empty list
+        ip_headers (list[str] | None): IP headers for extraction instead of peer IP, useful for applications
+            behind reverse proxies
         __kumo_callback_url (str): The Kumo callback url, default is None, do not set it if you don't know what it is.
         __kumo_callback_token (str): The Kumo callback token, default is None, do not set it if you don't know what
                                      it is.
@@ -391,6 +394,7 @@ def get_flask_application(
     decorator.set_rate_limiters(
         decorator.parse_limiter_args(global_rate_limit, "global_rate_limit")
     )
+    decorator.set_ip_header(ip_headers)
     if __host_regex:
         enable_funix_host_checker(__host_regex)
 

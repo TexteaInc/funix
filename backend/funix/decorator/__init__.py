@@ -261,6 +261,14 @@ Default function name.
 """
 
 
+ip_headers: list[str] = []
+"""
+IP headers for extraction, useful for applications behind reverse proxies
+
+e.g. `X-Forwarded-For`, `X-Real-Ip` e.t.c
+"""
+
+
 class LimitSource(Enum):
     """
     rate limit based on what value
@@ -348,7 +356,15 @@ class Limiter:
         call_history = self.call_history
         match self.source:
             case LimitSource.IP:
-                source = request.remote_addr
+                source: Optional[str] = None
+                for header in ip_headers:
+                    if header in request.headers:
+                        source = request.headers[header]
+                        break
+
+                if source is None:
+                    source = request.remote_addr
+
             case LimitSource.SESSION:
                 source = session.get("__funix_id")
 
@@ -371,6 +387,17 @@ class Limiter:
 
         queue.append(current_time)
         return None
+
+
+def set_ip_header(headers: Optional[list[str]]):
+    global ip_headers
+    if headers is None:
+        return
+
+    if len(headers) == 0:
+        return
+
+    ip_headers = headers
 
 
 def parse_limiter_args(rate_limit: Limiter | list | dict, arg_name: str = "rate_limit"):
