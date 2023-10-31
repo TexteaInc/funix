@@ -254,39 +254,30 @@ def import_from_config(
         set_app_secret(app_secret)
 
     if dir_mode:
-        if exists(file_or_module_name) and isdir(file_or_module_name):
-            base_dir = file_or_module_name
-            if default and ":" not in default:
-                raise ValueError(
-                    "Default function name should be in the format of `file:func` in dir mode!"
-                )
-            ignore_file = join(base_dir, ".funixignore")
-            matches = None
-            if exists(ignore_file):
-                matches = parse_gitignore(
-                    abspath(ignore_file), base_dir=abspath(base_dir)
-                )
-            for single_file in get_python_files_in_dir(
+        base_dir = file_or_module_name
+        if default and ":" not in default:
+            raise ValueError(
+                "Default function name should be in the format of `file:func` in dir mode!"
+            )
+        ignore_file = join(base_dir, ".funixignore")
+        matches = None
+        if exists(ignore_file):
+            matches = parse_gitignore(abspath(ignore_file), base_dir=abspath(base_dir))
+        for single_file in get_python_files_in_dir(
+            base_dir=base_dir,
+            add_to_sys_path=False,
+            need_full_path=True,
+            is_dir=True,
+            matches=matches,
+        ):
+            __prep(
+                module_or_file=single_file,
+                lazy=lazy,
+                need_path=True,
+                is_module=False,
+                need_name=True,
                 base_dir=base_dir,
-                add_to_sys_path=False,
-                need_full_path=True,
-                is_dir=True,
-                matches=matches,
-            ):
-                __prep(
-                    module_or_file=single_file,
-                    lazy=lazy,
-                    need_path=True,
-                    is_module=False,
-                    need_name=True,
-                    base_dir=base_dir,
-                    default=default,
-                )
-        else:
-            raise RuntimeError(
-                "Directory not found or not a directory! "
-                "If you want to use package mode, please use --package/-P option, "
-                "if you want to use file mode, please use remove --recursive/-R option."
+                default=default,
             )
     elif package_mode:
         if default or transform:
@@ -316,11 +307,6 @@ def import_from_config(
         if not exists(file_or_module_name):
             raise RuntimeError(
                 "File not found! If you want to use package mode, please use --package/-P option"
-            )
-        elif isdir(file_or_module_name):
-            raise RuntimeError(
-                "Oh this is a directory! If you want to use directory/recursive mode, "
-                "please use --recursive/-R option"
             )
         elif not file_or_module_name.endswith(".py"):
             raise RuntimeError(
@@ -421,7 +407,6 @@ def run(
     no_frontend: Optional[bool] = False,
     no_browser: Optional[bool] = False,
     lazy: Optional[bool] = False,
-    dir_mode: Optional[bool] = False,
     package_mode: Optional[bool] = False,
     from_git: Optional[str] = None,
     repo_dir: Optional[str] = None,
@@ -441,7 +426,6 @@ def run(
         no_frontend (bool): If you want to disable the frontend, default is False
         no_browser (bool): If you want to disable the browser opening, default is False
         lazy (bool): If you want to enable lazy mode, default is False
-        dir_mode (bool): If you want to enable dir mode, default is False
         package_mode (bool): If you want to enable package mode, default is False
         from_git (str): If you want to run the app from a git repo, default is None
         repo_dir (str): If you want to run the app from a git repo, you can specify the directory, default is None
@@ -453,6 +437,14 @@ def run(
     Returns:
         None
     """
+    dir_mode = exists(file_or_module_name) and isdir(file_or_module_name)
+
+    if dir_mode and package_mode:
+        print(
+            'Error: Cannot use both directory mode and package mode.\nPlease run "funix --help" for more information.'
+        )
+        sys.exit(1)
+
     import_from_config(
         file_or_module_name=file_or_module_name,
         lazy=lazy,

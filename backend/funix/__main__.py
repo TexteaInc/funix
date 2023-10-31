@@ -18,7 +18,6 @@ from funix import run
 @plac.flg("no_frontend", "Disable frontend server", abbrev="F")
 @plac.flg("no_browser", "Disable auto open browser", abbrev="B")
 @plac.flg("lazy", "Load functions without decorator", abbrev="l")
-@plac.flg("recursive", "Enable directory mode", abbrev="R")
 @plac.flg("package", "Enable package mode", abbrev="P")
 @plac.flg("dev", "Enable development mode", abbrev="d")
 @plac.flg("transform", "Transform the globals to a session variables", abbrev="t")
@@ -33,7 +32,6 @@ def main(
     no_frontend=False,
     no_browser=False,
     lazy=False,
-    recursive=False,
     package=False,
     dev=False,
     transform=False,
@@ -58,19 +56,12 @@ def main(
         )
         sys.exit(1)
 
-    if recursive and package:
-        print(
-            'Error: Cannot use both directory mode and package mode.\nPlease run "funix --help" for more information.'
-        )
-        sys.exit(1)
-
     sys.path.append(os.getcwd())
     parsed_host: str = os.getenv("FUNIX_HOST", host)
     parsed_port: int = int(os.getenv("FUNIX_PORT", port))
     parsed_no_frontend: bool = os.getenv("FUNIX_NO_FRONTEND", no_frontend)
     parsed_no_browser: bool = os.getenv("FUNIX_NO_BROWSER", no_browser)
     parsed_lazy: bool = os.getenv("FUNIX_LAZY", lazy)
-    parsed_dir_mode: bool = os.getenv("FUNIX_DIR_MODE", recursive)
     parsed_package_mode: bool = os.getenv("FUNIX_PACKAGE_MODE", package)
     parsed_from_git: str = os.getenv("FUNIX_FROM_GIT", from_git)
     parsed_repo_dir: str = os.getenv("FUNIX_REPO_DIR", repo_dir)
@@ -97,7 +88,6 @@ def main(
         no_frontend=parsed_no_frontend,
         no_browser=parsed_no_browser,
         lazy=parsed_lazy,
-        dir_mode=parsed_dir_mode,
         package_mode=parsed_package_mode,
         from_git=parsed_from_git,
         repo_dir=parsed_repo_dir,
