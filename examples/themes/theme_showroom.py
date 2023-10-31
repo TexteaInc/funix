@@ -13,7 +13,6 @@ This a markdown playground in the {theme} mode theme. You can write markdown her
     description=description.format(theme="dark"),
     theme="./dark_test.json",
     show_source=True,
-    default=True,
 )
 def theme_test_markdown_playground(
     markdown: StrCode("markdown"),

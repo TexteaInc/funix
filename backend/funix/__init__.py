@@ -4,7 +4,7 @@ from ipaddress import ip_address
 from os import chdir, getcwd, listdir
 from os.path import dirname, exists, isdir, join, normpath, sep, abspath
 from sys import exit, path
-from typing import Generator, Optional
+from typing import Generator, Optional, Any
 from urllib.parse import quote
 
 from flask import Flask
@@ -84,6 +84,7 @@ def __prep(
     is_module: bool,
     need_name: bool,
     base_dir: Optional[str] = None,
+    default: Optional[str] = None,
 ) -> None:
     """
     Prepare the module or file. Import and wrap the functions if needed.
@@ -96,6 +97,7 @@ def __prep(
         is_module (bool): Pass `True` if the module_or_file is a module, `False` if it is a file.
         need_name (bool): For the module, if the name is needed.
         base_dir (str): The base director, only for dir mode.
+        default (str): Default function name
     """
     decorator.enable_wrapper()
     path_difference: str | None = None
@@ -107,6 +109,8 @@ def __prep(
         path_difference = get_path_difference(base_dir, module)
     if module_or_file:
         if is_module:
+            if default:
+                decorator.set_default_function_name(default)
             module = import_module(module_or_file)
         else:
             folder = sep.join(module_or_file.split(sep)[0:-1])
@@ -114,6 +118,14 @@ def __prep(
                 chdir(folder)
             if base_dir and not lazy:
                 decorator.set_now_module(path_difference)
+                if default:
+                    python_file, function_name = default.strip().split(":")
+                    if abspath(join(__now_path, module_or_file)) == abspath(
+                        join(__now_path, base_dir, python_file)
+                    ):
+                        decorator.set_dir_mode_default_info((True, function_name))
+                    else:
+                        decorator.set_dir_mode_default_info((False, None))
             module = import_module_from_file(
                 join(__now_path, module_or_file), need_name
             )
@@ -143,7 +155,11 @@ def __prep(
 
 
 def get_python_files_in_dir(
-    base_dir: str, add_to_sys_path: bool, need_full_path: bool, is_dir: bool
+    base_dir: str,
+    add_to_sys_path: bool,
+    need_full_path: bool,
+    is_dir: bool,
+    matches: Any,
 ) -> Generator[str, None, None]:
     """
     Get all the Python files in a directory.
@@ -153,31 +169,28 @@ def get_python_files_in_dir(
         add_to_sys_path (bool): If the path should be added to sys.path.
         need_full_path (bool): If the full path is needed.
         is_dir (bool): If mode is dir mode.
+        matches (Any): The matches.
 
     Returns:
         Generator[str, None, None]: The Python files.
     """
     if add_to_sys_path:
         path.append(base_dir)
-    ignore_file = join(base_dir, ".funixignore")
-    matches = None
-    if exists(ignore_file):
-        matches = parse_gitignore(abspath(ignore_file))
     files = listdir(base_dir)
     for file in files:
         if isdir(join(base_dir, file)):
             yield from get_python_files_in_dir(
-                join(base_dir, file), add_to_sys_path, need_full_path, is_dir
+                join(base_dir, file), add_to_sys_path, need_full_path, is_dir, matches
             )
         if file.endswith(".py") and file != "__init__.py":
             full_path = join(base_dir, file)
-            abs_full_path = abspath(full_path)
             if matches:
-                if not matches(abs_full_path):
-                    if need_full_path:
-                        yield join(base_dir, file)
-                    else:
-                        yield file[:-3]
+                if matches(abspath(full_path)):
+                    continue
+            if need_full_path:
+                yield join(base_dir, file)
+            else:
+                yield file[:-3]
 
 
 def import_from_config(
@@ -189,6 +202,7 @@ def import_from_config(
     repo_dir: Optional[str] = None,
     transform: Optional[bool] = False,
     app_secret: Optional[str | bool] = False,
+    default: Optional[str] = None,
 ) -> None:
     """
     Import files, git repos and modules from the config argument.
@@ -202,6 +216,7 @@ def import_from_config(
         repo_dir (str): If you want to run the app from a git repo, you can specify the directory, default is None
         transform (bool): If you want to enable transform mode, default is False
         app_secret (str | bool): If you want to set an app secret, default is False
+        default (str): Default function name, default is None
 
     Returns:
         None
@@ -241,11 +256,22 @@ def import_from_config(
     if dir_mode:
         if exists(file_or_module_name) and isdir(file_or_module_name):
             base_dir = file_or_module_name
+            if default and ":" not in default:
+                raise ValueError(
+                    "Default function name should be in the format of `file:func` in dir mode!"
+                )
+            ignore_file = join(base_dir, ".funixignore")
+            matches = None
+            if exists(ignore_file):
+                matches = parse_gitignore(
+                    abspath(ignore_file), base_dir=abspath(base_dir)
+                )
             for single_file in get_python_files_in_dir(
                 base_dir=base_dir,
                 add_to_sys_path=False,
                 need_full_path=True,
                 is_dir=True,
+                matches=matches,
             ):
                 __prep(
                     module_or_file=single_file,
@@ -254,6 +280,7 @@ def import_from_config(
                     is_module=False,
                     need_name=True,
                     base_dir=base_dir,
+                    default=default,
                 )
         else:
             raise RuntimeError(
@@ -262,6 +289,10 @@ def import_from_config(
                 "if you want to use file mode, please use remove --recursive/-R option."
             )
     elif package_mode:
+        if default or transform:
+            print(
+                "WARNING: Default mode and transform mode is not supported for package mode!"
+            )
         module = import_module(file_or_module_name)
         module_path = module.__file__
         if module_path is None:
@@ -296,6 +327,10 @@ def import_from_config(
                 "This is not a Python file! You should change the file extension to `.py`."
             )
         else:
+            if default and ":" in default:
+                raise ValueError(
+                    "Default function name should be in the format of `func` in file mode!"
+                )
             if transform:
                 __prep(
                     module_or_file=get_new_python_file(file_or_module_name),
@@ -389,6 +424,7 @@ def run(
     dev: Optional[bool] = False,
     transform: Optional[bool] = False,
     app_secret: Optional[str | bool] = False,
+    default: Optional[str] = None,
 ) -> None:
     """
     Run the funix app.
@@ -408,6 +444,7 @@ def run(
         dev (bool): If you want to enable development mode, default is True
         transform (bool): If you want to enable transform mode, default is False
         app_secret (str | bool): If you want to set an app secret, default is False
+        default (str): Default function name, default is None
 
     Returns:
         None
@@ -421,6 +458,7 @@ def run(
         repo_dir=repo_dir,
         transform=transform,
         app_secret=app_secret,
+        default=default,
     )
 
     parsed_ip = ip_address(host)

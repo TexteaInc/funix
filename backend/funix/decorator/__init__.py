@@ -250,6 +250,16 @@ kumo_callback_token: str | None = None
 Kumo callback token.
 """
 
+dir_mode_default_info: tuple[bool, str | None] = (False, None)
+"""
+Default dir mode info.
+"""
+
+default_function_name: str | None = None
+"""
+Default function name.
+"""
+
 
 class LimitSource(Enum):
     """
@@ -362,6 +372,7 @@ class Limiter:
         queue.append(current_time)
         return None
 
+
 def parse_limiter_args(rate_limit: Limiter | list | dict, arg_name: str = "rate_limit"):
     limiters: Optional[list[Limiter]] = []
 
@@ -391,9 +402,7 @@ def parse_limiter_args(rate_limit: Limiter | list | dict, arg_name: str = "rate_
             elif isinstance(element, dict):
                 limiters.append(Limiter.from_dict(element))
             else:
-                raise TypeError(
-                    f"Invalid arguments, unsupported type for `{arg_name}`"
-                )
+                raise TypeError(f"Invalid arguments, unsupported type for `{arg_name}`")
 
     else:
         raise TypeError(f"Invalid arguments, unsupported type for `{arg_name}`")
@@ -464,6 +473,22 @@ def clear_now_module() -> None:
     """
     global now_module
     now_module = None
+
+
+def set_dir_mode_default_info(info: tuple[bool, str | None]) -> None:
+    """
+    Set this function as default.
+    """
+    global dir_mode_default_info
+    dir_mode_default_info = info
+
+
+def set_default_function_name(name: str) -> None:
+    """
+    Set this function as default.
+    """
+    global default_function_name
+    default_function_name = name
 
 
 def make_decorated_functions_happy() -> list[dict]:
@@ -718,6 +743,13 @@ def funix(
 
             Rest In Peace: f765733; Jul 9, 2022 - Oct 23, 2023
             """
+
+            if dir_mode_default_info[0]:
+                if function_name == dir_mode_default_info[1]:
+                    default_function = function_id
+            elif default_function_name:
+                if function_name == default_function_name:
+                    default_function = function_id
 
             unique_function_name: str | None = None  # Don't use it as id,
             # only when funix starts with `-R`, it will be not None

@@ -25,6 +25,7 @@ from funix import run
 @plac.opt("from_git", "Import module from git", abbrev="g")
 @plac.opt("repo_dir", "The directories in the repo that need to be used", abbrev="r")
 @plac.opt("secret", "The secret key for the full app", abbrev="s")
+@plac.opt("default", "The default function to run", abbrev="D")
 def main(
     file_or_module_name=None,
     host="0.0.0.0",
@@ -39,6 +40,7 @@ def main(
     from_git=None,
     repo_dir=None,
     secret=None,
+    default=None,
 ):
     """Funix: Building web apps without manually creating widgets
 
@@ -75,6 +77,7 @@ def main(
     parsed_dev: bool = os.getenv("FUNIX_NO_DEV", dev)
     parsed_transform: bool = os.getenv("FUNIX_TRANSFORM", transform)
     parsed_secret: bool | str = os.getenv("FUNIX_SECRET", secret)
+    parsed_default: str = os.getenv("FUNIX_DEFAULT", default)
 
     if isinstance(parsed_secret, str):
         if parsed_secret.lower() == "true":
@@ -101,6 +104,7 @@ def main(
         dev=parsed_dev,
         transform=parsed_transform,
         app_secret=parsed_secret,
+        default=parsed_default,
     )
 
 
