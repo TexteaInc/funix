@@ -303,12 +303,12 @@ const TextExtendedWidget = ({
   const freeSolo: boolean = contentPolicy != ContentPolicy.Whitelist;
 
   const multilineConfig: MultilineProps = {};
+  multilineConfig.multiline = true;
 
   if (schema.widget) {
     const widget = schema.widget;
 
     if (schema.widget.indexOf("textarea") !== -1) {
-      multilineConfig.multiline = true;
       const parseResult = textareaWidgetParser(widget);
 
       if (parseResult === "default") {
@@ -322,16 +322,14 @@ const TextExtendedWidget = ({
         console.warn("Invalid widget syntax for textarea");
         multilineConfig.rows = parseResult[0];
       }
+    } else {
+      multilineConfig.multiline = false;
     }
   }
 
   return (
     <Autocomplete
-      disableClearable={
-        inputType === "number" ||
-        inputType === "integer" ||
-        schema.widget?.indexOf("textarea") !== -1
-      }
+      disableClearable
       size="small"
       value={value || value === 0 ? value : ""}
       getOptionLabel={(option) => option.toString()}
@@ -352,9 +350,12 @@ const TextExtendedWidget = ({
                   {showPassword ? <VisibilityOff /> : <Visibility />}
                 </IconButton>
               </InputAdornment>
-              {newParams.InputProps.endAdornment}
             </>
           );
+        } else {
+          newParams.inputProps.style = {
+            resize: "vertical",
+          };
         }
         return (
           <TextField
@@ -370,6 +371,7 @@ const TextExtendedWidget = ({
                 />
               ) : null
             }
+            fullWidth
             autoFocus={autofocus}
             required={required}
             disabled={disabled || readonly}
