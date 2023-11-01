@@ -339,7 +339,6 @@ def get_flask_application(
     file_or_module_name: str,
     no_frontend: Optional[bool] = False,
     lazy: Optional[bool] = False,
-    dir_mode: Optional[bool] = False,
     package_mode: Optional[bool] = False,
     from_git: Optional[str] = None,
     repo_dir: Optional[str] = None,
@@ -358,7 +357,6 @@ def get_flask_application(
         file_or_module_name (str): The file or module name to run.
         no_frontend (bool): If you want to disable the frontend, default is False
         lazy (bool): If you want to enable lazy mode, default is False
-        dir_mode (bool): If you want to enable dir mode, default is False
         package_mode (bool): If you want to enable package mode, default is False
         from_git (str): If you want to run the app from a git repo, default is None
         repo_dir (str): If you want to run the app from a git repo, you can specify the directory, default is None
@@ -383,6 +381,14 @@ def get_flask_application(
     decorator.set_ip_header(ip_headers)
     if __host_regex:
         enable_funix_host_checker(__host_regex)
+
+    dir_mode = exists(file_or_module_name) and isdir(file_or_module_name)
+
+    if dir_mode and package_mode:
+        print(
+            'Error: Cannot use both directory mode and package mode.\nPlease run "funix --help" for more information.'
+        )
+        sys.exit(1)
 
     import_from_config(
         file_or_module_name=file_or_module_name,
