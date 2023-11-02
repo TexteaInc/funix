@@ -503,9 +503,7 @@ Our table widget uses advanced features in MUI Pro. If you have a MUI Pro licens
 ### Command line options
 
 ```text
-usage: funix [-h] [-H 0.0.0.0] [-p 3000] [-F] [-B] [-l] [-R] [-P] [-d] [-t]
-             [-g None] [-r None] [-s None] [--version]
-             [file_or_module_name]
+usage: funix [-h] [-H 0.0.0.0] [-p 3000] [-F] [-B] [-l] [-P] [-d] [-t] [-g None] [-r None] [-s None] [-D None] [--version] [file_folder_or_module_name]
 
 Funix: Building web apps without manually creating widgets
 
@@ -518,11 +516,9 @@ Funix: Building web apps without manually creating widgets
     Visit us at http://funix.io
 
 positional arguments:
-  file_or_module_name   The Python module containing functions to be turned
-                        into web apps by Funix. For example, if your
-                        functions are in the file `hello.py`, you should pass
-                        `hello.py` here.if you want to turn a module called
-                        `hello` into a web app, you should pass `hello` here.
+  file_folder_or_module_name
+                        The Python module containing functions to be turned into web apps by Funix. For example, if your functions are in the file `hello.py`, you should pass `hello.py` here. if you want to turn a module called `hello` into a web app, you should pass `hello`
+                        here, and with --package or -P flag. if you want to turn a full folder called `examples` into a web app, you should pass `examples` here.
 
 options:
   -h, --help            show this help message and exit
@@ -532,7 +528,6 @@ options:
   -F, --no-frontend     Disable frontend server
   -B, --no-browser      Disable auto open browser
   -l, --lazy            Load functions without decorator
-  -R, --recursive       Enable directory mode
   -P, --package         Enable package mode
   -d, --dev             Enable development mode
   -t, --transform       Transform the globals to a session variables
@@ -542,8 +537,9 @@ options:
                         The directories in the repo that need to be used
   -s None, --secret None
                         The secret key for the full app
+  -D None, --default None
+                        The default function to run
   --version, -v         show program's version number and exit
-
 ```
 
 The command `funix` above is equivalent to `python -m funix` if you have installed Funix.

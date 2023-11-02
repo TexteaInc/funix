@@ -8,10 +8,12 @@ from funix import run
 
 
 @plac.pos(
-    "file_or_module_name",
+    "file_folder_or_module_name",
     "The Python module containing functions to be turned into web apps by Funix. "
-    "For example, if your functions are in the file `hello.py`, you should pass `hello.py` here."
-    "if you want to turn a module called `hello` into a web app, you should pass `hello` here. ",
+    "For example, if your functions are in the file `hello.py`, you should pass `hello.py` here. "
+    "if you want to turn a module called `hello` into a web app, you should pass `hello` here, "
+    "and with --package or -P flag. "
+    "if you want to turn a full folder called `examples` into a web app, you should pass `examples` here.",
 )
 @plac.opt("host", "Host of Funix", abbrev="H")
 @plac.opt("port", "Port of Funix", abbrev="p")
@@ -26,7 +28,7 @@ from funix import run
 @plac.opt("secret", "The secret key for the full app", abbrev="s")
 @plac.opt("default", "The default function to run", abbrev="D")
 def main(
-    file_or_module_name=None,
+    file_folder_or_module_name=None,
     host="0.0.0.0",
     port=3000,
     no_frontend=False,
@@ -50,7 +52,7 @@ def main(
     Just write your core logic and leave the rest to Funix.
     Visit us at http://funix.io"""
 
-    if not file_or_module_name and not from_git:
+    if not file_folder_or_module_name and not from_git:
         print(
             'Error: No Python module, file or git repo provided.\nPlease run "funix --help" for more information.'
         )
@@ -84,7 +86,7 @@ def main(
     run(
         host=parsed_host,
         port=parsed_port,
-        file_or_module_name=file_or_module_name,
+        file_or_module_name=file_folder_or_module_name,
         no_frontend=parsed_no_frontend,
         no_browser=parsed_no_browser,
         lazy=parsed_lazy,
