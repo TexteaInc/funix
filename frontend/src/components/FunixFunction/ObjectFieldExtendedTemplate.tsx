@@ -497,7 +497,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
   props.schema.input_layout.forEach((row) => {
     const rowGrid: JSX.Element[] = [];
     row.forEach((rowItem) => {
-      let rowElement: JSX.Element = <></>;
+      let rowElement: JSX.Element | null = <></>;
       switch (rowItem.type) {
         case "markdown":
           rowElement = (
@@ -517,17 +517,15 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
           );
           break;
         case "argument":
-          rowElement = (
-            <>
-              {
-                propElementToJSXElement(
-                  props.properties.filter(
-                    (prop: any) => prop.name === rowItem.argument
-                  )[0]
-                ).element
-              }
-            </>
+          const result = props.properties.filter(
+            (prop: any) => prop.name === rowItem.argument
           );
+          console.log(rowItem, result);
+          if (result.length === 0) {
+            rowElement = null;
+          } else {
+            rowElement = <>{propElementToJSXElement(result[0]).element}</>;
+          }
           break;
         case "divider":
           rowElement =
@@ -544,21 +542,25 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
             );
           break;
       }
-      rowElement = (
-        <Grid2
-          xs={rowItem.width !== undefined ? rowItem.width : true}
-          mdOffset={rowItem.offset}
-        >
-          {rowElement}
+      if (rowElement) {
+        rowElement = (
+          <Grid2
+            xs={rowItem.width !== undefined ? rowItem.width : true}
+            mdOffset={rowItem.offset}
+          >
+            {rowElement}
+          </Grid2>
+        );
+        rowGrid.push(rowElement);
+      }
+    });
+    if (rowGrid.length > 0) {
+      rowElements.push(
+        <Grid2 container spacing={2} alignItems="center">
+          {rowGrid.map((item) => item)}
         </Grid2>
       );
-      rowGrid.push(rowElement);
-    });
-    rowElements.push(
-      <Grid2 container spacing={2} alignItems="center">
-        {rowGrid.map((item) => item)}
-      </Grid2>
-    );
+    }
   });
 
   props.properties
