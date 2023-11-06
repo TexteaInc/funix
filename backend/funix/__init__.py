@@ -2,9 +2,9 @@ from importlib import import_module
 from inspect import isfunction
 from ipaddress import ip_address
 from os import chdir, getcwd, listdir
-from os.path import dirname, exists, isdir, join, normpath, sep, abspath
+from os.path import abspath, dirname, exists, isdir, join, normpath, sep
 from sys import exit, path
-from typing import Generator, Optional, Any
+from typing import Any, Generator, Optional
 from urllib.parse import quote
 
 from flask import Flask

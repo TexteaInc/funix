@@ -68,6 +68,10 @@ export type FunctionPreview = {
    * ID of the function, please use this
    */
   id: string;
+  /**
+   * Is this function need websocket
+   */
+  websocket: boolean;
 };
 
 export type GetListResponse = {

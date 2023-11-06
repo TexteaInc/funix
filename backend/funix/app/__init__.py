@@ -4,7 +4,8 @@ Save the app instance here
 import re
 from secrets import token_hex
 
-from flask import Flask, Response, request, abort
+from flask import Flask, Response, abort, request
+from flask_sock import Sock
 
 app = Flask(__name__)
 app.secret_key = token_hex(16)
@@ -12,6 +13,7 @@ app.config.update(
     SESSION_COOKIE_PATH="/",
     SESSION_COOKIE_SAMESITE="Lax",
 )
+sock = Sock(app)
 
 
 @app.after_request

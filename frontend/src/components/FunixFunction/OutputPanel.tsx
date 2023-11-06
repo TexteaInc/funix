@@ -32,6 +32,15 @@ import ThemeReactJson from "../Common/ThemeReactJson";
 import { DataGrid } from "../../Key";
 import OutputDataframe from "./OutputComponents/OutputDataframe";
 
+const guessJSON = (response: string | null): object | false => {
+  if (response === null) return false;
+  try {
+    return JSON.parse(response);
+  } catch (e) {
+    return false;
+  }
+};
+
 const OutputPanel = (props: {
   detail: FunctionDetail;
   backend: URL;
@@ -285,7 +294,10 @@ const OutputPanel = (props: {
       ) {
         const listReturnType =
           typeof returnType === "string" ? [returnType] : returnType;
-        const parsedResponse = JSON.parse(response);
+        const parsedResponse = guessJSON(response);
+        if (parsedResponse === false) {
+          return <code>{response}</code>;
+        }
         if (!Array.isArray(parsedResponse))
           return <GuessingDataView response={response} />;
         const output: outputRow[] = props.detail.schema.output_layout;

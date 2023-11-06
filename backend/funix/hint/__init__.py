@@ -372,6 +372,11 @@ class DecoratedFunctionListItem(TypedDict):
     The name (in frontend, title) of the function.
     """
 
+    id: str
+    """
+    The id of the function.
+    """
+
     path: str
     """
     The path of the function.
@@ -385,6 +390,11 @@ class DecoratedFunctionListItem(TypedDict):
     secret: Optional[str]
     """
     The secret of the function.
+    """
+
+    websocket: bool
+    """
+    Is this function is run in a websocket?
     """
 
 
