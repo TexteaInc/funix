@@ -8,7 +8,7 @@ from copy import deepcopy
 from enum import Enum, auto
 from functools import wraps
 from importlib import import_module
-from inspect import Parameter, Signature, getsource, signature
+from inspect import Parameter, Signature, getsource, signature, isgeneratorfunction
 from json import dumps, loads
 from secrets import token_hex
 from traceback import format_exc
@@ -21,7 +21,7 @@ from flask import Response, request, session
 from requests import post
 from requests.structures import CaseInsensitiveDict
 
-from funix.app import app
+from funix.app import app, sock
 from funix.config import (
     banned_function_name_and_path,
     supported_basic_file_types,
@@ -40,6 +40,7 @@ from funix.decorator.file import (
     handle_ipython_audio_image_video,
 )
 from funix.decorator.magic import (
+    anal_function_result,
     convert_row_item,
     function_param_to_widget,
     get_type_dict,
@@ -66,36 +67,6 @@ from funix.theme import get_dict_theme, parse_theme
 from funix.util.module import funix_menu_to_safe_function_name
 from funix.util.uri import is_valid_uri
 from funix.widget import generate_frontend_widget_config
-
-__matplotlib_use = False
-"""
-Whether Funix can handle matplotlib-related logic
-"""
-
-try:
-    # From now on, Funix no longer mandates matplotlib and mpld3
-    import matplotlib
-
-    matplotlib.use("Agg")  # No display
-    __matplotlib_use = True
-except:
-    pass
-
-
-__ipython_use = False
-"""
-Whether Funix can handle IPython-related logic
-"""
-
-__ipython_display: None | ModuleType = None
-
-try:
-    __ipython_display = import_module("IPython.display")
-
-    __ipython_use = True
-except:
-    pass
-
 
 __ipython_type_convert_dict = {
     "IPython.core.display.Markdown": "Markdown",
@@ -198,11 +169,6 @@ A dict, key is theme name, value is parsed MUI theme.
 __app_secret: str | None = None
 """
 App secret, for all functions.
-"""
-
-mpld3: ModuleType | None = None
-"""
-The mpld3 module.
 """
 
 pre_fill_metadata: dict[str, list[str | int | PreFillEmpty]] = {}
@@ -317,8 +283,10 @@ class Limiter:
         return Limiter(max_calls=max_calls, period=period, source=LimitSource.SESSION)
 
     @staticmethod
-    def _dict_get_int(dictionary: dict, key: str) -> Optional[int]:
-        if not key in dictionary:
+    def _dict_get_int(
+        dictionary: dict | CaseInsensitiveDict, key: str
+    ) -> Optional[int]:
+        if key not in dictionary:
             return None
         value = dictionary[key]
         if isinstance(value, int):
@@ -861,6 +829,8 @@ def funix(
             else:
                 __decorated_functions_names_list.append(function_title)
 
+            is_generator_function = isgeneratorfunction(function)
+
             __decorated_functions_list.append(
                 {
                     "name": function_title,
@@ -868,6 +838,7 @@ def funix(
                     "module": replace_module,
                     "secret": secret_key,
                     "id": function_id,
+                    "websocket": is_generator_function,
                 }
             )
 
@@ -1608,7 +1579,7 @@ def funix(
             limiters = parse_limiter_args(rate_limit)
 
             @wraps(function)
-            def wrapper():
+            def wrapper(ws=None):
                 """
                 The function's wrapper
 
@@ -1628,7 +1599,10 @@ def funix(
                 try:
                     if not session.get("__funix_id"):
                         session["__funix_id"] = uuid4().hex
-                    function_kwargs = request.get_json()
+                    if is_generator_function:
+                        function_kwargs = loads(ws.receive())
+                    else:
+                        function_kwargs = request.get_json()
                     kumo_callback()
                     if __pandas_use:
                         if function_id in dataframe_parse_metadata:
@@ -1658,48 +1632,47 @@ def funix(
                                     # Oh, my `typing`
                                     continue
 
-                    def get_figure(figure) -> dict:
+                    def original_result_to_pre_fill_metadata(
+                        function_id_int: int,
+                        function_call_result: Any,
+                    ) -> None:
                         """
-                        Converts a matplotlib figure to a dictionary for drawing on the frontend
-
-                        Parameters:
-                            figure (matplotlib.figure.Figure): The figure to convert
-
-                        Returns:
-                            dict: The converted figure
-
-                        Raises:
-                            Exception: If matplotlib or mpld3 is not installed
+                        Document is on the way
                         """
-                        global mpld3
-                        if __matplotlib_use:
-                            if mpld3 is None:
-                                try:
-                                    import matplotlib.pyplot
-
-                                    mpld3 = import_module("mpld3")
-                                except:
-                                    raise Exception(
-                                        "if you use matplotlib, you must install mpld3"
+                        function_call_address = str(function_id_int)
+                        if function_call_address in pre_fill_metadata:
+                            for index_or_key in pre_fill_metadata[
+                                function_call_address
+                            ]:
+                                if index_or_key is PreFillEmpty:
+                                    set_global_variable(
+                                        function_call_address + "_result",
+                                        function_call_result,
+                                    )
+                                else:
+                                    set_global_variable(
+                                        function_call_address + f"_{index_or_key}",
+                                        function_call_result[index_or_key],
                                     )
 
-                            fig = mpld3.fig_to_dict(figure)
-                            fig["width"] = 560  # TODO: Change it in frontend
-                            return fig
-                        else:
-                            raise Exception("Install matplotlib to use this function")
-
-                    def get_dataframe_json(dataframe) -> dict:
+                    def pre_anal_result(function_call_result: Any):
                         """
-                        Converts a pandas dataframe to a dictionary for drawing on the frontend
-
-                        Parameters:
-                            dataframe (pandas.DataFrame | pandera.typing.DataFrame): The dataframe to convert
-
-                        Returns:
-                            dict: The converted dataframe
+                        Document is on the way
                         """
-                        return loads(dataframe.to_json(orient="records"))
+                        try:
+                            original_result_to_pre_fill_metadata(
+                                id(function), function_call_result
+                            )
+                            return anal_function_result(
+                                function_call_result,
+                                return_type_parsed,
+                                cast_to_list_flag,
+                            )
+                        except:
+                            return {
+                                "error_type": "pre-anal",
+                                "error_body": format_exc(),
+                            }
 
                     @wraps(function)
                     def wrapped_function(**wrapped_function_kwargs):
@@ -1709,213 +1682,7 @@ def funix(
                         # TODO: Best result handling, refactor it if possible
                         try:
                             function_call_result = function(**wrapped_function_kwargs)
-                            function_call_address = str(id(function))
-                            if function_call_address in pre_fill_metadata:
-                                for index_or_key in pre_fill_metadata[
-                                    function_call_address
-                                ]:
-                                    if index_or_key is PreFillEmpty:
-                                        set_global_variable(
-                                            function_call_address + "_result",
-                                            function_call_result,
-                                        )
-                                    else:
-                                        set_global_variable(
-                                            function_call_address + f"_{index_or_key}",
-                                            function_call_result[index_or_key],
-                                        )
-                            if return_type_parsed == "Figure":
-                                return [get_figure(function_call_result)]
-                            if return_type_parsed == "Dataframe":
-                                return [get_dataframe_json(function_call_result)]
-                            if return_type_parsed in supported_basic_file_types:
-                                if __ipython_use:
-                                    if isinstance(
-                                        function_call_result,
-                                        __ipython_display.Audio
-                                        | __ipython_display.Video
-                                        | __ipython_display.Image,
-                                    ):
-                                        return [
-                                            handle_ipython_audio_image_video(
-                                                function_call_result
-                                            )
-                                        ]
-                                return [get_static_uri(function_call_result)]
-                            else:
-                                if isinstance(function_call_result, list):
-                                    return [function_call_result]
-                                if __ipython_use:
-                                    if isinstance(
-                                        function_call_result,
-                                        __ipython_display.HTML
-                                        | __ipython_display.Markdown,
-                                    ):
-                                        function_call_result = function_call_result.data
-
-                                if not isinstance(
-                                    function_call_result, (str, dict, tuple)
-                                ):
-                                    function_call_result = dumps(function_call_result)
-                                if cast_to_list_flag:
-                                    function_call_result = list(function_call_result)
-                                else:
-                                    if isinstance(function_call_result, (str, dict)):
-                                        function_call_result = [function_call_result]
-                                    if isinstance(function_call_result, tuple):
-                                        function_call_result = list(
-                                            function_call_result
-                                        )
-                                if function_call_result and isinstance(
-                                    function_call_result, list
-                                ):
-                                    if isinstance(return_type_parsed, list):
-                                        for position, single_return_type in enumerate(
-                                            return_type_parsed
-                                        ):
-                                            if __ipython_use:
-                                                if (
-                                                    function_call_result[position]
-                                                    is not None
-                                                ):
-                                                    if isinstance(
-                                                        function_call_result[position],
-                                                        __ipython_display.HTML
-                                                        | __ipython_display.Markdown,
-                                                    ):
-                                                        function_call_result[
-                                                            position
-                                                        ] = function_call_result[
-                                                            position
-                                                        ].data
-                                                    if isinstance(
-                                                        function_call_result[position],
-                                                        __ipython_display.Audio
-                                                        | __ipython_display.Video
-                                                        | __ipython_display.Image,
-                                                    ):
-                                                        function_call_result[
-                                                            position
-                                                        ] = handle_ipython_audio_image_video(
-                                                            function_call_result[
-                                                                position
-                                                            ]
-                                                        )
-                                            if single_return_type == "Figure":
-                                                function_call_result[
-                                                    position
-                                                ] = get_figure(
-                                                    function_call_result[position]
-                                                )
-                                            if single_return_type == "Dataframe":
-                                                function_call_result[
-                                                    position
-                                                ] = get_dataframe_json(
-                                                    function_call_result[position]
-                                                )
-                                            if (
-                                                single_return_type
-                                                in supported_basic_file_types
-                                            ):
-                                                if (
-                                                    type(function_call_result[position])
-                                                    == "list"
-                                                ):
-                                                    function_call_result[position] = [
-                                                        handle_ipython_audio_image_video(
-                                                            single
-                                                        )
-                                                        if isinstance(
-                                                            single,
-                                                            (
-                                                                __ipython_display.Audio
-                                                                | __ipython_display.Video
-                                                                | __ipython_display.Image
-                                                            ),
-                                                        )
-                                                        else get_static_uri(single)
-                                                        for single in function_call_result[
-                                                            position
-                                                        ]
-                                                    ]
-                                                else:
-                                                    function_call_result[position] = (
-                                                        handle_ipython_audio_image_video(
-                                                            function_call_result[
-                                                                position
-                                                            ]
-                                                        )
-                                                        if isinstance(
-                                                            function_call_result[
-                                                                position
-                                                            ],
-                                                            (
-                                                                __ipython_display.Audio
-                                                                | __ipython_display.Video
-                                                                | __ipython_display.Image
-                                                            ),
-                                                        )
-                                                        else get_static_uri(
-                                                            function_call_result[
-                                                                position
-                                                            ]
-                                                        )
-                                                    )
-                                        return function_call_result
-                                    else:
-                                        if return_type_parsed == "Figure":
-                                            function_call_result = [
-                                                get_figure(function_call_result[0])
-                                            ]
-                                        if return_type_parsed == "Dataframe":
-                                            function_call_result = [
-                                                get_dataframe_json(
-                                                    function_call_result[0]
-                                                )
-                                            ]
-                                        if (
-                                            return_type_parsed
-                                            in supported_basic_file_types
-                                        ):
-                                            if type(function_call_result[0]) == "list":
-                                                function_call_result = [
-                                                    [
-                                                        handle_ipython_audio_image_video(
-                                                            single
-                                                        )
-                                                        if isinstance(
-                                                            single,
-                                                            (
-                                                                __ipython_display.Audio
-                                                                | __ipython_display.Video
-                                                                | __ipython_display.Image
-                                                            ),
-                                                        )
-                                                        else get_static_uri(single)
-                                                        for single in function_call_result[
-                                                            0
-                                                        ]
-                                                    ]
-                                                ]
-                                            else:
-                                                function_call_result = [
-                                                    handle_ipython_audio_image_video(
-                                                        function_call_result[0]
-                                                    )
-                                                    if isinstance(
-                                                        function_call_result[0],
-                                                        (
-                                                            __ipython_display.Audio
-                                                            | __ipython_display.Video
-                                                            | __ipython_display.Image
-                                                        ),
-                                                    )
-                                                    else get_static_uri(
-                                                        function_call_result[0]
-                                                    )
-                                                ]
-                                        return function_call_result
-                                return function_call_result
+                            return pre_anal_result(function_call_result)
                         except:
                             return {
                                 "error_type": "function",
@@ -1956,27 +1723,42 @@ def funix(
                                     ] = "multiple"
 
                     if function_kwargs is None:
-                        return {
+                        empty_function_kwargs_error = {
                             "error_type": "wrapper",
                             "error_body": "No arguments passed to function.",
                         }
+                        if is_generator_function:
+                            ws.send(dumps(empty_function_kwargs_error))
+                            ws.close()
+                        else:
+                            return empty_function_kwargs_error
                     if secret_key:
                         if "__funix_secret" in function_kwargs:
                             if (
                                 not __decorated_secret_functions_dict[function_id]
                                 == function_kwargs["__funix_secret"]
                             ):
-                                return {
+                                incorrect_secret_error = {
                                     "error_type": "wrapper",
                                     "error_body": "Provided secret is incorrect.",
                                 }
+                                if is_generator_function:
+                                    ws.send(dumps(incorrect_secret_error))
+                                    ws.close()
+                                else:
+                                    return incorrect_secret_error
                             else:
                                 del function_kwargs["__funix_secret"]
                         else:
-                            return {
+                            no_secret_error = {
                                 "error_type": "wrapper",
                                 "error_body": "No secret provided.",
                             }
+                            if is_generator_function:
+                                ws.send(dumps(no_secret_error))
+                                ws.close()
+                            else:
+                                return no_secret_error
 
                     if len(cell_names) > 0:
                         length = len(function_kwargs[cell_names[0]])
@@ -1988,12 +1770,26 @@ def funix(
                                 arg[cell_name] = function_kwargs[cell_name][i]
                             for static_key in static_keys:
                                 arg[static_key] = function_kwargs[static_key]
-                            temp_result = wrapped_function(**arg)
-                            if isinstance(temp_result, list):
-                                result.extend(temp_result)
+                            if is_generator_function:
+                                result = []
+                                for temp_function_result in function(**arg):
+                                    function_result = pre_anal_result(
+                                        temp_function_result
+                                    )
+                                    if isinstance(function_result, list):
+                                        result.extend(function_result)
+                                    else:
+                                        result.append(function_result)
+                                    ws.send(dumps({"result": result}))
+                                    result = []
+                                ws.close()
                             else:
-                                result.append(temp_result)
-                        return [{"result": result}]
+                                temp_result = wrapped_function(**arg)
+                                if isinstance(temp_result, list):
+                                    result.extend(temp_result)
+                                else:
+                                    result.append(temp_result)
+                                return [{"result": result}]
                     elif len(upload_base64_files) > 0:
                         new_args = function_kwargs
                         for upload_base64_file_key in upload_base64_files.keys():
@@ -2013,19 +1809,39 @@ def funix(
                                         new_args[upload_base64_file_key][
                                             pos
                                         ] = rsp.read()
-                        return wrapped_function(**new_args)
+                        if is_generator_function:
+                            for temp_function_result in function(**new_args):
+                                function_result = pre_anal_result(temp_function_result)
+                                ws.send(dumps(function_result))
+                            ws.close()
+                        else:
+                            return wrapped_function(**new_args)
                     else:
-                        return wrapped_function(**function_kwargs)
+                        if is_generator_function:
+                            for temp_function_result in function(**function_kwargs):
+                                function_result = pre_anal_result(temp_function_result)
+                                ws.send(dumps(function_result))
+                            ws.close()
+                        else:
+                            return wrapped_function(**function_kwargs)
                 except:
-                    return {"error_type": "wrapper", "error_body": format_exc()}
+                    error = {"error_type": "wrapper", "error_body": format_exc()}
+                    if is_generator_function:
+                        ws.send(dumps(error))
+                        ws.close()
+                    else:
+                        return error
 
             wrapper._decorator_name_ = "funix"
 
             if safe_module_now:
                 wrapper.__setattr__("__name__", safe_module_now + "_" + function_name)
 
-            app.post(f"/call/{endpoint}")(wrapper)
-            app.post(f"/call/{function_id}")(wrapper)
+            if is_generator_function:
+                sock.route(f"/call/{function_id}")(wrapper)
+            else:
+                app.post(f"/call/{endpoint}")(wrapper)
+                app.post(f"/call/{function_id}")(wrapper)
         return function
 
     return decorator

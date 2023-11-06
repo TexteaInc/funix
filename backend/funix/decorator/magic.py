@@ -12,16 +12,54 @@ the types of parameters, the types of return values and the rough logic.
 """
 
 import json
+from importlib import import_module
 from inspect import Parameter
 from re import Match, search
+from types import ModuleType
 from typing import Any
 
 from funix.config import (
     builtin_widgets,
+    supported_basic_file_types,
     supported_basic_types,
     supported_basic_types_dict,
 )
-from funix.decorator import analyze
+from funix.decorator import analyze, get_static_uri, handle_ipython_audio_image_video
+
+__matplotlib_use = False
+"""
+Whether Funix can handle matplotlib-related logic
+"""
+
+try:
+    # From now on, Funix no longer mandates matplotlib and mpld3
+    import matplotlib
+
+    matplotlib.use("Agg")  # No display
+    __matplotlib_use = True
+except:
+    pass
+
+
+__ipython_use = False
+"""
+Whether Funix can handle IPython-related logic
+"""
+
+__ipython_display: None | ModuleType = None
+
+try:
+    __ipython_display = import_module("IPython.display")
+
+    __ipython_use = True
+except:
+    pass
+
+
+mpld3: ModuleType | None = None
+"""
+The mpld3 module.
+"""
 
 
 def get_type_dict(annotation: any) -> dict:
@@ -294,3 +332,193 @@ def function_param_to_widget(annotation: any, widget: str) -> any:
                     funix_param_to_widget(annotation.__args__[0]),
                 ]
     return widget
+
+
+def get_dataframe_json(dataframe) -> dict:
+    """
+    Converts a pandas dataframe to a dictionary for drawing on the frontend
+
+    Parameters:
+        dataframe (pandas.DataFrame | pandera.typing.DataFrame): The dataframe to convert
+
+    Returns:
+        dict: The converted dataframe
+    """
+    return json.loads(dataframe.to_json(orient="records"))
+
+
+def get_figure(figure) -> dict:
+    """
+    Converts a matplotlib figure to a dictionary for drawing on the frontend
+
+    Parameters:
+        figure (matplotlib.figure.Figure): The figure to convert
+
+    Returns:
+        dict: The converted figure
+
+    Raises:
+        Exception: If matplotlib or mpld3 is not installed
+    """
+    global mpld3
+    if __matplotlib_use:
+        if mpld3 is None:
+            try:
+                import matplotlib.pyplot
+
+                mpld3 = import_module("mpld3")
+            except:
+                raise Exception("if you use matplotlib, you must install mpld3")
+
+        fig = mpld3.fig_to_dict(figure)
+        fig["width"] = 560  # TODO: Change it in frontend
+        return fig
+    else:
+        raise Exception("Install matplotlib to use this function")
+
+
+def anal_function_result(
+    function_call_result: Any,
+    return_type_parsed: Any,
+    cast_to_list_flag: bool,
+) -> Any:
+    """
+    Document is on the way.
+    """
+    # TODO: Best result handling, refactor it if possible
+    call_result = function_call_result
+    if return_type_parsed == "Figure":
+        return [get_figure(call_result)]
+
+    if return_type_parsed == "Dataframe":
+        return [get_dataframe_json(call_result)]
+
+    if return_type_parsed in supported_basic_file_types:
+        if __ipython_use:
+            if isinstance(
+                call_result,
+                __ipython_display.Audio
+                | __ipython_display.Video
+                | __ipython_display.Image,
+            ):
+                return [handle_ipython_audio_image_video(call_result)]
+        return [get_static_uri(call_result)]
+    else:
+        if isinstance(call_result, list):
+            return [call_result]
+
+        if __ipython_use:
+            if isinstance(
+                call_result,
+                __ipython_display.HTML | __ipython_display.Markdown,
+            ):
+                call_result = call_result.data
+
+        if not isinstance(function_call_result, (str, dict, tuple)):
+            call_result = json.dumps(call_result)
+
+        if cast_to_list_flag:
+            call_result = list(call_result)
+        else:
+            if isinstance(call_result, (str, dict)):
+                call_result = [call_result]
+            if isinstance(call_result, tuple):
+                call_result = list(call_result)
+
+        if function_call_result and isinstance(function_call_result, list):
+            if isinstance(return_type_parsed, list):
+                for position, single_return_type in enumerate(return_type_parsed):
+                    if __ipython_use:
+                        if call_result[position] is not None:
+                            if isinstance(
+                                call_result[position],
+                                (__ipython_display.HTML, __ipython_display.Markdown),
+                            ):
+                                call_result[position] = call_result[position].data
+                            if isinstance(
+                                call_result[position],
+                                (
+                                    __ipython_display.Audio,
+                                    __ipython_display.Video,
+                                    __ipython_display.Image,
+                                ),
+                            ):
+                                call_result[
+                                    position
+                                ] = handle_ipython_audio_image_video(
+                                    call_result[position]
+                                )
+                    if single_return_type == "Figure":
+                        call_result[position] = get_figure(call_result[position])
+
+                    if single_return_type == "Dataframe":
+                        call_result[position] = get_dataframe_json(
+                            call_result[position]
+                        )
+
+                    if single_return_type in supported_basic_file_types:
+                        if isinstance(call_result[position], list):
+                            call_result[position] = [
+                                handle_ipython_audio_image_video(single)
+                                if isinstance(
+                                    single,
+                                    (
+                                        __ipython_display.Audio,
+                                        __ipython_display.Video,
+                                        __ipython_display.Image,
+                                    ),
+                                )
+                                else get_static_uri(single)
+                                for single in call_result[position]
+                            ]
+                        else:
+                            call_result[position] = (
+                                handle_ipython_audio_image_video(call_result[position])
+                                if isinstance(
+                                    call_result[position],
+                                    (
+                                        __ipython_display.Audio,
+                                        __ipython_display.Video,
+                                        __ipython_display.Image,
+                                    ),
+                                )
+                                else get_static_uri(call_result[position])
+                            )
+                return call_result
+            else:
+                if return_type_parsed == "Figure":
+                    call_result = [get_figure(call_result[0])]
+                if return_type_parsed == "Dataframe":
+                    call_result = [get_dataframe_json(call_result[0])]
+                if return_type_parsed in supported_basic_file_types:
+                    if isinstance(call_result[0], list):
+                        call_result = [
+                            [
+                                handle_ipython_audio_image_video(single)
+                                if isinstance(
+                                    single,
+                                    (
+                                        __ipython_display.Audio,
+                                        __ipython_display.Video,
+                                        __ipython_display.Image,
+                                    ),
+                                )
+                                else get_static_uri(single)
+                                for single in call_result[0]
+                            ]
+                        ]
+                    else:
+                        call_result = [
+                            handle_ipython_audio_image_video(call_result[0])
+                            if isinstance(
+                                call_result[0],
+                                (
+                                    __ipython_display.Audio,
+                                    __ipython_display.Video,
+                                    __ipython_display.Image,
+                                ),
+                            )
+                            else get_static_uri(call_result[0])
+                        ]
+                return call_result
+    return call_result
