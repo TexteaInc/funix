@@ -1,26 +1,22 @@
 from funix import funix
 from funix.hint import Markdown
-from funix.session import (
-    get_global_variable,
-    set_global_variable,
-    set_default_global_variable,
-)
 
 from openai import OpenAI
 
 
-set_default_global_variable("user_client", None)
+user_client = None
 
 
 @funix()
 def set_openai_key(key: str) -> str:
-    set_global_variable("user_client", OpenAI(api_key=key))
+    global user_client
+    user_client = OpenAI(api_key=key)
     return "Success"
 
 
 @funix()
 def simple_ask(prompt: str) -> Markdown:
-    client: OpenAI | None = get_global_variable("user_client")
+    client: None | OpenAI = user_client
     if client is None:
         yield "Please set the OpenAI key first."
     else:
