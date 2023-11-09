@@ -8,9 +8,10 @@ from copy import deepcopy
 from enum import Enum, auto
 from functools import wraps
 from importlib import import_module
-from inspect import Parameter, Signature, getsource, signature, isgeneratorfunction
+from inspect import Parameter, Signature, getsource, isgeneratorfunction, signature
 from json import dumps, loads
 from secrets import token_hex
+from textwrap import dedent, indent
 from traceback import format_exc
 from types import ModuleType
 from typing import Any, Optional
@@ -762,9 +763,10 @@ def funix(
             function_title = title if title is not None else function_name
 
             function_description = description
-            if function_description is None:
-                if function_docstring := getattr(function, "__doc__"):
-                    function_description = function_docstring
+            # if function_description == "":
+            #     function_docstring = getattr(function, "__doc__")
+            #     if function_docstring:
+            #         function_description = dedent(function_docstring.strip())
 
             if not theme:
                 if "__default" in __parsed_themes:
