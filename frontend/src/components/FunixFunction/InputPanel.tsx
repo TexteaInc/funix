@@ -37,6 +37,8 @@ const InputPanel = (props: {
   const { setInput, setOutput } = useFunixHistory();
   const { enqueueSnackbar } = useSnackbar();
 
+  const [tempOutput, setTempOutput] = useState<string | null>(null);
+
   useEffect(() => {
     setWaiting(() => !requestDone);
   }, [asyncWaiting]);
@@ -70,6 +72,26 @@ const InputPanel = (props: {
   const handleChange = ({ formData }: Record<string, any>) => {
     // console.log("Data changed: ", formData);
     setForm(formData);
+  };
+
+  const saveOutput = async (
+    now: number,
+    name: string,
+    path: string,
+    output: string
+  ) => {
+    try {
+      await setOutput(now, name, path, output);
+    } catch (e) {
+      enqueueSnackbar(
+        "Cannot save output to history, check your console for more information",
+        {
+          variant: "error",
+        }
+      );
+      console.error("Funix History Error:");
+      console.error(e);
+    }
   };
 
   const widgets = {
@@ -107,7 +129,7 @@ const InputPanel = (props: {
         : form
       : form;
 
-    if (saveHistory && !props.preview.websocket) {
+    if (saveHistory) {
       try {
         await setInput(now, props.preview.name, props.preview.path, newForm);
       } catch (error) {
@@ -136,42 +158,34 @@ const InputPanel = (props: {
 
       socket.addEventListener("message", function (event) {
         props.setResponse(() => event.data);
+        setTempOutput(() => event.data);
       });
 
       socket.addEventListener("close", async function () {
-        enqueueSnackbar("In websocket mode, history will disable", {
-          variant: "warning",
-        });
         setWaiting(() => false);
         setRequestDone(() => true);
+        if (saveHistory && tempOutput) {
+          await saveOutput(
+            now,
+            props.preview.name,
+            props.preview.path,
+            tempOutput
+          );
+        }
       });
     } else {
       const response = await callFunctionRaw(
         new URL(`/call/${props.detail.id}`, props.backend),
         newForm
       );
-      if (saveHistory) {
-        try {
-          await setOutput(
-            now,
-            props.preview.name,
-            props.preview.path,
-            response
-          );
-        } catch (error) {
-          enqueueSnackbar(
-            "Cannot save output to history, check your console for more information",
-            {
-              variant: "error",
-            }
-          );
-          console.error("Funix History Error:");
-          console.error(error);
-        }
-      }
-      props.setResponse(() => response.toString());
+      const result = response.toString();
+      props.setResponse(() => result);
       setWaiting(() => false);
       setRequestDone(() => true);
+
+      if (saveHistory) {
+        await saveOutput(now, props.preview.name, props.preview.path, result);
+      }
     }
   };
 
