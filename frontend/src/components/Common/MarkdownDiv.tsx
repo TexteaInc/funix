@@ -12,16 +12,16 @@ import {
   TableHead,
   TableRow,
   Typography,
-  useTheme,
 } from "@mui/material";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import React from "react";
 import { Variant } from "@mui/material/styles/createTypography";
-import Editor from "@monaco-editor/react";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
+import SyntaxHighlighter from "react-syntax-highlighter";
+import { monokai } from "react-syntax-highlighter/dist/esm/styles/hljs";
 
 interface MarkdownDivProps {
   markdown?: string;
@@ -99,8 +99,6 @@ const MarkdownCode = (props: {
   inline?: boolean;
   className?: string;
 }) => {
-  const theme = useTheme();
-
   if (props.inline) {
     return (
       <Typography
@@ -131,22 +129,9 @@ const MarkdownCode = (props: {
     : "plaintext";
 
   return (
-    <Editor
-      width="100%"
-      value={(props.children ?? "").toString()}
-      language={language}
-      onMount={(editor) => {
-        const height = editor.getContentHeight();
-        editor.layout({ height });
-      }}
-      theme={theme.palette.mode === "dark" ? "vs-dark" : "light"}
-      options={{
-        readOnly: true,
-        minimap: {
-          enabled: false,
-        },
-      }}
-    />
+    <SyntaxHighlighter language={language} style={monokai} showLineNumbers>
+      {(props.children ?? "").toString()}
+    </SyntaxHighlighter>
   );
 };
 
