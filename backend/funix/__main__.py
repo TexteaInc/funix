@@ -33,7 +33,6 @@ def main(
     port=3000,
     no_frontend=False,
     no_browser=False,
-    lazy=False,
     package=False,
     dev=False,
     transform=False,
@@ -63,7 +62,6 @@ def main(
     parsed_port: int = int(os.getenv("FUNIX_PORT", port))
     parsed_no_frontend: bool = os.getenv("FUNIX_NO_FRONTEND", no_frontend)
     parsed_no_browser: bool = os.getenv("FUNIX_NO_BROWSER", no_browser)
-    parsed_lazy: bool = os.getenv("FUNIX_LAZY", lazy)
     parsed_package_mode: bool = os.getenv("FUNIX_PACKAGE_MODE", package)
     parsed_from_git: str = os.getenv("FUNIX_FROM_GIT", from_git)
     parsed_repo_dir: str = os.getenv("FUNIX_REPO_DIR", repo_dir)
@@ -89,7 +87,6 @@ def main(
         file_or_module_name=file_folder_or_module_name,
         no_frontend=parsed_no_frontend,
         no_browser=parsed_no_browser,
-        lazy=parsed_lazy,
         package_mode=parsed_package_mode,
         from_git=parsed_from_git,
         repo_dir=parsed_repo_dir,

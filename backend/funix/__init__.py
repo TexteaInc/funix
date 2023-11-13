@@ -24,6 +24,9 @@ from funix.util.network import (
     is_port_used,
 )
 
+import sys
+from inspect import getsourcefile
+
 # ---- Exports ----
 # ---- Decorators ----
 funix = decorator.funix
@@ -79,7 +82,6 @@ def get_path_difference(base_dir: str, target_dir: str) -> str | None:
 
 def __prep(
     module_or_file: Optional[str],
-    lazy: bool,
     need_path: bool,
     is_module: bool,
     need_name: bool,
@@ -92,7 +94,6 @@ def __prep(
 
     Parameters:
         module_or_file (str): The module or file.
-        lazy (bool): If the functions should be wrapped automatically.
         need_path (bool): If the path is needed.
         is_module (bool): Pass `True` if the module_or_file is a module, `False` if it is a file.
         need_name (bool): For the module, if the name is needed.
@@ -116,7 +117,7 @@ def __prep(
             folder = sep.join(module_or_file.split(sep)[0:-1])
             if folder:
                 chdir(folder)
-            if base_dir and not lazy:
+            if base_dir:
                 decorator.set_now_module(path_difference)
                 if default:
                     python_file, function_name = default.strip().split(":")
@@ -129,22 +130,26 @@ def __prep(
             module = import_module_from_file(
                 join(__now_path, module_or_file), need_name
             )
-            if base_dir and not lazy:
+            if base_dir:
                 decorator.clear_now_module()
             chdir(__now_path)
-        if lazy:
-            members = reversed(dir(module))
-            for member in members:
-                if isfunction(getattr(module, member)):
-                    if member.startswith("__") or member.startswith("_FUNIX_"):
-                        continue
-                    if need_path:
-                        if base_dir:
-                            funix(menu=path_difference)(getattr(module, member))
-                        else:
-                            funix(menu=f"{module.__name__}")(getattr(module, member))
+        members = reversed(dir(module))
+        for member in members:
+            if isfunction(getattr(module, member)):
+                if member.startswith("__") or member.startswith("_FUNIX_"):
+                    continue
+                if (
+                    decorator.is_function_decorated(id(getattr(module, member)))
+                    or getsourcefile(getattr(module, member)) != module.__file__
+                ):
+                    continue
+                if need_path:
+                    if base_dir:
+                        funix(menu=path_difference)(getattr(module, member))
                     else:
-                        funix()(getattr(module, member))
+                        funix(menu=f"{module.__name__}")(getattr(module, member))
+                else:
+                    funix()(getattr(module, member))
     else:
         print(
             "Error: No Python file, module or directory provided. "
@@ -195,7 +200,6 @@ def get_python_files_in_dir(
 
 def import_from_config(
     file_or_module_name: str,
-    lazy: Optional[bool] = False,
     dir_mode: Optional[bool] = False,
     package_mode: Optional[bool] = False,
     from_git: Optional[str] = None,
@@ -209,7 +213,6 @@ def import_from_config(
 
     Parameters:
         file_or_module_name (str): The file or module name to run.
-        lazy (bool): If you want to enable lazy mode, default is False
         dir_mode (bool): If you want to enable dir mode, default is False
         package_mode (bool): If you want to enable package mode, default is False
         from_git (str): If you want to run the app from a git repo, default is None
@@ -272,7 +275,6 @@ def import_from_config(
         ):
             __prep(
                 module_or_file=single_file,
-                lazy=lazy,
                 need_path=True,
                 is_module=False,
                 need_name=True,
@@ -295,10 +297,10 @@ def import_from_config(
             add_to_sys_path=True,
             need_full_path=False,
             is_dir=False,
+            matches=None,
         ):
             __prep(
                 module_or_file=module,
-                lazy=lazy,
                 need_path=True,
                 is_module=True,
                 need_name=True,
@@ -320,7 +322,6 @@ def import_from_config(
             if transform:
                 __prep(
                     module_or_file=get_new_python_file(file_or_module_name),
-                    lazy=lazy,
                     need_path=False,
                     is_module=False,
                     need_name=False,
@@ -328,7 +329,6 @@ def import_from_config(
             else:
                 __prep(
                     module_or_file=file_or_module_name,
-                    lazy=lazy,
                     need_path=False,
                     is_module=False,
                     need_name=False,
@@ -338,7 +338,6 @@ def import_from_config(
 def get_flask_application(
     file_or_module_name: str,
     no_frontend: Optional[bool] = False,
-    lazy: Optional[bool] = False,
     package_mode: Optional[bool] = False,
     from_git: Optional[str] = None,
     repo_dir: Optional[str] = None,
@@ -356,7 +355,6 @@ def get_flask_application(
     Parameters:
         file_or_module_name (str): The file or module name to run.
         no_frontend (bool): If you want to disable the frontend, default is False
-        lazy (bool): If you want to enable lazy mode, default is False
         package_mode (bool): If you want to enable package mode, default is False
         from_git (str): If you want to run the app from a git repo, default is None
         repo_dir (str): If you want to run the app from a git repo, you can specify the directory, default is None
@@ -392,7 +390,6 @@ def get_flask_application(
 
     import_from_config(
         file_or_module_name=file_or_module_name,
-        lazy=lazy,
         dir_mode=dir_mode,
         package_mode=package_mode,
         from_git=from_git,
@@ -412,7 +409,6 @@ def run(
     port: Optional[int] = 3000,
     no_frontend: Optional[bool] = False,
     no_browser: Optional[bool] = False,
-    lazy: Optional[bool] = False,
     package_mode: Optional[bool] = False,
     from_git: Optional[str] = None,
     repo_dir: Optional[str] = None,
@@ -431,7 +427,6 @@ def run(
         port (int): The port to run the app on, default is 3000
         no_frontend (bool): If you want to disable the frontend, default is False
         no_browser (bool): If you want to disable the browser opening, default is False
-        lazy (bool): If you want to enable lazy mode, default is False
         package_mode (bool): If you want to enable package mode, default is False
         from_git (str): If you want to run the app from a git repo, default is None
         repo_dir (str): If you want to run the app from a git repo, you can specify the directory, default is None
@@ -453,7 +448,6 @@ def run(
 
     import_from_config(
         file_or_module_name=file_or_module_name,
-        lazy=lazy,
         dir_mode=dir_mode,
         package_mode=package_mode,
         from_git=from_git,
