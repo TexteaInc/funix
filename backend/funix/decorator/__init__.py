@@ -11,7 +11,6 @@ from importlib import import_module
 from inspect import Parameter, Signature, getsource, isgeneratorfunction, signature
 from json import dumps, loads
 from secrets import token_hex
-from textwrap import dedent, indent
 from traceback import format_exc
 from types import ModuleType
 from typing import Any, Optional
@@ -227,12 +226,16 @@ default_function_name: str | None = None
 Default function name.
 """
 
-
 ip_headers: list[str] = []
 """
 IP headers for extraction, useful for applications behind reverse proxies
 
 e.g. `X-Forwarded-For`, `X-Real-Ip` e.t.c
+"""
+
+decorated_function_ids: list[int] = []
+"""
+Decorated function ids.
 """
 
 
@@ -624,6 +627,19 @@ def kumo_callback():
             pass
 
 
+def is_function_decorated(function_id: int) -> bool:
+    """
+    Check if the function is decorated.
+
+    Parameters:
+        function_id (int): The function id.
+
+    Returns:
+        bool: Whether the function is decorated.
+    """
+    return function_id in decorated_function_ids
+
+
 def funix(
     path: Optional[str] = None,
     title: Optional[str] = None,
@@ -832,6 +848,8 @@ def funix(
                 __decorated_functions_names_list.append(function_title)
 
             is_generator_function = isgeneratorfunction(function)
+
+            decorated_function_ids.append(id(function))
 
             __decorated_functions_list.append(
                 {
