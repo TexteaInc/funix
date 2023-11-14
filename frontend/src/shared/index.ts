@@ -271,17 +271,20 @@ function recursiveSort(arr: (string | object)[]): (string | object)[] {
 }
 
 export function objArraySort(obj: object[]): object[] {
+  if (obj.length === 0) {
+    return [];
+  }
   const result: object[] = [];
-  const topLevelArray = {
-    "": (
-      (
-        obj.filter(
-          (item) =>
-            Object.keys(item).length === 1 && Object.keys(item)[0] === ""
-        )[0] as any
-      )[""] as string[]
-    ).sort((a, b) => a.localeCompare(b)),
-  };
+  console.log(obj);
+  const topLevelObjects = obj.filter(
+    (item) => Object.keys(item).length === 1 && Object.keys(item)[0] === ""
+  );
+  const topLevelArray: Record<string, any> = {};
+  if (topLevelObjects.length > 0) {
+    topLevelArray[""] = ((topLevelObjects[0] as any)[""] as string[]).sort(
+      (a, b) => a.localeCompare(b)
+    );
+  }
 
   obj
     .sort((a, b) => {
@@ -299,7 +302,9 @@ export function objArraySort(obj: object[]): object[] {
       }
     });
 
-  result.push(topLevelArray);
+  if (topLevelObjects.length > 0) {
+    result.push(topLevelArray);
+  }
 
   return result;
 }
