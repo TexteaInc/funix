@@ -18,6 +18,14 @@ Value: The analyzer function.
 """
 
 
+def is_hashable(t):
+    try:
+        hash(t)
+        return True
+    except:  # No TypeError
+        return False
+
+
 class Step(Enum):
     """
     The step of the analyzer.
@@ -75,14 +83,15 @@ def analyze(value: Parameter | Any) -> dict:
     Returns:
         dict: The analyzed result.
     """
-
-    if isinstance(value, Parameter):
-        annotation = value.annotation
-        if annotation in __registered__:
-            return __registered__[annotation](value)
-    else:
-        if value in __registered__:
-            return __registered__[value](value)
+    # check type un hashable
+    if is_hashable(value):
+        if isinstance(value, Parameter):
+            annotation = value.annotation
+            if annotation in __registered__:
+                return __registered__[annotation](value)
+        else:
+            if value in __registered__:
+                return __registered__[value](value)
     return {}
 
 

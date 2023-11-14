@@ -1261,61 +1261,106 @@ def funix(
 
             for _, function_param in function_params.items():
                 if __pandas_use:
-                    if (
-                        function_param.annotation
-                        is __pandas_module.core.frame.DataFrame
-                    ):
-                        raise Exception(
-                            f"{function_name}: pandas DataFrame is not supported, "
-                            f"please use pandera.typing.DataFrame instead"
-                        )
-                    if (
-                        hasattr(function_param.annotation, "__origin__")
-                        and getattr(function_param.annotation, "__origin__")
-                        is __pandera_module.typing.pandas.DataFrame
-                    ):
-                        anno = function_param.annotation
-                        default_values = (
-                            {}
-                            if function_param.default is Parameter.empty
-                            else function_param.default
-                        )
-                        if hasattr(anno, "__args__"):
-                            model_class = getattr(anno, "__args__")[0]
-                            schema_columns = model_class.to_schema().columns
-                            dataframe_parse_metadata[
-                                function_id
-                            ] = dataframe_parse_metadata.get(function_id, {})
-                            column_names = []
-                            for name, column in schema_columns.items():
-                                if name in default_values:
-                                    column_default = list(default_values[name])
-                                else:
-                                    column_default = None
+                    anno = function_param.annotation
+                    default_values = (
+                        {}
+                        if function_param.default is Parameter.empty
+                        else function_param.default
+                    )
+
+                    def analyze_columns_and_default_value(pandas_like_anno):
+                        column_names = []
+                        dataframe_parse_metadata[
+                            function_id
+                        ] = dataframe_parse_metadata.get(function_id, {})
+                        columns = {}
+                        if isinstance(pandas_like_anno.columns, dict):
+                            columns = pandas_like_anno.columns
+                        else:
+                            # Should be Index here
+                            for column_name in pandas_like_anno.columns.to_list():
+                                columns[column_name] = {"don't": "check"}
+                        for name, column in columns.items():
+                            if name in default_values:
+                                column_default = list(default_values[name])
+                            else:
+                                column_default = None
+                            if hasattr(column, "dtype"):
                                 d_type = column.dtype
                                 items = analyze(type(d_type))
                                 items["widget"] = "sheet"
-                                column_names.append(name)
-                                anal = {
-                                    "type": "array",
-                                    "widget": "sheet",
-                                    "items": items,
-                                    "customLayout": False,
-                                    "treat_as": "config",
-                                }
-                                dec_param = {
-                                    "widget": "sheet",
-                                    "treat_as": "config",
-                                    "type": f"<mock>list[{items['type']}]</mock>",
-                                }
-                                if column_default:
-                                    anal["default"] = column_default
-                                    dec_param["default"] = column_default
-                                json_schema_props[name] = anal
-                                decorated_params[name] = dec_param
-                            dataframe_parse_metadata[function_id][
-                                function_param.name
-                            ] = column_names
+                            else:
+                                if column_default is None:
+                                    items = {"type": "string", "widget": "sheet"}
+                                else:
+                                    items = get_type_widget_prop(
+                                        get_type_dict(type(column_default[0]))["type"],
+                                        0,
+                                        [],
+                                        {},
+                                        None,
+                                    )
+                                    items = {
+                                        "type": items["type"],
+                                        "widget": "sheet",
+                                    }
+                            column_names.append(name)
+                            anal = {
+                                "type": "array",
+                                "widget": "sheet",
+                                "items": items,
+                                "customLayout": False,
+                                "treat_as": "config",
+                            }
+                            dec_param = {
+                                "widget": "sheet",
+                                "treat_as": "config",
+                                "type": f"<mock>list[{items['type']}]</mock>",
+                            }
+                            if column_default:
+                                anal["default"] = column_default
+                                dec_param["default"] = column_default
+                            json_schema_props[name] = anal
+                            decorated_params[name] = dec_param
+                        dataframe_parse_metadata[function_id][
+                            function_param.name
+                        ] = column_names
+
+                    if isinstance(anno, __pandas_module.DataFrame):
+                        if anno.columns.size == 0:
+                            raise Exception(
+                                f"{function_name}: pandas.DataFrame() is not supported, "
+                                f"but you can add columns to it, if you mean DataFrame with no columns, "
+                                f"please use `pandas.DataFrame` instead."
+                            )
+                        else:
+                            analyze_columns_and_default_value(anno)
+                            continue
+
+                    if anno is __pandas_module.core.frame.DataFrame:
+                        if function_param.default is not Parameter.empty:
+                            analyze_columns_and_default_value(default_values)
+                        else:
+                            # Be sheet later
+                            json_schema_props[function_param.name] = {
+                                "type": "object",
+                                "widget": "json",
+                                "treat_as": "config",
+                                "customLayout": False,
+                            }
+                            decorated_params[function_param.name] = {
+                                "widget": "json",
+                                "treat_as": "config",
+                            }
+                        continue
+                    if (
+                        hasattr(anno, "__origin__")
+                        and getattr(anno, "__origin__")
+                        is __pandera_module.typing.pandas.DataFrame
+                    ):
+                        if hasattr(anno, "__args__"):
+                            model_class = getattr(anno, "__args__")[0]
+                            analyze_columns_and_default_value(model_class.to_schema())
                         else:
                             raise Exception(
                                 "Please give a schema with pandera.DataFrameModel for DataFrame"

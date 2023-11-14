@@ -414,7 +414,7 @@ def anal_function_result(
             ):
                 call_result = call_result.data
 
-        if not isinstance(function_call_result, (str, dict, tuple)):
+        if not isinstance(call_result, (str, dict, tuple)):
             call_result = json.dumps(call_result)
 
         if cast_to_list_flag:
@@ -425,7 +425,7 @@ def anal_function_result(
             if isinstance(call_result, tuple):
                 call_result = list(call_result)
 
-        if function_call_result and isinstance(function_call_result, list):
+        if call_result and isinstance(call_result, list):
             if isinstance(return_type_parsed, list):
                 for position, single_return_type in enumerate(return_type_parsed):
                     if __ipython_use:
