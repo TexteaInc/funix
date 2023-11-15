@@ -116,7 +116,7 @@ def __prep(
         else:
             folder = sep.join(module_or_file.split(sep)[0:-1])
             if folder:
-                chdir(folder)
+                chdir(abspath(folder))
             if base_dir:
                 decorator.set_now_module(path_difference)
                 if default:
@@ -132,7 +132,7 @@ def __prep(
             )
             if base_dir:
                 decorator.clear_now_module()
-            chdir(__now_path)
+            chdir(abspath(__now_path))
         members = reversed(dir(module))
         for member in members:
             if isfunction(getattr(module, member)):
@@ -239,7 +239,7 @@ def import_from_config(
             if repo_dir:
                 new_path = join(tempdir, repo_dir)
             path.append(new_path)
-            chdir(new_path)
+            chdir(abspath(new_path))
 
             if file_or_module_name:
                 pass
