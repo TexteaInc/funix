@@ -51,7 +51,7 @@
     "lint": "eslint -c .eslintrc.js . --ext .ts,.tsx,.js --cache --fix",
     "lint:ci": "eslint -c .eslintrc.js . --ext .ts,.tsx,.js --cache",
     "funix:test": "env REACT_APP_FUNIX_BACKEND=http://127.0.0.1:8080 react-app-rewired start",
-    "funix:build": "env BUILD_PATH=../backend/funix/build GENERATE_SOURCEMAP=false react-app-rewired build"
+    "funix:build": "env BUILD_PATH=../backend/funix/build GENERATE_SOURCEMAP=false REACT_APP_IN_FUNIX=true react-app-rewired build"
   },
   "eslintConfig": {
     "extends": [
@@ -82,6 +82,7 @@
     "eslint-plugin-prettier": "^4.2.1",
     "prettier": "^2.7.1",
     "progress-bar-webpack-plugin": "^2.1.0",
-    "react-app-rewired": "^2.2.1"
+    "react-app-rewired": "^2.2.1",
+    "save-remote-file-webpack-plugin": "^1.1.0"
   }
 }
