@@ -275,7 +275,6 @@ export function objArraySort(obj: object[]): object[] {
     return [];
   }
   const result: object[] = [];
-  console.log(obj);
   const topLevelObjects = obj.filter(
     (item) => Object.keys(item).length === 1 && Object.keys(item)[0] === ""
   );
