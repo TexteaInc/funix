@@ -30,6 +30,7 @@ from inspect import getsourcefile
 # ---- Exports ----
 # ---- Decorators ----
 funix = decorator.funix
+funix_class = decorator.funix_class
 # ---- Decorators ----
 
 Limiter = decorator.Limiter

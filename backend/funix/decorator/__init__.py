@@ -8,7 +8,14 @@ from copy import deepcopy
 from enum import Enum, auto
 from functools import wraps
 from importlib import import_module
-from inspect import Parameter, Signature, getsource, isgeneratorfunction, signature
+from inspect import (
+    Parameter,
+    Signature,
+    getsource,
+    isgeneratorfunction,
+    signature,
+    ismethod,
+)
 from json import dumps, loads
 from secrets import token_hex
 from traceback import format_exc
@@ -1910,3 +1917,12 @@ def funix(
         return function
 
     return decorator
+
+
+def funix_class(inited_class):
+    for class_function in dir(inited_class):
+        if not class_function.startswith("_"):
+            function = getattr(inited_class, class_function)
+            print(class_function, function)
+            if ismethod(function):
+                funix()(function)
