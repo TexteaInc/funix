@@ -31,6 +31,7 @@ from inspect import getsourcefile
 # ---- Decorators ----
 funix = decorator.funix
 funix_class = decorator.funix_class
+funix_class_params = decorator.funix_class_params
 # ---- Decorators ----
 
 Limiter = decorator.Limiter

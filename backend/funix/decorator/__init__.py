@@ -245,6 +245,22 @@ decorated_function_ids: list[int] = []
 Decorated function ids.
 """
 
+class_method_ids_to_params: dict[int, dict] = {}
+"""
+Class method ids to params.
+"""
+
+
+def funix_class_params(*args, **kwargs):
+    def decorator(func):
+        class_method_ids_to_params[id(func)] = {
+            "args": args,
+            "kwargs": kwargs,
+        }
+        return func
+
+    return decorator
+
 
 class LimitSource(Enum):
     """
@@ -1923,6 +1939,12 @@ def funix_class(inited_class):
     for class_function in dir(inited_class):
         if not class_function.startswith("_"):
             function = getattr(inited_class, class_function)
-            print(class_function, function)
             if ismethod(function):
-                funix()(function)
+                org_id = id(getattr(type(inited_class), class_function))
+                if org_id not in class_method_ids_to_params:
+                    funix()(function)
+                else:
+                    params = class_method_ids_to_params[org_id]
+                    args = params["args"]
+                    kwargs = params["kwargs"]
+                    funix(*args, **kwargs)(function)
