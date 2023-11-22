@@ -14,8 +14,8 @@ from inspect import (
     Signature,
     getsource,
     isgeneratorfunction,
-    signature,
     ismethod,
+    signature,
 )
 from io import StringIO
 from json import dumps, loads
@@ -64,6 +64,7 @@ from funix.hint import (
     ExamplesType,
     InputLayout,
     LabelsType,
+    Markdown,
     OutputLayout,
     PreFillEmpty,
     PreFillType,
@@ -269,6 +270,7 @@ class StdoutToWebsocket:
     def flush(self):
         self.value.flush()
         self.ws.send(dumps([self.value.getvalue()]))
+        self.value = StringIO()
 
 
 def funix_class_params(*args, **kwargs):
@@ -902,10 +904,10 @@ def funix(
             if print_to_web:
                 print(
                     f"WARNING: the {function_name} function turn on the `print_to_web` option, "
-                    f"the return annotation will be forced to be `str`, and the websocket mode is forced to be on."
+                    f"the return annotation will be forced to be `markdown`, and the websocket mode is forced to be on."
                 )
                 need_websocket = True
-                setattr(function_signature, "_return_annotation", str)
+                setattr(function_signature, "_return_annotation", Markdown)
 
             __decorated_functions_list.append(
                 {
@@ -1816,9 +1818,12 @@ def funix(
                                 for single_result in function(
                                     **wrapped_function_kwargs
                                 ):
-                                    print(single_result)
+                                    if single_result:
+                                        print(single_result)
                             else:
-                                print(function(**wrapped_function_kwargs))
+                                function_result_ = function(**wrapped_function_kwargs)
+                                if function_result_:
+                                    print(function_result_)
                             sys.stdout = org_stdout
                         except:
                             ws.send(

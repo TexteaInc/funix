@@ -1,5 +1,6 @@
+import sys
 from importlib import import_module
-from inspect import isfunction
+from inspect import getsourcefile, isfunction
 from ipaddress import ip_address
 from os import chdir, getcwd, listdir
 from os.path import abspath, dirname, exists, isdir, join, normpath, sep
@@ -23,9 +24,6 @@ from funix.util.network import (
     is_ip_on_localhost,
     is_port_used,
 )
-
-import sys
-from inspect import getsourcefile
 
 # ---- Exports ----
 # ---- Decorators ----
