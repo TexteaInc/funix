@@ -275,10 +275,15 @@ class StdoutToWebsocket:
 
 def funix_class_params(*args, **kwargs):
     def decorator(func):
-        class_method_ids_to_params[id(func)] = {
-            "args": args,
-            "kwargs": kwargs,
-        }
+        if "disable" in kwargs and kwargs["disable"]:
+            class_method_ids_to_params[id(func)] = {
+                "disable": kwargs["disable"],
+            }
+        else:
+            class_method_ids_to_params[id(func)] = {
+                "args": args,
+                "kwargs": kwargs,
+            }
         return func
 
     return decorator
@@ -2025,6 +2030,8 @@ def funix_class(inited_class):
                     funix()(function)
                 else:
                     params = class_method_ids_to_params[org_id]
+                    if "disable" in params:
+                        continue
                     args = params["args"]
                     kwargs = params["kwargs"]
                     funix(*args, **kwargs)(function)
