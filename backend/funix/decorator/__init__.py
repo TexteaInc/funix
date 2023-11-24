@@ -683,19 +683,6 @@ def kumo_callback():
             pass
 
 
-def is_function_decorated(function_id: int) -> bool:
-    """
-    Check if the function is decorated.
-
-    Parameters:
-        function_id (int): The function id.
-
-    Returns:
-        bool: Whether the function is decorated.
-    """
-    return function_id in decorated_function_ids
-
-
 def funix(
     path: Optional[str] = None,
     title: Optional[str] = None,
