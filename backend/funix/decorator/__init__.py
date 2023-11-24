@@ -2,6 +2,7 @@
 Funix decorator. The central logic of Funix.
 """
 import dataclasses
+import inspect
 import sys
 import time
 from collections import deque
@@ -16,6 +17,7 @@ from inspect import (
     isgeneratorfunction,
     ismethod,
     signature,
+    isclass,
 )
 from io import StringIO
 from json import dumps, loads
@@ -72,7 +74,11 @@ from funix.hint import (
     WhitelistType,
     WidgetsType,
 )
-from funix.session import get_global_variable, set_global_variable
+from funix.session import (
+    get_global_variable,
+    set_global_variable,
+    set_default_global_variable,
+)
 from funix.theme import get_dict_theme, parse_theme
 from funix.util.module import funix_menu_to_safe_function_name
 from funix.util.uri import is_valid_uri
@@ -2020,18 +2026,95 @@ def funix(
     return decorator
 
 
-def funix_class(inited_class):
-    for class_function in dir(inited_class):
-        if not class_function.startswith("_"):
-            function = getattr(inited_class, class_function)
-            if ismethod(function):
-                org_id = id(getattr(type(inited_class), class_function))
-                if org_id not in class_method_ids_to_params:
-                    funix()(function)
-                else:
-                    params = class_method_ids_to_params[org_id]
-                    if "disable" in params:
-                        continue
-                    args = params["args"]
-                    kwargs = params["kwargs"]
-                    funix(*args, **kwargs)(function)
+def funix_class(cls):
+    if isclass(cls):
+        if not hasattr(cls, "__init__"):
+            raise Exception("Class must have `__init__` method!")
+
+        set_default_global_variable("__FUNIX_" + cls.__name__, None)
+
+        init_class = signature(cls)
+
+        if len(init_class.parameters) == 0:
+
+            def create_class():
+                set_global_variable("__FUNIX_" + cls.__name__, cls())
+
+        else:
+
+            def create_class(*replace_args, **replace_kwargs):
+                set_global_variable(
+                    "__FUNIX_" + cls.__name__, cls(*replace_args, **replace_kwargs)
+                )
+
+            create_class.__signature__ = signature(cls)
+
+        setattr(create_class, "__name__", cls.__name__)
+
+        funix()(create_class)
+
+        def get_init_function():
+            inited_class = get_global_variable("__FUNIX_" + cls.__name__)
+
+            if inited_class is None:
+                raise Exception("Class must be inited first!")
+            else:
+                return inited_class
+
+        for class_function in dir(cls):
+            if not class_function.startswith("_"):
+                function = getattr(cls, class_function)
+                if callable(function):
+                    is_static = isinstance(
+                        inspect.getattr_static(cls, function.__name__), staticmethod
+                    )
+
+                    sign = signature(function)
+
+                    is_empty = (
+                        len(sign.parameters) == 0
+                        if is_static
+                        else len(sign.parameters) == 1
+                    )
+
+                    if is_empty:
+
+                        def new_change_function():
+                            if is_static:
+                                return function()
+                            api = get_init_function()
+                            return function(api)
+
+                    else:
+
+                        def new_change_function(*function_args, **function_kwargs):
+                            if is_static:
+                                return function(*function_args, **function_kwargs)
+                            api = get_init_function()
+                            return function(api, *function_args, **function_kwargs)
+
+                    if is_static:
+                        new_change_function.__signature__ = sign
+                    else:
+                        new_sign = sign.replace(
+                            parameters=tuple(sign.parameters.values())[1:]
+                        )
+                        new_change_function.__signature__ = new_sign
+
+                    setattr(new_change_function, "__name__", function.__name__)
+                    funix()(new_change_function)
+    else:
+        for class_function in dir(cls):
+            if not class_function.startswith("_"):
+                function = getattr(cls, class_function)
+                if ismethod(function):
+                    org_id = id(getattr(type(cls), class_function))
+                    if org_id not in class_method_ids_to_params:
+                        funix()(function)
+                    else:
+                        params = class_method_ids_to_params[org_id]
+                        if "disable" in params:
+                            continue
+                        args = params["args"]
+                        kwargs = params["kwargs"]
+                        funix(*args, **kwargs)(function)
