@@ -2,15 +2,22 @@ from funix import funix_class, funix_class_params
 
 
 class A:
-    def __init__(self):
-        self.a = 1
+    def __init__(self, a: int):
+        self.a = a
 
-    @funix_class_params(title="okay")
     def abc(self, b: int, c: int) -> None:
         self.a = b + c
 
     def b(self) -> int:
         return self.a
 
+    @staticmethod
+    def e(a: int, b: int) -> int:
+        return a + b
 
-funix_class(A())
+    @staticmethod
+    def c() -> int:
+        return 1
+
+
+funix_class(A)
