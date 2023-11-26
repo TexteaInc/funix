@@ -1,6 +1,7 @@
 """
 Funix decorator. The central logic of Funix.
 """
+import ast
 import dataclasses
 import inspect
 import sys
@@ -14,20 +15,22 @@ from inspect import (
     Parameter,
     Signature,
     getsource,
+    isclass,
     isgeneratorfunction,
     ismethod,
     signature,
-    isclass,
 )
 from io import StringIO
 from json import dumps, loads
 from secrets import token_hex
+from textwrap import dedent
 from traceback import format_exc
 from types import ModuleType
 from typing import Any, Optional
 from urllib.request import urlopen
 from uuid import uuid4
 
+import dill
 from flask import Response, request, session
 from requests import post
 from requests.structures import CaseInsensitiveDict
@@ -57,6 +60,7 @@ from funix.decorator.magic import (
     get_type_dict,
     get_type_widget_prop,
 )
+from funix.decorator.runtime import RuntimeClassVisitor
 from funix.hint import (
     ArgumentConfigType,
     ConditionalVisibleType,
@@ -76,8 +80,8 @@ from funix.hint import (
 )
 from funix.session import (
     get_global_variable,
-    set_global_variable,
     set_default_global_variable,
+    set_global_variable,
 )
 from funix.theme import get_dict_theme, parse_theme
 from funix.util.module import funix_menu_to_safe_function_name
@@ -1808,6 +1812,7 @@ def funix(
                                 "error_body": format_exc(),
                             }
 
+                    @wraps(function)
                     def output_to_web_function(**wrapped_function_kwargs):
                         try:
                             fake_stdout = StdoutToWebsocket(ws)
@@ -2013,83 +2018,51 @@ def funix(
     return decorator
 
 
-def funix_class(cls):
-    if isclass(cls):
-        if not hasattr(cls, "__init__"):
-            raise Exception("Class must have `__init__` method!")
+def get_class_source_code(file_path: str, class_name: str) -> str:
+    with open(file_path, "r") as f:
+        lines = f.readlines()
 
-        set_default_global_variable("__FUNIX_" + cls.__name__, None)
+    inside_class = False
+    is_now_next = False
+    class_code = []
 
-        init_class = signature(cls)
+    hope_indent = 0
 
-        if len(init_class.parameters) == 0:
-
-            def create_class():
-                set_global_variable("__FUNIX_" + cls.__name__, cls())
-
-        else:
-
-            def create_class(*replace_args, **replace_kwargs):
-                set_global_variable(
-                    "__FUNIX_" + cls.__name__, cls(*replace_args, **replace_kwargs)
-                )
-
-            create_class.__signature__ = signature(cls)
-
-        setattr(create_class, "__name__", cls.__name__)
-
-        funix()(create_class)
-
-        def get_init_function():
-            inited_class = get_global_variable("__FUNIX_" + cls.__name__)
-
-            if inited_class is None:
-                raise Exception("Class must be inited first!")
+    for line in lines:
+        if line.strip().startswith("class " + class_name) and line.strip().endswith(
+            ":"
+        ):
+            inside_class = True
+            is_now_next = True
+            class_code.append(line)
+        elif inside_class:
+            if line.strip() == "":
+                class_code.append(line)
+                continue
+            if line.strip() and not line.startswith(" "):
+                inside_class = False
+            if is_now_next:
+                hope_indent = len(line) - len(line.lstrip())
+                is_now_next = False
+            if line.startswith(" " * hope_indent):
+                class_code.append(line)
             else:
-                return inited_class
+                inside_class = False
 
-        for class_function in dir(cls):
-            if not class_function.startswith("_"):
-                function = getattr(cls, class_function)
-                if callable(function):
-                    is_static = isinstance(
-                        inspect.getattr_static(cls, function.__name__), staticmethod
-                    )
+    return dedent("".join(class_code)).strip()
 
-                    sign = signature(function)
 
-                    is_empty = (
-                        len(sign.parameters) == 0
-                        if is_static
-                        else len(sign.parameters) == 1
-                    )
+def funix_class(cls):
+    if inspect.isclass(cls):
+        if not hasattr(cls, "__init__"):
+            raise Exception("Class must have __init__ method!")
 
-                    if is_empty:
-
-                        def new_change_function():
-                            if is_static:
-                                return function()
-                            api = get_init_function()
-                            return function(api)
-
-                    else:
-
-                        def new_change_function(*function_args, **function_kwargs):
-                            if is_static:
-                                return function(*function_args, **function_kwargs)
-                            api = get_init_function()
-                            return function(api, *function_args, **function_kwargs)
-
-                    if is_static:
-                        new_change_function.__signature__ = sign
-                    else:
-                        new_sign = sign.replace(
-                            parameters=tuple(sign.parameters.values())[1:]
-                        )
-                        new_change_function.__signature__ = new_sign
-
-                    setattr(new_change_function, "__name__", function.__name__)
-                    funix()(new_change_function)
+        f = RuntimeClassVisitor(cls.__name__, funix, cls)
+        f.visit(
+            ast.parse(
+                get_class_source_code(inspect.getsourcefile(cls.__init__), cls.__name__)
+            )
+        )
     else:
         for class_function in dir(cls):
             if not class_function.startswith("_"):

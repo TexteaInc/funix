@@ -1,4 +1,4 @@
-from funix import funix_class, funix_class_params
+from funix import funix_class
 
 
 class A:
