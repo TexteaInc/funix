@@ -1,6 +1,7 @@
 from funix import funix_class
 
 
+@funix_class
 class A:
     def __init__(self, a: int):
         self.a = a
@@ -18,6 +19,3 @@ class A:
     @staticmethod
     def c() -> int:
         return 1
-
-
-funix_class(A)
