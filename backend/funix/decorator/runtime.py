@@ -1,4 +1,5 @@
 import ast
+import inspect
 from _ast import (
     Assign,
     Attribute,
@@ -12,10 +13,10 @@ from _ast import (
     Name,
     Return,
     Store,
-    keyword,
 )
 from typing import Any
 
+import funix
 from funix.session import get_global_variable, set_global_variable
 
 
@@ -32,11 +33,30 @@ def set_init_function(cls_name: str, cls):
     set_global_variable("__FUNIX_" + cls_name, cls)
 
 
+def get_imports(path) -> list:
+    with open(path) as fh:
+        root = ast.parse(fh.read(), path)
+
+    imports = []
+
+    for node in ast.iter_child_nodes(root):
+        if isinstance(node, ast.Import):
+            imports.append(node)
+        elif isinstance(node, ast.ImportFrom):
+            imports.append(node)
+        else:
+            continue
+
+    return imports
+
+
 class RuntimeClassVisitor(ast.NodeVisitor):
     def __init__(self, cls_name: str, funix: Any, cls: Any):
         self.funix = funix
         self._cls_name = cls_name
         self._cls = cls
+        source_path = inspect.getsourcefile(self._cls.__init__)
+        self._imports = get_imports(source_path)
 
     def visit_ClassDef(self, node: ClassDef) -> Any:
         for cls_function in node.body:
@@ -48,9 +68,13 @@ class RuntimeClassVisitor(ast.NodeVisitor):
 
         is_static_method = False
 
-        # TODO: handle from funix import funix_class_params as xxx
-        #       Or xxx = funix_class_params
-        funix_decorator = Call(func=Name(id="funix", ctx=Load()), args=[], keywords=[])
+        funix_decorator = Call(
+            func=Attribute(
+                value=Name(id="__funix__module__", ctx=Load()), attr="funix", ctx=Load()
+            ),
+            args=[],
+            keywords=[],
+        )
 
         for decorator in node.decorator_list:
             if hasattr(decorator, "id") and decorator.id == "staticmethod":
@@ -78,16 +102,19 @@ class RuntimeClassVisitor(ast.NodeVisitor):
         if node.name.startswith("_") and node.name != "__init__":
             return
 
+        body = [
+            *self._imports,
+            FunctionDef(
+                name=node.name,
+                args=args,
+                decorator_list=[funix_decorator],
+                returns=node.returns,
+                lineno=0,
+            ),
+        ]
+        function = body[-1]
         new_module = Module(
-            body=[
-                FunctionDef(
-                    name=node.name,
-                    args=args,
-                    decorator_list=[funix_decorator],
-                    returns=node.returns,
-                    lineno=0,
-                )
-            ],
+            body=body,
             type_ignores=[],
         )
 
@@ -95,8 +122,8 @@ class RuntimeClassVisitor(ast.NodeVisitor):
             # new_module.body[0].decorator_list[0].keywords = [
             #     keyword(arg="title", value=Constant(value=self._cls_name))
             # ]
-            new_module.body[0].name = "initialize_" + self._cls_name
-            new_module.body[0].body = [
+            function.name = "initialize_" + self._cls_name
+            function.body = [
                 Expr(
                     value=Call(
                         func=Name(id="set_init_function", ctx=Load()),
@@ -116,7 +143,7 @@ class RuntimeClassVisitor(ast.NodeVisitor):
             ]
         else:
             if is_static_method:
-                new_module.body[0].body = [
+                function.body = [
                     Return(
                         value=Call(
                             func=Attribute(
@@ -130,7 +157,7 @@ class RuntimeClassVisitor(ast.NodeVisitor):
                     )
                 ]
             else:
-                new_module.body[0].body = [
+                function.body = [
                     Assign(
                         targets=[Name(id="api", ctx=Store())],
                         value=Call(
@@ -152,10 +179,18 @@ class RuntimeClassVisitor(ast.NodeVisitor):
                         )
                     ),
                 ]
-        globals()["funix"] = self.funix
+
+        globals()["__funix__module__"] = funix
         globals()[self._cls_name] = self._cls
-        exec(
-            ast.unparse(new_module),
-            globals(),
-            locals(),
-        )
+        code = ast.unparse(new_module)
+        try:
+            exec(
+                code,
+                globals(),
+                locals(),
+            )
+        except Exception as e:
+            print("=== Executed code start ===")
+            print(code)
+            print("=== Executed code end ===")
+            raise e
