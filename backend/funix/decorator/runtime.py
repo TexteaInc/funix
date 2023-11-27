@@ -87,7 +87,7 @@ class RuntimeClassVisitor(ast.NodeVisitor):
             # new_module.body[0].decorator_list[0].keywords = [
             #     keyword(arg="title", value=Constant(value=self._cls_name))
             # ]
-            new_module.body[0].name = "new_" + self._cls_name
+            new_module.body[0].name = "initialize_" + self._cls_name
             new_module.body[0].body = [
                 Expr(
                     value=Call(
