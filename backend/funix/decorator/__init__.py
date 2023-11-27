@@ -2045,7 +2045,11 @@ def get_class_source_code(file_path: str, class_name: str) -> str:
     return dedent("".join(class_code)).strip()
 
 
-def funix_class(cls):
+def funix_class():
+    return __funix_class
+
+
+def __funix_class(cls):
     if inspect.isclass(cls):
         if not hasattr(cls, "__init__"):
             raise Exception("Class must have __init__ method!")
