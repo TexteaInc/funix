@@ -327,6 +327,10 @@ const TextExtendedWidget = ({
     }
   }
 
+  if (inputType === "number" || inputType === "integer") {
+    multilineConfig.multiline = false;
+  }
+
   return (
     <Autocomplete
       disableClearable
@@ -353,9 +357,11 @@ const TextExtendedWidget = ({
             </>
           );
         } else {
-          newParams.inputProps.style = {
-            resize: "vertical",
-          };
+          if (inputType !== "number" && inputType !== "integer") {
+            newParams.inputProps.style = {
+              resize: "vertical",
+            };
+          }
         }
         return (
           <TextField
