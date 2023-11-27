@@ -2056,6 +2056,7 @@ def funix_class(cls):
                 get_class_source_code(inspect.getsourcefile(cls.__init__), cls.__name__)
             )
         )
+        return cls
     else:
         for class_function in dir(cls):
             if not class_function.startswith("_"):
