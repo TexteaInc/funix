@@ -29,7 +29,7 @@ from funix.util.network import (
 # ---- Decorators ----
 funix = decorator.funix
 funix_class = decorator.funix_class
-funix_class_params = decorator.funix_class_params
+funix_method = decorator.funix_method
 # ---- Decorators ----
 
 Limiter = decorator.Limiter
