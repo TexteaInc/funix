@@ -2067,7 +2067,7 @@ def funix_class(cls):
         for class_function in dir(cls):
             if not class_function.startswith("_"):
                 function = getattr(cls, class_function)
-                if ismethod(function):
+                if callable(function):
                     org_id = id(getattr(type(cls), class_function))
                     if org_id not in class_method_ids_to_params:
                         funix()(function)

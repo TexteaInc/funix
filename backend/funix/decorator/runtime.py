@@ -48,25 +48,20 @@ class RuntimeClassVisitor(ast.NodeVisitor):
 
         is_static_method = False
 
+        # TODO: handle from funix import funix_class_params as xxx
+        #       Or xxx = funix_class_params
+        funix_decorator = Call(func=Name(id="funix", ctx=Load()), args=[], keywords=[])
+
         for decorator in node.decorator_list:
             if hasattr(decorator, "id") and decorator.id == "staticmethod":
                 is_static_method = True
-                break
 
-            # TODO: handle from funix import funix_class_params as xxx
-            #       Or xxx = funix_class_params
-            funix_decorator = Call(
-                func=Name(id="funix", ctx=Load()), args=[], keywords=[]
-            )
             if hasattr(decorator, "func") and decorator.func.id == "funix_class_params":
-                if (
-                    decorator.keywords[0].arg == "disable"
-                    and decorator.keywords[0].value.value
-                ):
-                    return
-                else:
-                    funix_decorator.keywords = decorator.keywords
-                    funix_decorator.args = decorator.args
+                for key_word in decorator.keywords:
+                    if key_word.arg == "disable" and key_word.value.value:
+                        return
+                funix_decorator.keywords = decorator.keywords
+                funix_decorator.args = decorator.args
 
         if not is_static_method:
             # Yes .args
@@ -80,9 +75,7 @@ class RuntimeClassVisitor(ast.NodeVisitor):
                 FunctionDef(
                     name=node.name,
                     args=args,
-                    decorator_list=[
-                        Call(func=Name(id="funix", ctx=Load()), args=[], keywords=[])
-                    ],
+                    decorator_list=[funix_decorator],
                     returns=node.returns,
                     lineno=0,
                 )
@@ -91,9 +84,9 @@ class RuntimeClassVisitor(ast.NodeVisitor):
         )
 
         if node.name == "__init__":
-            new_module.body[0].decorator_list[0].keywords = [
-                keyword(arg="title", value=Constant(value=self._cls_name))
-            ]
+            # new_module.body[0].decorator_list[0].keywords = [
+            #     keyword(arg="title", value=Constant(value=self._cls_name))
+            # ]
             new_module.body[0].name = "new_" + self._cls_name
             new_module.body[0].body = [
                 Expr(
@@ -151,9 +144,8 @@ class RuntimeClassVisitor(ast.NodeVisitor):
                         )
                     ),
                 ]
-        new_globals = globals()
-        new_globals["funix"] = self.funix
-        new_globals[self._cls_name] = self._cls
+        globals()["funix"] = self.funix
+        globals()[self._cls_name] = self._cls
         exec(
             ast.unparse(new_module),
             globals(),
