@@ -6,9 +6,9 @@ class A:
     @funix_method(title="Initialize A", print_to_web=True)
     def __init__(self, a: int):
         self.a = a
-        print (f"`self.a` has been initialized to {self.a}")
+        print(f"`self.a` has been initialized to {self.a}")
 
-    def update_a(self, b: int) -> None:
+    def update_a(self, b: int) -> str:
         self.a = b
         return f"`self.a` has been updated to {self.a}"
 
