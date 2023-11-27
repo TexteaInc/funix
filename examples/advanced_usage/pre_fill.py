@@ -1,26 +1,28 @@
 from funix import funix
 
+# This example shows how to plug in results on one page to the input widgets of another. 
+
 
 @funix()
-def first_action(x: int) -> int:
+def foo(x: int) -> int:
     return x - 1
 
 
 @funix()
-def second_action(message: str) -> list[str]:
+def bar(message: str) -> list[str]:
     return message.split(" ")
 
 
 @funix()
-def third_action(x: int, y: int) -> dict:
+def goh(x: int, y: int) -> dict:
     return {"x": x, "y": y}
 
 
 @funix(
     pre_fill={
-        "a": first_action, 
-        "b": (second_action, -1), 
-        "c": (third_action, "x")}
+        "a": foo, # plug the return of function foo to a  
+        "b": (bar, -1),  # plug the last (-1) return of function bar to b
+        "c": (goh, "x")} # plug the return of key "x" of function goh to c
     )
-def final_action(a: int, b: str, c: int) -> str:
+def together(a: int, b: str, c: int) -> str:
     return f"{a} {b} {c}"

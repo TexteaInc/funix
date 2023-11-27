@@ -1,11 +1,9 @@
 from funix import funix
-from funix.hint import Markdown
+from IPython.display import Markdown
 
 from openai import OpenAI
 
-
 user_client = None
-
 
 @funix()
 def set_openai_key(key: str) -> str:
@@ -15,7 +13,7 @@ def set_openai_key(key: str) -> str:
 
 
 @funix()
-def simple_ask(prompt: str) -> Markdown:
+def chatGPT(prompt: str) -> Markdown:
     client: None | OpenAI = user_client
     if client is None:
         yield "Please set the OpenAI key first."

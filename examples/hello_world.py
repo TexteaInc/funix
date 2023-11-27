@@ -1,3 +1,4 @@
-# The two lines above can be commented out if using the lazy model, i.e., $ funix -l hello_world.py 
+import funix     # This line can be commented out in the lazy mode of funix. 
+@funix.funix()   # This line can be commented out in the lazy mode of funix.
 def hello_world(name: str="Funix") -> str:
     return f"Hello {name}!"
