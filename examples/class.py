@@ -3,17 +3,17 @@ from funix import funix_method, funix_class
 
 @funix_class()
 class A:
-    @funix_method(title="Initialize A")
+    @funix_method(title="Initialize A", print_to_web=True)
     def __init__(self, a: int):
         self.a = a
+        print (f"`self.a` has been initialized to {self.a}")
 
-    @funix_method(title="a = b + c")
-    def abc(self, b: int, c: int) -> None:
-        self.a = b + c
+    def update_a(self, b: int) -> None:
+        self.a = b
+        return f"`self.a` has been updated to {self.a}"
 
-    @funix_method(title="Returns a")
-    def b(self) -> int:
-        return self.a
+    def print_a(self) -> str:
+        return f"The value of `self.a` is {self.a}"
 
     @staticmethod
     def add(a: int, b: int) -> int:
