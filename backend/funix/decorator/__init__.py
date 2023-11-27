@@ -15,9 +15,7 @@ from inspect import (
     Parameter,
     Signature,
     getsource,
-    isclass,
     isgeneratorfunction,
-    ismethod,
     signature,
 )
 from io import StringIO
@@ -30,7 +28,6 @@ from typing import Any, Optional
 from urllib.request import urlopen
 from uuid import uuid4
 
-import dill
 from flask import Response, request, session
 from requests import post
 from requests.structures import CaseInsensitiveDict
@@ -78,11 +75,7 @@ from funix.hint import (
     WhitelistType,
     WidgetsType,
 )
-from funix.session import (
-    get_global_variable,
-    set_default_global_variable,
-    set_global_variable,
-)
+from funix.session import get_global_variable, set_global_variable
 from funix.theme import get_dict_theme, parse_theme
 from funix.util.module import funix_menu_to_safe_function_name
 from funix.util.uri import is_valid_uri
@@ -283,7 +276,7 @@ class StdoutToWebsocket:
         self.value = StringIO()
 
 
-def funix_class_params(*args, **kwargs):
+def funix_method(*args, **kwargs):
     def decorator(func):
         if "disable" in kwargs and kwargs["disable"]:
             class_method_ids_to_params[id(func)] = {
