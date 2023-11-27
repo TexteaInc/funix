@@ -8,13 +8,10 @@ import funix
 
 # @funix.new_funix_type(
 #     {
-#         "name": "textarea",
-#         "config": {
-#             "rows": 6,
-#         },
+#         "name": "radio"
 #     }
 # )
-# class PromptBox(str):
+# class RadioRange(range):
 #     pass
 
 
@@ -31,32 +28,22 @@ cfg = {  # declarative configuration, all in one place
 def ChatGPT_advanced_stream(
     prompt: str,
     show_advanced_options: bool = True,
-    max_tokens: range(100, 500, 50) = 150,
+    model: typing.Literal["gpt-3.5-turbo", "gpt-3.5-turbo-1106", "gpt-3.5-turbo-0301",
+                "gpt-3.5-turbo-0613"] = "gpt-3.5-turbo",
+    stream: bool = True,
+    max_tokens: range(100, 500, 50) = 150
 ) -> IPython.display.Markdown:
     client = openai.OpenAI()  # defaults to os.environ.get("OPENAI_API_KEY")
     response = client.chat.completions.create(
         messages=[{"role": "user", "content": prompt}],
-        model="gpt-3.5-turbo",
-        stream=True,
-        max_tokens=max_tokens,
+        model=model,
+        stream=stream,
+        max_tokens=max_tokens
     )
-    message = []
-    for chunk in response:
-        message.append(chunk.choices[0].delta.content or "")
-        yield "".join(message)
-
-
-@funix.funix(**cfg)
-def ChatGPT_advanced(
-    prompt: str,
-    show_advanced_options: bool = True,
-    max_tokens: range(100, 500, 50) = 150,
-) -> IPython.display.Markdown:
-    client = openai.OpenAI()  # defaults to os.environ.get("OPENAI_API_KEY")
-    response = client.chat.completions.create(
-        messages=[{"role": "user", "content": prompt}],
-        model="gpt-3.5-turbo",
-        stream=False,
-        max_tokens=max_tokens,
-    )
-    return response.choices[0].text
+    if stream: 
+        message = []
+        for chunk in response:
+            message.append(chunk.choices[0].delta.content or "")
+            yield "".join(message)
+    else: # no stream 
+        yield response.choices[0].message.content
