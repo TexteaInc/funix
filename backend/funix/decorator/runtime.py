@@ -56,12 +56,20 @@ class RuntimeClassVisitor(ast.NodeVisitor):
             if hasattr(decorator, "id") and decorator.id == "staticmethod":
                 is_static_method = True
 
-            if hasattr(decorator, "func") and decorator.func.id == "funix_method":
-                for key_word in decorator.keywords:
-                    if key_word.arg == "disable" and key_word.value.value:
-                        return
-                funix_decorator.keywords = decorator.keywords
-                funix_decorator.args = decorator.args
+            if hasattr(decorator, "func"):
+                func = decorator.func
+                if (hasattr(func, "id") and func.id == "funix_method") or (
+                    hasattr(func, "value")
+                    and hasattr(func.value, "id")
+                    and func.value.id == "funix"
+                    and hasattr(func, "attr")
+                    and func.attr == "funix_method"
+                ):
+                    for key_word in decorator.keywords:
+                        if key_word.arg == "disable" and key_word.value.value:
+                            return
+                    funix_decorator.keywords = decorator.keywords
+                    funix_decorator.args = decorator.args
 
         if not is_static_method:
             # Yes .args
