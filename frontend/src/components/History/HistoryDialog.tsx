@@ -30,7 +30,7 @@ import {
   FileDownload,
   Preview,
 } from "@mui/icons-material";
-import React, { useEffect } from "react";
+import React from "react";
 import {
   Timeline,
   TimelineConnector,
@@ -101,7 +101,9 @@ const HistoryDialog = (props: {
   open: boolean;
   setOpen: (open: boolean) => void;
 }) => {
-  const { getHistories, clearHistory, removeHistory, setHistoryNameAndPath } =
+  const [{ histories }] = useAtom(storeAtom);
+
+  const { clearHistory, removeHistory, setHistoryNameAndPath } =
     useFunixHistory();
   const [{ functions }, setStore] = useAtom(storeAtom);
   const [isAscending, setAscending] = React.useState(true);
@@ -114,6 +116,7 @@ const HistoryDialog = (props: {
   const [singleCollapsedMap, setSingleCollapsedMap] = React.useState<
     Record<string, Record<InputAndOutput, boolean>>
   >({});
+  // const loaded = useRef<boolean>(false);
   // const [backdropOpen, setBackdropOpen] = React.useState(false);
   // const [rewindSnackbarOpen, setRewindSnackbarOpen] = React.useState(false);
 
@@ -138,15 +141,19 @@ const HistoryDialog = (props: {
   //   backHistory(history);
   // };
 
-  const [histories, setHistories] = React.useState<History[]>([]);
-
-  useEffect(() => {
-    getHistories().then((h) => setHistories(h));
-  }, []);
-
-  window.addEventListener("funix-history-update", () => {
-    getHistories().then((h) => setHistories(h));
-  });
+  // const [histories, setHistories] = React.useState<History[]>([]);
+  //
+  // useEffect(() => {
+  //   if (loaded.current) {
+  //     return;
+  //   }
+  //   getHistories().then((h) => setHistories(h));
+  //   loaded.current = true;
+  // }, [loaded]);
+  //
+  // window.addEventListener("funix-history-update", () => {
+  //   getHistories().then((h) => setHistories(h));
+  // });
 
   return (
     <>
@@ -243,9 +250,7 @@ const HistoryDialog = (props: {
         <DialogActions>
           <Button
             onClick={() => {
-              getHistories().then((histories) => {
-                exportHistories(histories);
-              });
+              exportHistories(histories);
             }}
           >
             Export All
@@ -417,7 +422,7 @@ const HistoryDialog = (props: {
                                 history.input !== null &&
                                 getSingleCollapsed(history.uuid, "input")
                               }
-                              onChange={(event, expanded) => {
+                              onChange={(_event, expanded) => {
                                 setSingleCollapsedMap((prevState) => {
                                   return {
                                     ...prevState,
@@ -455,7 +460,7 @@ const HistoryDialog = (props: {
                                 history.output !== null &&
                                 getSingleCollapsed(history.uuid, "output")
                               }
-                              onChange={(event, expanded) => {
+                              onChange={(_event, expanded) => {
                                 setSingleCollapsedMap((prevState) => {
                                   return {
                                     ...prevState,
@@ -559,7 +564,7 @@ const HistoryDialog = (props: {
                               size="small"
                               color="error"
                               startIcon={<Delete />}
-                              onClick={() => removeHistory(history.uuid)}
+                              onClick={() => removeHistory(history.timestamp)}
                             >
                               Delete
                             </Button>

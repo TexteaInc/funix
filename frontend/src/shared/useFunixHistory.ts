@@ -13,20 +13,45 @@ export type History = {
   uuid: string;
 };
 
+const setHistory = async (historyKey: string, history: History) => {
+  await localforage.setItem(historyKey, history);
+  window.dispatchEvent(new CustomEvent("funix-history-update"));
+};
+
+const getHistoryOrMakeAnEmptyOne = async (
+  historyKey: string,
+  keys: string[],
+  functionName: string,
+  functionPath: string,
+  timestamp: number
+) => {
+  return keys.indexOf(historyKey) !== -1
+    ? await localforage.getItem<History>(historyKey)
+    : {
+        input: null,
+        output: null,
+        functionName,
+        functionPath,
+        name: null,
+        timestamp,
+        uuid: uuid4(),
+      };
+};
+
 const useFunixHistory = () => {
   const getHistories = async () => {
-    return localforage
-      .getItem("funix-history")
-      .then((value) => {
-        if (value) {
-          // By my hand, I think I will handle it (oh, e, hah
-          return JSON.parse(value as string) as History[];
-        }
-        return [] as History[];
-      })
-      .catch(() => {
-        return [] as History[];
-      });
+    const histories: History[] = [];
+    const keys = await localforage.keys();
+    const historyKeys = keys.filter((key) => key.startsWith("funix-history-"));
+
+    for (const historyKey of historyKeys) {
+      const history = await localforage.getItem<History>(historyKey);
+      if (history !== null) {
+        histories.push(history);
+      }
+    }
+
+    return histories.sort((a, b) => b.timestamp - a.timestamp);
   };
 
   const setInput = async (
@@ -35,37 +60,22 @@ const useFunixHistory = () => {
     functionPath: string,
     input: Record<any, any>
   ) => {
-    getHistories().then((histories) => {
-      const index = histories.findIndex((h) => h.timestamp === timestamp);
-      if (index !== -1) {
-        histories[index].input = input;
-      } else {
-        histories.push({
-          input,
-          output: null,
-          functionName,
-          functionPath,
-          name: null,
-          timestamp,
-          uuid: uuid4(),
-        });
-      }
-      localforage
-        .setItem("funix-history", JSON.stringify(histories))
-        .then(() => {
-          window.dispatchEvent(new CustomEvent("funix-history-update"));
-        })
-        .catch((error) => {
-          enqueueSnackbar(
-            "Cannot save input to history, check your console for more information",
-            {
-              variant: "error",
-            }
-          );
-          console.error("Funix History Error:");
-          console.error(error);
-        });
-    });
+    const historyKey = `funix-history-${timestamp}`;
+
+    const history: History | null = await getHistoryOrMakeAnEmptyOne(
+      historyKey,
+      await localforage.keys(),
+      functionName,
+      functionPath,
+      timestamp
+    );
+
+    if (history !== null) {
+      await setHistory(historyKey, {
+        ...history,
+        input,
+      });
+    }
   };
 
   const setOutput = async (
@@ -74,106 +84,52 @@ const useFunixHistory = () => {
     functionPath: string,
     output: PostCallResponse | string
   ) => {
-    getHistories().then((histories) => {
-      const index = histories.findIndex((h) => h.timestamp === timestamp);
-      let newOutput = output;
-      if (typeof output === "string") {
-        try {
-          newOutput = JSON.parse(output);
-        } catch (e) {
-          newOutput = output;
-        }
+    const historyKey = `funix-history-${timestamp}`;
+
+    let newOutput = output;
+    if (typeof output === "string") {
+      try {
+        newOutput = JSON.parse(output);
+      } catch (e) {
+        newOutput = output;
       }
-      if (index !== -1) {
-        histories[index].output = newOutput;
-      } else {
-        histories.push({
-          input: null,
-          output: newOutput,
-          functionName,
-          functionPath,
-          name: null,
-          timestamp,
-          uuid: uuid4(),
-        });
-      }
-      localforage
-        .setItem("funix-history", JSON.stringify(histories))
-        .then(() => {
-          window.dispatchEvent(new CustomEvent("funix-history-update"));
-        })
-        .catch((error) => {
-          enqueueSnackbar(
-            "Cannot save output to history, check your console for more information",
-            {
-              variant: "error",
-            }
-          );
-          console.error("Funix History Error:");
-          console.error(error);
-        });
-    });
+    }
+
+    const history: History | null = await getHistoryOrMakeAnEmptyOne(
+      historyKey,
+      await localforage.keys(),
+      functionName,
+      functionPath,
+      timestamp
+    );
+
+    if (history !== null) {
+      await setHistory(historyKey, {
+        ...history,
+        output: newOutput,
+      });
+    }
   };
 
-  const setInputOutput = (
+  const setInputOutput = async (
     timestamp: number,
     functionName: string,
     functionPath: string,
     input: Record<any, any>,
     output: string | PostCallResponse
   ) => {
-    getHistories().then((histories) => {
-      const index = histories.findIndex((h) => h.timestamp === timestamp);
-      let newOutput = output;
-      if (typeof output === "string") {
-        try {
-          newOutput = JSON.parse(output);
-        } catch (e) {
-          newOutput = output;
-        }
-      }
-      if (index !== -1) {
-        histories[index].input = input;
-        histories[index].output = newOutput;
-      } else {
-        histories.push({
-          input,
-          output: newOutput,
-          functionName,
-          functionPath,
-          name: null,
-          timestamp,
-          uuid: uuid4(),
-        });
-      }
-      localforage
-        .setItem("funix-history", JSON.stringify(histories))
-        .then(() => {
-          window.dispatchEvent(new CustomEvent("funix-history-update"));
-        })
-        .catch((error) => {
-          enqueueSnackbar(
-            "Cannot save input and output to history, check your console for more information",
-            {
-              variant: "error",
-            }
-          );
-          console.error("Funix History Error:");
-          console.error(error);
-        });
-    });
+    await setInput(timestamp, functionName, functionPath, input);
+    await setOutput(timestamp, functionName, functionPath, output);
   };
 
-  const removeHistory = (uuid: string) => {
-    getHistories().then((histories) => {
-      localforage
-        .setItem(
-          "funix-history",
-          JSON.stringify(histories.filter((h) => h.uuid !== uuid))
-        )
-        .then(() => {
+  const removeHistory = (timestamp: number) => {
+    localforage.keys().then((keys) => {
+      const historyKey = `funix-history-${timestamp}`;
+      if (keys.indexOf(historyKey) !== -1) {
+        localforage.removeItem(historyKey).then(() => {
           window.dispatchEvent(new CustomEvent("funix-history-update"));
         });
+      }
     });
   };
 
@@ -182,22 +138,39 @@ const useFunixHistory = () => {
     name: string,
     path: string
   ) => {
-    getHistories().then((histories) => {
-      const index = histories.findIndex((h) => h.timestamp === timestamp);
-      if (index !== -1) {
-        histories[index].name = name;
-        histories[index].functionPath = path;
-      }
-      localforage
-        .setItem("funix-history", JSON.stringify(histories))
-        .then(() => {
-          window.dispatchEvent(new CustomEvent("funix-history-update"));
+    localforage.keys().then((keys) => {
+      const historyKey = `funix-history-${timestamp}`;
+      if (keys.indexOf(historyKey) !== -1) {
+        localforage.getItem<History>(historyKey).then((history) => {
+          if (history !== null) {
+            const newHistory = {
+              ...history,
+              name,
+              functionPath: path,
+            };
+            localforage
+              .setItem(historyKey, newHistory)
+              .then(() => {
+                window.dispatchEvent(new CustomEvent("funix-history-update"));
+              })
+              .catch((error) => {
+                enqueueSnackbar(
+                  "Cannot save input to history, check your console for more information",
+                  {
+                    variant: "error",
+                  }
+                );
+                console.error("Funix History Error:");
+                console.error(error);
+              });
+          }
         });
+      }
     });
   };
 
   const clearHistory = () => {
-    localforage.removeItem("funix-history").then(() => {
+    localforage.clear().then(() => {
       window.dispatchEvent(new CustomEvent("funix-history-update"));
     });
   };
