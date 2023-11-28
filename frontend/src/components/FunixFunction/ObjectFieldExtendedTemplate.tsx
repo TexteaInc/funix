@@ -520,7 +520,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
           const result = props.properties.filter(
             (prop: any) => prop.name === rowItem.argument
           );
-          console.log(rowItem, result);
+          // console.log(rowItem, result);
           if (result.length === 0) {
             rowElement = null;
           } else {

@@ -21,10 +21,10 @@ export type HistoryInfoProps = {
 export const getHistoryInfo = (history: History): HistoryInfoProps => {
   let status: HistoryEnum;
 
-  if (history.input === null) {
+  if (history.input === null || history.input === undefined) {
     status = HistoryEnum.Unknown;
   } else {
-    if (history.output === null) {
+    if (history.output === null || history.output === undefined) {
       status = HistoryEnum.Pending;
     } else {
       status = HistoryEnum.Done;
@@ -32,8 +32,10 @@ export const getHistoryInfo = (history: History): HistoryInfoProps => {
   }
 
   const hasSecret =
-    history.input !== null ? "__funix_secret" in history.input : false;
-  if (history.output !== null) {
+    history.input !== null && history.input !== undefined
+      ? "__funix_secret" in history.input
+      : false;
+  if (history.output !== null && history.output !== undefined) {
     try {
       let output = history.output;
       if (typeof history.output === "string") {

@@ -6,8 +6,7 @@ import {
   FormControlLabel,
   Grid,
 } from "@mui/material";
-import Card from "@mui/material/Card";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+import Card from "@mui/material/Card"; // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import Form from "@rjsf/material-ui/v5";
 import React, { useEffect, useState } from "react";
@@ -128,8 +127,18 @@ const InputPanel = (props: {
           }
         : form
       : form;
+    const isLarge =
+      Object.values(props.detail.schema.properties).findIndex((value) => {
+        const newValue = value as unknown as any;
+        const largeWidgets = ["image", "video", "audio", "file"];
+        if ("items" in newValue) {
+          return largeWidgets.includes(newValue.items.widget);
+        } else {
+          return largeWidgets.includes(newValue.widget);
+        }
+      }) !== -1;
 
-    if (saveHistory) {
+    if (saveHistory && !isLarge) {
       try {
         await setInput(now, props.preview.name, props.preview.path, newForm);
       } catch (error) {

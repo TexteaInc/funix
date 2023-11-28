@@ -15,6 +15,7 @@ export type Store = {
   backConsensus: boolean[];
   saveHistory: boolean;
   appSecret: null | string;
+  histories: History[];
 };
 
 export const storeAtom = atom<Store>({
@@ -30,4 +31,5 @@ export const storeAtom = atom<Store>({
   backConsensus: [false, false, false],
   saveHistory: true,
   appSecret: null,
+  histories: [],
 });

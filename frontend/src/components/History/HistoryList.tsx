@@ -30,28 +30,18 @@ import React, { useEffect, useState } from "react";
 import { exportHistory } from "../../shared";
 
 const HistoryList = () => {
-  const { getHistories, setHistoryNameAndPath, removeHistory } =
-    useFunixHistory();
-  const [{ selectedFunction }, setStore] = useAtom(storeAtom);
+  const { setHistoryNameAndPath, removeHistory } = useFunixHistory();
+  const [{ selectedFunction, histories }, setStore] = useAtom(storeAtom);
   const [selectedHistoryTimestamp, setSelectedHistoryTimestamp] = useState(-1);
   const [selectedHistory, setSelectedHistory] = useState<null | History>(null);
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [tempRename, setTempRename] = useState("");
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [histories, setHistories] = useState<History[]>([]);
   const open = Boolean(anchorEl);
 
   useEffect(() => {
     setSelectedHistoryTimestamp(-1);
   }, [selectedFunction]);
-
-  useEffect(() => {
-    getHistories().then((h) => setHistories(h));
-  }, []);
-
-  window.addEventListener("funix-history-update", () => {
-    getHistories().then((h) => setHistories(h));
-  });
 
   if (selectedFunction === null || histories.length === 0) {
     return (
@@ -133,7 +123,7 @@ const HistoryList = () => {
         <MenuItem
           onClick={() => {
             if (selectedHistory !== null) {
-              removeHistory(selectedHistory.uuid);
+              removeHistory(selectedHistory.timestamp);
             }
             setSelectedHistory(null);
             setAnchorEl(null);

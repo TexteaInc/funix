@@ -42,7 +42,7 @@ import {
   Sick,
   Token,
 } from "@mui/icons-material";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { storeAtom } from "./store";
 import { useAtom } from "jotai";
 import { getList } from "./shared";
@@ -53,6 +53,7 @@ import HistoryDialog from "./components/History/HistoryDialog";
 import HistoryList from "./components/History/HistoryList";
 import MarkdownDiv from "./components/Common/MarkdownDiv";
 import InlineBox from "./components/Common/InlineBox";
+import useFunixHistory from "./shared/useFunixHistory";
 
 const drawerWidth = 240;
 
@@ -205,6 +206,7 @@ const App = () => {
     },
     setStore,
   ] = useAtom(storeAtom);
+  const { getHistories } = useFunixHistory();
 
   const funixBackend: string | undefined = process.env.REACT_APP_FUNIX_BACKEND;
   const selectedFunctionSecret: string | null = selectedFunction?.secret
@@ -226,6 +228,7 @@ const App = () => {
   const [tempAppSecret, setTempAppSecret] = useState(appSecret);
   const [functionListWidth, setFunctionListWidth] = useState(drawerWidth);
   const [onResizing, setOnResizing] = useState(false);
+  const historyLoaded = useRef<boolean>(false);
 
   const handlePointerMoveLeftSidebar = useCallback((e: PointerEvent | any) => {
     setFunctionListWidth(e.clientX - document.body.offsetLeft);
@@ -262,6 +265,27 @@ const App = () => {
         console.warn("No backend server on the same port!");
       });
   }, [window.location.origin]);
+
+  useEffect(() => {
+    if (historyLoaded.current) {
+      return;
+    }
+    getHistories().then((histories) => {
+      setStore((store) => ({
+        ...store,
+        histories,
+      }));
+    });
+  }, [historyLoaded]);
+
+  window.addEventListener("funix-history-update", () => {
+    getHistories().then((histories) => {
+      setStore((store) => ({
+        ...store,
+        histories,
+      }));
+    });
+  });
 
   useEffect(() => {
     if (typeof backendURL === "undefined") return;
@@ -576,8 +600,8 @@ const App = () => {
               spacing={2}
             >
               <Typography variant="body2">
-                Power by <Link href="http://funix.io">Funix.io</Link>, minimally
-                building apps in Python
+                Power by <Link href="https://funix.io">Funix.io</Link>,
+                minimally building apps in Python
               </Typography>
               <Box>
                 <Link href="https://github.com/TexteaInc/funix">
