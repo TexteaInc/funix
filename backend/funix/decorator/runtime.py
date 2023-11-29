@@ -1,5 +1,4 @@
 import ast
-import inspect
 from _ast import (
     Assign,
     Attribute,
@@ -33,32 +32,22 @@ def set_init_function(cls_name: str, cls):
     set_global_variable("__FUNIX_" + cls_name, cls)
 
 
-def get_imports(path) -> list:
-    with open(path) as fh:
-        root = ast.parse(fh.read(), path)
-
-    imports = []
-
-    for node in ast.iter_child_nodes(root):
-        if isinstance(node, ast.Import):
-            imports.append(node)
-        elif isinstance(node, ast.ImportFrom):
-            imports.append(node)
-        else:
-            continue
-
-    return imports
-
-
 class RuntimeClassVisitor(ast.NodeVisitor):
-    def __init__(self, cls_name: str, funix: Any, cls: Any):
-        self.funix = funix
+    def __init__(self, cls_name: str, funix_: Any, cls: Any):
+        self.funix = funix_
         self._cls_name = cls_name
         self._cls = cls
-        source_path = inspect.getsourcefile(self._cls.__init__)
-        self._imports = get_imports(source_path)
+        self._imports = []
+
+    def visit_Import(self, node):
+        self._imports.append(node)
+
+    def visit_ImportFrom(self, node):
+        self._imports.append(node)
 
     def visit_ClassDef(self, node: ClassDef) -> Any:
+        if node.name != self._cls_name:
+            return
         for cls_function in node.body:
             if isinstance(cls_function, FunctionDef):
                 self.visit_FunctionDef(cls_function)

@@ -11,17 +11,10 @@ from copy import deepcopy
 from enum import Enum, auto
 from functools import wraps
 from importlib import import_module
-from inspect import (
-    Parameter,
-    Signature,
-    getsource,
-    isgeneratorfunction,
-    signature,
-)
+from inspect import Parameter, Signature, getsource, isgeneratorfunction, signature
 from io import StringIO
 from json import dumps, loads
 from secrets import token_hex
-from textwrap import dedent
 from traceback import format_exc
 from types import ModuleType
 from typing import Any, Optional
@@ -2011,40 +2004,6 @@ def funix(
     return decorator
 
 
-def get_class_source_code(file_path: str, class_name: str) -> str:
-    with open(file_path, "r") as f:
-        lines = f.readlines()
-
-    inside_class = False
-    is_now_next = False
-    class_code = []
-
-    hope_indent = 0
-
-    for line in lines:
-        if line.strip().startswith("class " + class_name) and line.strip().endswith(
-            ":"
-        ):
-            inside_class = True
-            is_now_next = True
-            class_code.append(line)
-        elif inside_class:
-            if line.strip() == "":
-                class_code.append(line)
-                continue
-            if line.strip() and not line.startswith(" "):
-                inside_class = False
-            if is_now_next:
-                hope_indent = len(line) - len(line.lstrip())
-                is_now_next = False
-            if line.startswith(" " * hope_indent):
-                class_code.append(line)
-            else:
-                inside_class = False
-
-    return dedent("".join(class_code)).strip()
-
-
 def funix_class():
     return __funix_class
 
@@ -2055,11 +2014,11 @@ def __funix_class(cls):
             raise Exception("Class must have __init__ method!")
 
         f = RuntimeClassVisitor(cls.__name__, funix, cls)
-        f.visit(
-            ast.parse(
-                get_class_source_code(inspect.getsourcefile(cls.__init__), cls.__name__)
-            )
-        )
+
+        with open(inspect.getsourcefile(cls.__init__), "r") as file_:
+            class_source_code = file_.read()
+
+        f.visit(ast.parse(class_source_code))
         return cls
     else:
         for class_function in dir(cls):
