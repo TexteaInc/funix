@@ -69,14 +69,13 @@ For example, the OpenAI's ChatGPT function below, which str-to-str.
 import os # Python's native
 import openai  # you cannot skip it
 
-openai.api_key = os.environ.get("OPENAI_KEY")
-
 def ChatGPT(prompt: str) -> str:
-    completion = openai.ChatCompletion.create(
+    client = openai.Client()
+    response = client.chat.completions.create(
         messages=[{"role": "user", "content": prompt}],
         model="gpt-3.5-turbo"
     )
-    return completion["choices"][0]["message"]["content"]
+    return response.choices[0].message.content
 ```
 
 With the magical command `funix -l chatGPT_lazy.py`, you will get a web app like this:
