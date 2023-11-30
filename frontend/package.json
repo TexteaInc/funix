@@ -83,6 +83,7 @@
     "prettier": "^2.7.1",
     "progress-bar-webpack-plugin": "^2.1.0",
     "react-app-rewired": "^2.2.1",
-    "save-remote-file-webpack-plugin": "^1.1.0"
+    "save-remote-file-webpack-plugin": "^1.1.0",
+    "string-replace-loader": "^3.1.0"
   }
 }

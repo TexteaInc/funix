@@ -34,17 +34,6 @@ root.render(
             </IconButton>
           )}
         >
-          {process.env.REACT_APP_IN_FUNIX === undefined ? (
-            <>
-              <script src="https://d3js.org/d3.v5.js"></script>
-              <script src="https://mpld3.github.io/js/mpld3.v0.5.8.js"></script>
-            </>
-          ) : (
-            <>
-              <script src="/static/js/d3.v5.js"></script>
-              <script src="/static/js/mpld3.v0.5.8.js"></script>
-            </>
-          )}
           <App />
         </SnackbarProvider>
       </BrowserRouter>
