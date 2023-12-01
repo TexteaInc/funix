@@ -71,6 +71,7 @@ from funix.hint import (
 from funix.session import get_global_variable, set_global_variable
 from funix.theme import get_dict_theme, parse_theme
 from funix.util.module import funix_menu_to_safe_function_name
+from funix.util.text import un_indent
 from funix.util.uri import is_valid_uri
 from funix.widget import generate_frontend_widget_config
 
@@ -814,10 +815,10 @@ def funix(
             function_title = title if title is not None else function_name
 
             function_description = description
-            # if function_description == "":
-            #     function_docstring = getattr(function, "__doc__")
-            #     if function_docstring:
-            #         function_description = dedent(function_docstring.strip())
+            if function_description == "":
+                function_docstring = getattr(function, "__doc__")
+                if function_docstring:
+                    function_description = un_indent(function_docstring)
 
             if not theme:
                 if "__default" in __parsed_themes:
