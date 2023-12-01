@@ -35,13 +35,15 @@ def un_indent(message: str) -> str:
 
     result = ""
 
+    print(lines)
+
     for i in range(len(lines)):
         if i > 1 or (i == 1 and not ignore_first_line):
             result += "\n"
 
         if i == 0:
             result += lines[i]
-        elif len(lines) > min_space:
+        elif len(lines[i]) > min_space:
             result += lines[i][min_space:]
 
     return result.strip()
@@ -49,9 +51,7 @@ def un_indent(message: str) -> str:
 
 # if __name__ == "__main__":
 #     a = """
-#     Return 0
-#
-#     Parameters:
+#     This function is used to test the stream feature of Funix.
 #     """
 #
 #     print(un_indent(a))

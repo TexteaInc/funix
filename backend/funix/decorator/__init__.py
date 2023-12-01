@@ -815,7 +815,7 @@ def funix(
             function_title = title if title is not None else function_name
 
             function_description = description
-            if function_description == "":
+            if function_description == "" or function_description is None:
                 function_docstring = getattr(function, "__doc__")
                 if function_docstring:
                     function_description = un_indent(function_docstring)
