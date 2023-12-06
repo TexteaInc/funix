@@ -51,7 +51,6 @@ import MuiAppBar, { AppBarProps as MuiAppBarProps } from "@mui/material/AppBar";
 import MuiPaper, { PaperProps as MuiPaperProps } from "@mui/material/Paper";
 import HistoryDialog from "./components/History/HistoryDialog";
 import HistoryList from "./components/History/HistoryList";
-import MarkdownDiv from "./components/Common/MarkdownDiv";
 import InlineBox from "./components/Common/InlineBox";
 import useFunixHistory from "./shared/useFunixHistory";
 
@@ -450,10 +449,7 @@ const App = () => {
             {theme?.direction === "ltr" ? <ArrowBack /> : <ArrowForward />}
           </IconButton>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            <MarkdownDiv
-              markdown={selectedFunction?.name || "Funix"}
-              isRenderInline={true}
-            />
+            {selectedFunction?.name || "Funix"}
           </Typography>
           {selectedFunction && selectedFunction.secret && (
             <IconButton
