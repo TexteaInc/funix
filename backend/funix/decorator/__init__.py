@@ -1224,11 +1224,20 @@ def funix(
                 for prop_arg_name in prop[0]:
                     if isinstance(prop_arg_name, str):
                         if prop[1] == "widget":
-                            put_props_in_params(
-                                prop_arg_name,
-                                prop[1],
-                                parse_widget(prop[0][prop_arg_name]),
-                            )
+                            if prop_arg_name == "*":
+                                widget = parse_widget(prop[0][prop_arg_name])
+                                for k in list(function_params.keys()):
+                                    put_props_in_params(
+                                        k,
+                                        prop[1],
+                                        widget,
+                                    )
+                            else:
+                                put_props_in_params(
+                                    prop_arg_name,
+                                    prop[1],
+                                    parse_widget(prop[0][prop_arg_name]),
+                                )
                         else:
                             put_props_in_params(
                                 prop_arg_name, prop[1], prop[0][prop_arg_name]
