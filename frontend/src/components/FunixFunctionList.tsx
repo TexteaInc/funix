@@ -11,7 +11,6 @@ import { useAtom } from "jotai";
 import { FunctionPreview, getList, objArraySort } from "../shared";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
-import MarkdownDiv from "./Common/MarkdownDiv";
 
 export type FunctionListProps = {
   backend: URL;
@@ -215,25 +214,19 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
   if (!isTree) {
     return (
       <FunixList functionLength={state.length}>
-        {state.map((functionPreview) => (
-          <ListItemButton
-            onClick={() => {
-              changeRadioGroupValueById(functionPreview.id);
-            }}
-            key={functionPreview.name}
-            selected={radioGroupValue === functionPreview.path}
-          >
-            <ListItemText
-              primary={
-                <MarkdownDiv
-                  markdown={functionPreview.name}
-                  isRenderInline={true}
-                />
-              }
-              disableTypography
-            />
-          </ListItemButton>
-        ))}
+        {state
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map((functionPreview) => (
+            <ListItemButton
+              onClick={() => {
+                changeRadioGroupValueById(functionPreview.id);
+              }}
+              key={functionPreview.name}
+              selected={radioGroupValue === functionPreview.path}
+            >
+              <ListItemText primary={functionPreview.name} disableTypography />
+            </ListItemButton>
+          ))}
       </FunixList>
     );
   }
@@ -265,7 +258,7 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
         }}
       >
         <ListItemText
-          primary={<MarkdownDiv markdown={name} isRenderInline={true} />}
+          primary={name}
           sx={{
             wordWrap: "break-word",
           }}
@@ -299,7 +292,7 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
           }}
         >
           <ListItemText
-            primary={<MarkdownDiv markdown={k} isRenderInline={true} />}
+            primary={k}
             sx={{
               wordWrap: "break-word",
             }}
