@@ -1214,6 +1214,8 @@ def funix(
             safe_whitelist = {} if not whitelist else whitelist
             safe_argument_labels = {} if not argument_labels else argument_labels
 
+            function_params_name = list(function_params.keys())
+
             for prop in [
                 [safe_widgets, "widget"],
                 [safe_treat_as, "treat_as"],
@@ -1223,20 +1225,20 @@ def funix(
             ]:
                 for prop_arg_name in prop[0]:
                     if isinstance(prop_arg_name, str):
-                        if prop[1] == "widget":
+                        if prop[1] == "title" or prop[1] == "widget":
+                            value = prop[0][prop_arg_name] if prop[1] == "title" else parse_widget(prop[0][prop_arg_name])
                             if prop_arg_name == "*":
-                                widget = parse_widget(prop[0][prop_arg_name])
-                                for k in list(function_params.keys()):
+                                for k in function_params_name:
                                     put_props_in_params(
                                         k,
                                         prop[1],
-                                        widget,
+                                        value,
                                     )
                             else:
                                 put_props_in_params(
                                     prop_arg_name,
                                     prop[1],
-                                    parse_widget(prop[0][prop_arg_name]),
+                                    value,
                                 )
                         else:
                             put_props_in_params(
