@@ -192,6 +192,24 @@ export default function MarkdownDiv(props: MarkdownDivProps) {
       components={{
         p: "span",
         pre: React.Fragment,
+        ul: (props) =>
+          isRenderInline ? (
+            <ul className="text-style">{props.children}</ul>
+          ) : (
+            <ul>{props.children}</ul>
+          ),
+        li: (props) =>
+          isRenderInline ? (
+            <li className="text-style">{props.children}</li>
+          ) : (
+            <li>{props.children}</li>
+          ),
+        ol: (props) =>
+          isRenderInline ? (
+            <ol className="text-style">{props.children}</ol>
+          ) : (
+            <ol>{props.children}</ol>
+          ),
         h1: (props) => (
           <MarkdownHeading
             level={1}
