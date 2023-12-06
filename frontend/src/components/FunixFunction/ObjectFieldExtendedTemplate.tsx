@@ -401,6 +401,9 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
           type: gridColType,
           editable: !hasArrayWhitelist,
         };
+        if ("title" in elementProps.schema) {
+          newColumn["headerName"] = elementProps.schema.title;
+        }
         const handleCustomComponentChange = (
           rowId: GridRowId,
           field: string,
