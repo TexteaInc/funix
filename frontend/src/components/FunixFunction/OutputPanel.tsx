@@ -31,6 +31,7 @@ import { ExpandMore } from "@mui/icons-material";
 import ThemeReactJson from "../Common/ThemeReactJson";
 import { DataGrid } from "../../Key";
 import OutputDataframe from "./OutputComponents/OutputDataframe";
+import InnerHTML from "dangerously-set-html-content";
 
 const guessJSON = (response: string | null): object | false => {
   if (response === null) return false;
@@ -237,7 +238,7 @@ const OutputPanel = (props: {
       case "Markdown":
         return <MarkdownDiv markdown={response} isRenderInline={false} />;
       case "HTML":
-        return <div dangerouslySetInnerHTML={{ __html: response }} />;
+        return <InnerHTML html={response} />;
       case "Images":
       case "Videos":
       case "Audios":
@@ -321,13 +322,12 @@ const OutputPanel = (props: {
                 break;
               case "html":
                 itemElement = (
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html:
-                        (Array.isArray(item.content)
-                          ? item.content[0]
-                          : item.content) || "",
-                    }}
+                  <InnerHTML
+                    html={
+                      Array.isArray(item.content)
+                        ? item.content[0]
+                        : item.content || ""
+                    }
                   />
                 );
                 break;
