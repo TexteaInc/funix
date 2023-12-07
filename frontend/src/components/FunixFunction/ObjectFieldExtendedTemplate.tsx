@@ -56,6 +56,7 @@ import FileUploadWidget from "./FileUploadWidget";
 import { useAtom } from "jotai";
 import { storeAtom } from "../../store";
 import { DataGrid } from "../../Key";
+import InnerHTML from "dangerously-set-html-content";
 
 let rowIdCounter = 0;
 
@@ -512,10 +513,8 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
           break;
         case "html":
           rowElement = (
-            <div
-              dangerouslySetInnerHTML={{
-                __html: rowItem.content !== undefined ? rowItem.content : "",
-              }}
+            <InnerHTML
+              html={rowItem.content !== undefined ? rowItem.content : ""}
             />
           );
           break;

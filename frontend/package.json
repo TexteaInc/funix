@@ -21,6 +21,7 @@
     "@types/react-dom": "^18.0.6",
     "@types/react-pdf": "^6.2.0",
     "@types/uuid": "^9.0.2",
+    "dangerously-set-html-content": "^1.1.0",
     "jotai": "^1.7.4",
     "localforage": "^1.10.0",
     "material-ui-popup-state": "^4.0.2",
