@@ -4,6 +4,8 @@ Funix decorator. The central logic of Funix.
 import ast
 import dataclasses
 import inspect
+import pathlib
+import re
 import sys
 import time
 from collections import deque
@@ -22,9 +24,6 @@ from urllib.request import urlopen
 from uuid import uuid4
 
 from flask import Response, request, session
-from requests import post
-from requests.structures import CaseInsensitiveDict
-
 from funix.app import app, sock
 from funix.config import (
     banned_function_name_and_path,
@@ -74,6 +73,8 @@ from funix.util.module import funix_menu_to_safe_function_name
 from funix.util.text import un_indent
 from funix.util.uri import is_valid_uri
 from funix.widget import generate_frontend_widget_config
+from requests import post
+from requests.structures import CaseInsensitiveDict
 
 __ipython_type_convert_dict = {
     "IPython.core.display.Markdown": "Markdown",
@@ -1208,64 +1209,74 @@ def funix(
                             widget_result.append(widget_item)
                     return widget_result
 
-            safe_widgets = {} if not widgets else widgets
-            safe_treat_as = {} if not treat_as else treat_as
-            safe_examples = {} if not examples else examples
-            safe_whitelist = {} if not whitelist else whitelist
-            safe_argument_labels = {} if not argument_labels else argument_labels
+            def iter_over_prop(
+                argument_type: str,
+                argument: dict[str | tuple, Any] | None,
+                callback,
+            ):
+                """
+                callback: pass in (argument_type, key, key_idx, value)
+                """
+                if argument is None:
+                    return
 
-            function_params_name = list(function_params.keys())
-
-            for prop in [
-                [safe_widgets, "widget"],
-                [safe_treat_as, "treat_as"],
-                [safe_argument_labels, "title"],
-                [safe_examples, "example"],
-                [safe_whitelist, "whitelist"],
-            ]:
-                for prop_arg_name in prop[0]:
-                    if isinstance(prop_arg_name, str):
-                        if prop[1] == "title" or prop[1] == "widget":
-                            value = prop[0][prop_arg_name] if prop[1] == "title" else parse_widget(prop[0][prop_arg_name])
-                            if prop_arg_name == "*":
-                                for k in function_params_name:
-                                    put_props_in_params(
-                                        k,
-                                        prop[1],
-                                        value,
-                                    )
-                            else:
-                                put_props_in_params(
-                                    prop_arg_name,
-                                    prop[1],
-                                    value,
-                                )
-                        else:
-                            put_props_in_params(
-                                prop_arg_name, prop[1], prop[0][prop_arg_name]
+                for arg_idx, arg_key in enumerate(argument):
+                    if isinstance(arg_key, str):
+                        callback(argument_type, arg_key, 0, argument[arg_key])
+                    elif isinstance(arg_key, tuple):
+                        for key_idx, single_key in enumerate(arg_key):
+                            callback(
+                                argument_type, single_key, key_idx, argument[arg_key]
                             )
-                        if prop[1] in ["example", "whitelist"]:
-                            check_example_whitelist(prop_arg_name)
                     else:
-                        if prop[1] in ["example", "whitelist"]:
-                            for index, single_prop_arg_name in enumerate(prop_arg_name):
-                                put_props_in_params(
-                                    single_prop_arg_name,
-                                    prop[1],
-                                    prop[0][single_prop_arg_name][index],
-                                )
-                                check_example_whitelist(single_prop_arg_name)
-                        elif prop[1] == "widget":
-                            cached_result = parse_widget(prop[0][prop_arg_name])
-                            for prop_arg_name_item in prop_arg_name:
-                                put_props_in_params(
-                                    prop_arg_name_item, prop[1], cached_result
-                                )
-                        else:
-                            for prop_arg_name_item in prop_arg_name:
-                                put_props_in_params(
-                                    prop_arg_name_item, prop[1], prop[0][prop_arg_name]
-                                )
+                        raise TypeError(
+                            f"Argument `{argument_type}` has invalid key type {type(argument)}"
+                        )
+
+            function_params_name: list[str] = list(function_params.keys())
+
+            def expand_wildcards(origin_key: str, search_list: list[str]) -> list[str]:
+                keys = []
+                if "*" in origin_key or "?" in origin_key:
+                    for param_name in search_list:
+                        if pathlib.PurePath(param_name).match(origin_key):
+                            keys.append(param_name)
+                elif origin_key.startswith("regex:"):
+                    regex = re.compile(origin_key[6:])
+                    for param_name in search_list:
+                        if regex.search(param_name) is not None:
+                            keys.append(param_name)
+                else:
+                    keys.append(origin_key)
+                return keys
+
+            def process_widgets(arg_type: str, arg_key: str, key_idx: int, value: any):
+                parsed_widget = parse_widget(value)
+                for expanded_key in expand_wildcards(arg_key, function_params_name):
+                    put_props_in_params(expanded_key, arg_type, parsed_widget)
+
+            iter_over_prop("widget", widgets, process_widgets)
+
+            def process_title(arg_type: str, arg_key: str, key_idx: int, value: any):
+                for expanded_key in expand_wildcards(arg_key, function_params_name):
+                    put_props_in_params(expanded_key, arg_type, value)
+
+            iter_over_prop("title", argument_labels, process_title)
+
+            def process_treat_as(arg_type: str, arg_key: str, key_idx: int, value: any):
+                put_props_in_params(arg_key, arg_type, value)
+
+            iter_over_prop("treat_as", treat_as, process_treat_as)
+
+            def process_examples_and_whitelist(
+                arg_type: str, arg_key: str, key_idx: int, value: any
+            ):
+                put_props_in_params(arg_key, arg_type, value[key_idx])
+                check_example_whitelist(arg_key)
+
+            iter_over_prop("example", examples, process_examples_and_whitelist)
+            iter_over_prop("whitelist", whitelist, process_examples_and_whitelist)
+
             input_attr = ""
 
             safe_argument_config = {} if argument_config is None else argument_config
