@@ -39,6 +39,8 @@ class RuntimeClassVisitor(ast.NodeVisitor):
         self._cls = cls
         self._imports = []
 
+        self.open_function = False
+
     def visit_Import(self, node):
         self._imports.append(node)
 
@@ -50,9 +52,13 @@ class RuntimeClassVisitor(ast.NodeVisitor):
             return
         for cls_function in node.body:
             if isinstance(cls_function, FunctionDef):
+                self.open_function = True
                 self.visit_FunctionDef(cls_function)
+                self.open_function = False
 
     def visit_FunctionDef(self, node: FunctionDef) -> Any:
+        if not self.open_function:
+            return
         args = node.args
 
         is_static_method = False
