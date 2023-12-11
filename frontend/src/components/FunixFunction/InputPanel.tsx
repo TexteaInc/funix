@@ -10,7 +10,12 @@ import Card from "@mui/material/Card"; // eslint-disable-next-line @typescript-e
 // @ts-ignore
 import Form from "@rjsf/material-ui/v5";
 import React, { useEffect, useState } from "react";
-import { callFunctionRaw, FunctionDetail, FunctionPreview } from "../../shared";
+import {
+  callFunctionRaw,
+  FunctionDetail,
+  FunctionPreview,
+  UpdateResult,
+} from "../../shared";
 import ObjectFieldExtendedTemplate from "./ObjectFieldExtendedTemplate";
 import SwitchWidget from "./SwitchWidget";
 import TextExtendedWidget from "./TextExtendedWidget";
@@ -18,6 +23,7 @@ import { useAtom } from "jotai";
 import { storeAtom } from "../../store";
 import useFunixHistory from "../../shared/useFunixHistory";
 import { useSnackbar } from "notistack";
+import _ from "lodash";
 
 const InputPanel = (props: {
   detail: FunctionDetail;
@@ -69,8 +75,35 @@ const InputPanel = (props: {
   }, [backConsensus]);
 
   const handleChange = ({ formData }: Record<string, any>) => {
-    // console.log("Data changed: ", formData);
+    console.log("Data changed: ", formData);
     setForm(formData);
+
+    _.debounce(() => {
+      fetch(new URL(`/update/${props.preview.id}`, props.backend), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      })
+        .then((body) => {
+          return body.json();
+        })
+        .then((data: UpdateResult) => {
+          const result = data.result;
+
+          if (result !== null) {
+            for (const [key, value] of Object.entries(result)) {
+              setForm((form) => {
+                return {
+                  ...form,
+                  [key]: value,
+                };
+              });
+            }
+          }
+        });
+    }, 100)();
   };
 
   const saveOutput = async (

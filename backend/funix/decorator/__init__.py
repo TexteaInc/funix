@@ -19,7 +19,7 @@ from json import dumps, loads
 from secrets import token_hex
 from traceback import format_exc
 from types import ModuleType
-from typing import Any, Optional
+from typing import Any, Optional, Callable
 from urllib.request import urlopen
 from uuid import uuid4
 
@@ -66,6 +66,7 @@ from funix.hint import (
     TreatAsType,
     WhitelistType,
     WidgetsType,
+    ReactiveType,
 )
 from funix.session import get_global_variable, set_global_variable
 from funix.theme import get_dict_theme, parse_theme
@@ -697,6 +698,7 @@ def funix(
     menu: Optional[str] = None,
     default: bool = False,
     rate_limit: Limiter | list | dict = [],
+    reactive: ReactiveType = None,
     print_to_web: bool = False,
 ):
     """
@@ -733,6 +735,7 @@ def funix(
             You don't need to set it unless you are funixing a directory and package.
         default(bool): whether this function is the default function
         rate_limit(Limiter | list[Limiter]): rate limiters, an object or a list
+        reactive(ReactiveType): reactive config
         print_to_web(bool): handle all stdout to web
 
     Returns:
@@ -899,6 +902,92 @@ def funix(
                 need_websocket = True
                 setattr(function_signature, "_return_annotation", Markdown)
 
+            has_reactive_params = False
+
+            reactive_config: dict[str, tuple[Callable, dict[str, str]]] = {}
+            """
+            Empty dict: full form data
+            Dict argument keys: map
+            """
+
+            if isinstance(reactive, dict):
+                has_reactive_params = True
+                for reactive_param in reactive.keys():
+                    if reactive_param not in function_params:
+                        raise ValueError(
+                            f"Reactive param `{reactive_param}` not found in function `{function_name}`"
+                        )
+                    callable_or_with_config = reactive[reactive_param]
+
+                    if isinstance(callable_or_with_config, tuple):
+                        callable_ = callable_or_with_config[0]
+                        full_config = callable_or_with_config[1]
+                    else:
+                        callable_ = callable_or_with_config
+                        full_config = None
+
+                    callable_params = signature(callable_).parameters
+
+                    for callable_param in dict(callable_params.items()).values():
+                        if (
+                            callable_param.kind == Parameter.VAR_KEYWORD
+                            or callable_param.kind == Parameter.VAR_POSITIONAL
+                        ):
+                            reactive_config[reactive_param] = (callable_, {})
+                            break
+
+                    if reactive_param not in reactive_config:
+                        if full_config:
+                            reactive_config[reactive_param] = (callable_, full_config)
+                        else:
+                            reactive_config[reactive_param] = (callable_, {})
+                            for key in dict(callable_params.items()).keys():
+                                if key not in function_params:
+                                    raise ValueError(
+                                        f"The key {key} is not in function, please write full config"
+                                    )
+                                reactive_config[reactive_param][1][key] = key
+
+                def function_reactive_update():
+                    reactive_param_value = {}
+
+                    form_data = request.get_json()
+
+                    for key_, item_ in reactive_config.items():
+                        argument_key: str = key_
+                        callable_function: Callable = item_[0]
+                        callable_config: dict[str, str] = item_[1]
+
+                        try:
+                            if callable_config == {}:
+                                reactive_param_value[argument_key] = callable_function(
+                                    **form_data
+                                )
+                            else:
+                                new_form_data = {}
+                                for key__, value in callable_config.items():
+                                    new_form_data[key__] = form_data[value]
+                                reactive_param_value[argument_key] = callable_function(
+                                    **new_form_data
+                                )
+                        except:
+                            pass
+
+                    if reactive_param_value == {}:
+                        return {"result": None}
+
+                    return {"result": reactive_param_value}
+
+                function_reactive_update.__name__ = function_name + "_reactive_update"
+
+                if safe_module_now:
+                    function_reactive_update.__name__ = (
+                        f"{safe_module_now}_{function_reactive_update.__name__}"
+                    )
+
+                app.post(f"/update/{function_id}")(function_reactive_update)
+                app.post(f"/update/{endpoint}")(function_reactive_update)
+
             __decorated_functions_list.append(
                 {
                     "name": function_title,
@@ -907,6 +996,7 @@ def funix(
                     "secret": secret_key,
                     "id": function_id,
                     "websocket": need_websocket,
+                    "reactive": has_reactive_params,
                 }
             )
 
