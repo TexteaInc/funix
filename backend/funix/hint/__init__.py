@@ -244,6 +244,11 @@ Examples:
 
 PreFillEmpty = TypeVar("PreFillEmpty")
 
+ReactiveType = Optional[dict[str, Callable | tuple[Callable, dict[str, str]]]]
+"""
+Document is on the way
+"""
+
 
 class CodeConfig(TypedDict):
     """

@@ -24,6 +24,7 @@
     "dangerously-set-html-content": "^1.1.0",
     "jotai": "^1.7.4",
     "localforage": "^1.10.0",
+    "lodash": "^4.17.21",
     "material-ui-popup-state": "^4.0.2",
     "notistack": "^3.0.1",
     "react": "^18.2.0",
@@ -73,6 +74,7 @@
     ]
   },
   "devDependencies": {
+    "@types/lodash": "^4.14.202",
     "@types/markdown-it": "^12.2.3",
     "@types/react-syntax-highlighter": "^15.5.10",
     "@typescript-eslint/eslint-plugin": "^5.30.5",

@@ -72,6 +72,10 @@ export type FunctionPreview = {
    * Is this function need websocket
    */
   websocket: boolean;
+  /**
+   * Is this function has reactive argument
+   */
+  reactive: boolean;
 };
 
 export type GetListResponse = {
@@ -94,6 +98,10 @@ export type Param = {
   treat_as: "config" | "column" | "cell";
   whitelist?: string[];
   example?: any[];
+};
+
+export type UpdateResult = {
+  result: null | Record<string, any>;
 };
 
 export type FunctionDetail = {
