@@ -75,8 +75,12 @@ const InputPanel = (props: {
   }, [backConsensus]);
 
   const handleChange = ({ formData }: Record<string, any>) => {
-    console.log("Data changed: ", formData);
+    // console.log("Data changed: ", formData);
     setForm(formData);
+
+    if (!props.preview.reactive) {
+      return;
+    }
 
     _.debounce(() => {
       fetch(new URL(`/update/${props.preview.id}`, props.backend), {
