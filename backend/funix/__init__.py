@@ -467,6 +467,12 @@ def run(
         default=default,
     )
 
+    if decorator.is_empty_function_list():
+        print(
+            "No functions nor classes decorated by Funix. Could you wanna enable the lazy mode (add -l flag)?"
+        )
+        sys.exit(1)
+
     parsed_ip = ip_address(host)
     parsed_port = get_unused_port_from(port, parsed_ip)
 

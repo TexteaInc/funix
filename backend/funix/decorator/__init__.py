@@ -19,11 +19,14 @@ from json import dumps, loads
 from secrets import token_hex
 from traceback import format_exc
 from types import ModuleType
-from typing import Any, Optional, Callable
+from typing import Any, Callable, Optional
 from urllib.request import urlopen
 from uuid import uuid4
 
 from flask import Response, request, session
+from requests import post
+from requests.structures import CaseInsensitiveDict
+
 from funix.app import app, sock
 from funix.config import (
     banned_function_name_and_path,
@@ -63,10 +66,10 @@ from funix.hint import (
     OutputLayout,
     PreFillEmpty,
     PreFillType,
+    ReactiveType,
     TreatAsType,
     WhitelistType,
     WidgetsType,
-    ReactiveType,
 )
 from funix.session import get_global_variable, set_global_variable
 from funix.theme import get_dict_theme, parse_theme
@@ -74,8 +77,6 @@ from funix.util.module import funix_menu_to_safe_function_name
 from funix.util.text import un_indent
 from funix.util.uri import is_valid_uri
 from funix.widget import generate_frontend_widget_config
-from requests import post
-from requests.structures import CaseInsensitiveDict
 
 __ipython_type_convert_dict = {
     "IPython.core.display.Markdown": "Markdown",
@@ -462,6 +463,16 @@ def parse_limiter_args(rate_limit: Limiter | list | dict, arg_name: str = "rate_
 
 
 global_rate_limiters: list[Limiter] = []
+
+
+def is_empty_function_list() -> bool:
+    """
+    Check if the function list is empty.
+
+    Returns:
+        bool: True if empty, False otherwise.
+    """
+    return len(__decorated_functions_list) == 0
 
 
 def set_kumo_info(url: str, token: str) -> None:
