@@ -211,8 +211,13 @@ def get_type_widget_prop(
                 break
     if not widget:
         if hasattr(function_annotation, "__name__"):
-            if getattr(function_annotation, "__name__") in builtin_widgets:
-                widget = builtin_widgets[getattr(function_annotation, "__name__")]
+            function_annotation_name = getattr(function_annotation, "__name__")
+            if function_annotation_name == "Literal":
+                widget = (
+                    "radio" if len(function_annotation.__args__) < 8 else "inputbox"
+                )
+            elif function_annotation_name in builtin_widgets:
+                widget = builtin_widgets[function_annotation_name]
     if widget and anal_result:
         anal_result["widget"] = widget
 
