@@ -401,10 +401,13 @@ class Limiter:
         if len(queue) >= self.max_calls:
             time_passed = current_time - queue[0]
             time_to_wait = int(self.period - time_passed)
-            error_message = (
-                f"Rate limit exceeded. Please try again in {time_to_wait} seconds."
+            error_message = {
+                "error_body": f"Rate limit exceeded. Please try again in {time_to_wait} seconds.",
+                "error_type": "safe_checker",
+            }
+            return Response(
+                dumps(error_message), status=429, mimetype="application/json"
             )
-            return Response(error_message, status=429, mimetype="text/plain")
 
         queue.append(current_time)
         return None
