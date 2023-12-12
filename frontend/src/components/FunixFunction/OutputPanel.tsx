@@ -284,10 +284,6 @@ const OutputPanel = (props: {
           button at the bottom of the left, input panel.
         </Alert>
       );
-    } else if (
-      response.startsWith("Rate limit exceeded. Please try again in ")
-    ) {
-      return <Alert severity="error">{response}</Alert>;
     } else {
       if (
         typeof returnType !== undefined &&
