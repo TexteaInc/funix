@@ -16,6 +16,7 @@ from _ast import (
 from typing import Any
 
 import funix
+from funix.hint import WrapperException
 from funix.session import get_global_variable, set_global_variable
 
 
@@ -23,7 +24,7 @@ def get_init_function(cls_name: str):
     inited_class = get_global_variable("__FUNIX_" + cls_name)
 
     if inited_class is None:
-        raise Exception("Class must be inited first!")
+        raise WrapperException("Class must be inited first!")
     else:
         return inited_class
 

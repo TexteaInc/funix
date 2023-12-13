@@ -70,6 +70,7 @@ from funix.hint import (
     TreatAsType,
     WhitelistType,
     WidgetsType,
+    WrapperException,
 )
 from funix.session import get_global_variable, set_global_variable
 from funix.theme import get_dict_theme, parse_theme
@@ -1919,6 +1920,11 @@ def funix(
                         try:
                             function_call_result = function(**wrapped_function_kwargs)
                             return pre_anal_result(function_call_result)
+                        except WrapperException as e:
+                            return {
+                                "error_type": "wrapper",
+                                "error_body": str(e),
+                            }
                         except:
                             return {
                                 "error_type": "function",
