@@ -497,3 +497,12 @@ def new_funix_type(widget: NewFunixWidgetType) -> callable:
         return cls
 
     return decorator
+
+
+class WrapperException(Exception):
+    """
+    A wrapper exception for internal error handling, will be converted to
+    {"error_type": "wrapper", "error_body": str(exception)} and send to frontend
+    """
+
+    pass
