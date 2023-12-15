@@ -29,7 +29,7 @@ export const storeAtom = atom<Store>({
   backend: null,
   backHistory: null,
   backConsensus: [false, false, false],
-  saveHistory: false,
+  saveHistory: true,
   appSecret: null,
   histories: [],
 });

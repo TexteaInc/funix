@@ -34,13 +34,21 @@ export default function OutputMedias(props: {
               height: "auto",
               maxWidth: "100%",
               maxHeight: "100%",
+              minWidth: "65%",
             }}
             variant={props.outline ? "outlined" : "elevation"}
           >
             {isPDF ? (
               <PDFViewer pdf={relativeMedia} />
             ) : (
-              <CardMedia component={component} controls image={relativeMedia} />
+              <CardMedia
+                component={component}
+                controls
+                image={relativeMedia}
+                sx={{
+                  minWidth: "500px",
+                }}
+              />
             )}
           </Card>
         );
