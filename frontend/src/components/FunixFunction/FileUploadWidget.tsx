@@ -1,6 +1,6 @@
 import { WidgetProps } from "@rjsf/core";
 import { DropzoneOptions, useDropzone } from "react-dropzone";
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useLayoutEffect } from "react";
 import {
   Button,
   Dialog,
@@ -20,11 +20,18 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { Delete, FileUpload, Preview } from "@mui/icons-material";
+import {
+  CameraAlt,
+  Delete,
+  FileUpload,
+  KeyboardVoice,
+  Preview,
+} from "@mui/icons-material";
 import OutputMedias from "./OutputComponents/OutputMedias";
 import { useAtom } from "jotai";
 import { storeAtom } from "../../store";
 import { enqueueSnackbar } from "notistack";
+import FunixRecorder from "../../shared/media";
 
 interface FileUploadWidgetInterface {
   widget: WidgetProps;
@@ -68,13 +75,37 @@ const base64stringToFile = (base64: string) => {
   });
 };
 
+const CameraPreviewVideo = () => {
+  useLayoutEffect(() => {
+    const video = document.getElementById("videoPreview") as HTMLVideoElement;
+    navigator.mediaDevices
+      .getUserMedia({ video: true, audio: false })
+      .then((stream) => {
+        video.srcObject = stream;
+        video.play().catch((err) => {
+          console.log(err);
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  });
+  return <video id="videoPreview" autoPlay muted />;
+};
+
 const FileUploadWidget = (props: FileUploadWidgetInterface) => {
   const [{ backHistory }] = useAtom(storeAtom);
   const [files, setFiles] = React.useState<File[]>([]);
   const [open, setOpen] = React.useState(false);
+  const [cameraOpen, setCameraOpen] = React.useState(false);
   const [preview, setPreview] = React.useState<string>("");
   const [previewType, setPreviewType] = React.useState<string>("");
   const [confirmOpen, setConfirmOpen] = React.useState(false);
+  const [audioRecoding, setAudioRecording] = React.useState(false);
+  const [webcamRecoding, setWebcamRecording] = React.useState(false);
+  const [update, setUpdate] = React.useState(new Date().getTime());
+  const supportMediaDevices = navigator.mediaDevices !== undefined;
+  const funixRecorder = new FunixRecorder();
 
   let dropzoneConfig: DropzoneOptions = !props.multiple
     ? { multiple: false, maxFiles: 1, maxSize: 1024 * 1024 * 15 }
@@ -132,7 +163,7 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
         });
       }
     }
-  }, [acceptedFiles]);
+  }, [acceptedFiles, update]);
 
   useEffect(() => {
     fileRejections.forEach((file) => {
@@ -194,6 +225,70 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
 
   return (
     <>
+      <Dialog
+        open={cameraOpen}
+        onClose={() => setCameraOpen(false)}
+        maxWidth="xl"
+        fullWidth
+      >
+        <DialogTitle>Camera Preview</DialogTitle>
+        <CameraPreviewVideo />
+        <DialogActions>
+          {(props.supportType === "file" || props.supportType === "image") && (
+            <Button
+              onClick={() => {
+                const canvas = document.createElement("canvas");
+                const video = document.getElementById(
+                  "videoPreview"
+                ) as HTMLVideoElement;
+                const videoRect = video.getBoundingClientRect();
+                canvas.width = videoRect.width;
+                canvas.height = videoRect.height;
+                canvas
+                  .getContext("2d")
+                  ?.drawImage(video, 0, 0, videoRect.width, videoRect.height);
+                canvas.toBlob((blob) => {
+                  if (blob) {
+                    const now = new Date().getTime();
+                    const file = new File([blob], `image-${now}.png`, {
+                      type: "image/png",
+                    });
+                    if (props.multiple) {
+                      setFiles([...files, file]);
+                    } else {
+                      setFiles([file]);
+                    }
+                    setUpdate(new Date().getTime());
+                  }
+                });
+              }}
+            >
+              Take a Photo
+            </Button>
+          )}
+          {(props.supportType === "file" || props.supportType === "video") && (
+            <Button
+              id="videoRecord"
+              onClick={() => {
+                if (!webcamRecoding) {
+                  setWebcamRecording(true);
+                  funixRecorder.videoRecord((file) => {
+                    if (props.multiple) {
+                      setFiles([...files, file]);
+                    } else {
+                      setFiles([file]);
+                    }
+                    setUpdate(new Date().getTime());
+                    setWebcamRecording(false);
+                  }, false);
+                }
+              }}
+            >
+              {webcamRecoding ? "Stop" : "Record"}
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
       <Dialog open={open} onClose={() => setOpen(false)} maxWidth="lg">
         <DialogTitle>Media Preview</DialogTitle>
         <DialogContent>
@@ -270,118 +365,155 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
             <br />
           </Stack>
         </Paper>
-        {files.length !== 0 && (
-          <>
-            {files.filter((file) => file.type.startsWith("image")).length !==
-              0 && (
-              <ImageList
-                variant="masonry"
-                cols={3}
-                gap={8}
-                sx={{ width: "100%" }}
-              >
-                {files
-                  .filter((file) => file.type.startsWith("image"))
-                  .map((item) => (
-                    <ImageListItem key={item.name}>
-                      <img
-                        src={URL.createObjectURL(item)}
-                        alt={item.name}
-                        title={item.name}
-                        loading="lazy"
-                        onClick={() => {
-                          setPreview(URL.createObjectURL(item));
-                          setPreviewType(item.type);
-                          setOpen(true);
+        {files.filter((file) => file.type.startsWith("image")).length !== 0 && (
+          <ImageList variant="masonry" cols={3} gap={8} sx={{ width: "100%" }}>
+            {files
+              .filter((file) => file.type.startsWith("image"))
+              .map((item) => (
+                <ImageListItem key={item.name}>
+                  <img
+                    src={URL.createObjectURL(item)}
+                    alt={item.name}
+                    title={item.name}
+                    loading="lazy"
+                    onClick={() => {
+                      setPreview(URL.createObjectURL(item));
+                      setPreviewType(item.type);
+                      setOpen(true);
+                    }}
+                  />
+                </ImageListItem>
+              ))}
+          </ImageList>
+        )}
+        <TableContainer component={Paper}>
+          <Table
+            sx={{
+              width: "100%",
+            }}
+            size="small"
+          >
+            <TableHead>
+              <TableRow>
+                <TableCell>File Name</TableCell>
+                <TableCell>File Size</TableCell>
+                <TableCell>Action</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {files.length > 0 ? (
+                files.map((file, index) => {
+                  return (
+                    <TableRow key={index}>
+                      <TableCell
+                        align="left"
+                        sx={{
+                          minWidth: "50%",
                         }}
-                      />
-                    </ImageListItem>
-                  ))}
-              </ImageList>
-            )}
-            <TableContainer component={Paper}>
-              <Table
-                sx={{
-                  width: "100%",
-                }}
-                size="small"
-              >
-                <TableHead>
-                  <TableRow>
-                    <TableCell>File Name</TableCell>
-                    <TableCell>File Size</TableCell>
-                    <TableCell>Action</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {files.map((file, index) => {
-                    return (
-                      <TableRow key={index}>
-                        <TableCell
-                          align="left"
-                          sx={{
-                            minWidth: "50%",
+                      >
+                        {file.name}
+                      </TableCell>
+                      <TableCell align="left">
+                        {fileSizeToReadable(file.size)}
+                      </TableCell>
+                      <TableCell align="left">
+                        <Button
+                          variant="text"
+                          size="small"
+                          startIcon={<Delete fontSize="small" />}
+                          onClick={() => {
+                            removeFile(index);
                           }}
+                          color="error"
                         >
-                          {file.name}
-                        </TableCell>
-                        <TableCell align="left">
-                          {fileSizeToReadable(file.size)}
-                        </TableCell>
-                        <TableCell align="left">
+                          Delete
+                        </Button>
+                        {(file.type.startsWith("image") ||
+                          file.type.startsWith("video") ||
+                          file.type.startsWith("audio") ||
+                          file.type === "application/pdf") && (
                           <Button
                             variant="text"
                             size="small"
-                            startIcon={<Delete fontSize="small" />}
+                            startIcon={<Preview fontSize="small" />}
                             onClick={() => {
-                              removeFile(index);
+                              fileToBase64(file).then((value) => {
+                                setPreview(value as string);
+                                setPreviewType(file.type);
+                                setOpen(true);
+                              });
                             }}
-                            color="error"
                           >
-                            Delete
+                            Preview
                           </Button>
-                          {(file.type.startsWith("image") ||
-                            file.type.startsWith("video") ||
-                            file.type.startsWith("audio") ||
-                            file.type === "application/pdf") && (
-                            <Button
-                              variant="text"
-                              size="small"
-                              startIcon={<Preview fontSize="small" />}
-                              onClick={() => {
-                                fileToBase64(file).then((value) => {
-                                  setPreview(value as string);
-                                  setPreviewType(file.type);
-                                  setOpen(true);
-                                });
-                              }}
-                            >
-                              Preview
-                            </Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-                <TableFooter>
-                  <TableCell>
-                    <Button
-                      color="error"
-                      startIcon={<Delete />}
-                      onClick={() => {
-                        setConfirmOpen(true);
-                      }}
-                      size="small"
-                    >
-                      Delete All
-                    </Button>
-                  </TableCell>
-                </TableFooter>
-              </Table>
-            </TableContainer>
-          </>
-        )}
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              ) : (
+                <TableCell colSpan={3} align="center">
+                  No files
+                </TableCell>
+              )}
+            </TableBody>
+            <TableFooter>
+              <TableCell>
+                <Button
+                  color="error"
+                  startIcon={<Delete />}
+                  onClick={() => {
+                    setConfirmOpen(true);
+                  }}
+                  size="small"
+                  disabled={files.length === 0}
+                >
+                  Delete All
+                </Button>
+              </TableCell>
+              <TableCell colSpan={2} align="right">
+                <Button
+                  color="primary"
+                  startIcon={<CameraAlt />}
+                  size="small"
+                  disabled={!supportMediaDevices}
+                  onClick={() => {
+                    setCameraOpen(true);
+                  }}
+                >
+                  Webcam
+                </Button>
+                <Button
+                  id="audioRecord"
+                  color="primary"
+                  startIcon={<KeyboardVoice />}
+                  size="small"
+                  disabled={
+                    !supportMediaDevices &&
+                    (props.supportType === "audio" ||
+                      props.supportType === "file")
+                  }
+                  onClick={() => {
+                    if (!audioRecoding) {
+                      setAudioRecording(true);
+                      funixRecorder.audioRecord((file) => {
+                        if (props.multiple) {
+                          setFiles([...files, file]);
+                        } else {
+                          setFiles([file]);
+                        }
+                        setUpdate(new Date().getTime());
+                        setAudioRecording(false);
+                      });
+                    }
+                  }}
+                >
+                  {audioRecoding ? "Stop" : "Microphone"}
+                </Button>
+              </TableCell>
+            </TableFooter>
+          </Table>
+        </TableContainer>
       </Stack>
     </>
   );
