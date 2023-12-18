@@ -13,3 +13,5 @@ dist/
 .lh
 .env
 backend/funix/build
+*.db
+*.db-*
