@@ -53,6 +53,8 @@ import HistoryDialog from "./components/History/HistoryDialog";
 import HistoryList from "./components/History/HistoryList";
 import InlineBox from "./components/Common/InlineBox";
 import useFunixHistory from "./shared/useFunixHistory";
+import { getCookie, setCookie } from "typescript-cookie";
+import MarkdownDiv from "./components/Common/MarkdownDiv";
 
 const drawerWidth = 240;
 
@@ -192,6 +194,22 @@ const DrawerHeader = styled("div")(({ theme }) => ({
   justifyContent: "space-between",
 }));
 
+const SimpleText = `Welcome to Funix, for your data and privacy security, please take a moment to read the following text, also in different Funix apps, each service provider may have a different privacy policy, they may additionally process and collect other information, please read their privacy terms as well!<br /><br />
+
+To help developers with quality assessments, fixing bugs, etc., Funix provides an automated data collection module that will collect the following on the provider's local or controlled database:
+
+1. Your IP address and full browser header (like \`Host\`, \`User-Agent\`)
+2. Access time and URL path
+3. Requested data and responded data (data over 5MB will be fully discarded)
+4. Cookie data in the request
+
+You can tell Funix that it no longer collects the above data into the database by carrying a cookie called \`DO_NOT_LOG_ME\` with the value \`YES\` (you can turn on the do not collect option in the Funix Web settings, for individual sites only). However, it is important to note that Funix app developers who provide this service still have other ways of obtaining this data and may not honor this gentleman's agreement, you will need to check their privacy policy and, if available, their code to check this further.<br /><br />
+
+Funix also allows developers to return HTML or JavaScript code, which may introduce other third-party cookies. You can reject cookies in your browser settings, but this will also disable Funix's session state. If the application is deployed on the Funix Cloud, it will not be accessible via \`https://funix.io/\`, you must access via subdomain.<br /><br />
+
+Funix is not physically connected to the applications that developers make with Funix, and Funix officials do not have access to log data except for those deployed in the Funix Cloud. In general, your settings for this Funix App will not affect the settings of other Funix Apps if there is no mention of shared data in the developer's privacy policy or disclaimer.
+`;
+
 const App = () => {
   const navigate = useNavigate();
   const [
@@ -202,6 +220,7 @@ const App = () => {
       functionSecret,
       saveHistory,
       appSecret,
+      doNotTrackMe,
     },
     setStore,
   ] = useAtom(storeAtom);
@@ -218,6 +237,9 @@ const App = () => {
     backend ? new URL(backend) : undefined
   );
   const [tempBackend, setTempBackend] = useState(backend);
+  const [isFirstInThisFunixServer, setFirstInThisFunixServer] = useState(
+    getCookie("first-join") === undefined
+  );
   const [tempSecret, setTempSecret] = useState(selectedFunctionSecret);
   const [open, setOpen] = useState(false);
   const [tokenOpen, setTokenOpen] = useState(false);
@@ -310,6 +332,29 @@ const App = () => {
     <ThemeProvider theme={createTheme(theme || undefined)}>
       <CssBaseline />
       <HistoryDialog open={historyOpen} setOpen={setHistoryOpen} />
+      <Dialog open={isFirstInThisFunixServer} fullWidth maxWidth="lg">
+        <DialogTitle>Welcome to Funix</DialogTitle>
+        <DialogContent>
+          <MarkdownDiv markdown={SimpleText} isRenderInline={false} />
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              window.location.href = "https://funix.io";
+            }}
+          >
+            Disagree
+          </Button>
+          <Button
+            onClick={() => {
+              setCookie("first-join", "false", { expires: 365 * 10 });
+              setFirstInThisFunixServer(false);
+            }}
+          >
+            Agree
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Dialog
         open={tokenOpen}
         onClose={() => setTokenOpen(false)}
@@ -403,6 +448,26 @@ const App = () => {
                 />
               }
               label="Save history"
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={doNotTrackMe}
+                  onChange={(event) => {
+                    const doNotTrack = event.target.checked;
+
+                    setCookie("DO_NOT_LOG_ME", doNotTrack ? "YES" : "NO", {
+                      expires: 365 * 10,
+                    });
+
+                    setStore((store) => ({
+                      ...store,
+                      doNotTrackMe: doNotTrack,
+                    }));
+                  }}
+                />
+              }
+              label="Do not track me"
             />
           </FormGroup>
         </DialogContent>
