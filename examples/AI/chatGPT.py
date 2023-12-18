@@ -3,25 +3,14 @@ import os  # Python's native
 import openai   
 import IPython  # a famous library for interactive python
 
-# client = OpenAI()
-
-# completion = client.chat.completions.create(
-#   model="gpt-3.5-turbo",
-#   messages=[
-#     {"role": "system", "content": "You are a helpful assistant."},
-#     {"role": "user", "content": "Hello!"}
-#   ]
-# )
-
-# print(completion.choices[0].message)
-
 import funix
-@funix.funix(
-    rate_limit=funix.decorator.Limiter.session(max_calls=2, period=60*60*24),
-    show_source=True
-)
 
-def ChatGPT(prompt: str) -> IPython.display.Markdown:
+cfg = {
+    "rate_limit":funix.decorator.Limiter.session(max_calls=2, period=60*60*24),
+    "show_source":True
+}
+
+def ChatGPT(prompt: str="Who is Cauchy?") -> IPython.display.Markdown:
     client = openai.OpenAI() # defaults to os.environ.get("OPENAI_API_KEY")
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
@@ -32,8 +21,8 @@ def ChatGPT(prompt: str) -> IPython.display.Markdown:
     )
     return response.choices[0].message.content
 
-
-def ChatGPT_stream(prompt: str) -> IPython.display.Markdown:
+@funix.funix(**cfg)
+def ChatGPT_stream(prompt: str="Who is Cauchy?") -> IPython.display.Markdown:
     client = openai.OpenAI() # defaults to os.environ.get("OPENAI_API_KEY")
     response = client.chat.completions.create(
         messages=[{"role": "user", "content": prompt}],
@@ -41,6 +30,6 @@ def ChatGPT_stream(prompt: str) -> IPython.display.Markdown:
         stream=True,
     )
     message = []
-    for chunk in response:
+    for chunk in response: # streaming from OpenAI
         message.append(chunk.choices[0].delta.content or "")
         yield "".join(message)
