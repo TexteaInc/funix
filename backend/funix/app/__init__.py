@@ -4,7 +4,7 @@ Save the app instance here
 import json
 import os
 import re
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 from secrets import token_hex
 
 from flask import Flask, Response, abort, request
@@ -87,7 +87,7 @@ if os.environ.get("DISABLE_FUNIX_TELEMETRY") is None:
                 ),
                 [
                     {
-                        "time": datetime.now(UTC).isoformat(),
+                        "time": datetime.now(timezone.utc).isoformat(),
                         "req": dumped_req,
                         "resp": dumped_resp,
                     }
