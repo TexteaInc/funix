@@ -15,3 +15,4 @@ dist/
 backend/funix/build
 *.db
 *.db-*
+logs.jsonl
