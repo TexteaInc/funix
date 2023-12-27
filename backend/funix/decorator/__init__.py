@@ -715,6 +715,7 @@ def funix(
     rate_limit: Limiter | list | dict = [],
     reactive: ReactiveType = None,
     print_to_web: bool = False,
+    autorun: bool = False,
 ):
     """
     Decorator for functions to convert them to web apps
@@ -752,6 +753,7 @@ def funix(
         rate_limit(Limiter | list[Limiter]): rate limiters, an object or a list
         reactive(ReactiveType): reactive config
         print_to_web(bool): handle all stdout to web
+        autorun(bool): allow users to use continuity runs on the front end
 
     Returns:
         function: the decorated function
@@ -1012,6 +1014,7 @@ def funix(
                     "id": function_id,
                     "websocket": need_websocket,
                     "reactive": has_reactive_params,
+                    "autorun": autorun,
                 }
             )
 

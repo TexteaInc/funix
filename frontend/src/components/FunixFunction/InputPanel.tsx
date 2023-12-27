@@ -43,6 +43,18 @@ const InputPanel = (props: {
   const { enqueueSnackbar } = useSnackbar();
 
   const [tempOutput, setTempOutput] = useState<string | null>(null);
+  const [autoRun, setAutoRun] = useState(false);
+
+  const isLarge =
+    Object.values(props.detail.schema.properties).findIndex((value) => {
+      const newValue = value as unknown as any;
+      const largeWidgets = ["image", "video", "audio", "file"];
+      if ("items" in newValue) {
+        return largeWidgets.includes(newValue.items.widget);
+      } else {
+        return largeWidgets.includes(newValue.widget);
+      }
+    }) !== -1;
 
   useEffect(() => {
     setWaiting(() => !requestDone);
@@ -78,36 +90,40 @@ const InputPanel = (props: {
     // console.log("Data changed: ", formData);
     setForm(formData);
 
-    if (!props.preview.reactive) {
-      return;
+    if (props.preview.reactive) {
+      _.debounce(() => {
+        fetch(new URL(`/update/${props.preview.id}`, props.backend), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        })
+          .then((body) => {
+            return body.json();
+          })
+          .then((data: UpdateResult) => {
+            const result = data.result;
+
+            if (result !== null) {
+              for (const [key, value] of Object.entries(result)) {
+                setForm((form) => {
+                  return {
+                    ...form,
+                    [key]: value,
+                  };
+                });
+              }
+            }
+          });
+      }, 100)();
     }
 
-    _.debounce(() => {
-      fetch(new URL(`/update/${props.preview.id}`, props.backend), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      })
-        .then((body) => {
-          return body.json();
-        })
-        .then((data: UpdateResult) => {
-          const result = data.result;
-
-          if (result !== null) {
-            for (const [key, value] of Object.entries(result)) {
-              setForm((form) => {
-                return {
-                  ...form,
-                  [key]: value,
-                };
-              });
-            }
-          }
-        });
-    }, 100)();
+    if (props.preview.autorun && autoRun) {
+      _.debounce(() => {
+        handleSubmitWithoutHistory().then();
+      }, 100)();
+    }
   };
 
   const saveOutput = async (
@@ -148,9 +164,8 @@ const InputPanel = (props: {
     }, 300);
   };
 
-  const handleSubmit = async () => {
-    const now = new Date().getTime();
-    const newForm = props.preview.secret
+  const getNewForm = () => {
+    return props.preview.secret
       ? props.preview.name in functionSecret &&
         functionSecret[props.preview.path] !== null
         ? {
@@ -164,16 +179,48 @@ const InputPanel = (props: {
           }
         : form
       : form;
-    const isLarge =
-      Object.values(props.detail.schema.properties).findIndex((value) => {
-        const newValue = value as unknown as any;
-        const largeWidgets = ["image", "video", "audio", "file"];
-        if ("items" in newValue) {
-          return largeWidgets.includes(newValue.items.widget);
-        } else {
-          return largeWidgets.includes(newValue.widget);
-        }
-      }) !== -1;
+  };
+
+  const getWebsocketUrl = () => {
+    return props.backend.protocol === "https:"
+      ? "wss"
+      : "ws" + "://" + props.backend.host + "/call/" + props.detail.id;
+  };
+
+  const handleSubmitWithoutHistory = async () => {
+    const newForm = getNewForm();
+    setRequestDone(() => false);
+    checkResponse().then();
+    if (props.preview.websocket) {
+      const socket = new WebSocket(getWebsocketUrl());
+      socket.addEventListener("open", function () {
+        socket.send(JSON.stringify(newForm));
+      });
+
+      socket.addEventListener("message", function (event) {
+        props.setResponse(() => event.data);
+        setTempOutput(() => event.data);
+      });
+
+      socket.addEventListener("close", async function () {
+        setWaiting(() => false);
+        setRequestDone(() => true);
+      });
+    } else {
+      const response = await callFunctionRaw(
+        new URL(`/call/${props.detail.id}`, props.backend),
+        newForm
+      );
+      const result = response.toString();
+      props.setResponse(() => result);
+      setWaiting(() => false);
+      setRequestDone(() => true);
+    }
+  };
+
+  const handleSubmit = async () => {
+    const now = new Date().getTime();
+    const newForm = getNewForm();
 
     if (saveHistory && !isLarge) {
       try {
@@ -193,11 +240,7 @@ const InputPanel = (props: {
     setRequestDone(() => false);
     checkResponse().then();
     if (props.preview.websocket) {
-      const websocketUrl =
-        props.backend.protocol === "https:"
-          ? "wss"
-          : "ws" + "://" + props.backend.host + "/call/" + props.detail.id;
-      const socket = new WebSocket(websocketUrl);
+      const socket = new WebSocket(getWebsocketUrl());
       socket.addEventListener("open", function () {
         socket.send(JSON.stringify(newForm));
       });
@@ -265,7 +308,16 @@ const InputPanel = (props: {
         >
           <Grid item xs>
             <FormControlLabel
-              control={<Checkbox defaultChecked={false} disabled />}
+              control={
+                <Checkbox
+                  defaultChecked={false}
+                  value={autoRun}
+                  onChange={(event) => {
+                    setAutoRun(() => event.target.checked);
+                  }}
+                  disabled={!props.preview.autorun}
+                />
+              }
               label="Continuously Run"
             />
           </Grid>
