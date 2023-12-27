@@ -76,6 +76,10 @@ export type FunctionPreview = {
    * Is this function has reactive argument
    */
   reactive: boolean;
+  /**
+   * autorun
+   */
+  autorun: boolean;
 };
 
 export type GetListResponse = {
