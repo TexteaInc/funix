@@ -244,9 +244,9 @@ IP headers for extraction, useful for applications behind reverse proxies
 e.g. `X-Forwarded-For`, `X-Real-Ip` e.t.c
 """
 
-decorated_function_ids: list[int] = []
+handled_object: list[int] = []
 """
-Decorated function ids.
+Handled object ids.
 """
 
 class_method_ids_to_params: dict[int, dict] = {}
@@ -276,15 +276,10 @@ class StdoutToWebsocket:
 
 def funix_method(*args, **kwargs):
     def decorator(func):
-        if "disable" in kwargs and kwargs["disable"]:
-            class_method_ids_to_params[id(func)] = {
-                "disable": kwargs["disable"],
-            }
-        else:
-            class_method_ids_to_params[id(func)] = {
-                "args": args,
-                "kwargs": kwargs,
-            }
+        class_method_ids_to_params[id(func)] = {
+            "args": args,
+            "kwargs": kwargs,
+        }
         return func
 
     return decorator
@@ -663,6 +658,19 @@ def clear_default_theme() -> None:
     __parsed_themes.pop("__default")
 
 
+def object_is_handled(object_id: int) -> bool:
+    """
+    Check if the object is handled.
+
+    Parameters:
+        object_id (int): The object id.
+
+    Returns:
+        bool: True if handled, False otherwise.
+    """
+    return object_id in handled_object
+
+
 def export_secrets():
     """
     Export all secrets from the decorated functions.
@@ -716,6 +724,7 @@ def funix(
     reactive: ReactiveType = None,
     print_to_web: bool = False,
     autorun: bool = False,
+    disable: bool = False,
 ):
     """
     Decorator for functions to convert them to web apps
@@ -754,6 +763,7 @@ def funix(
         reactive(ReactiveType): reactive config
         print_to_web(bool): handle all stdout to web
         autorun(bool): allow users to use continuity runs on the front end
+        disable(bool): disable this function
 
     Returns:
         function: the decorated function
@@ -777,6 +787,9 @@ def funix(
             Check code for details
         """
         global default_function
+        handled_object.append(id(function))
+        if disable:
+            return function
         if __wrapper_enabled:
             if menu:
                 module_functions_counter[menu] = (
@@ -905,8 +918,6 @@ def funix(
                 __decorated_functions_names_list.append(function_title)
 
             need_websocket = isgeneratorfunction(function)
-
-            decorated_function_ids.append(id(function))
 
             function_signature = signature(function)
             function_params = function_signature.parameters
@@ -2140,11 +2151,14 @@ def funix(
     return decorator
 
 
-def funix_class():
+def funix_class(disable: bool = False):
+    if disable:
+        return lambda cls: cls
     return __funix_class
 
 
 def __funix_class(cls):
+    handled_object.append(id(cls))
     if inspect.isclass(cls):
         if not hasattr(cls, "__init__"):
             raise Exception("Class must have __init__ method!")
@@ -2166,8 +2180,6 @@ def __funix_class(cls):
                         funix()(function)
                     else:
                         params = class_method_ids_to_params[org_id]
-                        if "disable" in params:
-                            continue
                         args = params["args"]
                         kwargs = params["kwargs"]
                         funix(*args, **kwargs)(function)
