@@ -242,6 +242,7 @@ const OutputPanel = (props: {
       case "Images":
       case "Videos":
       case "Audios":
+      case "FigureImage":
         return (
           <OutputMedias
             medias={response}
