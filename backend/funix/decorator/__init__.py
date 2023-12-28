@@ -725,6 +725,7 @@ def funix(
     print_to_web: bool = False,
     autorun: bool = False,
     disable: bool = False,
+    figure_to_image: bool = False,
 ):
     """
     Decorator for functions to convert them to web apps
@@ -764,6 +765,7 @@ def funix(
         print_to_web(bool): handle all stdout to web
         autorun(bool): allow users to use continuity runs on the front end
         disable(bool): disable this function
+        figure_to_image(bool): convert matplotlib figure to image
 
     Returns:
         function: the decorated function
@@ -1101,7 +1103,11 @@ def funix(
                                     function_signature.return_annotation.__name__
                                     == "Figure"
                                 ):
-                                    return_type_parsed = "Figure"
+                                    return_type_parsed = (
+                                        "Figure"
+                                        if not figure_to_image
+                                        else "FigureImage"
+                                    )
                                 else:
                                     if hasattr(
                                         function_signature.return_annotation,

@@ -10,7 +10,7 @@ to the frontend for direct use or as middleware to return the pre-processed data
 However, their logic is complex, with a lot of if-else, no comments and no unit tests, so it is not very good to infer
 the types of parameters, the types of return values and the rough logic.
 """
-
+import io
 import json
 from importlib import import_module
 from inspect import Parameter
@@ -382,6 +382,13 @@ def get_figure(figure) -> dict:
         raise Exception("Install matplotlib to use this function")
 
 
+def get_figure_image(figure) -> str:
+    with io.BytesIO() as buf:
+        figure.savefig(buf, format="png")
+        buf.seek(0)
+        return get_static_uri(buf.getvalue())
+
+
 def anal_function_result(
     function_call_result: Any,
     return_type_parsed: Any,
@@ -394,6 +401,9 @@ def anal_function_result(
     call_result = function_call_result
     if return_type_parsed == "Figure":
         return [get_figure(call_result)]
+
+    if return_type_parsed == "FigureImage":
+        return [get_figure_image(call_result)]
 
     if return_type_parsed == "Dataframe":
         return [get_dataframe_json(call_result)]
@@ -456,6 +466,9 @@ def anal_function_result(
                     if single_return_type == "Figure":
                         call_result[position] = get_figure(call_result[position])
 
+                    if single_return_type == "FigureImage":
+                        call_result[position] = get_figure_image(call_result[position])
+
                     if single_return_type == "Dataframe":
                         call_result[position] = get_dataframe_json(
                             call_result[position]
@@ -493,6 +506,8 @@ def anal_function_result(
             else:
                 if return_type_parsed == "Figure":
                     call_result = [get_figure(call_result[0])]
+                if return_type_parsed == "FigureImage":
+                    call_result = [get_figure_image(call_result[0])]
                 if return_type_parsed == "Dataframe":
                     call_result = [get_dataframe_json(call_result[0])]
                 if return_type_parsed in supported_basic_file_types:

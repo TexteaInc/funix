@@ -24,6 +24,7 @@ export type ReturnType =
   | "object"
   | "dict"
   | "Figure"
+  | "FigureImage"
   | "Dataframe"
   | "List"
   | "Dict"

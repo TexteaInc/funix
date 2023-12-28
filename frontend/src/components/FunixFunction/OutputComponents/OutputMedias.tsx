@@ -9,13 +9,15 @@ export default function OutputMedias(props: {
 }) {
   const medias = Array.isArray(props.medias) ? props.medias : [props.medias];
 
-  const component = props.type.toLowerCase().startsWith("image")
-    ? "img"
-    : props.type.toLowerCase().startsWith("video")
-    ? "video"
-    : props.type.toLowerCase().startsWith("application/pdf")
-    ? "pdf"
-    : "audio";
+  const component =
+    props.type.toLowerCase().startsWith("image") ||
+    props.type.toLowerCase().startsWith("figure")
+      ? "img"
+      : props.type.toLowerCase().startsWith("video")
+      ? "video"
+      : props.type.toLowerCase().startsWith("application/pdf")
+      ? "pdf"
+      : "audio";
 
   return (
     <>
