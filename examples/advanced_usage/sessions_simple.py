@@ -16,9 +16,9 @@ Another example is OpenAI demos where OpenAI key is set in one page while DallE 
     title="Session/state: set",
     description="Set the global variable `y` to a new value. ",
 )
-def set_y(x: str="123") -> str:
+def set_y(new_y: str="123") -> str:
     global y
-    y = x 
+    y = new_y 
     return "Y has been changed. Now check it in the `Session/State: get` page."
 
 
