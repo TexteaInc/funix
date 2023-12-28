@@ -1,6 +1,6 @@
 import sys
 from importlib import import_module
-from inspect import isfunction, isclass
+from inspect import isfunction, isclass, getsourcefile
 from ipaddress import ip_address
 from os import chdir, getcwd, listdir
 from os.path import abspath, dirname, exists, isdir, join, normpath, sep
@@ -92,6 +92,8 @@ def handle_module(
         is_func = isfunction(module_member)
         is_cls = isclass(module_member)
         if is_func or is_cls:
+            if getsourcefile(module_member) != module.__file__:
+                continue
             in_funix = decorator.object_is_handled(id(module_member))
             if in_funix:
                 continue
