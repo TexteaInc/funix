@@ -238,7 +238,9 @@ const App = () => {
   );
   const [tempBackend, setTempBackend] = useState(backend);
   const [isFirstInThisFunixServer, setFirstInThisFunixServer] = useState(
-    getCookie("first-join") === undefined
+    getCookie("SERVER_LOG") === "1"
+      ? getCookie("first-join") === undefined
+      : false
   );
   const [tempSecret, setTempSecret] = useState(selectedFunctionSecret);
   const [open, setOpen] = useState(false);
