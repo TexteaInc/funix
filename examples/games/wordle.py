@@ -1,18 +1,22 @@
 import random
 import string
-from funix import funix_class, funix_method
+from funix import funix, funix_class, funix_method
 from funix.hint import HTML
 
 import json
 
 
-with open("./files/words.json", "r") as f:
+with open("./words.json", "r") as f:
     words = json.load(f)
 
 
-def random_5_letter() -> str:
+@funix(
+    title="Get hint",
+    description="Get 5 random letters"
+)
+def random_5_letters() -> str:
     """
-    Get random 5 letter
+    Get random 5 letters
     """
     return "".join(random.choices(string.ascii_lowercase, k=5))
 
@@ -20,24 +24,27 @@ def random_5_letter() -> str:
 @funix_class()
 class Wordle:
     @funix_method(
-        title="Wordle Settings",
-        description="Settings for the Wordle",
+        title="Start a game",
         argument_labels={
             "random_word": "Random 5-letter"
-        }
+        },
+        print_to_web=True
     )
     def __init__(self, random_word: bool = False):
+        """
+        Start a game
+        """
         self.random_word = random_word
 
-        self.word = random_5_letter() if random_word else random.choice(words)
+        self.word = random_5_letters() if random_word else random.choice(words)
         self.history = []
 
         self.mismatch = False
 
-        print(self.word)
+        print("Game started. Now go to Play to play. ")
 
     def __reset(self):
-        self.word = random_5_letter() if self.random_word else random.choice(words)
+        self.word = random_5_letters() if self.random_word else random.choice(words)
         self.history = []
 
     def __push(self, word: str):
@@ -70,11 +77,14 @@ class Wordle:
             html_code += "<span>Word mismatch, please enter a 5-letter word</span>"
         if len(self.history) > 0 and self.history[-1] == self.word:
             self.__reset()
-            html_code += "<span>Game Over, you win!</span>"
+            html_code += "<span>Good game, you win!</span>"
         elif len(self.history) == 6:
             html_code += f"<span>Game Over, answer is: <strong>{self.word}</strong></span>"
         return html_code
 
-    def guess(self, word: str) -> HTML:
+    def Play(self, word: str) -> HTML:
+        """
+        Enter a five-letter word and click the "Run" button to see your guess result. 
+        """
         self.__push(word)
         return self.__generate()

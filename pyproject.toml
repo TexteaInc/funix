@@ -2,7 +2,7 @@
 name = "funix"
 version = "0.5.4"
 authors = [
-  {name = "Textea Inc.", email = "bao@textea.co"}
+  {name = "Textea Inc.", email = "hello@funix.io"}
 ]
 license = {file = "LICENSE"}
 description = "Building web apps without manually creating widgets"

@@ -11,7 +11,7 @@
 [![PyPI version](https://badge.fury.io/py/funix.svg)](https://badge.fury.io/py/funix)
 [![](https://dcbadge.vercel.app/api/server/JyANAMUAHM?style=flat)](https://discord.gg/JyANAMUAHM)
 
-<h4><a href="https://youtu.be/qDkzXS270Zo">Intro video</a> | <a href="https://github.com/TexteaInc/funix-doc/blob/main/Reference.md">Reference Manual</a> | <a href="#gallery"> Gallery </a> </h4>
+<h4><a href="https://youtu.be/qDkzXS270Zo">Intro video</a> | <a href="#getting-started-with-funix">Getting started</a> |  <a href="#gallery"> Gallery </a> | <a href="https://github.com/TexteaInc/funix-doc/blob/main/Reference.md">Reference Manual</a> </h4>
 
 https://github.com/TexteaInc/funix/assets/438579/86868ab5-ed6e-46e5-8dc5-9e3e4a3cdc3f
 
@@ -33,11 +33,11 @@ https://github.com/TexteaInc/funix/assets/438579/86868ab5-ed6e-46e5-8dc5-9e3e4a3
 
 ## Key advantages
 
-* **Minimalist and effortless**: Make no or little addition to your existing code. 
+* **Minimalist and out-of-box**: Make no or little addition to your existing code. 
 * **CSS for Python**: Widgets are generated automatically based on variable types according to a theme, rather than per-variable manually, for centralized, reusable, and consistent UI across apps. 
-* **Non-intrusive and Declarative**: In JSON string, UI aspects are separated from the core logic. Your code can still be run, imported, and called as usual. 
+* **Non-intrusive and declarative**: As JSON strings, UI configurations are separated from the core logic. Your code can still be run, imported, and called as usual. 
 * **Seamlessly Pythonic**: Map Python's native keywords to web app features, such as `global` for sessions, `yield` for streaming, and `print` for anything you wanna display in your app. 
-* **Apps, not demos**: Out of the box support for [history](https://github.com/TexteaInc/funix-doc/blob/main/Reference.md#call-history), [access control](https://github.com/TexteaInc/funix-doc/blob/main/Reference.md#secret), [multipage apps](https://github.com/TexteaInc/funix-doc/blob/main/Reference.md#multipage-apps-and-sessionsstates), session management, reactiveness, backend telemetry, passing values between widgets and pages, etc.
+* **Apps, not demos**: Out of the box support for [access control](https://github.com/TexteaInc/funix-doc/blob/main/Reference.md#secret), user tracking and Do-Not-Track options, [multipage apps](https://github.com/TexteaInc/funix-doc/blob/main/Reference.md#multipage-apps-and-sessionsstates) with data passing, session management, reactiveness, backend telemetry, etc.
 
 #### Love Funix? Give us a star
 
@@ -51,7 +51,7 @@ https://github.com/TexteaInc/funix/assets/438579/86868ab5-ed6e-46e5-8dc5-9e3e4a3
     pip install funix
     ```
 
-2. Save the code bellow to a file called `hello.py`:
+2. Save the code below to a file called `hello.py`:
 
     ```python
     def hello(your_name: str) -> str:
@@ -61,7 +61,7 @@ https://github.com/TexteaInc/funix/assets/438579/86868ab5-ed6e-46e5-8dc5-9e3e4a3
 3. Running this command
 
     ```bash
-    $ funix -l hello.py # -l for lazy mode using all default settings
+    $ funix hello.py
     ```
 
 4. The app will pop in a browser on `http://localhost:3000`:
@@ -71,7 +71,7 @@ https://github.com/TexteaInc/funix/assets/438579/86868ab5-ed6e-46e5-8dc5-9e3e4a3
 
 <!-- > **Note**: The `-l` flag stands for _"lazy"_ meaning that only default settings are used. It cannot be used when your function is decorated by the funix decorator `@funix()` which allows you to customize your app. For more details, please refer to the [reference manual]([docs/Reference.md](https://github.com/TexteaInc/funix-doc/blob/main/Reference.md)). -->
 
-## A quick showoff of Funix
+## Getting started with Funix
 
 **The Zen of Funix** is to generate widgets for function I/Os based on their types, instead of manually picking and customizing the widget for each I/O. **Funix to Python is like CSS to HTML or style class to LaTeX**. UI stuff is not intermingled with the core logic but defined separately. The type-to-widget mapping is controlled by a theme and new types can be defined on top of existing types. 
 
@@ -119,12 +119,31 @@ def table_and_plot(
 
 ![table and plot screenshot](https://raw.githubusercontent.com/TexteaInc/funix-doc/main/screenshots/table_plot.png)
 
- 
+You can even continuously update a plot based on user input. 
 
-### Funix and classes
+```python
+import funix 
+import matplotlib.pyplot, matplotlib.figure
+import numpy 
+
+@funix.funix(
+        autorun=True, 
+)
+def sine(omega: funix.hint.FloatSlider(0, 4, 0.1)) -> matplotlib.figure.Figure:
+    fig = matplotlib.pyplot.figure()
+    x = numpy.linspace(0, 20, 200)
+    y = numpy.sin(x*omega)
+    matplotlib.pyplot.plot(x, y, linewidth=5)
+    return fig
+```
+
+![continuous sine function](https://raw.githubusercontent.com/TexteaInc/funix-doc/main/screenshots/continous_run_sine.gif)
+
+ 
+### Out-of-box support for classes and OOP
 
 Funix can turn each member method of a class into a page of an app. 
-In two additional lines, the example turn a class definition into a multi-page app with the OOP experience where the instantiation of an object of the class is done in a page corresponding to the constructor of the class and the member values of the object can be viewed and updated in other pages. 
+In two additional lines, the example below turn a class definition into a multi-page app with the OOP experience where the instantiation of an object of the class is done in a page corresponding to the constructor of the class and the member values of the object can be viewed and updated in other pages. **No need to manually expose** the member methods of the class.
 
 ```python
 from funix import funix_class
@@ -146,9 +165,9 @@ class A:
 ![class demo app gif](https://raw.githubusercontent.com/TexteaInc/funix-doc/main/videos/class/class.gif)
 
 
-A more advanced example of class is the wordle game. You can find the source code in [`examples/wordle.py`](./examples/wordle.py). The screenshot is as follows:
+A more advanced example of class is the wordle game. You can find the source code in [`examples/wordle.py`](./examples/games/wordle.py). In less than 100 lines, you can build Wordle! The screenshot is as follows:
 
-
+![Wordle demo](https://github.com/TexteaInc/funix-doc/blob/main/screenshots/wordle.png?raw=true)
 
 ### The quickest way to build GenAI apps
 
@@ -156,7 +175,6 @@ You can wrap any Python function into a web app in Funix.
 For example, you can take the ChatGPT demo code from OpenAI's APi reference and wrap it into a str-to-str function: 
 
 ```python
-# command: funix -l chatgpt.py
 from openai import OpenAI
 
 def ChatGPT(prompt: str) -> str:    
@@ -210,37 +228,61 @@ To introduce a new data type, just declare a new Python class, and use a decorat
 from funix import funix, new_funix_type
 
 @new_funix_type(
-        widget = {"name":"password"}
-    ) # associate the new type `blackout_message` to the widget `password`
-class blackout_message(str): # inherit from str
+        widget = {"name":"password", "config":None}
+    )
+class blackout(str):
     def print(self):
-        return self + " is from Funix"
+        return self + " is the message."
 
 @funix()
-def hoho(x: blackout_message):
+def hoho(x: blackout = "Funix Rocks!") -> str:
     return x.print()
 
-# Still works as usual
 if __name__ == "__main__":
-    print (hoho(warning_message('Fun'))) 
+    print (hoho(blackout('Fun'))) 
 ```
 
-## Python native to web native
+### Python-native to web-native
 
-Funix is designed to be as Pythonic as possible. It maps Python's native keywords to web app features.
+Funix repurposes some Python-native features to web features. 
 
-### `print` to add content to the app
+First, Funix won't let your docstring or `print()` function calls go to waste. They will appear in the input and output panels of the web app.
 
 ```python
 from funix import funix
 @funix(
     print_to_web=True
 )
-def my_main(x: str="123", debug:bool=True) -> None:
-    if debug:
-        print("### This is a debug message.")
+def foo() -> None:
+    """
+    ## What a great app in Funix! 
+    
+    Funix won't let your docstring go to waste.
+    """
+    print("It supports **Markdown**.")
+    print ("And <b>HTML</b>.")
     return None
 ```
+
+![Docstring and print to web](https://github.com/TexteaInc/funix-doc/blob/main/screenshots/docstring_and_print.png?raw=true)
+
+To stream text to the web, simply use `yield`:
+
+```python
+import time
+
+def stream() -> str:
+    """
+    This function is used to test the stream feature of Funix.
+    """
+    message = "We the People of the United States, in Order to form a more perfect Union, establish Justice, insure domestic Tranquility, provide for the common defence, promote the general Welfare, and secure the Blessings of Liberty to ourselves and our Posterity, do ordain and establish this Constitution for the United States of America."
+
+    for i in range(len(message)):
+        time.sleep(0.01)
+        yield message[0:i]
+```
+
+![Streamt text to web](https://github.com/TexteaInc/funix-doc/blob/main/screenshots/stream.gif?raw=true)
 
 ## Advanced features 
 
@@ -359,44 +401,10 @@ The token needs to be included in the URL or manually entered in order to execut
 
 ## Gallery
 
-More examples in <a href="https://github.com/TexteaInc/funix-doc/blob/main/QuickStart.md">QuickStart Guide</a>, <a href="https://github.com/TexteaInc/funix-doc/blob/main/Reference.md">Reference Manual</a>, or the <code>./examples</code> folder.
+More examples in <a href="https://github.com/TexteaInc/funix-doc/blob/main/Reference.md">Reference Manual</a> or the <code>./examples</code> folder.
 
 * [ChatPaper](https://github.com/forrestbao/ChatPaper) (It's like the popular ChatPDF. But in Funix, only 70 lines of code needed.)
 * [mFlux](https://github.com/Yazawazi/MFlux) (synthetic biology)
-
-### Chatbot from any generative LLMs on HuggingFace
-
-<details>
-<summary><code>examples/AI/huggingface.py</code> 👈 Toggle me to show source code </summary>
-
-```python
-import os, json, typing # Python's native
-import requests # pip install requests
-
-API_TOKEN = os.getenv("HF_TOKEN") # "Please set your API token as an environment variable named HF_TOKEN. You can get your token from https://huggingface.co/settings/token"
-
-def huggingface(
-    model_name: typing.Literal[
-        "gpt2",
-        "bigcode/starcoder",
-        "google/flan-t5-large"] = "gpt2",
-    prompt: str = "Who is Einstein?") -> str:
-
-    payload = {"inputs": prompt} # not all models use this query  and output formats.  Hence, we limit the models above.
-
-    API_URL = f"https://api-inference.huggingface.co/models/{model_name}"
-    headers = {"Authorization": f"Bearer {API_TOKEN}"}
-
-    response = requests.post(API_URL, headers=headers, json=payload)
-
-    if "error" in response.json():
-        return response.json()["error"]
-    else:
-        return response.json()[0]["generated_text"]
-```
-</details>
-
-![Multiturn chat](https://github.com/TexteaInc/funix-doc/raw/main/screenshots/huggingface.png)
 
 ### ChatGPT, multi-turn
 <details>
@@ -462,39 +470,6 @@ def dalle(prompt: str = "a cat") -> Image:
 ![Dalle demo](https://github.com/TexteaInc/funix-doc/raw/main/screenshots/dalle.jpg)
 
 <!-- Funix.io can get the same job done in half the amount of code required by Gradio, by exploiting the Python language as much as possible. Here, state/session is maintained using a global variable, while the order of the returns defines the return layout.  -->
-
-
-### Compound UIs
-
-The table is copi-able from Excel! The plot is interactive!
-
-<details>
-<summary><code>examples/slider_table_plot.py</code> 👈 Toggle me to show source code</summary>
-
-> The code below uses an inelegant solution by manually choosing the `sheet` widget. We are working on a better solution by feeding a Pandas DataFrame to the `table_plot` function to automate. 
-
-```python
-from typing import List
-import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
-
-@funix(
-        widgets={ 
-           "a": "sheet",
-           "b": ["sheet", "slider[0,1,0.01]"]
-        }
-)
-
-# below is a simple matplotlib function
-def table_plot(a: List[int], b: List[float]) -> Figure:
-    fig = plt.figure()
-    plt.plot(a, b)
-    return fig
-```
-
-</details>
-
-![table plot demo static](https://github.com/TexteaInc/funix-doc/raw/main/screenshots/table_plot.png)
 
 ### Bioinformatics: vector stripping
 
@@ -575,47 +550,11 @@ Our table widget uses advanced features in MUI Pro. If you have a MUI Pro licens
 
 ### Command line options
 
+Run the command below to see the command line options:
+
 ```text
-usage: funix [-h] [-H 0.0.0.0] [-p 3000] [-F] [-B] [-l] [-P] [-d] [-t] [-g None] [-r None] [-s None] [-D None] [--version] [file_folder_or_module_name]
-
-Funix: Building web apps without manually creating widgets
-
-    Funix turns your Python function into a web app
-    by building the UI from the function's signature,
-    based on the mapping from variable types to UI widgets,
-    customizable per-widget or kept consistent across apps via themes.
-
-    Just write your core logic and leave the rest to Funix.
-    Visit us at http://funix.io
-
-positional arguments:
-  file_folder_or_module_name
-                        The Python module containing functions to be turned into web apps by Funix. For example, if your functions are in the file `hello.py`, you should pass `hello.py` here. if you want to turn a module called `hello` into a web app, you should pass `hello`
-                        here, and with --package or -P flag. if you want to turn a full folder called `examples` into a web app, you should pass `examples` here.
-
-options:
-  -h, --help            show this help message and exit
-  -H 0.0.0.0, --host 0.0.0.0
-                        Host of Funix
-  -p 3000, --port 3000  Port of Funix
-  -F, --no-frontend     Disable frontend server
-  -B, --no-browser      Disable auto open browser
-  -l, --lazy            Load functions without decorator
-  -P, --package         Enable package mode
-  -d, --dev             Enable development mode
-  -t, --transform       Transform the globals to a session variables
-  -g None, --from-git None
-                        Import module from git
-  -r None, --repo-dir None
-                        The directories in the repo that need to be used
-  -s None, --secret None
-                        The secret key for the full app
-  -D None, --default None
-                        The default function to run
-  --version, -v         show program's version number and exit
+funix -h 
 ```
-
-The command `funix` above is equivalent to `python -m funix` if you have installed Funix.
 
 ### Call `funix` in Python
 
@@ -642,14 +581,10 @@ funix [module] --host [your_server_ip]
 
 Funix is open-sourced under the MIT License. Community contribution is not only welcomed but desired. Feel free to fork and make a pull request when you are ready. You can also report bugs, suggest new features via the [issue tracker](https://github.com/TexteaInc/funix/issues/new) or our [Discord server](https://discord.gg/JyANAMUAHM).
 
-## Acknowledgement
+## Acknowledgment
 
 Funix draws inspiration from FastAPI and Python-Fire: building software interfaces by inferring from function signatures containing type hints. We port this idea from the backend (FastAPI) or the terminal (Python-Fire) to the frontend. We also thank Streamlit, Gradio, PyWebIO, and Pynecone/Reflex. They inspired us. We are just too lazy to manually define widgets imperatively. Funix’s backend is implemented in Flask and the frontend in Material UI. 
 
-## Team
+## Contact
 
-Funix is a team effort of: 
-
-* [Ruixuan Tu](https://github.com/Turx)
-* [Yazawazi](https://github.com/Yazawazi)
-* [Forrest Sheng Bao](https://forrestbao.github.io/)
+hello at funix dot io
