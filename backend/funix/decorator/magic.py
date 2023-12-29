@@ -429,6 +429,13 @@ def anal_function_result(
             ):
                 call_result = call_result.data
 
+            if isinstance(call_result, __ipython_display.Javascript):
+                call_result = (
+                    "<script>"
+                    + getattr(call_result, "_repr_javascript_")()
+                    + "</script>"
+                )
+
         if not isinstance(call_result, (str, dict, tuple)):
             call_result = json.dumps(call_result)
 
@@ -450,6 +457,16 @@ def anal_function_result(
                                 (__ipython_display.HTML, __ipython_display.Markdown),
                             ):
                                 call_result[position] = call_result[position].data
+                            if isinstance(
+                                call_result[position], __ipython_display.Javascript
+                            ):
+                                call_result[position] = (
+                                    "<script>"
+                                    + getattr(
+                                        call_result[position], "_repr_javascript_"
+                                    )()
+                                    + "</script>"
+                                )
                             if isinstance(
                                 call_result[position],
                                 (

@@ -6,10 +6,12 @@ const scripts = process.env.REACT_APP_IN_FUNIX
   ? `
   <script src="static/js/d3.v5.js"></script>
   <script src="static/js/mpld3.v0.5.8.js"></script>
+  <script src="static/js/jquery-3.7.1.min.js"></script>
   `
   : `
   <script src="https://d3js.org/d3.v5.js"></script>
   <script src="https://mpld3.github.io/js/mpld3.v0.5.8.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   `;
 
 module.exports = function override(config) {
@@ -49,6 +51,11 @@ module.exports = function override(config) {
           filepath: "static/js/mpld3.v0.5.8.js",
           hash: false,
         },
+        {
+          url: "https://code.jquery.com/jquery-3.7.1.min.js",
+          filepath: "static/js/jquery-3.7.1.min.js",
+          hash: false,
+        }
       ])
     );
   }
