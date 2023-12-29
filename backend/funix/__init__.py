@@ -79,6 +79,14 @@ def get_path_difference(base_dir: str, target_dir: str) -> str | None:
 
     return ".".join(path_diff)
 
+def getsourcefile_safe(obj: Any) -> str | None:
+    try:
+        if isclass(obj):
+            return getsourcefile(obj.__init__)
+        return getsourcefile(obj)
+    except:
+        return None
+
 
 def handle_module(
     module: Any,
@@ -92,9 +100,9 @@ def handle_module(
         is_func = isfunction(module_member)
         is_cls = isclass(module_member)
         if is_func or is_cls:
-            if getsourcefile(module_member) != module.__file__:
+            if getsourcefile_safe(module_member) != module.__file__:
                 continue
-            in_funix = decorator.object_is_handled(id(module_member))
+            in_funix = decorator.object_is_handled(id(module_member)) or id(module_member) in hint.custom_cls_ids
             if in_funix:
                 continue
             use_func = funix if is_func else funix_class
