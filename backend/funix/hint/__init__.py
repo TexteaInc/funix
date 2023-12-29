@@ -406,6 +406,9 @@ class DecoratedFunctionListItem(TypedDict):
 # ---- Decorator ----
 
 
+custom_cls_ids: list[int] = []
+
+
 def new_funix_type_with_config_func(
     widget: str, config_func: Optional[callable] = None
 ) -> callable:
@@ -430,6 +433,7 @@ def new_funix_type_with_config_func(
         Returns:
             Any: The decorated class or getting the new funix type function.
         """
+        custom_cls_ids.append(id(cls))
         if config_func is None:
             cls.__funix__ = True
             cls.__funix_widget__ = widget
@@ -489,6 +493,7 @@ def new_funix_type(widget: NewFunixWidgetType) -> callable:
     """
 
     def decorator(cls) -> Any:
+        custom_cls_ids.append(id(cls))
         cls.__funix__ = True
         cls.__funix_widget__ = widget["name"]
         cls.__funix_base__ = cls.__base__
