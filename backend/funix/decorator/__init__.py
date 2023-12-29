@@ -84,6 +84,8 @@ __ipython_type_convert_dict = {
     "IPython.lib.display.Markdown": "Markdown",
     "IPython.core.display.HTML": "HTML",
     "IPython.lib.display.HTML": "HTML",
+    "IPython.core.display.Javascript": "HTML",
+    "IPython.lib.display.Javascript": "HTML",
     "IPython.core.display.Image": "Images",
     "IPython.lib.display.Image": "Images",
     "IPython.core.display.Audio": "Audios",
