@@ -21,6 +21,8 @@ app.config.update(
 )
 sock = Sock(app)
 
+logging_enabled = os.environ.get("FUNIX_TELEMERY") is not None and os.environ.get("FUNIX_TELEMERY", "false").lower() in ["1", "true", "on", "yes"]
+
 
 @app.after_request
 def funix_auto_cors(response: Response) -> Response:
@@ -29,6 +31,7 @@ def funix_auto_cors(response: Response) -> Response:
         "Access-Control-Allow-Methods"
     ] = "GET, HEAD, POST, OPTIONS, PUT, PATCH, DELETE"
     response.headers["Access-Control-Allow-Headers"] = "*"
+    response.set_cookie("SERVER_LOG", "1" if logging_enabled else "0")
     return response
 
 
@@ -75,7 +78,7 @@ def __api_call_data(response: Response, dict_to_json: bool = False) -> dict | No
     }
 
 
-if os.environ.get("DISABLE_FUNIX_TELEMETRY") is None:
+if logging_enabled:
     storage_path = Path(os.environ.get("FUNIX_TELEMETRY_STORAGE", default="logs.jsonl"))
     if storage_path.suffix == ".db":
         telemetry_db = os.environ.get("FUNIX_TELEMETRY_DB", default="sqlite:///logs.db")
