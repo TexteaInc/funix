@@ -16,3 +16,4 @@ backend/funix/build
 *.db
 *.db-*
 logs.jsonl
+*.key
