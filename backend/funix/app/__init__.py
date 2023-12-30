@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from secrets import token_hex
 from enum import Enum
+import hashlib
 
 from flask import Flask, Response, abort, request
 from flask_sock import Sock
@@ -51,12 +52,17 @@ below.
 4. Clicking "Agree" indicates that you agree to the above data policy.
 """
 
+privacy_update_hash = hashlib.sha256(
+    privacy.encode() + str(funix_log_level.value).encode()
+).hexdigest()
+
 
 @app.get("/privacy")
 def __funix_privacy():
     return {
         "text": privacy,
         "log_level": int(funix_log_level.value),
+        "hash": privacy_update_hash,
     }
 
 
@@ -70,7 +76,10 @@ def privacy_policy(message: str) -> None:
     Returns:
         None
     """
-    global privacy
+    global privacy, privacy_update_hash
+    privacy_update_hash = hashlib.sha256(
+        message.encode() + str(funix_log_level.value).encode()
+    ).hexdigest()
     privacy = message
 
 
