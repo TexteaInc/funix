@@ -233,6 +233,7 @@ const App = () => {
   const [onResizing, setOnResizing] = useState(false);
   const historyLoaded = useRef<boolean>(false);
   const [privacyText, setPrivacyText] = useState("");
+  const [lastPrivacyHash, setLastPrivacyHash] = useState("");
 
   const handlePointerMoveLeftSidebar = useCallback((e: PointerEvent | any) => {
     setFunctionListWidth(e.clientX - document.body.offsetLeft);
@@ -317,13 +318,18 @@ const App = () => {
     .then((body) => {
       return body.json();
     })
-    .then((json: { text: string; log_level: number }) => {
+    .then((json: { text: string; log_level: number; hash: string }) => {
       setPrivacyText(json.text);
       setLogLevel(json.log_level);
+      setLastPrivacyHash(json.hash);
 
-      setPrivacy(
-        json.log_level === 0 ? false : getCookie("first-join") === undefined
-      );
+      if (localStorage.getItem("privacy-hash") !== json.hash) {
+        setPrivacy(true);
+      } else {
+        setPrivacy(
+          json.log_level === 0 ? false : getCookie("first-join") === undefined
+        );
+      }
     });
 
   return (
@@ -341,6 +347,7 @@ const App = () => {
               logLevel === 1
                 ? setCookie("DO_NOT_LOG_ME", "YES")
                 : (window.location.href = "https://funix.io");
+              localStorage.setItem("privacy-hash", lastPrivacyHash);
               setCookie("first-join", "false", { expires: 365 * 10 });
               setPrivacy(false);
             }}
@@ -351,6 +358,7 @@ const App = () => {
             onClick={() => {
               setCookie("first-join", "false", { expires: 365 * 10 });
               setPrivacy(false);
+              localStorage.setItem("privacy-hash", lastPrivacyHash);
             }}
           >
             Agree
