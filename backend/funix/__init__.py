@@ -13,7 +13,7 @@ from gitignore_parser import parse_gitignore
 
 import funix.decorator as decorator
 import funix.hint as hint
-from funix.app import app, enable_funix_host_checker
+from funix.app import app, enable_funix_host_checker, privacy_policy
 from funix.frontend import OpenFrontend, run_open_frontend, start
 from funix.prep.global_to_session import get_new_python_file
 from funix.util.file import create_safe_tempdir
@@ -79,6 +79,7 @@ def get_path_difference(base_dir: str, target_dir: str) -> str | None:
 
     return ".".join(path_diff)
 
+
 def getsourcefile_safe(obj: Any) -> str | None:
     try:
         if isclass(obj):
@@ -102,7 +103,10 @@ def handle_module(
         if is_func or is_cls:
             if getsourcefile_safe(module_member) != module.__file__:
                 continue
-            in_funix = decorator.object_is_handled(id(module_member)) or id(module_member) in hint.custom_cls_ids
+            in_funix = (
+                decorator.object_is_handled(id(module_member))
+                or id(module_member) in hint.custom_cls_ids
+            )
             if in_funix:
                 continue
             use_func = funix if is_func else funix_class

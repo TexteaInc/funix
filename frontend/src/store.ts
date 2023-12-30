@@ -1,7 +1,6 @@
 import { atom } from "jotai";
 import { FunctionPreview } from "./shared";
 import { History } from "./shared/useFunixHistory";
-import { getCookie } from "typescript-cookie";
 
 export type Store = {
   selectedFunction: null | FunctionPreview;
@@ -17,7 +16,6 @@ export type Store = {
   saveHistory: boolean;
   appSecret: null | string;
   histories: History[];
-  doNotTrackMe: boolean;
 };
 
 export const storeAtom = atom<Store>({
@@ -34,5 +32,4 @@ export const storeAtom = atom<Store>({
   saveHistory: true,
   appSecret: null,
   histories: [],
-  doNotTrackMe: getCookie("DO_NOT_LOG_ME") === "YES",
 });

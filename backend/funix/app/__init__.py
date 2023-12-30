@@ -7,6 +7,7 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 from secrets import token_hex
+from enum import Enum
 
 from flask import Flask, Response, abort, request
 from flask_sock import Sock
@@ -21,7 +22,56 @@ app.config.update(
 )
 sock = Sock(app)
 
-logging_enabled = os.environ.get("FUNIX_TELEMERY") is not None and os.environ.get("FUNIX_TELEMERY", "false").lower() in ["1", "true", "on", "yes"]
+
+class LogLevel(Enum):
+    OFF = 0
+    OPTIONAL = 1
+    MANDATORY = 2
+
+
+funix_telemetry = os.environ.get("FUNIX_TELEMETRY", "off").lower()
+
+if funix_telemetry == "optional":
+    funix_log_level = LogLevel.OPTIONAL
+elif funix_telemetry == "mandatory":
+    funix_log_level = LogLevel.MANDATORY
+elif funix_telemetry == "off":
+    funix_log_level = LogLevel.OFF
+else:
+    funix_log_level = LogLevel.OFF
+
+
+privacy = """We honor your choices. For your data and freedom.
+
+1. We do not share your data with third party organizations. 
+2. Your IP address, browser header data, access time, access address, cookie data, request and response data will be \
+recorded. We will use this data to improve our services and provide better user experience.
+3. You can tell Funix that you refuse to collect the above information by clicking on the "Do not track me" button \
+below.
+4. Clicking "Agree" indicates that you agree to the above data policy.
+"""
+
+
+@app.get("/privacy")
+def __funix_privacy():
+    return {
+        "text": privacy,
+        "log_level": int(funix_log_level.value),
+    }
+
+
+def privacy_policy(message: str) -> None:
+    """
+    Set the privacy policy.
+
+    Parameters:
+        message (str): The privacy policy message.
+
+    Returns:
+        None
+    """
+    global privacy
+    privacy = message
 
 
 @app.after_request
@@ -31,12 +81,13 @@ def funix_auto_cors(response: Response) -> Response:
         "Access-Control-Allow-Methods"
     ] = "GET, HEAD, POST, OPTIONS, PUT, PATCH, DELETE"
     response.headers["Access-Control-Allow-Headers"] = "*"
-    response.set_cookie("SERVER_LOG", "1" if logging_enabled else "0")
     return response
 
 
 def __api_call_data(response: Response, dict_to_json: bool = False) -> dict | None:
-    do_not_log_me = request.cookies.get("DO_NOT_LOG_ME")
+    do_not_log_me = (
+        request.cookies.get("DO_NOT_LOG_ME") and funix_log_level != LogLevel.MANDATORY
+    )
     if do_not_log_me is not None and do_not_log_me == "YES":
         return
 
@@ -78,7 +129,7 @@ def __api_call_data(response: Response, dict_to_json: bool = False) -> dict | No
     }
 
 
-if logging_enabled:
+if funix_log_level != LogLevel.OFF:
     storage_path = Path(os.environ.get("FUNIX_TELEMETRY_STORAGE", default="logs.jsonl"))
     if storage_path.suffix == ".db":
         telemetry_db = os.environ.get("FUNIX_TELEMETRY_DB", default="sqlite:///logs.db")
