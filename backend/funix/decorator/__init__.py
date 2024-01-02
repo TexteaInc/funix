@@ -1673,6 +1673,16 @@ def funix(
                     )
                     json_schema_props[function_arg_name]["type"] = "array"
 
+                if hasattr(function_param.annotation, "__funix_component__"):
+                    json_schema_props[function_arg_name][
+                        "funixComponent"
+                    ] = function_param.annotation.__funix_component__
+                    if hasattr(function_param.annotation, "__funix_props__"):
+                        json_schema_props[function_arg_name][
+                            "funixProps"
+                        ] = function_param.annotation.__funix_props__
+                    json_schema_props[function_arg_name]["type"] = "object"
+
             all_of = []
             delete_keys = set()
             safe_conditional_visible = (

@@ -57,6 +57,7 @@ import { useAtom } from "jotai";
 import { storeAtom } from "../../store";
 import { DataGrid } from "../../Key";
 import InnerHTML from "dangerously-set-html-content";
+import FunixCustom from "./FunixCustom";
 
 let rowIdCounter = 0;
 
@@ -112,6 +113,23 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
     }
     const filesType = ["image", "video", "audio", "file"];
     if (!isArray) {
+      if ("funixComponent" in elementContent.props.schema) {
+        const component = elementContent.props.schema.funixComponent;
+        const props =
+          "funixProps" in elementContent.props.schema
+            ? elementContent.props.schema.funixProps
+            : null;
+        return {
+          type: "config",
+          element: (
+            <FunixCustom
+              component={component}
+              props={props}
+              widget={elementContent.props}
+            />
+          ),
+        };
+      }
       if (elementContent.props.schema.widget === "json") {
         if (elementContent.props.schema.keys) {
           return {

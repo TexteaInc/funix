@@ -315,7 +315,7 @@ def function_param_to_widget(annotation: any, widget: str) -> any:
         stop = annotation.stop if type(annotation.stop) is int else 101
         step = annotation.step if type(annotation.step) is int else 1
         widget = f"slider[{start},{stop - 1},{step}]"
-    elif hasattr(annotation, "__funix__"):
+    elif hasattr(annotation, "__funix_widget__"):
         widget = funix_param_to_widget(annotation)
     else:
         if (
@@ -331,7 +331,7 @@ def function_param_to_widget(annotation: any, widget: str) -> any:
                     widget if isinstance(widget, str) else widget[0],
                     f"slider[{start},{stop - 1},{step}]",
                 ]
-            elif hasattr(annotation.__args__[0], "__funix__"):
+            elif hasattr(annotation.__args__[0], "__funix_widget__"):
                 widget = [
                     widget if isinstance(widget, str) else widget[0],
                     funix_param_to_widget(annotation.__args__[0]),

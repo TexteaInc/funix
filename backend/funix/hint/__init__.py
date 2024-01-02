@@ -11,6 +11,7 @@ from typing import (
     TypeAlias,
     TypedDict,
     TypeVar,
+    Union,
 )
 
 from funix.hint.layout import InputRow, OutputRow
@@ -249,6 +250,26 @@ ReactiveType = Optional[dict[str, Callable | tuple[Callable, dict[str, str]]]]
 Document is on the way
 """
 
+ComponentMuiComponents = [
+    "@mui/material/TextField",
+    "@mui/material/Switch",
+    "@mui/material/Checkbox",
+    "@mui/material/Slider",
+    "@mui/material/Rating",
+]
+
+ComponentTypes = Union[str, bool, int, float]
+
+ComponentMaps: dict[Any, list[str]] = {
+    str: ["@mui/material/TextField"],
+    bool: ["@mui/material/Switch", "@mui/material/Checkbox"],
+    int: ["@mui/material/Slider", "@mui/material/TextField", "@mui/material/Rating"],
+    float: ["@mui/material/Slider", "@mui/material/TextField", "@mui/material/Rating"],
+}
+"""
+The component maps.
+"""
+
 
 class CodeConfig(TypedDict):
     """
@@ -470,7 +491,7 @@ class NewFunixWidgetType(TypedDict):
     For new funix typing.
     """
 
-    name: str
+    name: Optional[str]
     """
     The name of the widget.
     """
@@ -481,7 +502,27 @@ class NewFunixWidgetType(TypedDict):
     """
 
 
-def new_funix_type(widget: NewFunixWidgetType) -> callable:
+class NewFunixWithComponentType(TypedDict):
+    """
+    New Funix widget type.
+
+    For new funix typing. With component.
+    """
+
+    props: Optional[dict]
+    """
+    The props of the widget.
+    """
+
+    widget: Optional[str]
+    """
+    The component name of the widget.
+    """
+
+
+def new_funix_type(
+    widget: Union[NewFunixWidgetType, NewFunixWithComponentType, dict]
+) -> callable:
     """
     Decorator for creating new funix types.
 
@@ -495,10 +536,30 @@ def new_funix_type(widget: NewFunixWidgetType) -> callable:
     def decorator(cls) -> Any:
         custom_cls_ids.append(id(cls))
         cls.__funix__ = True
-        cls.__funix_widget__ = widget["name"]
+        if not widget.get("name") and not widget.get("widget"):
+            raise ValueError("You must specify a name or a widget")
         cls.__funix_base__ = cls.__base__
-        if "config" in widget and widget["config"] is not None:
-            cls.__funix_config__ = widget["config"]
+        if widget.get("name", None):
+            cls.__funix_widget__ = widget["name"]
+            if "config" in widget and widget["config"] is not None:
+                cls.__funix_config__ = widget["config"]
+        elif widget.get("widget", None):
+            if "props" in widget and widget["props"] is not None:
+                cls.__funix_props__ = widget["props"]
+            if "widget" in widget and widget["widget"] is not None:
+                if widget["widget"] not in ComponentMuiComponents:
+                    raise ValueError(
+                        f"The widget {widget['widget']} is not a valid component."
+                    )
+                if cls.__base__ not in ComponentMaps:
+                    raise ValueError(
+                        f"The {cls.__base__} is not a valid type for a widget."
+                    )
+                if widget["widget"] not in ComponentMaps[cls.__base__]:
+                    raise ValueError(
+                        f"The widget {widget['widget']} is not match the type {cls.__base__}."
+                    )
+                cls.__funix_component__ = widget["widget"]
         return cls
 
     return decorator
