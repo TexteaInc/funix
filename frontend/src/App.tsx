@@ -234,6 +234,7 @@ const App = () => {
   const historyLoaded = useRef<boolean>(false);
   const [privacyText, setPrivacyText] = useState("");
   const [lastPrivacyHash, setLastPrivacyHash] = useState("");
+  const privacyDone = useRef(false);
 
   const handlePointerMoveLeftSidebar = useCallback((e: PointerEvent | any) => {
     setFunctionListWidth(e.clientX - document.body.offsetLeft);
@@ -312,25 +313,28 @@ const App = () => {
     }
   };
 
-  fetch(new URL("/privacy", backendURL), {
-    method: "GET",
-  })
-    .then((body) => {
-      return body.json();
+  if (!privacyDone.current) {
+    fetch(new URL("/privacy", backendURL), {
+      method: "GET",
     })
-    .then((json: { text: string; log_level: number; hash: string }) => {
-      setPrivacyText(json.text);
-      setLogLevel(json.log_level);
-      setLastPrivacyHash(json.hash);
+      .then((body) => {
+        return body.json();
+      })
+      .then((json: { text: string; log_level: number; hash: string }) => {
+        setPrivacyText(json.text);
+        setLogLevel(json.log_level);
+        setLastPrivacyHash(json.hash);
 
-      if (localStorage.getItem("privacy-hash") !== json.hash) {
-        setPrivacy(true);
-      } else {
-        setPrivacy(
-          json.log_level === 0 ? false : getCookie("first-join") === undefined
-        );
-      }
-    });
+        if (localStorage.getItem("privacy-hash") !== json.hash) {
+          setPrivacy(true);
+        } else {
+          setPrivacy(
+            json.log_level === 0 ? false : getCookie("first-join") === undefined
+          );
+        }
+      });
+    privacyDone.current = true;
+  }
 
   return (
     <ThemeProvider theme={createTheme(theme || undefined)}>
