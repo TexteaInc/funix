@@ -1590,8 +1590,13 @@ def funix(
                     decorated_params[function_arg_name]["default"] = None
                 if function_arg_name not in json_schema_props:
                     json_schema_props[function_arg_name] = {}
+                custom_component = None
                 if "widget" in decorated_params[function_arg_name]:
                     widget = decorated_params[function_arg_name]["widget"]
+                    if widget.startswith("@"):
+                        # Custom component
+                        custom_component = widget
+                        widget = ""
                 else:
                     if function_arg_type_dict is None:
                         widget = "json"
@@ -1672,6 +1677,12 @@ def funix(
                         function_param.annotation,
                     )
                     json_schema_props[function_arg_name]["type"] = "array"
+
+                if custom_component is not None:
+                    json_schema_props[function_arg_name][
+                        "funixComponent"
+                    ] = custom_component
+                    json_schema_props[function_arg_name]["type"] = "object"
 
                 if hasattr(function_param.annotation, "__funix_component__"):
                     json_schema_props[function_arg_name][
