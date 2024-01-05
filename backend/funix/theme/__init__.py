@@ -184,7 +184,7 @@ def parse_theme(theme: dict) -> tuple[list[str], dict, dict, dict, dict]:
         #         type_names.append(name)
         #         type_widget_dict[name] = theme["widgets"][type_name]
 
-        # Oh sh1t, here we go again
+        # Oh, here we go again
         # for type_widget_group in theme["widgets"]:
         #     data_types = type_widget_group["data_type"]
         #     widget_type = type_widget_group["widget_type"]
@@ -201,6 +201,16 @@ def parse_theme(theme: dict) -> tuple[list[str], dict, dict, dict, dict]:
             widget = theme["widgets"][type_name]
             if isinstance(widget, list):
                 widget = dump_frontend_config(widget[0], widget[1])
+            if isinstance(widget, dict):
+                widget_name = widget["widget"]
+                widget_config = widget.get("props", None)
+                if widget_name.startswith("@"):
+                    pass
+                else:
+                    if widget_config is not None:
+                        widget = dump_frontend_config(widget_name, widget_config)
+                    else:
+                        widget = widget_name
             type_names.append(type_name)
             type_widget_dict[type_name] = widget
     if "palette" in theme:

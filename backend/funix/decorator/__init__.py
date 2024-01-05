@@ -1309,16 +1309,30 @@ def funix(
                             f"{function_name}: {arg_name} has both an example and a whitelist"
                         )
 
-            def parse_widget(widget_info: str | tuple | list) -> list[str] | str:
+            def parse_widget(
+                widget_info: str | tuple | list | dict,
+            ) -> list[str] | str | dict:
                 """
                 Parses the given widget_info
 
                 Parameters:
-                    widget_info (str | tuple | list): The widget_info to parse
+                    widget_info (str | tuple | list | dict): The widget_info to parse
 
                 Returns:
-                    list[str] | str: The widget
+                    list[str] | str | dict: The widget
                 """
+                if isinstance(widget_info, dict):
+                    widget_name = widget_info["widget"]
+                    widget_config = widget_info.get("props", None)
+                    if widget_name.startswith("@"):
+                        return widget_info
+                    else:
+                        if widget_config is None:
+                            return widget_name
+                        else:
+                            return generate_frontend_widget_config(
+                                (widget_name, widget_config)
+                            )
                 if isinstance(widget_info, str):
                     return widget_info
                 elif isinstance(widget_info, tuple):
@@ -1590,12 +1604,25 @@ def funix(
                     decorated_params[function_arg_name]["default"] = None
                 if function_arg_name not in json_schema_props:
                     json_schema_props[function_arg_name] = {}
+                theme_widgets = deepcopy(parsed_theme[1])
                 custom_component = None
+                custom_component_props = None
+                if function_arg_name in theme_widgets:
+                    result = theme_widgets[function_arg_name]
+                    if isinstance(result, dict):
+                        custom_component = result["widget"]
+                        custom_component_props = result.get("props", None)
+                        theme_widgets.pop(function_arg_name)
                 if "widget" in decorated_params[function_arg_name]:
                     widget = decorated_params[function_arg_name]["widget"]
-                    if widget.startswith("@"):
-                        # Custom component
-                        custom_component = widget
+                    if isinstance(widget, str):
+                        if widget.startswith("@"):
+                            # Custom component
+                            custom_component = widget
+                            widget = ""
+                    elif isinstance(widget, dict):
+                        custom_component = widget["widget"]
+                        custom_component_props = widget.get("props", None)
                         widget = ""
                 else:
                     if function_arg_type_dict is None:
@@ -1610,6 +1637,8 @@ def funix(
                         else:
                             widget = ""
 
+                if custom_component is not None:
+                    widget = ""
                 widget = function_param_to_widget(function_param.annotation, widget)
                 param_type = (
                     "object"
@@ -1636,7 +1665,7 @@ def funix(
                     widget,
                     {}
                     if "widget" in decorated_params[function_arg_name]
-                    else parsed_theme[1],
+                    else theme_widgets,
                     function_param.annotation,
                 )
 
@@ -1673,7 +1702,7 @@ def funix(
                         widget[1:],
                         {}
                         if "widget" in decorated_params[function_arg_name]
-                        else parsed_theme[1],
+                        else theme_widgets,
                         function_param.annotation,
                     )
                     json_schema_props[function_arg_name]["type"] = "array"
@@ -1682,6 +1711,10 @@ def funix(
                     json_schema_props[function_arg_name][
                         "funixComponent"
                     ] = custom_component
+                    if custom_component_props is not None:
+                        json_schema_props[function_arg_name][
+                            "funixProps"
+                        ] = custom_component_props
                     json_schema_props[function_arg_name]["type"] = "object"
 
                 if hasattr(function_param.annotation, "__funix_component__"):
