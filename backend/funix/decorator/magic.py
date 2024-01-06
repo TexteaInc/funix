@@ -376,7 +376,6 @@ def get_figure(figure) -> dict:
                 raise Exception("if you use matplotlib, you must install mpld3")
 
         fig = mpld3.fig_to_dict(figure)
-        fig["width"] = 560  # TODO: Change it in frontend
         return fig
     else:
         raise Exception("Install matplotlib to use this function")
