@@ -301,6 +301,35 @@ const App = () => {
         backend: backendURL,
       };
     });
+
+    if (!privacyDone.current) {
+      fetch(new URL("/privacy", backendURL), {
+        method: "GET",
+      })
+        .then((body) => {
+          return body.json();
+        })
+        .then((json: { text: string; log_level: number; hash: string }) => {
+          setPrivacyText(json.text);
+          setLogLevel(json.log_level);
+          setLastPrivacyHash(json.hash);
+
+          if (localStorage.getItem("privacy-hash") !== json.hash) {
+            setPrivacy(true);
+          } else {
+            setPrivacy(
+              json.log_level === 0
+                ? false
+                : getCookie("first-join") === undefined
+            );
+          }
+
+          privacyDone.current = true;
+        })
+        .catch(() => {
+          console.warn("No privacy text!");
+        });
+    }
   }, [backendURL]);
 
   const checkURL = (url: string | undefined): boolean => {
@@ -312,29 +341,6 @@ const App = () => {
       return false;
     }
   };
-
-  if (!privacyDone.current) {
-    fetch(new URL("/privacy", backendURL), {
-      method: "GET",
-    })
-      .then((body) => {
-        return body.json();
-      })
-      .then((json: { text: string; log_level: number; hash: string }) => {
-        setPrivacyText(json.text);
-        setLogLevel(json.log_level);
-        setLastPrivacyHash(json.hash);
-
-        if (localStorage.getItem("privacy-hash") !== json.hash) {
-          setPrivacy(true);
-        } else {
-          setPrivacy(
-            json.log_level === 0 ? false : getCookie("first-join") === undefined
-          );
-        }
-      });
-    privacyDone.current = true;
-  }
 
   return (
     <ThemeProvider theme={createTheme(theme || undefined)}>
