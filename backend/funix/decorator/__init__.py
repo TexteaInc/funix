@@ -1607,12 +1607,18 @@ def funix(
                 theme_widgets = deepcopy(parsed_theme[1])
                 custom_component = None
                 custom_component_props = None
-                if function_arg_name in theme_widgets:
-                    result = theme_widgets[function_arg_name]
-                    if isinstance(result, dict):
-                        custom_component = result["widget"]
-                        custom_component_props = result.get("props", None)
-                        theme_widgets.pop(function_arg_name)
+                if hasattr(function_param.annotation, "__name__"):
+                    name = function_param.annotation.__name__
+                    if name in theme_widgets:
+                        result = theme_widgets[name]
+                        if isinstance(result, dict):
+                            custom_component = result["widget"]
+                            custom_component_props = result.get("props", None)
+                            theme_widgets.pop(name)
+                        elif isinstance(result, str):
+                            if result.startswith("@"):
+                                custom_component = result
+                                theme_widgets.pop(name)
                 if "widget" in decorated_params[function_arg_name]:
                     widget = decorated_params[function_arg_name]["widget"]
                     if isinstance(widget, str):
