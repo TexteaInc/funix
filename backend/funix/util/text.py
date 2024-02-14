@@ -39,8 +39,6 @@ def un_indent(message: str) -> str:
 
     result = ""
 
-    print(lines)
-
     for i in range(len(lines)):
         if i > 1 or (i == 1 and not ignore_first_line):
             result += "\n"
