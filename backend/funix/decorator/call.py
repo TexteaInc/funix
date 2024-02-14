@@ -277,6 +277,8 @@ def call(
                                 }
                             )
                         )
+                        ws.close()
+                        return
                     else:
                         result = []
                         for temp_function_result in function(**arg):
@@ -285,16 +287,18 @@ def call(
                                 result.extend(function_result)
                             else:
                                 result.append(function_result)
-                            ws.send(dumps({"result": result}))
-                            result = []
-                    ws.close()
                 else:
                     temp_result = wrapped_function(**arg)
                     if isinstance(temp_result, list):
                         result.extend(temp_result)
                     else:
                         result.append(temp_result)
-                    return [{"result": result}]
+            if need_websocket:
+                ws.send(dumps({"result": result}))
+                ws.close()
+                return
+            else:
+                return [{"result": result}]
         elif len(upload_base64_files) > 0:
             new_args = function_kwargs
             for upload_base64_file_key in upload_base64_files.keys():
