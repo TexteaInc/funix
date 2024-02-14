@@ -5,15 +5,11 @@ Limited application cases/not fully considered
 """
 
 from _ast import (
-    AST,
     Assign,
-    Attribute,
     Call,
     Constant,
     Expr,
-    FunctionDef,
     Global,
-    List,
     Load,
     Module,
     Name,

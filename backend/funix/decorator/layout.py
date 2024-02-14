@@ -1,7 +1,24 @@
 """
 Layout decorator
 """
-from funix.decorator import convert_row_item
+
+
+def convert_row_item(row_item: dict, item_type: str) -> dict:
+    """
+    Convert a layout row item(block) to frontend-readable item.
+
+    Parameters:
+        row_item (dict): The row item.
+        item_type (str): The item type.
+
+    Returns:
+        dict: The converted item.
+    """
+    converted_item = row_item
+    converted_item["type"] = item_type
+    converted_item["content"] = row_item[item_type]
+    converted_item.pop(item_type)
+    return converted_item
 
 
 def handle_input_layout(input_layout: list) -> (list, dict):
