@@ -18,6 +18,13 @@ from uuid import uuid4
 
 from flask import Response, request, session
 from funix.decorator.layout import handle_input_layout, handle_output_layout
+from funix.decorator.magic import (
+    parse_function_annotation,
+    get_type_widget_prop,
+    get_type_dict,
+    anal_function_result,
+    function_param_to_widget,
+)
 from funix.decorator.pre_fill import parse_pre_fill, get_pre_fill_metadata
 from funix.decorator.widget import widget_parse, parse_widget
 from requests import post
@@ -46,14 +53,6 @@ from funix.decorator.lists import (
     get_default_function_name,
     push_counter,
     set_default_function,
-)
-from funix.decorator.magic import (
-    anal_function_result,
-    convert_row_item,
-    function_param_to_widget,
-    get_type_dict,
-    get_type_widget_prop,
-    parse_function_annotation,
 )
 from funix.decorator.reactive import function_reactive_update, get_reactive_config
 from funix.decorator.runtime import RuntimeClassVisitor
