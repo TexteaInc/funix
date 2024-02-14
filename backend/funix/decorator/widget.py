@@ -198,13 +198,13 @@ def process_treat_as(
 def process_examples_and_whitelist(
     arg_type: str,
     arg_key: str,
-    key_idx: int,
+    _key_idx: int,
     value: any,
     _function_params_name: list,
     decorated_params: dict,
     function_name: str,
 ):
-    put_props_in_params(arg_key, arg_type, value[key_idx], decorated_params)
+    put_props_in_params(arg_key, arg_type, value, decorated_params)
     check_example_whitelist(arg_key, decorated_params, function_name)
 
 
