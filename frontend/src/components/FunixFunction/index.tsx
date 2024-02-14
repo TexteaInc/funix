@@ -169,7 +169,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
         <></>
       )}
       <Stack spacing={2}>
-        <Grid container direction={detail.direction}>
+        <Grid container direction={detail.direction} wrap="nowrap">
           <Grid
             item
             sx={
