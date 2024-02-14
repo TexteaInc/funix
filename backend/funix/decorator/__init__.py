@@ -3,20 +3,16 @@ Funix decorator. The central logic of Funix.
 """
 import ast
 import inspect
-import sys
-from copy import deepcopy
 from functools import wraps
 from importlib import import_module
-from inspect import Parameter, getsource, isgeneratorfunction, signature
-from json import dumps, loads
+from inspect import getsource, isgeneratorfunction, signature
 from secrets import token_hex
-from traceback import format_exc
 from types import ModuleType
-from typing import Any, Callable, Optional, Union
-from urllib.request import urlopen
+from typing import Callable, Optional, Union
 from uuid import uuid4
 
-from flask import Response, request, session
+from funix.decorator.all_of import parse_all_of
+from funix.decorator.call import call
 from funix.decorator.layout import handle_input_layout, handle_output_layout
 from funix.decorator.magic import (
     parse_function_annotation,
@@ -25,15 +21,23 @@ from funix.decorator.magic import (
     anal_function_result,
     function_param_to_widget,
 )
+from funix.decorator.param import (
+    create_parse_type_metadata,
+    parse_param,
+    get_param_for_funix,
+)
 from funix.decorator.pre_fill import parse_pre_fill, get_pre_fill_metadata
-from funix.decorator.widget import widget_parse, parse_widget
-from requests import post
+from funix.decorator.secret import (
+    get_app_secret,
+    set_function_secret,
+    get_secret_by_id,
+    check_secret,
+)
+from funix.decorator.widget import widget_parse, parse_widget, parse_argument_config
 
 from funix.app import app, sock
-from funix.app.websocket import StdoutToWebsocket
 from funix.config import (
     banned_function_name_and_path,
-    supported_upload_widgets,
 )
 from funix.config.switch import GlobalSwitchOption
 from funix.decorator.annnotation_analyzer import (
@@ -72,15 +76,12 @@ from funix.hint import (
     LabelsType,
     Markdown,
     OutputLayout,
-    PreFillEmpty,
     PreFillType,
     ReactiveType,
     TreatAsType,
     WhitelistType,
     WidgetsType,
-    WrapperException,
 )
-from funix.session import get_global_variable, set_global_variable
 from funix.util.module import funix_menu_to_safe_function_name
 from funix.util.text import un_indent
 from funix.util.uri import get_endpoint
@@ -121,51 +122,14 @@ __decorated_functions_names_list: list[str] = []
 A list, each element is the name of the decorated function.
 """
 
-__decorated_secret_functions_dict: dict[str, str] = {}
-"""
-A dict, key is function id, value is secret.
-For checking if the secret is correct.
-"""
-
-__decorated_id_to_function_dict: dict[str, str] = {}
-"""
-A dict, key is function id, value is function name.
-"""
-
 __wrapper_enabled: bool = False
 """
 If the wrapper is enabled.
 """
 
-__app_secret: str | None = None
-"""
-App secret, for all functions.
-"""
-
-parse_type_metadata: dict[str, dict[str, Any]] = {}
-"""
-A dict, key is function ID, value is a map of parameter name to type.
-"""
-
-dataframe_parse_metadata: dict[str, dict[str, list[str]]] = {}
-"""
-A dict, key is function ID, value is a map of parameter name to type.
-"""
-
 now_module: str | None = None
 """
 External passes to module, recorded here, are used to help funix decoration override config.
-"""
-
-
-kumo_callback_url: str | None = None
-"""
-Kumo callback url. For kumo only, only record the call numbers.
-"""
-
-kumo_callback_token: str | None = None
-"""
-Kumo callback token.
 """
 
 dir_mode_default_info: tuple[bool, str | None] = (False, None)
@@ -193,44 +157,6 @@ def funix_method(*args, **kwargs):
         return func
 
     return decorator
-
-
-def set_kumo_info(url: str, token: str) -> None:
-    """
-    Set the kumo info.
-
-    Parameters:
-        url (str): The url.
-        token (str): The token.
-    """
-    global kumo_callback_url, kumo_callback_token
-    kumo_callback_url = url
-    kumo_callback_token = token
-
-
-def set_function_secret(secret: str, function_id: str, function_name: str) -> None:
-    """
-    Set the secret of a function.
-
-    Parameters:
-        secret (str): The secret.
-        function_id (str): The function id.
-        function_name (str): The function name (or with path).
-    """
-    global __decorated_secret_functions_dict, __decorated_id_to_function_dict
-    __decorated_secret_functions_dict[function_id] = secret
-    __decorated_id_to_function_dict[function_id] = function_name
-
-
-def set_app_secret(secret: str) -> None:
-    """
-    Set the app secret, it will be used for all functions.
-
-    Parameters:
-        secret (str): The secret.
-    """
-    global __app_secret
-    __app_secret = secret
 
 
 def set_now_module(module: str) -> None:
@@ -283,34 +209,6 @@ def object_is_handled(object_id: int) -> bool:
         bool: True if handled, False otherwise.
     """
     return object_id in handled_object
-
-
-def export_secrets():
-    """
-    Export all secrets from the decorated functions.
-    """
-    __new_dict: dict[str, str] = {}
-    for function_id, secret in __decorated_secret_functions_dict.items():
-        __new_dict[__decorated_id_to_function_dict[function_id]] = secret
-    return __new_dict
-
-
-def kumo_callback():
-    """
-    Kumo callback.
-    """
-    global kumo_callback_url, kumo_callback_token
-    if kumo_callback_url and kumo_callback_token:
-        try:
-            post(
-                kumo_callback_url,
-                json={
-                    "token": kumo_callback_token,
-                },
-                timeout=1,
-            )
-        except:
-            pass
 
 
 def funix(
@@ -387,14 +285,13 @@ def funix(
     Raises:
         Check code for details
     """
-    global parse_type_metadata
 
-    def decorator(function: callable) -> callable:
+    def decorator(function: Callable) -> callable:
         """
         Decorator for functions to convert them to web apps
 
         Parameters:
-            function(callable): the function to be decorated
+            function(Callable): the function to be decorated
 
         Returns:
             callable: the decorated function
@@ -423,7 +320,7 @@ def funix(
             if safe_module_now:
                 safe_module_now = funix_menu_to_safe_function_name(safe_module_now)
 
-            parse_type_metadata[function_id] = {}
+            create_parse_type_metadata(function_id)
 
             function_direction = direction if direction else "row"
 
@@ -484,16 +381,15 @@ def funix(
                     raise ValueError(
                         f"Function with name {function_title} already exists"
                     )
-
-            if __app_secret is not None:
-                set_function_secret(__app_secret, function_id, function_title)
+            if app_secret := get_app_secret():
+                set_function_secret(app_secret, function_id, function_title)
             elif secret:
                 if isinstance(secret, bool):
                     set_function_secret(token_hex(16), function_id, function_title)
                 else:
                     set_function_secret(secret, function_id, function_title)
 
-            secret_key = __decorated_secret_functions_dict.get(function_id, None)
+            secret_key = get_secret_by_id(function_id) is not None
 
             replace_module = None
 
@@ -598,348 +494,29 @@ def funix(
                 whitelist,
             )
 
-            input_attr = ""
-
             safe_argument_config = {} if argument_config is None else argument_config
 
-            for decorator_arg_name, decorator_arg_dict in safe_argument_config.items():
-                if isinstance(decorator_arg_name, str):
-                    decorator_arg_names = [decorator_arg_name]
-                else:
-                    decorator_arg_names = list(decorator_arg_name)
-                for single_decorator_arg_name in decorator_arg_names:
-                    if single_decorator_arg_name not in decorated_params:
-                        decorated_params[single_decorator_arg_name] = {}
+            parse_argument_config(safe_argument_config, decorated_params, function_name)
 
-                    treat_as_config = decorator_arg_dict.get("treat_as", "config")
-                    decorated_params[single_decorator_arg_name][
-                        "treat_as"
-                    ] = treat_as_config
-                    if treat_as_config != "config":
-                        input_attr = (
-                            decorator_arg_dict["treat_as"]
-                            if input_attr == ""
-                            else input_attr
-                        )
-                        if input_attr != decorator_arg_dict["treat_as"]:
-                            raise Exception(f"{function_name} input type doesn't match")
+            parse_param_result = parse_param(
+                function_params,
+                json_schema_props,
+                decorated_params,
+                __pandas_use,
+                __pandas_module,
+                __pandera_module,
+                function_id,
+                function_name,
+                parsed_theme,
+            )
 
-                    for prop_key in ["widget", "label", "whitelist", "example"]:
-                        if prop_key in decorator_arg_dict:
-                            if prop_key == "label":
-                                decorated_params[single_decorator_arg_name][
-                                    "title"
-                                ] = decorator_arg_dict[prop_key]
-                            elif prop_key == "widget":
-                                decorated_params[single_decorator_arg_name][
-                                    prop_key
-                                ] = parse_widget(decorator_arg_dict[prop_key])
-                            else:
-                                decorated_params[single_decorator_arg_name][
-                                    prop_key
-                                ] = decorator_arg_dict[prop_key]
+            if parse_param_result:
+                return_type_parsed = parse_param_result
 
-                    if (
-                        "whitelist" in decorated_params[single_decorator_arg_name]
-                        and "example" in decorated_params[single_decorator_arg_name]
-                    ):
-                        raise Exception(
-                            f"{function_name}: {single_decorator_arg_name} has both an example and a whitelist"
-                        )
-
-            for _, function_param in function_params.items():
-                if __pandas_use:
-                    anno = function_param.annotation
-                    default_values = (
-                        {}
-                        if function_param.default is Parameter.empty
-                        else function_param.default
-                    )
-
-                    def analyze_columns_and_default_value(pandas_like_anno):
-                        column_names = []
-                        dataframe_parse_metadata[
-                            function_id
-                        ] = dataframe_parse_metadata.get(function_id, {})
-                        columns = {}
-                        if isinstance(pandas_like_anno.columns, dict):
-                            columns = pandas_like_anno.columns
-                        else:
-                            # Should be Index here
-                            for column_name in pandas_like_anno.columns.to_list():
-                                columns[column_name] = {"don't": "check"}
-                        for name, column in columns.items():
-                            if name in default_values:
-                                column_default = list(default_values[name])
-                            else:
-                                column_default = None
-                            if hasattr(column, "dtype"):
-                                d_type = column.dtype
-                                items = analyze(type(d_type))
-                                items["widget"] = "sheet"
-                            else:
-                                if column_default is None:
-                                    items = {"type": "string", "widget": "sheet"}
-                                else:
-                                    items = get_type_widget_prop(
-                                        get_type_dict(type(column_default[0]))["type"],
-                                        0,
-                                        [],
-                                        {},
-                                        None,
-                                    )
-                                    items = {
-                                        "type": items["type"],
-                                        "widget": "sheet",
-                                    }
-                            column_names.append(name)
-                            anal = {
-                                "type": "array",
-                                "widget": "sheet",
-                                "items": items,
-                                "customLayout": False,
-                                "treat_as": "config",
-                            }
-                            dec_param = {
-                                "widget": "sheet",
-                                "treat_as": "config",
-                                "type": f"<mock>list[{items['type']}]</mock>",
-                            }
-                            if column_default:
-                                anal["default"] = column_default
-                                dec_param["default"] = column_default
-                            json_schema_props[name] = anal
-                            decorated_params[name] = dec_param
-                        dataframe_parse_metadata[function_id][
-                            function_param.name
-                        ] = column_names
-
-                    if isinstance(anno, __pandas_module.DataFrame):
-                        if anno.columns.size == 0:
-                            raise Exception(
-                                f"{function_name}: pandas.DataFrame() is not supported, "
-                                f"but you can add columns to it, if you mean DataFrame with no columns, "
-                                f"please use `pandas.DataFrame` instead."
-                            )
-                        else:
-                            analyze_columns_and_default_value(anno)
-                            continue
-
-                    if anno is __pandas_module.core.frame.DataFrame:
-                        if function_param.default is not Parameter.empty:
-                            analyze_columns_and_default_value(default_values)
-                        else:
-                            # Be sheet later
-                            json_schema_props[function_param.name] = {
-                                "type": "object",
-                                "widget": "json",
-                                "treat_as": "config",
-                                "customLayout": False,
-                            }
-                            decorated_params[function_param.name] = {
-                                "widget": "json",
-                                "treat_as": "config",
-                            }
-                        continue
-                    if (
-                        hasattr(anno, "__origin__")
-                        and getattr(anno, "__origin__")
-                        is __pandera_module.typing.pandas.DataFrame
-                    ):
-                        if hasattr(anno, "__args__"):
-                            model_class = getattr(anno, "__args__")[0]
-                            analyze_columns_and_default_value(model_class.to_schema())
-                        else:
-                            raise Exception(
-                                "Please give a schema with pandera.DataFrameModel for DataFrame"
-                            )
-                        continue
-                parse_type_metadata[function_id][
-                    function_param.name
-                ] = function_param.annotation
-                function_arg_name = function_param.name
-                decorated_params[function_arg_name] = decorated_params.get(
-                    function_arg_name, {}
-                )
-                decorated_params[function_arg_name]["treat_as"] = decorated_params[
-                    function_arg_name
-                ].get("treat_as", "config")
-
-                if GlobalSwitchOption.AUTO_CONVERT_UNDERSCORE_TO_SPACE_IN_NAME:
-                    if "_" in function_arg_name:
-                        decorated_params[function_arg_name]["title"] = decorated_params[
-                            function_arg_name
-                        ].get("title", function_arg_name.replace("_", " "))
-
-                function_arg_type_dict = get_type_dict(function_param.annotation)
-                decorated_params[function_arg_name].update(function_arg_type_dict)
-                default_example = function_param.default
-                if default_example is not Parameter.empty:
-                    decorated_params[function_arg_name]["default"] = default_example
-                elif decorated_params[function_arg_name]["type"] == "bool":
-                    decorated_params[function_arg_name]["default"] = False
-                elif (
-                    "optional" in decorated_params[function_arg_name]
-                    and decorated_params[function_arg_name]["optional"]
-                ):
-                    decorated_params[function_arg_name]["default"] = None
-                if function_arg_name not in json_schema_props:
-                    json_schema_props[function_arg_name] = {}
-                theme_widgets = deepcopy(parsed_theme[1])
-                custom_component = None
-                custom_component_props = None
-                if hasattr(function_param.annotation, "__name__"):
-                    name = function_param.annotation.__name__
-                    if name in theme_widgets:
-                        result = theme_widgets[name]
-                        if isinstance(result, dict):
-                            custom_component = result["widget"]
-                            custom_component_props = result.get("props", None)
-                            theme_widgets.pop(name)
-                        elif isinstance(result, str):
-                            if result.startswith("@"):
-                                custom_component = result
-                                theme_widgets.pop(name)
-                if "widget" in decorated_params[function_arg_name]:
-                    widget = decorated_params[function_arg_name]["widget"]
-                    if isinstance(widget, str):
-                        if widget.startswith("@"):
-                            # Custom component
-                            custom_component = widget
-                            widget = ""
-                    elif isinstance(widget, dict):
-                        custom_component = widget["widget"]
-                        custom_component_props = widget.get("props", None)
-                        widget = ""
-                else:
-                    if function_arg_type_dict is None:
-                        widget = "json"
-                    else:
-                        if function_arg_type_dict["type"] in [
-                            "list",
-                            "dict",
-                            "typing.Dict",
-                        ]:
-                            widget = "json"
-                        else:
-                            widget = ""
-
-                if custom_component is not None:
-                    widget = ""
-                widget = function_param_to_widget(function_param.annotation, widget)
-                param_type = (
-                    "object"
-                    if function_arg_type_dict is None
-                    else function_arg_type_dict["type"]
-                )
-                if hasattr(function_param.annotation, "__funix__"):
-                    if hasattr(function_param.annotation, "__funix_bool__"):
-                        new_function_arg_type_dict = get_type_dict(bool)
-                    else:
-                        if hasattr(function_param.annotation, "__funix_base__"):
-                            new_function_arg_type_dict = get_type_dict(
-                                function_param.annotation.__funix_base__
-                            )
-                        else:
-                            new_function_arg_type_dict = get_type_dict(
-                                function_param.annotation.__base__
-                            )
-                    if new_function_arg_type_dict is not None:
-                        param_type = new_function_arg_type_dict["type"]
-                json_schema_props[function_arg_name] = get_type_widget_prop(
-                    param_type,
-                    0,
-                    widget,
-                    {}
-                    if "widget" in decorated_params[function_arg_name]
-                    else theme_widgets,
-                    function_param.annotation,
-                )
-
-                for prop_key in ["whitelist", "example", "keys", "default", "title"]:
-                    if prop_key in decorated_params[function_arg_name].keys():
-                        json_schema_props[function_arg_name][
-                            prop_key
-                        ] = decorated_params[function_arg_name][prop_key]
-
-                if (
-                    "whitelist" in json_schema_props[function_arg_name]
-                    and "example" in json_schema_props[function_arg_name]
-                ):
-                    raise Exception(
-                        f"{function_name}: {function_arg_name} has both an example and a whitelist"
-                    )
-
-                json_schema_props[function_arg_name]["customLayout"] = decorated_params[
-                    function_arg_name
-                ].get("customLayout", False)
-
-                if decorated_params[function_arg_name]["treat_as"]:
-                    json_schema_props[function_arg_name]["treat_as"] = decorated_params[
-                        function_arg_name
-                    ]["treat_as"]
-
-                if decorated_params[function_arg_name]["treat_as"] == "cell":
-                    return_type_parsed = "array"
-                    json_schema_props[function_arg_name][
-                        "items"
-                    ] = get_type_widget_prop(
-                        param_type,
-                        0,
-                        widget[1:],
-                        {}
-                        if "widget" in decorated_params[function_arg_name]
-                        else theme_widgets,
-                        function_param.annotation,
-                    )
-                    json_schema_props[function_arg_name]["type"] = "array"
-
-                if custom_component is not None:
-                    json_schema_props[function_arg_name][
-                        "funixComponent"
-                    ] = custom_component
-                    if custom_component_props is not None:
-                        json_schema_props[function_arg_name][
-                            "funixProps"
-                        ] = custom_component_props
-                    json_schema_props[function_arg_name]["type"] = "object"
-
-                if hasattr(function_param.annotation, "__funix_component__"):
-                    json_schema_props[function_arg_name][
-                        "funixComponent"
-                    ] = function_param.annotation.__funix_component__
-                    if hasattr(function_param.annotation, "__funix_props__"):
-                        json_schema_props[function_arg_name][
-                            "funixProps"
-                        ] = function_param.annotation.__funix_props__
-                    json_schema_props[function_arg_name]["type"] = "object"
-
-            all_of = []
-            delete_keys = set()
             safe_conditional_visible = (
                 {} if conditional_visible is None else conditional_visible
             )
-
-            for conditional_visible_item in safe_conditional_visible:
-                config = {
-                    "if": {"properties": {}},
-                    "then": {"properties": {}},
-                    "required": [],
-                }
-                if_items: Any = conditional_visible_item["when"]
-                then_items = conditional_visible_item["show"]
-                for if_item in if_items.keys():
-                    config["if"]["properties"][if_item] = {"const": if_items[if_item]}
-                for then_item in then_items:
-                    config["then"]["properties"][then_item] = json_schema_props[
-                        then_item
-                    ]
-                    config["required"].append(then_item)
-                    delete_keys.add(then_item)
-                all_of.append(config)
-
-            for key in delete_keys:
-                json_schema_props.pop(key)
+            all_of = parse_all_of(safe_conditional_visible, json_schema_props)
 
             decorated_function = {
                 "id": function_id,
@@ -977,29 +554,7 @@ def funix(
                 Returns:
                     flask.Response: The function's parameters
                 """
-                if pre_fill is not None:
-                    new_decorated_function = deepcopy(decorated_function)
-                    for argument_key, from_function_info in pre_fill.items():
-                        if isinstance(from_function_info, tuple):
-                            last_result = get_global_variable(
-                                str(id(from_function_info[0]))
-                                + f"_{from_function_info[1]}"
-                            )
-                        else:
-                            last_result = get_global_variable(
-                                str(id(from_function_info)) + "_result"
-                            )
-                        if last_result is not None:
-                            new_decorated_function["params"][argument_key][
-                                "default"
-                            ] = last_result
-                            new_decorated_function["schema"]["properties"][
-                                argument_key
-                            ]["default"] = last_result
-                    return Response(
-                        dumps(new_decorated_function), mimetype="application/json"
-                    )
-                return Response(dumps(decorated_function), mimetype="application/json")
+                return get_param_for_funix(pre_fill, decorated_function)
 
             decorated_function_param_getter_name = f"{function_name}_param_getter"
 
@@ -1030,37 +585,7 @@ def funix(
                     Returns:
                         flask.Response: The verification result
                     """
-                    data = request.get_json()
-
-                    failed_data = Response(
-                        dumps(
-                            {
-                                "success": False,
-                            }
-                        ),
-                        mimetype="application/json",
-                        status=400,
-                    )
-
-                    if data is None:
-                        return failed_data
-
-                    if "secret" not in data:
-                        return failed_data
-
-                    user_secret = request.get_json()["secret"]
-                    if user_secret == __decorated_secret_functions_dict[function_id]:
-                        return Response(
-                            dumps(
-                                {
-                                    "success": True,
-                                }
-                            ),
-                            mimetype="application/json",
-                            status=200,
-                        )
-                    else:
-                        return failed_data
+                    return check_secret(function_id)
 
                 decorated_function_verify_secret_name = f"{function_name}_verify_secret"
 
@@ -1080,310 +605,22 @@ def funix(
 
             @wraps(function)
             def wrapper(ws=None):
-                """
-                The function's wrapper
-
-                Routes:
-                    /call/{endpoint}
-                    /call/{function_id}
-
-                Returns:
-                    Any: The function's result
-                """
-
-                for limiter in global_rate_limiters + limiters:
-                    limit_result = limiter.rate_limit()
-                    if limit_result is not None:
-                        return limit_result
-
-                try:
-                    if not session.get("__funix_id"):
-                        session["__funix_id"] = uuid4().hex
-                    if need_websocket:
-                        function_kwargs = loads(ws.receive())
-                    else:
-                        function_kwargs = request.get_json()
-                    kumo_callback()
-                    if __pandas_use:
-                        if function_id in dataframe_parse_metadata:
-                            for need_argument in dataframe_parse_metadata[function_id]:
-                                big_dict = {}
-                                get_args = dataframe_parse_metadata[function_id][
-                                    need_argument
-                                ]
-                                for get_arg in get_args:
-                                    big_dict[get_arg] = deepcopy(
-                                        function_kwargs[get_arg]
-                                    )
-                                    del function_kwargs[get_arg]
-                                function_kwargs[
-                                    need_argument
-                                ] = __pandas_module.DataFrame(big_dict)
-                    if function_id in parse_type_metadata:
-                        for func_arg, func_arg_type_class in parse_type_metadata[
-                            function_id
-                        ].items():
-                            if func_arg in function_kwargs:
-                                try:
-                                    function_kwargs[func_arg] = func_arg_type_class(
-                                        function_kwargs[func_arg]
-                                    )
-                                except:
-                                    # Oh, my `typing`
-                                    continue
-
-                    def original_result_to_pre_fill_metadata(
-                        function_id_int: int,
-                        function_call_result: Any,
-                    ) -> None:
-                        """
-                        Document is on the way
-                        """
-                        function_call_address = str(function_id_int)
-                        if pre_fill_metadata := get_pre_fill_metadata(
-                            function_call_address
-                        ):
-                            for index_or_key in pre_fill_metadata:
-                                if index_or_key is PreFillEmpty:
-                                    set_global_variable(
-                                        function_call_address + "_result",
-                                        function_call_result,
-                                    )
-                                else:
-                                    set_global_variable(
-                                        function_call_address + f"_{index_or_key}",
-                                        function_call_result[index_or_key],
-                                    )
-
-                    def pre_anal_result(function_call_result: Any):
-                        """
-                        Document is on the way
-                        """
-                        try:
-                            original_result_to_pre_fill_metadata(
-                                id(function), function_call_result
-                            )
-                            return anal_function_result(
-                                function_call_result,
-                                return_type_parsed,
-                                cast_to_list_flag,
-                            )
-                        except:
-                            return {
-                                "error_type": "pre-anal",
-                                "error_body": format_exc(),
-                            }
-
-                    @wraps(function)
-                    def wrapped_function(**wrapped_function_kwargs):
-                        """
-                        The function's wrapper
-                        """
-                        # TODO: Best result handling, refactor it if possible
-                        try:
-                            function_call_result = function(**wrapped_function_kwargs)
-                            return pre_anal_result(function_call_result)
-                        except WrapperException as e:
-                            return {
-                                "error_type": "wrapper",
-                                "error_body": str(e),
-                            }
-                        except:
-                            return {
-                                "error_type": "function",
-                                "error_body": format_exc(),
-                            }
-
-                    @wraps(function)
-                    def output_to_web_function(**wrapped_function_kwargs):
-                        try:
-                            fake_stdout = StdoutToWebsocket(ws)
-                            org_stdout, sys.stdout = sys.stdout, fake_stdout
-                            if isgeneratorfunction(function):
-                                for single_result in function(
-                                    **wrapped_function_kwargs
-                                ):
-                                    if single_result:
-                                        print(single_result)
-                            else:
-                                function_result_ = function(**wrapped_function_kwargs)
-                                if function_result_:
-                                    print(function_result_)
-                            sys.stdout = org_stdout
-                        except:
-                            ws.send(
-                                dumps(
-                                    {
-                                        "error_type": "function",
-                                        "error_body": format_exc(),
-                                    }
-                                )
-                            )
-                        ws.close()
-
-                    cell_names = []
-                    upload_base64_files = {}
-
-                    # TODO: And the logic below, refactor it if possible
-
-                    for json_schema_prop_key in json_schema_props.keys():
-                        if "treat_as" in json_schema_props[json_schema_prop_key]:
-                            if (
-                                json_schema_props[json_schema_prop_key]["treat_as"]
-                                == "cell"
-                            ):
-                                cell_names.append(json_schema_prop_key)
-                        if "widget" in json_schema_props[json_schema_prop_key]:
-                            if (
-                                json_schema_props[json_schema_prop_key]["widget"]
-                                in supported_upload_widgets
-                            ):
-                                upload_base64_files[json_schema_prop_key] = "single"
-                        if "items" in json_schema_props[json_schema_prop_key]:
-                            if (
-                                "widget"
-                                in json_schema_props[json_schema_prop_key]["items"]
-                            ):
-                                if (
-                                    json_schema_props[json_schema_prop_key]["items"][
-                                        "widget"
-                                    ]
-                                    in supported_upload_widgets
-                                ):
-                                    upload_base64_files[
-                                        json_schema_prop_key
-                                    ] = "multiple"
-
-                    if function_kwargs is None:
-                        empty_function_kwargs_error = {
-                            "error_type": "wrapper",
-                            "error_body": "No arguments passed to function.",
-                        }
-                        if need_websocket:
-                            ws.send(dumps(empty_function_kwargs_error))
-                            ws.close()
-                        else:
-                            return empty_function_kwargs_error
-                    if secret_key:
-                        if "__funix_secret" in function_kwargs:
-                            if (
-                                not __decorated_secret_functions_dict[function_id]
-                                == function_kwargs["__funix_secret"]
-                            ):
-                                incorrect_secret_error = {
-                                    "error_type": "wrapper",
-                                    "error_body": "Provided secret is incorrect.",
-                                }
-                                if need_websocket:
-                                    ws.send(dumps(incorrect_secret_error))
-                                    ws.close()
-                                else:
-                                    return incorrect_secret_error
-                            else:
-                                del function_kwargs["__funix_secret"]
-                        else:
-                            no_secret_error = {
-                                "error_type": "wrapper",
-                                "error_body": "No secret provided.",
-                            }
-                            if need_websocket:
-                                ws.send(dumps(no_secret_error))
-                                ws.close()
-                            else:
-                                return no_secret_error
-
-                    if len(cell_names) > 0:
-                        length = len(function_kwargs[cell_names[0]])
-                        static_keys = function_kwargs.keys() - cell_names
-                        result = []
-                        for i in range(length):
-                            arg = {}
-                            for cell_name in cell_names:
-                                arg[cell_name] = function_kwargs[cell_name][i]
-                            for static_key in static_keys:
-                                arg[static_key] = function_kwargs[static_key]
-                            if need_websocket:
-                                if print_to_web:
-                                    ws.send(
-                                        dumps(
-                                            {
-                                                "error_type": "wrapper",
-                                                "error_body": "Funix cannot handle cell, print_to_web and stream mode "
-                                                "in the same time",
-                                            }
-                                        )
-                                    )
-                                else:
-                                    result = []
-                                    for temp_function_result in function(**arg):
-                                        function_result = pre_anal_result(
-                                            temp_function_result
-                                        )
-                                        if isinstance(function_result, list):
-                                            result.extend(function_result)
-                                        else:
-                                            result.append(function_result)
-                                        ws.send(dumps({"result": result}))
-                                        result = []
-                                ws.close()
-                            else:
-                                temp_result = wrapped_function(**arg)
-                                if isinstance(temp_result, list):
-                                    result.extend(temp_result)
-                                else:
-                                    result.append(temp_result)
-                                return [{"result": result}]
-                    elif len(upload_base64_files) > 0:
-                        new_args = function_kwargs
-                        for upload_base64_file_key in upload_base64_files.keys():
-                            if upload_base64_files[upload_base64_file_key] == "single":
-                                with urlopen(
-                                    function_kwargs[upload_base64_file_key]
-                                ) as rsp:
-                                    new_args[upload_base64_file_key] = rsp.read()
-                            elif (
-                                upload_base64_files[upload_base64_file_key]
-                                == "multiple"
-                            ):
-                                for pos, each in enumerate(
-                                    function_kwargs[upload_base64_file_key]
-                                ):
-                                    with urlopen(each) as rsp:
-                                        new_args[upload_base64_file_key][
-                                            pos
-                                        ] = rsp.read()
-                        if need_websocket:
-                            if print_to_web:
-                                output_to_web_function(**new_args)
-                            else:
-                                for temp_function_result in function(**new_args):
-                                    function_result = pre_anal_result(
-                                        temp_function_result
-                                    )
-                                    ws.send(dumps(function_result))
-                                ws.close()
-                        else:
-                            return wrapped_function(**new_args)
-                    else:
-                        if need_websocket:
-                            if print_to_web:
-                                output_to_web_function(**function_kwargs)
-                            else:
-                                for temp_function_result in function(**function_kwargs):
-                                    function_result = pre_anal_result(
-                                        temp_function_result
-                                    )
-                                    ws.send(dumps(function_result))
-                                ws.close()
-                        else:
-                            return wrapped_function(**function_kwargs)
-                except:
-                    error = {"error_type": "wrapper", "error_body": format_exc()}
-                    if need_websocket:
-                        ws.send(dumps(error))
-                        ws.close()
-                    else:
-                        return error
+                result = call(
+                    limiters,
+                    need_websocket,
+                    __pandas_use,
+                    __pandas_module,
+                    function_id,
+                    function,
+                    return_type_parsed,
+                    cast_to_list_flag,
+                    json_schema_props,
+                    print_to_web,
+                    secret_key,
+                    ws,
+                )
+                if result is not None:
+                    return result
 
             wrapper._decorator_name_ = "funix"
 
