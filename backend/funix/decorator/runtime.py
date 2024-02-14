@@ -1,4 +1,3 @@
-import ast
 from _ast import (
     Assign,
     Attribute,
@@ -13,6 +12,7 @@ from _ast import (
     Return,
     Store,
 )
+from ast import NodeVisitor, unparse
 from typing import Any
 
 import funix
@@ -20,7 +20,19 @@ from funix.hint import WrapperException
 from funix.session import get_global_variable, set_global_variable
 
 
-def get_init_function(cls_name: str):
+def get_init_function(cls_name: str) -> Any:
+    """
+    Get the inited class. Used in the funix ast handler.
+
+    Parameters:
+        cls_name (str): The class name.
+
+    Returns:
+        Any: The inited class.
+
+    Raises:
+        WrapperException: If the class is not inited.
+    """
     inited_class = get_global_variable("__FUNIX_" + cls_name)
 
     if inited_class is None:
@@ -29,12 +41,41 @@ def get_init_function(cls_name: str):
         return inited_class
 
 
-def set_init_function(cls_name: str, cls):
+def set_init_function(cls_name: str, cls: Any):
+    """
+    Set the inited class. Used in the funix ast handler.
+
+    Parameters:
+        cls_name (str): The class name.
+        cls (Any): The inited class.
+    """
     set_global_variable("__FUNIX_" + cls_name, cls)
 
 
-class RuntimeClassVisitor(ast.NodeVisitor):
+class RuntimeClassVisitor(NodeVisitor):
+    """
+    The runtime class visitor.
+
+    Base Class:
+        ast.NodeVisitor: The ast node visitor.
+
+    Attributes:
+        funix (Any): The funix module.
+        _cls_name (str): The class name.
+        _cls (Any): The class (no instance).
+        _imports (list): The imports.
+        open_function (bool): Whether to start function import.
+    """
+
     def __init__(self, cls_name: str, funix_: Any, cls: Any):
+        """
+        Initialize the runtime class visitor.
+
+        Parameters:
+            cls_name (str): The class name.
+            funix_ (Any): The funix module.
+            cls (Any): The class (no instance).
+        """
         self.funix = funix_
         self._cls_name = cls_name
         self._cls = cls
@@ -43,12 +84,32 @@ class RuntimeClassVisitor(ast.NodeVisitor):
         self.open_function = False
 
     def visit_Import(self, node):
+        """
+        Visit the import node, and append it to the imports.
+
+        Parameters:
+            node (_ast.Import): The import node.
+        """
         self._imports.append(node)
 
     def visit_ImportFrom(self, node):
+        """
+        Visit the import from node, and append it to the imports.
+
+        Parameters:
+            node (_ast.ImportFrom): The import from node.
+        """
         self._imports.append(node)
 
-    def visit_ClassDef(self, node: ClassDef) -> Any:
+    def visit_ClassDef(self, node: ClassDef):
+        """
+        Visit the class definition node.
+
+        If this is the class we want, then visit the function definition node.
+
+        Parameters:
+            node (_ast.ClassDef): The class definition node.
+        """
         if node.name != self._cls_name:
             return
         for cls_function in node.body:
@@ -57,7 +118,13 @@ class RuntimeClassVisitor(ast.NodeVisitor):
                 self.visit_FunctionDef(cls_function)
                 self.open_function = False
 
-    def visit_FunctionDef(self, node: FunctionDef) -> Any:
+    def visit_FunctionDef(self, node: FunctionDef):
+        """
+        Visit the function definition node. And create the function.
+
+        Parameters:
+            node (_ast.FunctionDef): The function definition node.
+        """
         if not self.open_function:
             return
         args = node.args
@@ -178,7 +245,7 @@ class RuntimeClassVisitor(ast.NodeVisitor):
 
         globals()["__funix__module__"] = funix
         globals()[self._cls_name] = self._cls
-        code = ast.unparse(new_module)
+        code = unparse(new_module)
         try:
             exec(
                 code,

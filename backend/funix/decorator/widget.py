@@ -1,0 +1,236 @@
+import pathlib
+import re
+from inspect import Parameter
+from types import MappingProxyType
+from typing import Any, Union
+
+from funix.widget import generate_frontend_widget_config
+
+
+def create_decorated_params(arg_name: str, decorated_params: dict) -> None:
+    """
+    Creates a decorated_params entry for the given arg_name if it doesn't exist
+
+    Parameters:
+        arg_name (str): The name of the argument
+        decorated_params (dict): The decorated_params
+    """
+    if arg_name not in decorated_params:
+        decorated_params[arg_name] = {}
+
+
+def put_props_in_params(
+    arg_name: str, prop_name: str, prop_value: Any, decorated_params: dict
+) -> None:
+    """
+    Puts the given prop_name and prop_value in the decorated_params entry for the given arg_name
+
+    Parameters:
+        arg_name (str): The name of the argument
+        prop_name (str): The name of the prop
+        prop_value (Any): The value of the prop
+        decorated_params (dict): The decorated_params
+    """
+    create_decorated_params(arg_name, decorated_params)
+    decorated_params[arg_name][prop_name] = prop_value
+
+
+def check_example_whitelist(
+    arg_name: str, decorated_params: dict, function_name: str
+) -> None:
+    """
+    Checks if the given arg_name has both an example and a whitelist
+
+    Parameters:
+        arg_name (str): The name of the argument
+        decorated_params (dict): The decorated_params
+        function_name (str): The name of the function
+
+    Raises:
+        ValueError: If the given arg_name has both an example and a whitelist
+    """
+    if arg_name in decorated_params:
+        if (
+            "example" in decorated_params[arg_name]
+            and "whitelist" in decorated_params[arg_name]
+        ):
+            raise ValueError(
+                f"{function_name}: {arg_name} has both an example and a whitelist"
+            )
+
+
+def parse_widget(
+    widget_info: str | tuple | list | dict,
+) -> list[str] | str | dict:
+    """
+    Parses the given widget_info
+
+    Parameters:
+        widget_info (str | tuple | list | dict): The widget_info to parse
+
+    Returns:
+        list[str] | str | dict: The widget
+    """
+    if isinstance(widget_info, dict):
+        widget_name = widget_info["widget"]
+        widget_config: Union[dict, None] = widget_info.get("props", None)
+        if widget_name.startswith("@"):
+            return widget_info
+        else:
+            if widget_config is None:
+                return widget_name
+            else:
+                return generate_frontend_widget_config((widget_name, widget_config))
+    if isinstance(widget_info, str):
+        return widget_info
+    elif isinstance(widget_info, tuple):
+        return generate_frontend_widget_config(widget_info)
+    elif isinstance(widget_info, list):
+        widget_result = []
+        for widget_item in widget_info:
+            if isinstance(widget_item, tuple):
+                widget_result.append(generate_frontend_widget_config(widget_item))
+            elif isinstance(widget_item, list):
+                widget_result.append(parse_widget(widget_item))
+            elif isinstance(widget_item, str):
+                widget_result.append(widget_item)
+        return widget_result
+
+
+def iter_over_prop(
+    argument_type: str,
+    argument: dict[str | tuple, Any] | None,
+    function_params_name: list[str],
+    decorated_params: dict,
+    function_name: str,
+    callback,
+):
+    """
+    callback: pass in (argument_type, key, key_idx, value)
+    """
+    if argument is None:
+        return
+
+    for arg_idx, arg_key in enumerate(argument):
+        if isinstance(arg_key, str):
+            callback(
+                argument_type,
+                arg_key,
+                0,
+                argument[arg_key],
+                function_params_name,
+                decorated_params,
+                function_name,
+            )
+        elif isinstance(arg_key, tuple):
+            for key_idx, single_key in enumerate(arg_key):
+                callback(
+                    argument_type,
+                    single_key,
+                    key_idx,
+                    argument[arg_key],
+                    function_params_name,
+                    decorated_params,
+                    function_name,
+                )
+        else:
+            raise TypeError(
+                f"Argument `{argument_type}` has invalid key type {type(argument)}"
+            )
+
+
+def expand_wildcards(origin_key: str, search_list: list[str]) -> list[str]:
+    keys = []
+    if "*" in origin_key or "?" in origin_key:
+        for param_name in search_list:
+            if pathlib.PurePath(param_name).match(origin_key):
+                keys.append(param_name)
+    elif origin_key.startswith("regex:"):
+        regex = re.compile(origin_key[6:])
+        for param_name in search_list:
+            if regex.search(param_name) is not None:
+                keys.append(param_name)
+    else:
+        keys.append(origin_key)
+    return keys
+
+
+def process_widgets(
+    arg_type: str,
+    arg_key: str,
+    _key_idx: int,
+    value: any,
+    function_params_name: list,
+    decorated_params: dict,
+    _function_name: str,
+):
+    parsed_widget = parse_widget(value)
+    for expanded_key in expand_wildcards(arg_key, function_params_name):
+        put_props_in_params(expanded_key, arg_type, parsed_widget, decorated_params)
+
+
+def process_title(
+    arg_type: str,
+    arg_key: str,
+    _key_idx: int,
+    value: any,
+    function_params_name: list,
+    decorated_params: dict,
+    _function_name: str,
+):
+    for expanded_key in expand_wildcards(arg_key, function_params_name):
+        put_props_in_params(expanded_key, arg_type, value, decorated_params)
+
+
+def process_treat_as(
+    arg_type: str,
+    arg_key: str,
+    _key_idx: int,
+    value: any,
+    _function_params_name: list,
+    decorated_params: dict,
+    _function_name: str,
+):
+    put_props_in_params(arg_key, arg_type, value, decorated_params)
+
+
+def process_examples_and_whitelist(
+    arg_type: str,
+    arg_key: str,
+    key_idx: int,
+    value: any,
+    _function_params_name: list,
+    decorated_params: dict,
+    function_name: str,
+):
+    put_props_in_params(arg_key, arg_type, value[key_idx], decorated_params)
+    check_example_whitelist(arg_key, decorated_params, function_name)
+
+
+def widget_parse(
+    function_params: MappingProxyType[str, Parameter],
+    decorated_params: dict,
+    function_name: str,
+    widgets: dict,
+    argument_labels: dict,
+    treat_as: dict,
+    examples: dict,
+    whitelist: dict,
+):
+    function_params_name: list[str] = list(function_params.keys())
+
+    for i in [
+        ("widget", widgets, process_widgets),
+        ("title", argument_labels, process_title),
+        ("treat_as", treat_as, process_treat_as),
+        ("example", examples, process_examples_and_whitelist),
+        ("whitelist", whitelist, process_examples_and_whitelist),
+    ]:
+        iter_over_prop(
+            i[0],
+            i[1],
+            function_params_name,
+            decorated_params,
+            function_name,
+            i[2],
+        )

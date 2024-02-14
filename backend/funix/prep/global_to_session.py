@@ -197,6 +197,9 @@ def get_new_python_file(file_path: str) -> str:
 
     Returns:
         str: The new python file path.
+
+    Note:
+        Not cool for Kumo, redo it later.
     """
     with open(file_path, "r", encoding="utf-8") as file:
         source = file.read()

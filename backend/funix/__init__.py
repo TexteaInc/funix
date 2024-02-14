@@ -1,29 +1,29 @@
 import sys
 from importlib import import_module
-from inspect import isfunction, isclass, getsourcefile
 from ipaddress import ip_address
-from os import chdir, getcwd, listdir
-from os.path import abspath, dirname, exists, isdir, join, normpath, sep
+from os import chdir, getcwd
+from os.path import abspath, dirname, exists, isdir, join, sep, splitext
 from sys import exit, path
-from typing import Any, Generator, Optional
+from typing import Optional
 from urllib.parse import quote
 
 from flask import Flask
 from gitignore_parser import parse_gitignore
 
 import funix.decorator as decorator
+import funix.decorator.limit as limit
+import funix.decorator.theme as theme
 import funix.hint as hint
 from funix.app import app, enable_funix_host_checker, privacy_policy
 from funix.frontend import OpenFrontend, run_open_frontend, start
 from funix.prep.global_to_session import get_new_python_file
-from funix.util.file import create_safe_tempdir
-from funix.util.module import import_module_from_file
-from funix.util.network import (
-    get_compressed_ip_address_as_str,
-    get_unused_port_from,
-    is_ip_on_localhost,
-    is_port_used,
+from funix.util.file import (
+    create_safe_tempdir,
+    get_path_difference,
+    get_python_files_in_dir,
 )
+from funix.util.module import getsourcefile_safe, handle_module, import_module_from_file
+from funix.util.network import get_compressed_ip_address_as_str, get_unused_port_from
 
 # ---- Exports ----
 # ---- Decorators ----
@@ -32,12 +32,12 @@ funix_class = decorator.funix_class
 funix_method = decorator.funix_method
 # ---- Decorators ----
 
-Limiter = decorator.Limiter
+Limiter = limit.Limiter
 
 # ---- Theme ----
-set_default_theme = decorator.set_default_theme
-clear_default_theme = decorator.clear_default_theme
-import_theme = decorator.import_theme
+set_default_theme = theme.set_default_theme
+clear_default_theme = theme.clear_default_theme
+import_theme = theme.import_theme
 # ---- Theme ----
 
 # ---- Util ----
@@ -65,62 +65,6 @@ except:
     pass
 
 
-def get_path_difference(base_dir: str, target_dir: str) -> str | None:
-    base_components = normpath(base_dir).split(sep)
-    target_components = normpath(target_dir).split(sep)
-
-    if not target_dir.startswith(base_dir):
-        raise ValueError("The base directory is not a prefix of the target directory.")
-
-    path_diff = target_components
-
-    for _ in range(len(base_components)):
-        path_diff.pop(0)
-
-    return ".".join(path_diff)
-
-
-def getsourcefile_safe(obj: Any) -> str | None:
-    try:
-        if isclass(obj):
-            return getsourcefile(obj.__init__)
-        return getsourcefile(obj)
-    except:
-        return None
-
-
-def handle_module(
-    module: Any,
-    need_path: bool,
-    base_dir: Optional[str],
-    path_difference: Optional[str],
-) -> None:
-    members = reversed(dir(module))
-    for member in members:
-        module_member = getattr(module, member)
-        is_func = isfunction(module_member)
-        is_cls = isclass(module_member)
-        if is_func or is_cls:
-            if getsourcefile_safe(module_member) != module.__file__:
-                continue
-            in_funix = (
-                decorator.object_is_handled(id(module_member))
-                or id(module_member) in hint.custom_cls_ids
-            )
-            if in_funix:
-                continue
-            use_func = funix if is_func else funix_class
-            if member.startswith("__") or member.startswith("_FUNIX_"):
-                continue
-            if need_path:
-                if base_dir:
-                    use_func(menu=path_difference)(module_member)
-                else:
-                    use_func(menu=f"{module.__name__}")(module_member)
-            else:
-                use_func()(module_member)
-
-
 def __prep(
     module_or_file: Optional[str],
     need_path: bool,
@@ -146,7 +90,7 @@ def __prep(
     if base_dir:
         # dir mode
         module = module_or_file.split(sep)
-        module[-1] = module[-1][:-3]  # remove .py
+        module[-1] = splitext(module[-1])[0]
         module = sep.join(module)
         path_difference = get_path_difference(base_dir, module)
     if module_or_file:
@@ -183,45 +127,6 @@ def __prep(
             "functions are in a file called hello.py, you should pass hello.py here. \n Example: funix hello.py"
         )
         exit(1)
-
-
-def get_python_files_in_dir(
-    base_dir: str,
-    add_to_sys_path: bool,
-    need_full_path: bool,
-    is_dir: bool,
-    matches: Any,
-) -> Generator[str, None, None]:
-    """
-    Get all the Python files in a directory.
-
-    Parameters:
-        base_dir (str): The path.
-        add_to_sys_path (bool): If the path should be added to sys.path.
-        need_full_path (bool): If the full path is needed.
-        is_dir (bool): If mode is dir mode.
-        matches (Any): The matches.
-
-    Returns:
-        Generator[str, None, None]: The Python files.
-    """
-    if add_to_sys_path:
-        path.append(base_dir)
-    files = listdir(base_dir)
-    for file in files:
-        if isdir(join(base_dir, file)):
-            yield from get_python_files_in_dir(
-                join(base_dir, file), add_to_sys_path, need_full_path, is_dir, matches
-            )
-        if file.endswith(".py") and file != "__init__.py":
-            full_path = join(base_dir, file)
-            if matches:
-                if matches(abspath(full_path)):
-                    continue
-            if need_full_path:
-                yield join(base_dir, file)
-            else:
-                yield file[:-3]
 
 
 def import_from_config(
@@ -364,13 +269,12 @@ def import_from_config(
 def get_flask_application(
     file_or_module_name: str,
     no_frontend: Optional[bool] = False,
-    lazy: Optional[bool] = False,
     package_mode: Optional[bool] = False,
     from_git: Optional[str] = None,
     repo_dir: Optional[str] = None,
     transform: Optional[bool] = False,
     app_secret: Optional[str | bool] = False,
-    global_rate_limit: decorator.Limiter | list | dict = [],
+    global_rate_limit: decorator.Limiter | list | dict = None,
     ip_headers: Optional[list[str]] = None,
     __kumo_callback_url: Optional[str] = None,
     __kumo_callback_token: Optional[str] = None,
@@ -382,7 +286,6 @@ def get_flask_application(
     Parameters:
         file_or_module_name (str): The file or module name to run.
         no_frontend (bool): If you want to disable the frontend, default is False
-        lazy (bool): If you want to enable lazy mode, default is False
         package_mode (bool): If you want to enable package mode, default is False
         from_git (str): If you want to run the app from a git repo, default is None
         repo_dir (str): If you want to run the app from a git repo, you can specify the directory, default is None
@@ -400,11 +303,12 @@ def get_flask_application(
     Returns:
         flask.Flask: The flask application.
     """
+    new_global_rate_limit = [] if global_rate_limit is None else global_rate_limit
     decorator.set_kumo_info(__kumo_callback_url, __kumo_callback_token)
-    decorator.set_rate_limiters(
-        decorator.parse_limiter_args(global_rate_limit, "global_rate_limit")
+    limit.set_rate_limiters(
+        limit.parse_limiter_args(new_global_rate_limit, "global_rate_limit")
     )
-    decorator.set_ip_header(ip_headers)
+    limit.set_ip_header(ip_headers)
     if __host_regex:
         enable_funix_host_checker(__host_regex)
 
