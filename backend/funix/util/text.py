@@ -1,3 +1,7 @@
+"""
+Handle text processing
+"""
+
 # Copied from [indoc](https://github.com/dtolnay/indoc)
 
 
@@ -47,11 +51,3 @@ def un_indent(message: str) -> str:
             result += lines[i][min_space:]
 
     return result.strip()
-
-
-# if __name__ == "__main__":
-#     a = """
-#     This function is used to test the stream feature of Funix.
-#     """
-#
-#     print(un_indent(a))

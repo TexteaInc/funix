@@ -1,7 +1,8 @@
 """
 This file is used to define the type hint of the Funix backend.
 """
-
+import os
+from enum import Enum, auto
 from typing import (
     Any,
     Callable,
@@ -572,3 +573,55 @@ class WrapperException(Exception):
     """
 
     pass
+
+
+class LogLevel(Enum):
+    """
+    The log level.
+    """
+
+    OFF = 0
+    """
+    Turn off the log.
+    """
+
+    OPTIONAL = 1
+    """
+    User can choose to turn off the log.
+    """
+
+    MANDATORY = 2
+    """
+    If use want to use the service, the log is mandatory.
+    """
+
+    @staticmethod
+    def get_level() -> "LogLevel":
+        """
+        Get the log level from the environment variable.
+
+        Returns:
+            LogLevel: The log level.
+        """
+        funix_telemetry = os.environ.get("FUNIX_TELEMETRY", "off").lower()
+
+        if funix_telemetry == "optional":
+            return LogLevel.OPTIONAL
+        elif funix_telemetry == "mandatory":
+            return LogLevel.MANDATORY
+        elif funix_telemetry == "off":
+            return LogLevel.OFF
+        else:
+            return LogLevel.OFF
+
+
+class LimitSource(Enum):
+    """
+    rate limit based on what value
+    """
+
+    # Based on browser session
+    SESSION = auto()
+
+    # Based on IP
+    IP = auto()

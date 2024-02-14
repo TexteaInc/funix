@@ -47,13 +47,13 @@ class Step(Enum):
     """
 
 
-def register(annotation: Parameter.annotation, step: Step) -> callable:
+def register(annotation: Parameter.annotation, _step: Step) -> callable:
     """
     Register an annotation analyzer.
 
     Parameters:
         annotation (Parameter.annotation): The annotation to register.
-        step (Step): The step of the analyzer. Only for document.
+        _step (Step): The step of the analyzer. Only for document.
 
     Returns:
         The decorator.

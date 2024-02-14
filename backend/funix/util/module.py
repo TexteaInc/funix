@@ -3,10 +3,37 @@ Handle module
 """
 
 from importlib.util import module_from_spec, spec_from_file_location
+from inspect import getsourcefile, isclass, isfunction
 from os.path import basename
 from string import ascii_letters, digits
 from types import ModuleType
+from typing import Any, Optional
 from uuid import uuid4
+
+from funix import decorator, hint
+from funix.decorator import funix, funix_class
+
+
+def getsourcefile_safe(obj: Any) -> str | None:
+    """
+    Get the source file of the object.
+
+    Note:
+        Need think a better way to handle the class.
+
+    Parameters:
+        obj (Any): The object to get the source file.
+
+    Returns:
+        str: The source file.
+        None: If the source file is not found, it may be a built-in object.
+    """
+    try:
+        if isclass(obj):
+            return getsourcefile(obj.__init__)
+        return getsourcefile(obj)
+    except:
+        return None
 
 
 def import_module_from_file(path: str, need_name: bool) -> ModuleType:
@@ -51,3 +78,46 @@ def funix_menu_to_safe_function_name(name: str) -> str:
             name,
         )
     )
+
+
+def handle_module(
+    module: Any,
+    need_path: bool,
+    base_dir: Optional[str],
+    path_difference: Optional[str],
+) -> None:
+    """
+    Import module's functions and classes to funix.
+    It won't handle the object that is already handled by funix,
+    or the object that is customized by the funix or private.
+
+    Parameters:
+        module (Any): The module to handle.
+        need_path (bool): If the path is needed.
+        base_dir (str | None): The base directory.
+        path_difference (str | None): The path difference. See `funix.util.get_path_difference` for more info.
+    """
+    members = reversed(dir(module))
+    for member in members:
+        module_member = getattr(module, member)
+        is_func = isfunction(module_member)
+        is_cls = isclass(module_member)
+        if is_func or is_cls:
+            if getsourcefile_safe(module_member) != module.__file__:
+                continue
+            in_funix = (
+                decorator.object_is_handled(id(module_member))
+                or id(module_member) in hint.custom_cls_ids
+            )
+            if in_funix:
+                continue
+            use_func = funix if is_func else funix_class
+            if member.startswith("__") or member.startswith("_FUNIX_"):
+                continue
+            if need_path:
+                if base_dir:
+                    use_func(menu=path_difference)(module_member)
+                else:
+                    use_func(menu=f"{module.__name__}")(module_member)
+            else:
+                use_func()(module_member)

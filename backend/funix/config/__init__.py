@@ -55,3 +55,29 @@ A dict, key is the type name, value is the MUI component name.
 
 This is the funix builtin widgets.
 """
+
+ipython_type_convert_dict = {
+    "IPython.core.display.Markdown": "Markdown",
+    "IPython.lib.display.Markdown": "Markdown",
+    "IPython.core.display.HTML": "HTML",
+    "IPython.lib.display.HTML": "HTML",
+    "IPython.core.display.Javascript": "HTML",
+    "IPython.lib.display.Javascript": "HTML",
+    "IPython.core.display.Image": "Images",
+    "IPython.lib.display.Image": "Images",
+    "IPython.core.display.Audio": "Audios",
+    "IPython.lib.display.Audio": "Audios",
+    "IPython.core.display.Video": "Videos",
+    "IPython.lib.display.Video": "Videos",
+}
+"""
+A dict, key is the IPython type name, value is the Funix type name.
+"""
+
+dataframe_convert_dict = {
+    "pandera.typing.pandas.DataFrame": "Dataframe",
+    "pandas.core.frame.DataFrame": "Dataframe",
+}
+"""
+A dict, key is the dataframe type name, value is the Funix type name.
+"""

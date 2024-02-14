@@ -1,10 +1,10 @@
 import os
-import secrets
 import sys
 
 import plac
 
 from funix import run
+from funix.util.secret import get_secret_key_from_option
 
 
 @plac.pos(
@@ -57,42 +57,21 @@ def main(
         sys.exit(1)
 
     sys.path.append(os.getcwd())
-    parsed_host: str = os.getenv("FUNIX_HOST", host)
-    parsed_port: int = int(os.getenv("FUNIX_PORT", port))
-    parsed_no_frontend: bool = os.getenv("FUNIX_NO_FRONTEND", no_frontend)
-    parsed_no_browser: bool = os.getenv("FUNIX_NO_BROWSER", no_browser)
-    parsed_package_mode: bool = os.getenv("FUNIX_PACKAGE_MODE", package)
-    parsed_from_git: str = os.getenv("FUNIX_FROM_GIT", from_git)
-    parsed_repo_dir: str = os.getenv("FUNIX_REPO_DIR", repo_dir)
-    parsed_dev: bool = os.getenv("FUNIX_NO_DEV", dev)
-    parsed_transform: bool = os.getenv("FUNIX_TRANSFORM", transform)
-    parsed_secret: bool | str = os.getenv("FUNIX_SECRET", secret)
-    parsed_default: str = os.getenv("FUNIX_DEFAULT", default)
-
-    if isinstance(parsed_secret, str):
-        if parsed_secret.lower() == "true":
-            parsed_secret = True
-        elif parsed_secret.lower() == "false" or parsed_secret == "":
-            parsed_secret = False
-    elif parsed_secret is None:
-        parsed_secret = False
-
-    if isinstance(parsed_secret, bool) and parsed_secret:
-        parsed_secret = secrets.token_hex(16)
+    parsed_secret: bool | str = get_secret_key_from_option(secret)
 
     run(
-        host=parsed_host,
-        port=parsed_port,
+        host=host,
+        port=port,
         file_or_module_name=file_folder_or_module_name,
-        no_frontend=parsed_no_frontend,
-        no_browser=parsed_no_browser,
-        package_mode=parsed_package_mode,
-        from_git=parsed_from_git,
-        repo_dir=parsed_repo_dir,
-        dev=parsed_dev,
-        transform=parsed_transform,
+        no_frontend=no_frontend,
+        no_browser=no_browser,
+        package_mode=package,
+        from_git=from_git,
+        repo_dir=repo_dir,
+        dev=dev,
+        transform=transform,
         app_secret=parsed_secret,
-        default=parsed_default,
+        default=default,
     )
 
 

@@ -5,7 +5,7 @@ For parsing theme.
 import json
 from copy import deepcopy
 from os.path import join
-from typing import Optional
+from typing import Optional, Union
 from uuid import uuid4
 
 from requests import get
@@ -203,14 +203,14 @@ def parse_theme(theme: dict) -> tuple[list[str], dict, dict, dict, dict]:
                 widget = dump_frontend_config(widget[0], widget[1])
             if isinstance(widget, dict):
                 widget_name = widget["widget"]
-                widget_config = widget.get("props", None)
+                widget_config: Union[None, dict] = widget.get("props", None)
                 if widget_name.startswith("@"):
                     pass
                 else:
-                    if widget_config is not None:
-                        widget = dump_frontend_config(widget_name, widget_config)
-                    else:
+                    if widget_config is None:
                         widget = widget_name
+                    else:
+                        widget = dump_frontend_config(widget_name, widget_config)
             type_names.append(type_name)
             type_widget_dict[type_name] = widget
     if "palette" in theme:
