@@ -3,12 +3,11 @@ This file contains some shared config for debug and production.
 It's a global switch for quick turning on/off some key features in Funix.
 """
 
-from dataclasses import dataclass
 from secrets import token_hex
 from typing import Union
 
 
-class SwitchOption(dataclass):
+class SwitchOption:
     """Switch option."""
 
     AUTO_CONVERT_UNDERSCORE_TO_SPACE_IN_NAME: bool = True

@@ -26,7 +26,8 @@ from funix.config import (
     ipython_type_convert_dict,
     dataframe_convert_dict,
 )
-from funix.decorator import analyze, get_static_uri, handle_ipython_audio_image_video
+from funix.decorator.annnotation_analyzer import analyze
+from funix.decorator.file import get_static_uri, handle_ipython_audio_image_video
 
 __matplotlib_use = False
 """
@@ -75,10 +76,10 @@ def get_type_dict(annotation: any) -> dict:
         >>> import typing
         >>> from funix.decorator.magic import get_type_dict
         >>>
-        >>> get_type_dict(int) == {"type": "int"}
-        >>> get_type_dict(type(True)) == {"type": "bool"}
-        >>> get_type_dict(typing.Literal["a", "b", "c"]) == {'type': 'str', 'whitelist': ('a', 'b', 'c')}
-        >>> get_type_dict(typing.Optional[int]) == {'optional': True, 'type': 'int'}
+        >>> assert get_type_dict(int) == {"type": "int"}
+        >>> assert get_type_dict(type(True)) == {"type": "bool"}
+        >>> assert get_type_dict(typing.Literal["a", "b", "c"]) == {'type': 'str', 'whitelist': ('a', 'b', 'c')}
+        >>> assert get_type_dict(typing.Optional[int]) == {'optional': True, 'type': 'int'}
 
     Returns:
         dict: The type dict.
@@ -264,24 +265,6 @@ def get_type_widget_prop(
         else:
             # raise Exception("Unsupported Container Type")
             return {"type": "object", "widget": widget}
-
-
-def convert_row_item(row_item: dict, item_type: str) -> dict:
-    """
-    Convert a layout row item(block) to frontend-readable item.
-
-    Parameters:
-        row_item (dict): The row item.
-        item_type (str): The item type.
-
-    Returns:
-        dict: The converted item.
-    """
-    converted_item = row_item
-    converted_item["type"] = item_type
-    converted_item["content"] = row_item[item_type]
-    converted_item.pop(item_type)
-    return converted_item
 
 
 def funix_param_to_widget(annotation: any) -> str:

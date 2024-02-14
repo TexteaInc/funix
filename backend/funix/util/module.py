@@ -11,7 +11,6 @@ from typing import Any, Optional
 from uuid import uuid4
 
 from funix import decorator, hint
-from funix.decorator import funix, funix_class
 
 
 def getsourcefile_safe(obj: Any) -> str | None:
@@ -111,7 +110,7 @@ def handle_module(
             )
             if in_funix:
                 continue
-            use_func = funix if is_func else funix_class
+            use_func = decorator.funix if is_func else decorator.funix_class
             if member.startswith("__") or member.startswith("_FUNIX_"):
                 continue
             if need_path:
