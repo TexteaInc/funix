@@ -13,6 +13,9 @@ from gitignore_parser import parse_gitignore
 import funix.decorator as decorator
 import funix.decorator.limit as limit
 import funix.decorator.theme as theme
+import funix.decorator.secret as secret
+import funix.decorator.lists as lists
+import funix.decorator.call as call
 import funix.hint as hint
 from funix.app import app, enable_funix_host_checker, privacy_policy
 from funix.frontend import OpenFrontend, run_open_frontend, start
@@ -43,7 +46,7 @@ import_theme = theme.import_theme
 # ---- Util ----
 new_funix_type_with_config_func = hint.new_funix_type_with_config_func
 new_funix_type = hint.new_funix_type
-set_app_secret = decorator.set_app_secret
+set_app_secret = secret.set_app_secret
 # ---- Util ----
 # ---- Exports ----
 
@@ -96,7 +99,7 @@ def __prep(
     if module_or_file:
         if is_module:
             if default:
-                decorator.set_default_function_name(default)
+                lists.set_default_function_name(default)
             module = import_module(module_or_file)
             handle_module(module, need_path, base_dir, path_difference)
         else:
@@ -304,7 +307,7 @@ def get_flask_application(
         flask.Flask: The flask application.
     """
     new_global_rate_limit = [] if global_rate_limit is None else global_rate_limit
-    decorator.set_kumo_info(__kumo_callback_url, __kumo_callback_token)
+    call.set_kumo_info(__kumo_callback_url, __kumo_callback_token)
     limit.set_rate_limiters(
         limit.parse_limiter_args(new_global_rate_limit, "global_rate_limit")
     )
@@ -389,7 +392,7 @@ def run(
         default=default,
     )
 
-    if decorator.is_empty_function_list():
+    if lists.is_empty_function_list():
         print(
             "No functions nor classes decorated by Funix. Please check your code: "
             "functions and classes that need to be handled by Funix should be public "
@@ -400,16 +403,16 @@ def run(
     parsed_ip = ip_address(host)
     parsed_port = get_unused_port_from(port, parsed_ip)
 
-    funix_secrets = decorator.export_secrets()
+    funix_secrets = secret.export_secrets()
     if funix_secrets:
         local = get_compressed_ip_address_as_str(parsed_ip)
         print("Secrets:")
         print("-" * 15)
-        for name, secret in funix_secrets.items():
+        for name, secret_ in funix_secrets.items():
             print(f"Name: {name}")
-            print(f"Secret: {secret}")
+            print(f"Secret: {secret_}")
             if not no_frontend:
-                print(f"Link: http://{local}:{port}/{quote(name)}?secret={secret}")
+                print(f"Link: http://{local}:{port}/{quote(name)}?secret={secret_}")
             print("-" * 15)
 
     if not no_frontend:

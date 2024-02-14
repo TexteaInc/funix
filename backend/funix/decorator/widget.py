@@ -4,6 +4,7 @@ from inspect import Parameter
 from types import MappingProxyType
 from typing import Any, Union
 
+from funix.hint import ArgumentConfigType
 from funix.widget import generate_frontend_widget_config
 
 
@@ -234,3 +235,51 @@ def widget_parse(
             function_name,
             i[2],
         )
+
+
+def parse_argument_config(
+    argument_config: ArgumentConfigType,
+    decorated_params: dict,
+    function_name: str,
+):
+    input_attr = ""
+    for decorator_arg_name, decorator_arg_dict in argument_config.items():
+        if isinstance(decorator_arg_name, str):
+            decorator_arg_names = [decorator_arg_name]
+        else:
+            decorator_arg_names = list(decorator_arg_name)
+        for single_decorator_arg_name in decorator_arg_names:
+            if single_decorator_arg_name not in decorated_params:
+                decorated_params[single_decorator_arg_name] = {}
+
+            treat_as_config = decorator_arg_dict.get("treat_as", "config")
+            decorated_params[single_decorator_arg_name]["treat_as"] = treat_as_config
+            if treat_as_config != "config":
+                input_attr = (
+                    decorator_arg_dict["treat_as"] if input_attr == "" else input_attr
+                )
+                if input_attr != decorator_arg_dict["treat_as"]:
+                    raise Exception(f"{function_name} input type doesn't match")
+
+            for prop_key in ["widget", "label", "whitelist", "example"]:
+                if prop_key in decorator_arg_dict:
+                    if prop_key == "label":
+                        decorated_params[single_decorator_arg_name][
+                            "title"
+                        ] = decorator_arg_dict[prop_key]
+                    elif prop_key == "widget":
+                        decorated_params[single_decorator_arg_name][
+                            prop_key
+                        ] = parse_widget(decorator_arg_dict[prop_key])
+                    else:
+                        decorated_params[single_decorator_arg_name][
+                            prop_key
+                        ] = decorator_arg_dict[prop_key]
+
+            if (
+                "whitelist" in decorated_params[single_decorator_arg_name]
+                and "example" in decorated_params[single_decorator_arg_name]
+            ):
+                raise Exception(
+                    f"{function_name}: {single_decorator_arg_name} has both an example and a whitelist"
+                )
