@@ -1,4 +1,4 @@
-from funix import app
+from funix.app import app
 from funix.config.switch import GlobalSwitchOption
 from funix.hint import DecoratedFunctionListItem
 
