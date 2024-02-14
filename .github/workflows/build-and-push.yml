@@ -21,6 +21,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: ".nvmrc"
+          node-version: "20.x"
       - name: Install dependencies
         run: yarn install
         working-directory: frontend
