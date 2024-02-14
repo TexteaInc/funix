@@ -35,14 +35,14 @@ def register_widget_update_config(widget: str) -> callable:
     return decorator
 
 
-def dump_frontend_config(widget_name: str, config: TypedDict) -> str:
+def dump_frontend_config(widget_name: str, config: dict) -> str:
     """
     Convert the config to a string that can be used in frontend. Will auto update the config if this widget has an
     update config function.
 
     Parameters:
         widget_name (str): The name of the widget.
-        config (TypedDict): The config of the widget.
+        config (dict): The config of the widget.
 
     Returns:
         str: The string that can be used in frontend.
@@ -222,13 +222,13 @@ def textarea(*args, **kwargs) -> (str, MultilineTextboxConfig):
         )
 
 
-def generate_frontend_widget_config(config: tuple[str, TypedDict] | str) -> str:
+def generate_frontend_widget_config(config: tuple[str, dict] | str) -> str:
     """
     Generate the frontend widget config.
 
     Parameters:
-        config((str, TypedDict) | str): The config of the widget.
-            (str, TypedDict): Widget name and config, I will call `dump_frontend_config` to convert it to a str.
+        config((str, dict) | str): The config of the widget.
+            (str, dict): Widget name and config, I will call `dump_frontend_config` to convert it to a str.
             str: Widget config (already in str), I will return it directly.
     """
     if isinstance(config, tuple):

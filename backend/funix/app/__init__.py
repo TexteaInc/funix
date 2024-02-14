@@ -1,46 +1,30 @@
 """
 Save the app instance here
 """
+import hashlib
 import json
 import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
-from secrets import token_hex
-from enum import Enum
-import hashlib
 
 from flask import Flask, Response, abort, request
 from flask_sock import Sock
 from sqlalchemy import create_engine, text
 from sqlalchemy.pool import SingletonThreadPool
 
+from funix.config.switch import GlobalSwitchOption
+from funix.hint import LogLevel
+
 app = Flask(__name__)
-app.secret_key = token_hex(16)
+app.secret_key = GlobalSwitchOption.get_session_key()
 app.config.update(
     SESSION_COOKIE_PATH="/",
     SESSION_COOKIE_SAMESITE="Lax",
 )
 sock = Sock(app)
 
-
-class LogLevel(Enum):
-    OFF = 0
-    OPTIONAL = 1
-    MANDATORY = 2
-
-
-funix_telemetry = os.environ.get("FUNIX_TELEMETRY", "off").lower()
-
-if funix_telemetry == "optional":
-    funix_log_level = LogLevel.OPTIONAL
-elif funix_telemetry == "mandatory":
-    funix_log_level = LogLevel.MANDATORY
-elif funix_telemetry == "off":
-    funix_log_level = LogLevel.OFF
-else:
-    funix_log_level = LogLevel.OFF
-
+funix_log_level = LogLevel.get_level()
 
 privacy = """We honor your choices. For your data and freedom.
 

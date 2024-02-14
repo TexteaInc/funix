@@ -19,7 +19,7 @@ def get_compressed_ip_address_as_str(host: IPv4Address | IPv6Address) -> str:
         str: The handled host.
     """
     is_v4 = host.version == 4
-    if is_ip_on_localhost(host):
+    if is_ip_private(host):
         return "127.0.0.1" if is_v4 else "[::1]"
     return host.compressed
 
@@ -42,21 +42,17 @@ def is_port_used(port: int, host: str) -> bool:
         return False
 
 
-def is_ip_on_localhost(ip: IPv4Address | IPv6Address) -> bool:
+def is_ip_private(ip: IPv4Address | IPv6Address) -> bool:
     """
-    Check if the ip is on this host(localhost).
+    Check if the ip is a private ip.
 
     Parameters:
         ip (IPv4Address | IPv6Address): The ip to check.
 
     Returns:
-        bool: If the ip is on this host.
+        bool: If the ip is a private ip.
     """
-    is_v4 = ip.version == 4
-    if is_v4:
-        return ip in ip_network("0.0.0.0/32")
-    else:
-        return ip in ip_network("::/128")
+    return ip.is_private
 
 
 def get_next_unused_port(port: int, host: str) -> int | None:

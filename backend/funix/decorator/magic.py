@@ -13,7 +13,7 @@ the types of parameters, the types of return values and the rough logic.
 import io
 import json
 from importlib import import_module
-from inspect import Parameter
+from inspect import Parameter, Signature
 from re import Match, search
 from types import ModuleType
 from typing import Any
@@ -23,6 +23,8 @@ from funix.config import (
     supported_basic_file_types,
     supported_basic_types,
     supported_basic_types_dict,
+    ipython_type_convert_dict,
+    dataframe_convert_dict,
 )
 from funix.decorator import analyze, get_static_uri, handle_ipython_audio_image_video
 
@@ -382,6 +384,15 @@ def get_figure(figure) -> dict:
 
 
 def get_figure_image(figure) -> str:
+    """
+    Converts a matplotlib figure to a static image for drawing on the frontend
+
+    Parameters:
+        figure (matplotlib.figure.Figure): The figure to convert
+
+    Returns:
+        str: The converted image with static URI
+    """
     with io.BytesIO() as buf:
         figure.savefig(buf, format="png")
         buf.seek(0)
@@ -394,7 +405,15 @@ def anal_function_result(
     cast_to_list_flag: bool,
 ) -> Any:
     """
-    Document is on the way.
+    Analyze the function result to get the frontend-readable data.
+
+    Parameters:
+        function_call_result (Any): The function call result.
+        return_type_parsed (Any): The parsed return type.
+        cast_to_list_flag (bool): Whether to cast the result to list.
+
+    Returns:
+        Any: The frontend-readable data.
     """
     # TODO: Best result handling, refactor it if possible
     call_result = function_call_result
@@ -558,3 +577,127 @@ def anal_function_result(
                         ]
                 return call_result
     return call_result
+
+
+def parse_function_annotation(
+    function_signature: Signature, figure_to_image: bool
+) -> (bool, Any):
+    cast_to_list_flag = False
+    if function_signature.return_annotation is not Signature.empty:
+        # TODO: Magic code, I've forgotten what it does, but it works, refactor it if you can
+        # return type dict enforcement for yodas only
+        try:
+            if (
+                cast_to_list_flag := function_signature.return_annotation.__class__.__name__
+                == "tuple"
+                or function_signature.return_annotation.__name__ == "Tuple"
+            ):
+                parsed_return_annotation_list = []
+                return_annotation = list(
+                    function_signature.return_annotation
+                    if function_signature.return_annotation.__class__.__name__
+                    == "tuple"
+                    else function_signature.return_annotation.__args__
+                )
+                for return_annotation_type in return_annotation:
+                    return_annotation_type_name = getattr(
+                        return_annotation_type, "__name__"
+                    )
+                    full_type_name = (
+                        getattr(return_annotation_type, "__module__")
+                        + "."
+                        + return_annotation_type_name
+                    )
+                    if return_annotation_type_name in supported_basic_types:
+                        return_annotation_type_name = supported_basic_types_dict[
+                            return_annotation_type_name
+                        ]
+                    elif return_annotation_type_name == "List":
+                        list_type_name = getattr(
+                            getattr(return_annotation_type, "__args__")[0],
+                            "__name__",
+                        )
+                        if list_type_name in supported_basic_file_types:
+                            return_annotation_type_name = list_type_name
+                    if full_type_name in ipython_type_convert_dict:
+                        return_annotation_type_name = ipython_type_convert_dict[
+                            full_type_name
+                        ]
+                    elif full_type_name in dataframe_convert_dict:
+                        return_annotation_type_name = dataframe_convert_dict[
+                            full_type_name
+                        ]
+                    parsed_return_annotation_list.append(return_annotation_type_name)
+                return_type_parsed = parsed_return_annotation_list
+            else:
+                if hasattr(function_signature.return_annotation, "__annotations__"):
+                    return_type_raw = getattr(
+                        function_signature.return_annotation, "__annotations__"
+                    )
+                    if getattr(type(return_type_raw), "__name__") == "dict":
+                        if function_signature.return_annotation.__name__ == "Figure":
+                            return_type_parsed = (
+                                "Figure" if not figure_to_image else "FigureImage"
+                            )
+                        else:
+                            if hasattr(
+                                function_signature.return_annotation,
+                                "__module__",
+                            ):
+                                full_name = (
+                                    getattr(
+                                        function_signature.return_annotation,
+                                        "__module__",
+                                    )
+                                    + "."
+                                    + getattr(
+                                        function_signature.return_annotation,
+                                        "__name__",
+                                    )
+                                )
+                                if full_name in ipython_type_convert_dict:
+                                    return_type_parsed = ipython_type_convert_dict[
+                                        full_name
+                                    ]
+                                elif full_name in dataframe_convert_dict:
+                                    return_type_parsed = dataframe_convert_dict[
+                                        full_name
+                                    ]
+                                else:
+                                    # TODO: DO MORE
+                                    return_type_parsed = None
+                            else:
+                                return_type_parsed = {}
+                                for (
+                                    return_type_key,
+                                    return_type_value,
+                                ) in return_type_raw.items():
+                                    return_type_parsed[return_type_key] = str(
+                                        return_type_value
+                                    )
+                    else:
+                        return_type_parsed = str(return_type_raw)
+                else:
+                    return_type_parsed = getattr(
+                        function_signature.return_annotation, "__name__"
+                    )
+                    if return_type_parsed in supported_basic_types:
+                        return_type_parsed = supported_basic_types_dict[
+                            return_type_parsed
+                        ]
+                    elif return_type_parsed == "List":
+                        list_type_name = getattr(
+                            getattr(function_signature.return_annotation, "__args__")[
+                                0
+                            ],
+                            "__name__",
+                        )
+                        if list_type_name in supported_basic_file_types:
+                            return_type_parsed = list_type_name
+        except:
+            return_type_parsed = get_type_dict(function_signature.return_annotation)
+            if return_type_parsed is not None:
+                return_type_parsed = return_type_parsed["type"]
+    else:
+        return_type_parsed = None
+    return cast_to_list_flag, return_type_parsed

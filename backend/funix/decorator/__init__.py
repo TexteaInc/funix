@@ -2,39 +2,33 @@
 Funix decorator. The central logic of Funix.
 """
 import ast
-import dataclasses
 import inspect
-import pathlib
-import re
 import sys
-import time
-from collections import deque
 from copy import deepcopy
-from enum import Enum, auto
 from functools import wraps
 from importlib import import_module
-from inspect import Parameter, Signature, getsource, isgeneratorfunction, signature
-from io import StringIO
+from inspect import Parameter, getsource, isgeneratorfunction, signature
 from json import dumps, loads
 from secrets import token_hex
 from traceback import format_exc
 from types import ModuleType
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Union
 from urllib.request import urlopen
 from uuid import uuid4
 
 from flask import Response, request, session
+from funix.decorator.layout import handle_input_layout, handle_output_layout
+from funix.decorator.pre_fill import parse_pre_fill, get_pre_fill_metadata
+from funix.decorator.widget import widget_parse, parse_widget
 from requests import post
-from requests.structures import CaseInsensitiveDict
 
 from funix.app import app, sock
+from funix.app.websocket import StdoutToWebsocket
 from funix.config import (
     banned_function_name_and_path,
-    supported_basic_file_types,
-    supported_basic_types,
-    supported_basic_types_dict,
     supported_upload_widgets,
 )
+from funix.config.switch import GlobalSwitchOption
 from funix.decorator.annnotation_analyzer import (
     analyze,
     register_ipywidgets,
@@ -45,18 +39,33 @@ from funix.decorator.file import (
     get_static_uri,
     handle_ipython_audio_image_video,
 )
+from funix.decorator.limit import Limiter, global_rate_limiters, parse_limiter_args
+from funix.decorator.lists import (
+    decorated_functions_list_append,
+    enable_list,
+    get_default_function_name,
+    push_counter,
+    set_default_function,
+)
 from funix.decorator.magic import (
     anal_function_result,
     convert_row_item,
     function_param_to_widget,
     get_type_dict,
     get_type_widget_prop,
+    parse_function_annotation,
 )
+from funix.decorator.reactive import function_reactive_update, get_reactive_config
 from funix.decorator.runtime import RuntimeClassVisitor
+from funix.decorator.theme import (
+    get_parsed_theme_fot_funix,
+    import_theme,
+    parsed_themes,
+    themes,
+)
 from funix.hint import (
     ArgumentConfigType,
     ConditionalVisibleType,
-    DecoratedFunctionListItem,
     DestinationType,
     DirectionType,
     ExamplesType,
@@ -73,37 +82,9 @@ from funix.hint import (
     WrapperException,
 )
 from funix.session import get_global_variable, set_global_variable
-from funix.theme import get_dict_theme, parse_theme
 from funix.util.module import funix_menu_to_safe_function_name
 from funix.util.text import un_indent
-from funix.util.uri import is_valid_uri
-from funix.widget import generate_frontend_widget_config
-
-__ipython_type_convert_dict = {
-    "IPython.core.display.Markdown": "Markdown",
-    "IPython.lib.display.Markdown": "Markdown",
-    "IPython.core.display.HTML": "HTML",
-    "IPython.lib.display.HTML": "HTML",
-    "IPython.core.display.Javascript": "HTML",
-    "IPython.lib.display.Javascript": "HTML",
-    "IPython.core.display.Image": "Images",
-    "IPython.lib.display.Image": "Images",
-    "IPython.core.display.Audio": "Audios",
-    "IPython.lib.display.Audio": "Audios",
-    "IPython.core.display.Video": "Videos",
-    "IPython.lib.display.Video": "Videos",
-}
-"""
-A dict, key is the IPython type name, value is the Funix type name.
-"""
-
-__dataframe_convert_dict = {
-    "pandera.typing.pandas.DataFrame": "Dataframe",
-    "pandas.core.frame.DataFrame": "Dataframe",
-}
-"""
-A dict, key is the dataframe type name, value is the Funix type name.
-"""
+from funix.util.uri import get_endpoint
 
 __ipywidgets_use = False
 """
@@ -136,13 +117,6 @@ try:
 except:
     pass
 
-__decorated_functions_list: list[DecoratedFunctionListItem] = []
-"""
-A list, each element is a dict, record the information of the decorated function.
-
-See `DecoratedFunctionListItem` for more information.
-"""
-
 __decorated_functions_names_list: list[str] = []
 """
 A list, each element is the name of the decorated function.
@@ -164,29 +138,9 @@ __wrapper_enabled: bool = False
 If the wrapper is enabled.
 """
 
-__default_theme: dict = {}
-"""
-The default funix theme.
-"""
-
-__themes = {}
-"""
-A dict, key is theme name, value is funix theme.
-"""
-
-__parsed_themes = {}
-"""
-A dict, key is theme name, value is parsed MUI theme.
-"""
-
 __app_secret: str | None = None
 """
 App secret, for all functions.
-"""
-
-pre_fill_metadata: dict[str, list[str | int | PreFillEmpty]] = {}
-"""
-A dict, key is function ID, value is a list of indexes/keys of pre-fill parameters.
 """
 
 parse_type_metadata: dict[str, dict[str, Any]] = {}
@@ -204,20 +158,6 @@ now_module: str | None = None
 External passes to module, recorded here, are used to help funix decoration override config.
 """
 
-module_functions_counter: dict[str, int] = {}
-"""
-A dict, key is module name, value is the number of functions in the module.
-"""
-
-default_function: str | None = None
-"""
-Default function id.
-"""
-
-cached_list_functions: list[dict] = []
-"""
-Cached list functions. For `/list` route.
-"""
 
 kumo_callback_url: str | None = None
 """
@@ -234,18 +174,6 @@ dir_mode_default_info: tuple[bool, str | None] = (False, None)
 Default dir mode info.
 """
 
-default_function_name: str | None = None
-"""
-Default function name.
-"""
-
-ip_headers: list[str] = []
-"""
-IP headers for extraction, useful for applications behind reverse proxies
-
-e.g. `X-Forwarded-For`, `X-Real-Ip` e.t.c
-"""
-
 handled_object: list[int] = []
 """
 Handled object ids.
@@ -255,25 +183,6 @@ class_method_ids_to_params: dict[int, dict] = {}
 """
 Class method ids to params.
 """
-
-
-class StdoutToWebsocket:
-    def __init__(self, ws):
-        self.ws = ws
-        self.value = StringIO()
-
-    def write(self, data):
-        self.value.write(data)
-        self.ws.send(dumps([self.value.getvalue()]))
-
-    def writelines(self, data):
-        self.value.writelines(data)
-        self.ws.send(dumps([self.value.getvalue()]))
-
-    def flush(self):
-        self.value.flush()
-        self.ws.send(dumps([self.value.getvalue()]))
-        self.value = StringIO()
 
 
 def funix_method(*args, **kwargs):
@@ -287,192 +196,6 @@ def funix_method(*args, **kwargs):
     return decorator
 
 
-class LimitSource(Enum):
-    """
-    rate limit based on what value
-    """
-
-    # Based on browser session
-    SESSION = auto()
-
-    # Based on IP
-    IP = auto()
-
-
-@dataclasses.dataclass
-class Limiter:
-    call_history: dict
-    # How many calls client can send between each interval set by `period`
-    max_calls: int
-    # Max call interval time, in seconds
-    period: int
-    source: LimitSource
-
-    def __init__(
-        self,
-        max_calls: int = 10,
-        period: int = 60,
-        source: LimitSource = LimitSource.SESSION,
-    ):
-        if type(max_calls) is not int:
-            raise TypeError("type of `max_calls` is not int")
-        if type(period) is not int:
-            raise TypeError("type of `period` is not int")
-        if type(source) is not LimitSource:
-            raise TypeError("type of `source` is not LimitSource")
-
-        self.source = source
-        self.max_calls = max_calls
-        self.period = period
-        self.call_history = {}
-
-    @staticmethod
-    def ip(max_calls: int, period: int = 60):
-        return Limiter(max_calls=max_calls, period=period, source=LimitSource.IP)
-
-    @staticmethod
-    def session(max_calls: int, period: int = 60):
-        return Limiter(max_calls=max_calls, period=period, source=LimitSource.SESSION)
-
-    @staticmethod
-    def _dict_get_int(
-        dictionary: dict | CaseInsensitiveDict, key: str
-    ) -> Optional[int]:
-        if key not in dictionary:
-            return None
-        value = dictionary[key]
-        if isinstance(value, int):
-            return value
-        if isinstance(value, str):
-            return int(value)
-        raise ValueError(
-            f"The value of key `{key}` is `{value}`, cannot parse to integer"
-        )
-
-    @staticmethod
-    def from_dict(dictionary: dict):
-        converted = CaseInsensitiveDict(dictionary)
-        ip = Limiter._dict_get_int(converted, "per_ip")
-        session = Limiter._dict_get_int(converted, "per_browser")
-
-        if ip is not None and session is not None:
-            raise TypeError(
-                "`per_ip` and `per_browser` are conflicting options in a single dict"
-            )
-
-        if ip is None and session is None:
-            raise TypeError("`per_ip` or `per_browser` is required")
-
-        max_calls = ip or session
-        if ip is not None:
-            source = LimitSource.IP
-        if session is not None:
-            source = LimitSource.SESSION
-        period = Limiter._dict_get_int(converted, "period") or 60
-
-        return Limiter(max_calls=max_calls, period=period, source=source)
-
-    def rate_limit(self) -> Optional[Response]:
-        call_history = self.call_history
-        match self.source:
-            case LimitSource.IP:
-                source: Optional[str] = None
-                for header in ip_headers:
-                    if header in request.headers:
-                        source = request.headers[header]
-                        break
-
-                if source is None:
-                    source = request.remote_addr
-
-            case LimitSource.SESSION:
-                source = session.get("__funix_id")
-
-        if source not in call_history:
-            call_history[source] = deque()
-
-        queue = call_history[source]
-        current_time = time.time()
-
-        while len(queue) > 0 and current_time - queue[0] > self.period:
-            queue.popleft()
-
-        if len(queue) >= self.max_calls:
-            time_passed = current_time - queue[0]
-            time_to_wait = int(self.period - time_passed)
-            error_message = {
-                "error_body": f"Rate limit exceeded. Please try again in {time_to_wait} seconds.",
-                "error_type": "safe_checker",
-            }
-            return Response(
-                dumps(error_message), status=429, mimetype="application/json"
-            )
-
-        queue.append(current_time)
-        return None
-
-
-def set_ip_header(headers: Optional[list[str]]):
-    global ip_headers
-    if headers is None:
-        return
-
-    if len(headers) == 0:
-        return
-
-    ip_headers = headers
-
-
-def parse_limiter_args(rate_limit: Limiter | list | dict, arg_name: str = "rate_limit"):
-    limiters: Optional[list[Limiter]] = []
-
-    if isinstance(rate_limit, Limiter):
-        limiters = []
-        limiters.append(rate_limit)
-    elif isinstance(rate_limit, dict):
-        converted = CaseInsensitiveDict(rate_limit)
-
-        per_ip = Limiter._dict_get_int(converted, "per_ip")
-        per_session = Limiter._dict_get_int(converted, "per_browser")
-        limiters = []
-        if per_ip:
-            limiters.append(Limiter.ip(per_ip))
-        if per_session:
-            limiters.append(Limiter.ip(per_session))
-        if len(limiters) == 0:
-            raise TypeError(
-                f"Dict passed for `{arg_name}` but no limiters are provided, something wrong."
-            )
-
-    elif isinstance(rate_limit, list):
-        limiters = []
-        for element in rate_limit:
-            if isinstance(element, Limiter):
-                limiters.append(element)
-            elif isinstance(element, dict):
-                limiters.append(Limiter.from_dict(element))
-            else:
-                raise TypeError(f"Invalid arguments, unsupported type for `{arg_name}`")
-
-    else:
-        raise TypeError(f"Invalid arguments, unsupported type for `{arg_name}`")
-
-    return limiters
-
-
-global_rate_limiters: list[Limiter] = []
-
-
-def is_empty_function_list() -> bool:
-    """
-    Check if the function list is empty.
-
-    Returns:
-        bool: True if empty, False otherwise.
-    """
-    return len(__decorated_functions_list) == 0
-
-
 def set_kumo_info(url: str, token: str) -> None:
     """
     Set the kumo info.
@@ -484,11 +207,6 @@ def set_kumo_info(url: str, token: str) -> None:
     global kumo_callback_url, kumo_callback_token
     kumo_callback_url = url
     kumo_callback_token = token
-
-
-def set_rate_limiters(limiters: list[Limiter]):
-    global global_rate_limiters
-    global_rate_limiters = limiters
 
 
 def set_function_secret(secret: str, function_id: str, function_name: str) -> None:
@@ -543,121 +261,16 @@ def set_dir_mode_default_info(info: tuple[bool, str | None]) -> None:
     dir_mode_default_info = info
 
 
-def set_default_function_name(name: str) -> None:
-    """
-    Set this function as default.
-    """
-    global default_function_name
-    default_function_name = name
-
-
-def make_decorated_functions_happy() -> list[dict]:
-    """
-    Make the decorated functions happy,
-    """
-    global cached_list_functions, __decorated_functions_list
-    if cached_list_functions:
-        return cached_list_functions
-    new_decorated_functions_list = []
-    for i in __decorated_functions_list:
-        if i["module"] in module_functions_counter:
-            if module_functions_counter[i["module"]] == 1:
-                if "." in i["module"]:
-                    i["module"] = ".".join(i["module"].split(".")[0:-1])
-                else:
-                    i["module"] = None
-        new_decorated_functions_list.append(i)
-    cached_list_functions = new_decorated_functions_list
-    return new_decorated_functions_list
-
-
 def enable_wrapper() -> None:
     """
     Enable the wrapper, this will add the list and file path to the app.
     """
-    global __wrapper_enabled, default_function
+    global __wrapper_enabled
     if not __wrapper_enabled:
         __wrapper_enabled = True
 
-        @app.get("/list")
-        def __funix_export_func_list() -> dict:
-            """
-            Send the full function list.
-
-            Routes:
-                /list: The list path, we don't consider the GET "/" route, because it is the index page. And we start
-                       frontend and backend at the same port.
-
-            Returns:
-                dict: The function list.
-            """
-            return {
-                "list": make_decorated_functions_happy(),
-                "default_function": default_function,
-            }
-
+        enable_list()
         enable_file_service()
-
-
-def set_default_theme(theme: str) -> None:
-    """
-    Set the default theme.
-
-    Parameters:
-        theme (str): The theme alias, path or url.
-    """
-    global __default_theme, __parsed_themes, __themes
-    if theme in __themes:
-        theme_dict = __themes[theme]
-    else:
-        if is_valid_uri(theme):
-            theme_dict = get_dict_theme(None, theme)
-        else:
-            theme_dict = get_dict_theme(theme, None)
-    __default_theme = theme_dict
-    __parsed_themes["__default"] = parse_theme(__default_theme)
-
-
-def import_theme(
-    source: str | dict,
-    alias: Optional[str],
-) -> None:
-    """
-    Import a theme from path, url or dict.
-
-    Parameters:
-        source (str | dict): The path, url or dict of the theme.
-        alias (str): The theme alias.
-
-    Raises:
-        ValueError: If the theme already exists.
-
-    Notes:
-        Check the `funix.theme.get_dict_theme` function for more information.
-    """
-    global __themes
-    if isinstance(source, str):
-        if is_valid_uri(source):
-            theme = get_dict_theme(None, source)
-        else:
-            theme = get_dict_theme(source, None)
-    else:
-        theme = source
-    name = theme["name"]
-    if alias is not None:
-        name = alias
-    if name in __themes:
-        raise ValueError(f"Theme {name} already exists")
-    __themes[name] = theme
-
-
-def clear_default_theme() -> None:
-    """
-    Clear the default theme.
-    """
-    global __default_theme, __parsed_themes
-    __default_theme = {}
-    __parsed_themes.pop("__default")
 
 
 def object_is_handled(object_id: int) -> bool:
@@ -722,7 +335,7 @@ def funix(
     pre_fill: PreFillType = None,
     menu: Optional[str] = None,
     default: bool = False,
-    rate_limit: Limiter | list | dict = [],
+    rate_limit: Union[Limiter, list, dict, None] = None,
     reactive: ReactiveType = None,
     print_to_web: bool = False,
     autorun: bool = False,
@@ -775,7 +388,7 @@ def funix(
     Raises:
         Check code for details
     """
-    global __parsed_themes, pre_fill_metadata, parse_type_metadata
+    global parse_type_metadata
 
     def decorator(function: callable) -> callable:
         """
@@ -790,28 +403,21 @@ def funix(
         Raises:
             Check code for details
         """
-        global default_function
         handled_object.append(id(function))
         if disable:
             return function
         if __wrapper_enabled:
             if menu:
-                module_functions_counter[menu] = (
-                    module_functions_counter.get(menu, 0) + 1
-                )
+                push_counter(menu)
             elif now_module:
-                module_functions_counter[now_module] = (
-                    module_functions_counter.get(now_module, 0) + 1
-                )
+                push_counter(now_module)
             else:
-                module_functions_counter["$Funix_Main"] = (
-                    module_functions_counter.get("$Funix_Main", 0) + 1
-                )
+                push_counter("$Funix_Main")
 
             function_id = str(uuid4())
 
             if default:
-                default_function = function_id
+                set_default_function(function_id)
 
             safe_module_now = now_module
 
@@ -832,10 +438,10 @@ def funix(
 
             if dir_mode_default_info[0]:
                 if function_name == dir_mode_default_info[1]:
-                    default_function = function_id
-            elif default_function_name:
-                if function_name == default_function_name:
-                    default_function = function_id
+                    set_default_function(function_id)
+            elif default_function_name_ := get_default_function_name():
+                if function_name == default_function_name_:
+                    set_default_function(function_id)
 
             unique_function_name: str | None = None  # Don't use it as id,
             # only when funix starts with `-R`, it will be not None
@@ -850,41 +456,23 @@ def funix(
                     f"{function_name} is not allowed, banned names: {banned_function_name_and_path}"
                 )
 
-            function_title = title if title is not None else function_name
+            function_name_ = function_name
+
+            if GlobalSwitchOption.AUTO_CONVERT_UNDERSCORE_TO_SPACE_IN_NAME:
+                function_name_ = function_name_.replace("_", " ")
+
+            function_title = title if title is not None else function_name_
 
             function_description = description
             if function_description == "" or function_description is None:
-                function_docstring = getattr(function, "__doc__")
-                if function_docstring:
-                    function_description = un_indent(function_docstring)
+                if GlobalSwitchOption.AUTO_READ_DOCSTRING_TO_FUNCTION_DESCRIPTION:
+                    function_docstring = getattr(function, "__doc__")
+                    if function_docstring:
+                        function_description = un_indent(function_docstring)
 
-            if not theme:
-                if "__default" in __parsed_themes:
-                    parsed_theme = __parsed_themes["__default"]
-                else:
-                    parsed_theme = [], {}, {}, {}, {}
-            else:
-                if theme in __parsed_themes:
-                    parsed_theme = __parsed_themes[theme]
-                else:
-                    # Cache
-                    if theme in __themes:
-                        parsed_theme = parse_theme(__themes[theme])
-                        __parsed_themes[theme] = parsed_theme
-                    else:
-                        import_theme(theme, alias=theme)  # alias is not important here
-                        parsed_theme = parse_theme(__themes[theme])
-                        __parsed_themes[theme] = parsed_theme
+            parsed_theme = get_parsed_theme_fot_funix(theme)
 
-            if not path:
-                if unique_function_name:
-                    endpoint = unique_function_name
-                else:
-                    endpoint = function_name
-            else:
-                if path in banned_function_name_and_path:
-                    raise Exception(f"{function_name}'s path: {path} is not allowed")
-                endpoint = path.strip("/")
+            endpoint = get_endpoint(path, unique_function_name, function_name)
 
             if unique_function_name:
                 if unique_function_name in __decorated_functions_names_list:
@@ -944,83 +532,24 @@ def funix(
 
             if isinstance(reactive, dict):
                 has_reactive_params = True
-                for reactive_param in reactive.keys():
-                    if reactive_param not in function_params:
-                        raise ValueError(
-                            f"Reactive param `{reactive_param}` not found in function `{function_name}`"
-                        )
-                    callable_or_with_config = reactive[reactive_param]
+                reactive_config = get_reactive_config(
+                    reactive, function_params, function_name
+                )
 
-                    if isinstance(callable_or_with_config, tuple):
-                        callable_ = callable_or_with_config[0]
-                        full_config = callable_or_with_config[1]
-                    else:
-                        callable_ = callable_or_with_config
-                        full_config = None
+                def _function_reactive_update():
+                    return function_reactive_update(reactive_config)
 
-                    callable_params = signature(callable_).parameters
-
-                    for callable_param in dict(callable_params.items()).values():
-                        if (
-                            callable_param.kind == Parameter.VAR_KEYWORD
-                            or callable_param.kind == Parameter.VAR_POSITIONAL
-                        ):
-                            reactive_config[reactive_param] = (callable_, {})
-                            break
-
-                    if reactive_param not in reactive_config:
-                        if full_config:
-                            reactive_config[reactive_param] = (callable_, full_config)
-                        else:
-                            reactive_config[reactive_param] = (callable_, {})
-                            for key in dict(callable_params.items()).keys():
-                                if key not in function_params:
-                                    raise ValueError(
-                                        f"The key {key} is not in function, please write full config"
-                                    )
-                                reactive_config[reactive_param][1][key] = key
-
-                def function_reactive_update():
-                    reactive_param_value = {}
-
-                    form_data = request.get_json()
-
-                    for key_, item_ in reactive_config.items():
-                        argument_key: str = key_
-                        callable_function: Callable = item_[0]
-                        callable_config: dict[str, str] = item_[1]
-
-                        try:
-                            if callable_config == {}:
-                                reactive_param_value[argument_key] = callable_function(
-                                    **form_data
-                                )
-                            else:
-                                new_form_data = {}
-                                for key__, value in callable_config.items():
-                                    new_form_data[key__] = form_data[value]
-                                reactive_param_value[argument_key] = callable_function(
-                                    **new_form_data
-                                )
-                        except:
-                            pass
-
-                    if reactive_param_value == {}:
-                        return {"result": None}
-
-                    return {"result": reactive_param_value}
-
-                function_reactive_update.__name__ = function_name + "_reactive_update"
+                _function_reactive_update.__name__ = function_name + "_reactive_update"
 
                 if safe_module_now:
-                    function_reactive_update.__name__ = (
-                        f"{safe_module_now}_{function_reactive_update.__name__}"
+                    _function_reactive_update.__name__ = (
+                        f"{safe_module_now}_{_function_reactive_update.__name__}"
                     )
 
-                app.post(f"/update/{function_id}")(function_reactive_update)
-                app.post(f"/update/{endpoint}")(function_reactive_update)
+                app.post(f"/update/{function_id}")(_function_reactive_update)
+                app.post(f"/update/{endpoint}")(_function_reactive_update)
 
-            __decorated_functions_list.append(
+            decorated_functions_list_append(
                 {
                     "name": function_title,
                     "path": endpoint,
@@ -1041,382 +570,34 @@ def funix(
             decorated_params = {}
             json_schema_props = {}
 
-            cast_to_list_flag = False
-
-            if function_signature.return_annotation is not Signature.empty:
-                # TODO: Magic code, I've forgotten what it does, but it works, refactor it if you can
-                # return type dict enforcement for yodas only
-                try:
-                    if (
-                        cast_to_list_flag := function_signature.return_annotation.__class__.__name__
-                        == "tuple"
-                        or function_signature.return_annotation.__name__ == "Tuple"
-                    ):
-                        parsed_return_annotation_list = []
-                        return_annotation = list(
-                            function_signature.return_annotation
-                            if function_signature.return_annotation.__class__.__name__
-                            == "tuple"
-                            else function_signature.return_annotation.__args__
-                        )
-                        for return_annotation_type in return_annotation:
-                            return_annotation_type_name = getattr(
-                                return_annotation_type, "__name__"
-                            )
-                            full_type_name = (
-                                getattr(return_annotation_type, "__module__")
-                                + "."
-                                + return_annotation_type_name
-                            )
-                            if return_annotation_type_name in supported_basic_types:
-                                return_annotation_type_name = (
-                                    supported_basic_types_dict[
-                                        return_annotation_type_name
-                                    ]
-                                )
-                            elif return_annotation_type_name == "List":
-                                list_type_name = getattr(
-                                    getattr(return_annotation_type, "__args__")[0],
-                                    "__name__",
-                                )
-                                if list_type_name in supported_basic_file_types:
-                                    return_annotation_type_name = list_type_name
-                            if full_type_name in __ipython_type_convert_dict:
-                                return_annotation_type_name = (
-                                    __ipython_type_convert_dict[full_type_name]
-                                )
-                            elif full_type_name in __dataframe_convert_dict:
-                                return_annotation_type_name = __dataframe_convert_dict[
-                                    full_type_name
-                                ]
-                            parsed_return_annotation_list.append(
-                                return_annotation_type_name
-                            )
-                        return_type_parsed = parsed_return_annotation_list
-                    else:
-                        if hasattr(
-                            function_signature.return_annotation, "__annotations__"
-                        ):
-                            return_type_raw = getattr(
-                                function_signature.return_annotation, "__annotations__"
-                            )
-                            if getattr(type(return_type_raw), "__name__") == "dict":
-                                if (
-                                    function_signature.return_annotation.__name__
-                                    == "Figure"
-                                ):
-                                    return_type_parsed = (
-                                        "Figure"
-                                        if not figure_to_image
-                                        else "FigureImage"
-                                    )
-                                else:
-                                    if hasattr(
-                                        function_signature.return_annotation,
-                                        "__module__",
-                                    ):
-                                        full_name = (
-                                            getattr(
-                                                function_signature.return_annotation,
-                                                "__module__",
-                                            )
-                                            + "."
-                                            + getattr(
-                                                function_signature.return_annotation,
-                                                "__name__",
-                                            )
-                                        )
-                                        if full_name in __ipython_type_convert_dict:
-                                            return_type_parsed = (
-                                                __ipython_type_convert_dict[full_name]
-                                            )
-                                        elif full_name in __dataframe_convert_dict:
-                                            return_type_parsed = (
-                                                __dataframe_convert_dict[full_name]
-                                            )
-                                        else:
-                                            # TODO: DO MORE
-                                            return_type_parsed = None
-                                    else:
-                                        return_type_parsed = {}
-                                        for (
-                                            return_type_key,
-                                            return_type_value,
-                                        ) in return_type_raw.items():
-                                            return_type_parsed[return_type_key] = str(
-                                                return_type_value
-                                            )
-                            else:
-                                return_type_parsed = str(return_type_raw)
-                        else:
-                            return_type_parsed = getattr(
-                                function_signature.return_annotation, "__name__"
-                            )
-                            if return_type_parsed in supported_basic_types:
-                                return_type_parsed = supported_basic_types_dict[
-                                    return_type_parsed
-                                ]
-                            elif return_type_parsed == "List":
-                                list_type_name = getattr(
-                                    getattr(
-                                        function_signature.return_annotation, "__args__"
-                                    )[0],
-                                    "__name__",
-                                )
-                                if list_type_name in supported_basic_file_types:
-                                    return_type_parsed = list_type_name
-                except:
-                    return_type_parsed = get_type_dict(
-                        function_signature.return_annotation
-                    )
-                    if return_type_parsed is not None:
-                        return_type_parsed = return_type_parsed["type"]
-            else:
-                return_type_parsed = None
-
-            return_input_layout = []
+            cast_to_list_flag, return_type_parsed = parse_function_annotation(
+                function_signature, figure_to_image
+            )
 
             safe_input_layout = [] if not input_layout else input_layout
+            return_input_layout, _need_update = handle_input_layout(safe_input_layout)
 
-            for row in safe_input_layout:
-                row_layout = []
-                for row_item in row:
-                    row_item_done = row_item
-                    for common_row_item_key in ["markdown", "html"]:
-                        if common_row_item_key in row_item:
-                            row_item_done = convert_row_item(
-                                row_item, common_row_item_key
-                            )
-                    if "argument" in row_item:
-                        if row_item["argument"] not in decorated_params:
-                            decorated_params[row_item["argument"]] = {}
-                        decorated_params[row_item["argument"]]["customLayout"] = True
-                        row_item_done["type"] = "argument"
-                    elif "divider" in row_item:
-                        row_item_done["type"] = "divider"
-                        if isinstance(row_item["divider"], str):
-                            row_item_done["content"] = row_item_done["divider"]
-                        row_item_done.pop("divider")
-                    row_layout.append(row_item_done)
-                return_input_layout.append(row_layout)
-
-            return_output_layout = []
-            return_output_indexes = []
+            decorated_params.update(_need_update)
 
             safe_output_layout = [] if not output_layout else output_layout
 
-            for row in safe_output_layout:
-                row_layout = []
-                for row_item in row:
-                    row_item_done = row_item
-                    for common_row_item_key in [
-                        "markdown",
-                        "html",
-                        "images",
-                        "videos",
-                        "audios",
-                        "files",
-                    ]:
-                        if common_row_item_key in row_item:
-                            row_item_done = convert_row_item(
-                                row_item, common_row_item_key
-                            )
-                    if "divider" in row_item:
-                        row_item_done["type"] = "divider"
-                        if isinstance(row_item["divider"], str):
-                            row_item_done["content"] = row_item_done["divider"]
-                        row_item_done.pop("divider")
-                    elif "code" in row_item:
-                        row_item_done = row_item
-                        row_item_done["type"] = "code"
-                        row_item_done["content"] = row_item_done["code"]
-                        row_item_done.pop("code")
-                    elif "return_index" in row_item:
-                        row_item_done["type"] = "return_index"
-                        row_item_done["index"] = row_item_done["return_index"]
-                        row_item_done.pop("return_index")
-                        if isinstance(row_item_done["index"], int):
-                            return_output_indexes.append(row_item_done["index"])
-                        elif isinstance(row_item_done["index"], list):
-                            return_output_indexes.extend(row_item_done["index"])
-                    row_layout.append(row_item_done)
-                return_output_layout.append(row_layout)
+            return_output_layout, return_output_indexes = handle_output_layout(
+                safe_output_layout
+            )
 
             if pre_fill:
-                for _, from_arg_function_info in pre_fill.items():
-                    if isinstance(from_arg_function_info, tuple):
-                        from_arg_function_address = str(id(from_arg_function_info[0]))
-                        from_arg_function_index_or_key = from_arg_function_info[1]
-                        if from_arg_function_address in pre_fill_metadata:
-                            pre_fill_metadata[from_arg_function_address].append(
-                                from_arg_function_index_or_key
-                            )
-                        else:
-                            pre_fill_metadata[from_arg_function_address] = [
-                                from_arg_function_index_or_key
-                            ]
-                    else:
-                        from_arg_function_address = str(id(from_arg_function_info))
-                        if from_arg_function_address in pre_fill_metadata:
-                            pre_fill_metadata[from_arg_function_address].append(
-                                PreFillEmpty
-                            )
-                        else:
-                            pre_fill_metadata[from_arg_function_address] = [
-                                PreFillEmpty
-                            ]
+                parse_pre_fill(pre_fill)
 
-            def create_decorated_params(arg_name: str) -> None:
-                """
-                Creates a decorated_params entry for the given arg_name if it doesn't exist
-
-                Parameters:
-                    arg_name (str): The name of the argument
-                """
-                if arg_name not in decorated_params:
-                    decorated_params[arg_name] = {}
-
-            def put_props_in_params(
-                arg_name: str, prop_name: str, prop_value: Any
-            ) -> None:
-                """
-                Puts the given prop_name and prop_value in the decorated_params entry for the given arg_name
-
-                Parameters:
-                    arg_name (str): The name of the argument
-                    prop_name (str): The name of the prop
-                    prop_value (Any): The value of the prop
-                """
-                create_decorated_params(arg_name)
-                decorated_params[arg_name][prop_name] = prop_value
-
-            def check_example_whitelist(arg_name: str) -> None:
-                """
-                Checks if the given arg_name has both an example and a whitelist
-
-                Parameters:
-                    arg_name (str): The name of the argument
-
-                Raises:
-                    ValueError: If the given arg_name has both an example and a whitelist
-                """
-                if arg_name in decorated_params:
-                    if (
-                        "example" in decorated_params[arg_name]
-                        and "whitelist" in decorated_params[arg_name]
-                    ):
-                        raise ValueError(
-                            f"{function_name}: {arg_name} has both an example and a whitelist"
-                        )
-
-            def parse_widget(
-                widget_info: str | tuple | list | dict,
-            ) -> list[str] | str | dict:
-                """
-                Parses the given widget_info
-
-                Parameters:
-                    widget_info (str | tuple | list | dict): The widget_info to parse
-
-                Returns:
-                    list[str] | str | dict: The widget
-                """
-                if isinstance(widget_info, dict):
-                    widget_name = widget_info["widget"]
-                    widget_config = widget_info.get("props", None)
-                    if widget_name.startswith("@"):
-                        return widget_info
-                    else:
-                        if widget_config is None:
-                            return widget_name
-                        else:
-                            return generate_frontend_widget_config(
-                                (widget_name, widget_config)
-                            )
-                if isinstance(widget_info, str):
-                    return widget_info
-                elif isinstance(widget_info, tuple):
-                    return generate_frontend_widget_config(widget_info)
-                elif isinstance(widget_info, list):
-                    widget_result = []
-                    for widget_item in widget_info:
-                        if isinstance(widget_item, tuple):
-                            widget_result.append(
-                                generate_frontend_widget_config(widget_item)
-                            )
-                        elif isinstance(widget_item, list):
-                            widget_result.append(parse_widget(widget_item))
-                        elif isinstance(widget_item, str):
-                            widget_result.append(widget_item)
-                    return widget_result
-
-            def iter_over_prop(
-                argument_type: str,
-                argument: dict[str | tuple, Any] | None,
-                callback,
-            ):
-                """
-                callback: pass in (argument_type, key, key_idx, value)
-                """
-                if argument is None:
-                    return
-
-                for arg_idx, arg_key in enumerate(argument):
-                    if isinstance(arg_key, str):
-                        callback(argument_type, arg_key, 0, argument[arg_key])
-                    elif isinstance(arg_key, tuple):
-                        for key_idx, single_key in enumerate(arg_key):
-                            callback(
-                                argument_type, single_key, key_idx, argument[arg_key]
-                            )
-                    else:
-                        raise TypeError(
-                            f"Argument `{argument_type}` has invalid key type {type(argument)}"
-                        )
-
-            function_params_name: list[str] = list(function_params.keys())
-
-            def expand_wildcards(origin_key: str, search_list: list[str]) -> list[str]:
-                keys = []
-                if "*" in origin_key or "?" in origin_key:
-                    for param_name in search_list:
-                        if pathlib.PurePath(param_name).match(origin_key):
-                            keys.append(param_name)
-                elif origin_key.startswith("regex:"):
-                    regex = re.compile(origin_key[6:])
-                    for param_name in search_list:
-                        if regex.search(param_name) is not None:
-                            keys.append(param_name)
-                else:
-                    keys.append(origin_key)
-                return keys
-
-            def process_widgets(arg_type: str, arg_key: str, key_idx: int, value: any):
-                parsed_widget = parse_widget(value)
-                for expanded_key in expand_wildcards(arg_key, function_params_name):
-                    put_props_in_params(expanded_key, arg_type, parsed_widget)
-
-            iter_over_prop("widget", widgets, process_widgets)
-
-            def process_title(arg_type: str, arg_key: str, key_idx: int, value: any):
-                for expanded_key in expand_wildcards(arg_key, function_params_name):
-                    put_props_in_params(expanded_key, arg_type, value)
-
-            iter_over_prop("title", argument_labels, process_title)
-
-            def process_treat_as(arg_type: str, arg_key: str, key_idx: int, value: any):
-                put_props_in_params(arg_key, arg_type, value)
-
-            iter_over_prop("treat_as", treat_as, process_treat_as)
-
-            def process_examples_and_whitelist(
-                arg_type: str, arg_key: str, key_idx: int, value: any
-            ):
-                put_props_in_params(arg_key, arg_type, value[key_idx])
-                check_example_whitelist(arg_key)
-
-            iter_over_prop("example", examples, process_examples_and_whitelist)
-            iter_over_prop("whitelist", whitelist, process_examples_and_whitelist)
+            widget_parse(
+                function_params,
+                decorated_params,
+                function_name,
+                widgets,
+                argument_labels,
+                treat_as,
+                examples,
+                whitelist,
+            )
 
             input_attr = ""
 
@@ -1585,10 +766,11 @@ def funix(
                     function_arg_name
                 ].get("treat_as", "config")
 
-                if "_" in function_arg_name:
-                    decorated_params[function_arg_name]["title"] = decorated_params[
-                        function_arg_name
-                    ].get("title", function_arg_name.replace("_", " "))
+                if GlobalSwitchOption.AUTO_CONVERT_UNDERSCORE_TO_SPACE_IN_NAME:
+                    if "_" in function_arg_name:
+                        decorated_params[function_arg_name]["title"] = decorated_params[
+                            function_arg_name
+                        ].get("title", function_arg_name.replace("_", " "))
 
                 function_arg_type_dict = get_type_dict(function_param.annotation)
                 decorated_params[function_arg_name].update(function_arg_type_dict)
@@ -1959,10 +1141,10 @@ def funix(
                         Document is on the way
                         """
                         function_call_address = str(function_id_int)
-                        if function_call_address in pre_fill_metadata:
-                            for index_or_key in pre_fill_metadata[
-                                function_call_address
-                            ]:
+                        if pre_fill_metadata := get_pre_fill_metadata(
+                            function_call_address
+                        ):
+                            for index_or_key in pre_fill_metadata:
                                 if index_or_key is PreFillEmpty:
                                     set_global_variable(
                                         function_call_address + "_result",
