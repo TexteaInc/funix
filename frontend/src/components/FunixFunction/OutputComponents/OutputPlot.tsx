@@ -1,16 +1,37 @@
-import { useLayoutEffect } from "react";
+import { useLayoutEffect, useRef } from "react";
+import { Box } from "@mui/material";
 
 export default function OutputPlot(props: {
   plotCode: string;
   indexId: string;
 }) {
+  const drawLock = useRef(false);
+
   useLayoutEffect(() => {
+    if (drawLock.current) {
+      return;
+    }
     if (document.querySelector(`#plot-${props.indexId}`)?.innerHTML === "") {
-      const scriptElement = document.createElement("script");
-      scriptElement.innerHTML = `mpld3.draw_figure("plot-${props.indexId}", ${props.plotCode})`;
-      document.body.appendChild(scriptElement);
+      const plot = JSON.parse(props.plotCode);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      mpld3.draw_figure(`plot-${props.indexId}`, plot);
+      drawLock.current = true;
     }
   }, []);
 
-  return <div id={`plot-${props.indexId}`} />;
+  return (
+    <Box
+      component="div"
+      sx={{
+        width: "100%",
+        height: "auto",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <div id={`plot-${props.indexId}`} />
+    </Box>
+  );
 }
