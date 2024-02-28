@@ -543,34 +543,42 @@ def anal_function_result(
                     call_result = [get_dataframe_json(call_result[0])]
                 if return_type_parsed in supported_basic_file_types:
                     if isinstance(call_result[0], list):
-                        call_result = [
-                            [
-                                handle_ipython_audio_image_video(single)
+                        if __ipython_use:
+                            call_result = [
+                                [
+                                    handle_ipython_audio_image_video(single)
+                                    if isinstance(
+                                        single,
+                                        (
+                                            __ipython_display.Audio,
+                                            __ipython_display.Video,
+                                            __ipython_display.Image,
+                                        ),
+                                    )
+                                    else get_static_uri(single)
+                                    for single in call_result[0]
+                                ]
+                            ]
+                        else:
+                            call_result = [
+                                [get_static_uri(single) for single in call_result[0]]
+                            ]
+                    else:
+                        if __ipython_use:
+                            call_result = [
+                                handle_ipython_audio_image_video(call_result[0])
                                 if isinstance(
-                                    single,
+                                    call_result[0],
                                     (
                                         __ipython_display.Audio,
                                         __ipython_display.Video,
                                         __ipython_display.Image,
                                     ),
                                 )
-                                else get_static_uri(single)
-                                for single in call_result[0]
+                                else get_static_uri(call_result[0])
                             ]
-                        ]
-                    else:
-                        call_result = [
-                            handle_ipython_audio_image_video(call_result[0])
-                            if isinstance(
-                                call_result[0],
-                                (
-                                    __ipython_display.Audio,
-                                    __ipython_display.Video,
-                                    __ipython_display.Image,
-                                ),
-                            )
-                            else get_static_uri(call_result[0])
-                        ]
+                        else:
+                            call_result = [get_static_uri(call_result[0])]
                 return call_result
     return call_result
 
