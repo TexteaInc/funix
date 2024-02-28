@@ -494,32 +494,45 @@ def anal_function_result(
 
                     if single_return_type in supported_basic_file_types:
                         if isinstance(call_result[position], list):
-                            call_result[position] = [
-                                handle_ipython_audio_image_video(single)
-                                if isinstance(
-                                    single,
-                                    (
-                                        __ipython_display.Audio,
-                                        __ipython_display.Video,
-                                        __ipython_display.Image,
-                                    ),
-                                )
-                                else get_static_uri(single)
-                                for single in call_result[position]
-                            ]
+                            if __ipython_use:
+                                call_result[position] = [
+                                    handle_ipython_audio_image_video(single)
+                                    if isinstance(
+                                        single,
+                                        (
+                                            __ipython_display.Audio,
+                                            __ipython_display.Video,
+                                            __ipython_display.Image,
+                                        ),
+                                    )
+                                    else get_static_uri(single)
+                                    for single in call_result[position]
+                                ]
+                            else:
+                                call_result[position] = [
+                                    get_static_uri(single)
+                                    for single in call_result[position]
+                                ]
                         else:
-                            call_result[position] = (
-                                handle_ipython_audio_image_video(call_result[position])
-                                if isinstance(
-                                    call_result[position],
-                                    (
-                                        __ipython_display.Audio,
-                                        __ipython_display.Video,
-                                        __ipython_display.Image,
-                                    ),
+                            if __ipython_use:
+                                call_result[position] = (
+                                    handle_ipython_audio_image_video(
+                                        call_result[position]
+                                    )
+                                    if isinstance(
+                                        call_result[position],
+                                        (
+                                            __ipython_display.Audio,
+                                            __ipython_display.Video,
+                                            __ipython_display.Image,
+                                        ),
+                                    )
+                                    else get_static_uri(call_result[position])
                                 )
-                                else get_static_uri(call_result[position])
-                            )
+                            else:
+                                call_result[position] = get_static_uri(
+                                    call_result[position]
+                                )
                 return call_result
             else:
                 if return_type_parsed == "Figure":
