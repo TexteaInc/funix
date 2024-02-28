@@ -573,15 +573,16 @@ def parse_function_annotation(
             if (
                 cast_to_list_flag := function_signature.return_annotation.__class__.__name__
                 == "tuple"
+                or function_signature.return_annotation.__name__ == "tuple"
                 or function_signature.return_annotation.__name__ == "Tuple"
             ):
                 parsed_return_annotation_list = []
-                return_annotation = list(
-                    function_signature.return_annotation
-                    if function_signature.return_annotation.__class__.__name__
-                    == "tuple"
-                    else function_signature.return_annotation.__args__
-                )
+                if function_signature.return_annotation.__class__.__name__ == "tuple":
+                    return_annotation = list(function_signature.return_annotation)
+                else:
+                    return_annotation = list(
+                        function_signature.return_annotation.__args__
+                    )
                 for return_annotation_type in return_annotation:
                     return_annotation_type_name = getattr(
                         return_annotation_type, "__name__"
