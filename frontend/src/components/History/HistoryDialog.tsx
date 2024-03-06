@@ -154,6 +154,9 @@ const HistoryDialog = (props: {
   // window.addEventListener("funix-history-update", () => {
   //   getHistories().then((h) => setHistories(h));
   // });
+  if (!props.open) {
+    return <></>;
+  }
 
   return (
     <>
