@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { FunctionDetail, FunctionPreview, verifyToken } from "../../shared";
@@ -9,6 +9,7 @@ import InputPanel from "./InputPanel";
 import OutputPanel from "./OutputPanel";
 import { Token } from "@mui/icons-material";
 import InlineBox from "../Common/InlineBox";
+// import useSWR from "swr";
 
 export type FunctionDetailProps = {
   preview: FunctionPreview;
@@ -16,17 +17,10 @@ export type FunctionDetailProps = {
 };
 
 const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
-  const [detail] = useState<FunctionDetail | null>(() => {
-    // no asynchronous, no cache
-    const xhr = new XMLHttpRequest();
-    xhr.open("GET", new URL(`/param/${preview.id}`, backend).toString(), false);
-    xhr.send();
-    if (xhr.status === 200) {
-      return JSON.parse(xhr.responseText) as FunctionDetail;
-    } else {
-      return null;
-    }
-  });
+  // const { data: detail } = useSWR<FunctionDetail>(
+  //   new URL(`/param/${preview.id}`, backend).toString()
+  // );
+  const [detail, setDetail] = useState<FunctionDetail | null>(null);
   const [
     { inputOutputWidth, functionSecret, backHistory, backConsensus, appSecret },
     setStore,
@@ -35,6 +29,8 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
   const [onResizing, setOnResizing] = useState(false);
   const [response, setResponse] = useState<string | null>(null);
   const [verified, setVerified] = useState(!preview.secret);
+  const queryLock = useRef(false);
+  const [warning, setWarning] = useState(false);
 
   useEffect(() => {
     if (preview.secret) {
@@ -53,6 +49,15 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
         });
     }
   }, [functionSecret, preview, appSecret]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (detail === null) {
+        setWarning(true);
+      }
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [detail]);
 
   useEffect(() => {
     if (backHistory === null) return;
@@ -104,20 +109,29 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
     }));
   }, [onResizing]);
 
-  if (detail == null) {
-    console.log("Failed to display function detail");
-    return <div />;
-  } else {
-    useEffect(() => {
-      setStore((store) => ({
-        ...store,
-        theme: functionDetail.theme,
-      }));
-    }, []);
-  }
+  useEffect(() => {
+    if (detail == null) return;
+    setStore((store) => ({
+      ...store,
+      theme: detail.theme,
+    }));
+  }, [detail]);
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const functionDetail = detail!;
+  useEffect(() => {
+    if (queryLock.current) {
+      return;
+    }
+    queryLock.current = true;
+    fetch(new URL(`/param/${preview.id}`, backend).toString())
+      .then((body) => {
+        return body.json();
+      })
+      .then((data: FunctionDetail) => {
+        setDetail(data);
+        setWarning(false);
+      });
+  }, [preview, backend]);
+
   const needSecret = preview.secret;
 
   const handleResize = (event: PointerEvent) => {
@@ -141,7 +155,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
     }));
   };
 
-  return (
+  return detail !== null ? (
     <>
       {needSecret ? (
         functionSecret[preview.path] == null && appSecret == null ? (
@@ -264,7 +278,17 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
         </Grid>
       </Stack>
     </>
+  ) : warning ? (
+    <Alert severity="warning">
+      <AlertTitle>Waiting for detail</AlertTitle>
+      <InlineBox>
+        If this message lasts for a long time, please check your network or the
+        backend status.
+      </InlineBox>
+    </Alert>
+  ) : (
+    <></>
   );
 };
 
-export default React.memo(FunixFunction);
+export default FunixFunction;
