@@ -39,10 +39,11 @@ const InputPanel = (props: {
     { functionSecret, backHistory, backConsensus, saveHistory, appSecret },
     setStore,
   ] = useAtom(storeAtom);
-  const { setInput, setOutput } = useFunixHistory();
+  const { setInputOutput } = useFunixHistory();
   const { enqueueSnackbar } = useSnackbar();
 
   const [tempOutput, setTempOutput] = useState<string | null>(null);
+  const tempOutputRef = React.useRef<string | null>(null);
   const [autoRun, setAutoRun] = useState(false);
 
   const isLarge =
@@ -59,6 +60,10 @@ const InputPanel = (props: {
   useEffect(() => {
     setWaiting(() => !requestDone);
   }, [asyncWaiting]);
+
+  useEffect(() => {
+    tempOutputRef.current = tempOutput;
+  }, [tempOutput]);
 
   useEffect(() => {
     if (backHistory === null) return;
@@ -123,26 +128,6 @@ const InputPanel = (props: {
       _.debounce(() => {
         handleSubmitWithoutHistory().then();
       }, 100)();
-    }
-  };
-
-  const saveOutput = async (
-    now: number,
-    name: string,
-    path: string,
-    output: string
-  ) => {
-    try {
-      await setOutput(now, name, path, output);
-    } catch (e) {
-      enqueueSnackbar(
-        "Cannot save output to history, check your console for more information",
-        {
-          variant: "error",
-        }
-      );
-      console.error("Funix History Error:");
-      console.error(e);
     }
   };
 
@@ -222,44 +207,40 @@ const InputPanel = (props: {
     const now = new Date().getTime();
     const newForm = getNewForm();
 
-    if (saveHistory && !isLarge) {
-      try {
-        await setInput(now, props.preview.name, props.preview.path, newForm);
-      } catch (error) {
-        enqueueSnackbar(
-          "Cannot save input to history, check your console for more information",
-          {
-            variant: "error",
-          }
-        );
-        console.error("Funix History Error:");
-        console.error(error);
-      }
-    }
-    // console.log("Data submitted: ", newForm);
     setRequestDone(() => false);
     checkResponse().then();
     if (props.preview.websocket) {
       const socket = new WebSocket(getWebsocketUrl());
       socket.addEventListener("open", function () {
+        setTempOutput(() => null);
         socket.send(JSON.stringify(newForm));
       });
 
       socket.addEventListener("message", function (event) {
-        props.setResponse(() => event.data);
-        setTempOutput(() => event.data);
+        const data = structuredClone(event.data);
+        props.setResponse(() => data);
+        setTempOutput(() => data);
       });
 
       socket.addEventListener("close", async function () {
         setWaiting(() => false);
         setRequestDone(() => true);
-        if (saveHistory && tempOutput) {
-          await saveOutput(
-            now,
-            props.preview.name,
-            props.preview.path,
-            tempOutput
-          );
+        console.log(saveHistory, tempOutputRef.current, isLarge);
+        if (saveHistory && tempOutputRef.current && !isLarge) {
+          try {
+            await setInputOutput(
+              now,
+              props.preview.name,
+              props.preview.path,
+              newForm,
+              tempOutputRef.current
+            );
+          } catch (e) {
+            enqueueSnackbar("Failed to save history, check your console", {
+              variant: "error",
+            });
+            console.error(e);
+          }
         }
       });
     } else {
@@ -272,8 +253,21 @@ const InputPanel = (props: {
       setWaiting(() => false);
       setRequestDone(() => true);
 
-      if (saveHistory) {
-        await saveOutput(now, props.preview.name, props.preview.path, result);
+      if (saveHistory && !isLarge) {
+        try {
+          await setInputOutput(
+            now,
+            props.preview.name,
+            props.preview.path,
+            newForm,
+            result
+          );
+        } catch (e) {
+          enqueueSnackbar("Failed to save history, check your console", {
+            variant: "error",
+          });
+          console.error(e);
+        }
       }
     }
   };

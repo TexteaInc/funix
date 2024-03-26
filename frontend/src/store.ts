@@ -18,18 +18,38 @@ export type Store = {
   histories: History[];
 };
 
+// atomWithStorage("saveHistory", true);
+
+const fromLocalStorage = () => {
+  let saveHistory = localStorage.getItem("saveHistory");
+  if (saveHistory === null) {
+    saveHistory = "true";
+    localStorage.setItem("saveHistory", saveHistory);
+  }
+
+  let showFunctionDetail = localStorage.getItem("showFunctionDetail");
+  if (showFunctionDetail === null) {
+    showFunctionDetail = "false";
+    localStorage.setItem("showFunctionDetail", showFunctionDetail);
+  }
+
+  return {
+    saveHistory: saveHistory === "true",
+    showFunctionDetail: showFunctionDetail === "true",
+  };
+};
+
 export const storeAtom = atom<Store>({
   selectedFunction: null,
   functions: null,
   theme: null,
-  showFunctionDetail: false,
   inputOutputWidth: ["50%", "50%"],
   viewType: "json",
   functionSecret: {},
   backend: null,
   backHistory: null,
   backConsensus: [false, false, false],
-  saveHistory: true,
   appSecret: null,
   histories: [],
+  ...fromLocalStorage(),
 });

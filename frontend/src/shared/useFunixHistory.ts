@@ -118,8 +118,34 @@ const useFunixHistory = () => {
     input: Record<any, any>,
     output: string | PostCallResponse
   ) => {
-    await setInput(timestamp, functionName, functionPath, input);
-    await setOutput(timestamp, functionName, functionPath, output);
+    // await setInput(timestamp, functionName, functionPath, input);
+    // await setOutput(timestamp, functionName, functionPath, output);
+    const historyKey = `funix-history-${timestamp}`;
+
+    let newOutput = output;
+    if (typeof output === "string") {
+      try {
+        newOutput = JSON.parse(output);
+      } catch (e) {
+        newOutput = output;
+      }
+    }
+
+    const history: History | null = await getHistoryOrMakeAnEmptyOne(
+      historyKey,
+      await localforage.keys(),
+      functionName,
+      functionPath,
+      timestamp
+    );
+
+    if (history !== null) {
+      await setHistory(historyKey, {
+        ...history,
+        input,
+        output: newOutput,
+      });
+    }
   };
 
   const removeHistory = (timestamp: number) => {

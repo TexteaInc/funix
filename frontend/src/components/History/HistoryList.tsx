@@ -29,7 +29,7 @@ import { getHistoryInfo, getHistoryStatusIcon } from "./HistoryUtils";
 import React, { useEffect, useState } from "react";
 import { exportHistory } from "../../shared";
 
-const HistoryList = () => {
+const HistoryList = (props: { isOpen: boolean }) => {
   const { setHistoryNameAndPath, removeHistory } = useFunixHistory();
   const [{ selectedFunction, histories }, setStore] = useAtom(storeAtom);
   const [selectedHistoryTimestamp, setSelectedHistoryTimestamp] = useState(-1);
@@ -42,6 +42,10 @@ const HistoryList = () => {
   useEffect(() => {
     setSelectedHistoryTimestamp(-1);
   }, [selectedFunction]);
+
+  if (!props.isOpen) {
+    return <></>;
+  }
 
   if (selectedFunction === null || histories.length === 0) {
     return (
