@@ -11,45 +11,22 @@ from types import ModuleType
 from typing import Callable, Optional, Union
 from uuid import uuid4
 
-from funix.decorator.all_of import parse_all_of
-from funix.decorator.call import call
-from funix.decorator.layout import handle_input_layout, handle_output_layout
-from funix.decorator.magic import (
-    parse_function_annotation,
-    get_type_widget_prop,
-    get_type_dict,
-    anal_function_result,
-    function_param_to_widget,
-)
-from funix.decorator.param import (
-    create_parse_type_metadata,
-    parse_param,
-    get_param_for_funix,
-)
-from funix.decorator.pre_fill import parse_pre_fill, get_pre_fill_metadata
-from funix.decorator.secret import (
-    get_app_secret,
-    set_function_secret,
-    get_secret_by_id,
-    check_secret,
-)
-from funix.decorator.widget import widget_parse, parse_widget, parse_argument_config
-
 from funix.app import app, sock
-from funix.config import (
-    banned_function_name_and_path,
-)
+from funix.config import banned_function_name_and_path
 from funix.config.switch import GlobalSwitchOption
+from funix.decorator.all_of import parse_all_of
 from funix.decorator.annnotation_analyzer import (
     analyze,
     register_ipywidgets,
     register_pandera,
 )
+from funix.decorator.call import call
 from funix.decorator.file import (
     enable_file_service,
     get_static_uri,
     handle_ipython_audio_image_video,
 )
+from funix.decorator.layout import handle_input_layout, handle_output_layout
 from funix.decorator.limit import Limiter, global_rate_limiters, parse_limiter_args
 from funix.decorator.lists import (
     decorated_functions_list_append,
@@ -58,14 +35,34 @@ from funix.decorator.lists import (
     push_counter,
     set_default_function,
 )
+from funix.decorator.magic import (
+    anal_function_result,
+    function_param_to_widget,
+    get_type_dict,
+    get_type_widget_prop,
+    parse_function_annotation,
+)
+from funix.decorator.param import (
+    create_parse_type_metadata,
+    get_param_for_funix,
+    parse_param,
+)
+from funix.decorator.pre_fill import get_pre_fill_metadata, parse_pre_fill
 from funix.decorator.reactive import function_reactive_update, get_reactive_config
 from funix.decorator.runtime import RuntimeClassVisitor
+from funix.decorator.secret import (
+    check_secret,
+    get_app_secret,
+    get_secret_by_id,
+    set_function_secret,
+)
 from funix.decorator.theme import (
     get_parsed_theme_fot_funix,
     import_theme,
     parsed_themes,
     themes,
 )
+from funix.decorator.widget import parse_argument_config, parse_widget, widget_parse
 from funix.hint import (
     ArgumentConfigType,
     ConditionalVisibleType,
@@ -216,6 +213,7 @@ def funix(
     title: Optional[str] = None,
     secret: bool | str = False,
     description: Optional[str] = "",
+    session_description: Optional[str] = None,
     destination: DestinationType = None,
     direction: DirectionType = None,
     show_source: bool = False,
@@ -254,6 +252,7 @@ def funix(
             if True, the function will be locked with a random 16 character password.
             if str, the function will be locked with the given password.
         description(str): description of the function, if None, the function docstring will be used
+        session_description(str): get description from session
         destination(DestinationType): for yodas, no effect on funix
         direction(DirectionType): Whether the input/output panel is aligned left/right (row) or top/bottom (column)
         show_source(bool): whether to display the code of this function in the frontend
@@ -554,7 +553,9 @@ def funix(
                 Returns:
                     flask.Response: The function's parameters
                 """
-                return get_param_for_funix(pre_fill, decorated_function)
+                return get_param_for_funix(
+                    pre_fill, decorated_function, session_description
+                )
 
             decorated_function_param_getter_name = f"{function_name}_param_getter"
 

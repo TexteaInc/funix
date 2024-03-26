@@ -22,6 +22,7 @@ import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import SyntaxHighlighter from "react-syntax-highlighter";
 import { monokai } from "react-syntax-highlighter/dist/esm/styles/hljs";
+import { useNavigate } from "react-router-dom";
 
 interface MarkdownDivProps {
   markdown?: string;
@@ -173,10 +174,10 @@ const MarkdownCheckbox = (props: { checked?: boolean; disabled?: boolean }) => {
 };
 
 export default function MarkdownDiv(props: MarkdownDivProps) {
+  const navigate = useNavigate();
   if (!props.markdown) return null;
 
   const isRenderInline = props.isRenderInline ?? false;
-
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm, remarkMath]}
@@ -252,16 +253,27 @@ export default function MarkdownDiv(props: MarkdownDivProps) {
             isInline={isRenderInline}
           />
         ),
-        a: (props) => (
-          <Link
-            href={props.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            color="inherit"
-          >
-            {props.children}
-          </Link>
-        ),
+        a: (props) =>
+          props.href?.startsWith("/") ? (
+            <Link
+              component="button"
+              onClick={() => {
+                navigate(`${props.href}`);
+              }}
+              color="inherit"
+            >
+              {props.children}
+            </Link>
+          ) : (
+            <Link
+              href={props.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              color="inherit"
+            >
+              {props.children}
+            </Link>
+          ),
         blockquote: (props) => (
           <MarkdownBlockquote
             children={props.children}

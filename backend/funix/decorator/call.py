@@ -2,23 +2,24 @@ import sys
 from copy import deepcopy
 from functools import wraps
 from inspect import isgeneratorfunction
-from json import loads, dumps
+from json import dumps, loads
 from traceback import format_exc
 from typing import Any, Callable
 from urllib.request import urlopen
 from uuid import uuid4
 
-from flask import session, request
+from flask import request, session
+from requests import post
+
 from funix.app.websocket import StdoutToWebsocket
 from funix.config import supported_upload_widgets
-from funix.decorator.secret import get_secret_by_id
-from funix.decorator.magic import anal_function_result
 from funix.decorator.limit import Limiter, global_rate_limiters
-from funix.decorator.pre_fill import get_pre_fill_metadata
+from funix.decorator.magic import anal_function_result
 from funix.decorator.param import get_dataframe_parse_metadata, get_parse_type_metadata
+from funix.decorator.pre_fill import get_pre_fill_metadata
+from funix.decorator.secret import get_secret_by_id
 from funix.hint import PreFillEmpty, WrapperException
 from funix.session import set_global_variable
-from requests import post
 
 kumo_callback_url: str | None = None
 """

@@ -10,9 +10,9 @@ from uuid import uuid4
 
 from flask import abort, send_file
 
-from funix.util.file import create_safe_tempdir
 from funix.app import app
 from funix.config.switch import GlobalSwitchOption
+from funix.util.file import create_safe_tempdir
 from funix.util.uri import is_valid_uri
 
 __files_dict: dict[str, bytes | str] = {}

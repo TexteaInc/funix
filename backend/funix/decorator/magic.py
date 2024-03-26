@@ -20,11 +20,11 @@ from typing import Any
 
 from funix.config import (
     builtin_widgets,
+    dataframe_convert_dict,
+    ipython_type_convert_dict,
     supported_basic_file_types,
     supported_basic_types,
     supported_basic_types_dict,
-    ipython_type_convert_dict,
-    dataframe_convert_dict,
 )
 from funix.decorator.annnotation_analyzer import analyze
 from funix.decorator.file import get_static_uri, handle_ipython_audio_image_video
