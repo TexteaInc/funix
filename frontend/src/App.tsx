@@ -446,9 +446,14 @@ const App = () => {
                 <Switch
                   checked={showFunctionDetail}
                   onChange={(event) => {
+                    const value = event.target.checked;
+                    localStorage.setItem(
+                      "showFunctionDetail",
+                      value.toString()
+                    );
                     setStore((store) => ({
                       ...store,
-                      showFunctionDetail: event.target.checked,
+                      showFunctionDetail: value,
                     }));
                   }}
                 />
@@ -460,9 +465,11 @@ const App = () => {
                 <Switch
                   checked={saveHistory}
                   onChange={(event) => {
+                    const value = event.target.checked;
+                    localStorage.setItem("saveHistory", value.toString());
                     setStore((store) => ({
                       ...store,
-                      saveHistory: event.target.checked,
+                      saveHistory: value,
                     }));
                   }}
                 />
@@ -709,7 +716,7 @@ const App = () => {
           </ListItem>
         </DrawerHeader>
         <Divider />
-        <HistoryList />
+        <HistoryList isOpen={historySideBarOpen} />
       </Drawer>
     </ThemeProvider>
   );

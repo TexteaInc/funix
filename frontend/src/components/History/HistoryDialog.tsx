@@ -4,6 +4,7 @@ import {
   AccordionSummary,
   Alert,
   AppBar,
+  Box,
   Button,
   Card,
   CardActions,
@@ -15,6 +16,7 @@ import {
   DialogContentText,
   DialogTitle,
   IconButton,
+  TablePagination,
   TextField,
   Toolbar,
   Typography,
@@ -119,6 +121,8 @@ const HistoryDialog = (props: {
   // const loaded = useRef<boolean>(false);
   // const [backdropOpen, setBackdropOpen] = React.useState(false);
   // const [rewindSnackbarOpen, setRewindSnackbarOpen] = React.useState(false);
+  const [page, setPage] = React.useState(0);
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
   const backHistory = (history: History) => {
     setStore((store) => ({
@@ -189,7 +193,7 @@ const HistoryDialog = (props: {
           setSelectedHistory(null);
         }}
         sx={{
-          zIndex: 3000,
+          zIndex: 1200,
         }}
       >
         <DialogTitle>Rename History</DialogTitle>
@@ -239,7 +243,7 @@ const HistoryDialog = (props: {
         open={clearDialogOpen}
         onClose={() => setClearDialogOpen(false)}
         sx={{
-          zIndex: 3000,
+          zIndex: 1200,
         }}
       >
         <DialogTitle>Clear all history</DialogTitle>
@@ -275,7 +279,7 @@ const HistoryDialog = (props: {
         onClose={() => props.setOpen(false)}
         fullScreen
         sx={{
-          zIndex: 2500,
+          zIndex: 1200,
         }}
       >
         <AppBar sx={{ position: "relative" }}>
@@ -330,254 +334,288 @@ const HistoryDialog = (props: {
           {histories.length === 0 ? (
             <Alert severity="info">No history, try to run some functions</Alert>
           ) : (
-            <Timeline
-              position="right"
-              sx={{
-                [`& .${timelineOppositeContentClasses.root}`]: {
-                  flex: 0.2,
-                },
-                width: "100%",
-              }}
-            >
-              {histories
-                .sort((a, b) => {
-                  return isAscending
-                    ? a.timestamp - b.timestamp
-                    : b.timestamp - a.timestamp;
-                })
-                .map((history, index) => {
-                  const { status, hasSecret } = getHistoryInfo(history);
-                  const disabled =
-                    functions === null ||
-                    !functions?.includes(history.functionName);
-                  // setSingleCollapsedMap((prevState) => {
-                  //   return {
-                  //     ...prevState,
-                  //     [history.uuid]: {
-                  //       input: false,
-                  //       output: false,
-                  //     },
-                  //   };
-                  // });
-                  return (
-                    <TimelineItem key={index}>
-                      <TimelineOppositeContent
-                        sx={{ m: "auto 0" }}
-                        variant="body2"
-                        color="text.secondary"
-                      >
-                        {new Date(history.timestamp).toLocaleString()}
-                      </TimelineOppositeContent>
-                      <TimelineSeparator>
-                        <TimelineConnector />
-                        <TimelineDot color={getHistoryStatusColor(status)}>
-                          {getHistoryStatusIcon(status)}
-                        </TimelineDot>
-                        <TimelineConnector />
-                      </TimelineSeparator>
-                      <TimelineContent
-                        sx={{ py: "12px", px: 2, width: "80%", flex: "auto" }}
-                      >
-                        <Card>
-                          <CardContent>
-                            <Typography
-                              variant="h5"
-                              component="div"
-                              gutterBottom
-                            >
-                              {history.name || "Untitled"}
-                            </Typography>
-                            <Typography
-                              variant="body2"
-                              component="div"
-                              color="text.secondary"
-                              gutterBottom
-                            >
-                              Function: {history.functionName}
-                            </Typography>
-                            {hasSecret && (
+            <>
+              <Timeline
+                position="right"
+                sx={{
+                  [`& .${timelineOppositeContentClasses.root}`]: {
+                    flex: 0.2,
+                  },
+                  width: "100%",
+                }}
+              >
+                {histories
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .sort((a, b) => {
+                    return isAscending
+                      ? a.timestamp - b.timestamp
+                      : b.timestamp - a.timestamp;
+                  })
+                  .map((history, index) => {
+                    const { status, hasSecret } = getHistoryInfo(history);
+                    const disabled =
+                      functions === null ||
+                      !functions?.includes(history.functionName);
+                    // setSingleCollapsedMap((prevState) => {
+                    //   return {
+                    //     ...prevState,
+                    //     [history.uuid]: {
+                    //       input: false,
+                    //       output: false,
+                    //     },
+                    //   };
+                    // });
+                    return (
+                      <TimelineItem key={index}>
+                        <TimelineOppositeContent
+                          sx={{ m: "auto 0" }}
+                          variant="body2"
+                          color="text.secondary"
+                        >
+                          {new Date(history.timestamp).toLocaleString()}
+                        </TimelineOppositeContent>
+                        <TimelineSeparator>
+                          <TimelineConnector />
+                          <TimelineDot color={getHistoryStatusColor(status)}>
+                            {getHistoryStatusIcon(status)}
+                          </TimelineDot>
+                          <TimelineConnector />
+                        </TimelineSeparator>
+                        <TimelineContent
+                          sx={{ py: "12px", px: 2, width: "80%", flex: "auto" }}
+                        >
+                          <Card>
+                            <CardContent>
+                              <Typography
+                                variant="h5"
+                                component="div"
+                                gutterBottom
+                              >
+                                {history.name || "Untitled"}
+                              </Typography>
                               <Typography
                                 variant="body2"
                                 component="div"
                                 color="text.secondary"
                                 gutterBottom
                               >
-                                This function has secret key, please be careful
-                                when sharing this history or input information.
+                                Function: {history.functionName}
                               </Typography>
-                            )}
-                            {disabled && (
-                              <Typography
-                                variant="body2"
-                                component="div"
-                                color="text.secondary"
-                                gutterBottom
-                              >
-                                This function cannot be found in the current
-                                backend server, change the backend server to the
-                                one that contains this function to use view.
-                              </Typography>
-                            )}
-                            <FunixHistoryStepper status={status} />
-                            <Accordion
-                              disabled={history.input === null}
-                              expanded={
-                                history.input !== null &&
-                                getSingleCollapsed(history.uuid, "input")
-                              }
-                              onChange={(_event, expanded) => {
-                                setSingleCollapsedMap((prevState) => {
-                                  return {
-                                    ...prevState,
-                                    [history.uuid]: {
-                                      ...prevState[history.uuid],
-                                      input: expanded,
-                                    },
-                                  };
-                                });
-                              }}
-                            >
-                              <AccordionSummary expandIcon={<ExpandMore />}>
-                                <Typography>Input</Typography>
-                              </AccordionSummary>
-                              <AccordionDetails
-                                sx={{
-                                  maxWidth: "100%",
-                                  overflow: "auto",
-                                  maxHeight: "50vh",
+                              {hasSecret && (
+                                <Typography
+                                  variant="body2"
+                                  component="div"
+                                  color="text.secondary"
+                                  gutterBottom
+                                >
+                                  This function has secret key, please be
+                                  careful when sharing this history or input
+                                  information.
+                                </Typography>
+                              )}
+                              {disabled && (
+                                <Typography
+                                  variant="body2"
+                                  component="div"
+                                  color="text.secondary"
+                                  gutterBottom
+                                >
+                                  This function cannot be found in the current
+                                  backend server, change the backend server to
+                                  the one that contains this function to use
+                                  view.
+                                </Typography>
+                              )}
+                              <FunixHistoryStepper status={status} />
+                              <Accordion
+                                disabled={history.input === null}
+                                expanded={
+                                  history.input !== null &&
+                                  getSingleCollapsed(history.uuid, "input")
+                                }
+                                onChange={(_event, expanded) => {
+                                  setSingleCollapsedMap((prevState) => {
+                                    return {
+                                      ...prevState,
+                                      [history.uuid]: {
+                                        ...prevState[history.uuid],
+                                        input: expanded,
+                                      },
+                                    };
+                                  });
                                 }}
                               >
-                                {history.input !== null ? (
-                                  <ThemeReactJson
-                                    src={history.input}
-                                    collapsed={true}
-                                  />
-                                ) : (
-                                  <Typography>No input</Typography>
-                                )}
-                              </AccordionDetails>
-                            </Accordion>
-                            <Accordion
-                              disabled={history.output === null}
-                              expanded={
-                                history.output !== null &&
-                                getSingleCollapsed(history.uuid, "output")
-                              }
-                              onChange={(_event, expanded) => {
-                                setSingleCollapsedMap((prevState) => {
-                                  return {
-                                    ...prevState,
-                                    [history.uuid]: {
-                                      ...prevState[history.uuid],
-                                      output: expanded,
-                                    },
-                                  };
-                                });
-                              }}
-                            >
-                              <AccordionSummary expandIcon={<ExpandMore />}>
-                                <Typography
+                                <AccordionSummary expandIcon={<ExpandMore />}>
+                                  <Typography>Input</Typography>
+                                </AccordionSummary>
+                                <AccordionDetails
                                   sx={{
-                                    width: "33%",
-                                    flexShrink: 0,
+                                    maxWidth: "100%",
+                                    overflow: "auto",
+                                    maxHeight: "50vh",
                                   }}
                                 >
-                                  Output
-                                </Typography>
-                                {status === HistoryEnum.Error && (
-                                  <Typography sx={{ color: "text.secondary" }}>
-                                    Backend server reports an error
-                                  </Typography>
-                                )}
-                              </AccordionSummary>
-                              <AccordionDetails
-                                sx={{
-                                  maxWidth: "100%",
-                                  overflow: "auto",
-                                  maxHeight: "50vh",
+                                  {history.input !== null ? (
+                                    <ThemeReactJson
+                                      src={history.input}
+                                      collapsed={true}
+                                    />
+                                  ) : (
+                                    <Typography>No input</Typography>
+                                  )}
+                                </AccordionDetails>
+                              </Accordion>
+                              <Accordion
+                                disabled={history.output === null}
+                                expanded={
+                                  history.output !== null &&
+                                  getSingleCollapsed(history.uuid, "output")
+                                }
+                                onChange={(_event, expanded) => {
+                                  setSingleCollapsedMap((prevState) => {
+                                    return {
+                                      ...prevState,
+                                      [history.uuid]: {
+                                        ...prevState[history.uuid],
+                                        output: expanded,
+                                      },
+                                    };
+                                  });
                                 }}
                               >
-                                {history.output !== null ? (
-                                  <TryJson
-                                    src={history.output}
-                                    collapsed={true}
-                                  />
-                                ) : (
-                                  <Typography>No output</Typography>
-                                )}
-                              </AccordionDetails>
-                            </Accordion>
-                          </CardContent>
-                          <CardActions>
-                            <Button
-                              size="small"
-                              color="primary"
-                              startIcon={<Preview />}
-                              disabled={disabled}
-                              onClick={() => backHistory(history)}
-                            >
-                              View
-                            </Button>
-                            <Button
-                              size="small"
-                              color="primary"
-                              startIcon={<Edit />}
-                              disabled={disabled}
-                              onClick={() => {
-                                setTempRename(history.name || "");
-                                setSelectedHistory(history);
-                                setRenameDialogOpen(true);
-                              }}
-                            >
-                              Rename
-                            </Button>
-                            {/*<Button*/}
-                            {/*  size="small"*/}
-                            {/*  color="primary"*/}
-                            {/*  startIcon={<FastRewind />}*/}
-                            {/*  disabled={disabled}*/}
-                            {/*  onClick={async () => {*/}
-                            {/*    setBackdropOpen(true);*/}
-                            {/*    await rewindHistory(*/}
-                            {/*      histories,*/}
-                            {/*      functions,*/}
-                            {/*      history,*/}
-                            {/*      backend*/}
-                            {/*    )*/}
-                            {/*      .then(() => {*/}
-                            {/*        rewindOver(history);*/}
-                            {/*      })*/}
-                            {/*      .catch((e) => {*/}
-                            {/*        console.error(e);*/}
-                            {/*        rewindOver(history);*/}
-                            {/*      });*/}
-                            {/*  }}*/}
-                            {/*>*/}
-                            {/*  Rewind*/}
-                            {/*</Button>*/}
-                            <Button
-                              size="small"
-                              color="primary"
-                              startIcon={<FileDownload />}
-                              onClick={() => exportHistory(history)}
-                            >
-                              Export
-                            </Button>
-                            <Button
-                              size="small"
-                              color="error"
-                              startIcon={<Delete />}
-                              onClick={() => removeHistory(history.timestamp)}
-                            >
-                              Delete
-                            </Button>
-                          </CardActions>
-                        </Card>
-                      </TimelineContent>
-                    </TimelineItem>
-                  );
-                })}
-            </Timeline>
+                                <AccordionSummary expandIcon={<ExpandMore />}>
+                                  <Typography
+                                    sx={{
+                                      width: "33%",
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    Output
+                                  </Typography>
+                                  {status === HistoryEnum.Error && (
+                                    <Typography
+                                      sx={{ color: "text.secondary" }}
+                                    >
+                                      Backend server reports an error
+                                    </Typography>
+                                  )}
+                                </AccordionSummary>
+                                <AccordionDetails
+                                  sx={{
+                                    maxWidth: "100%",
+                                    overflow: "auto",
+                                    maxHeight: "50vh",
+                                  }}
+                                >
+                                  {history.output !== null ? (
+                                    <TryJson
+                                      src={history.output}
+                                      collapsed={true}
+                                    />
+                                  ) : (
+                                    <Typography>No output</Typography>
+                                  )}
+                                </AccordionDetails>
+                              </Accordion>
+                            </CardContent>
+                            <CardActions>
+                              <Button
+                                size="small"
+                                color="primary"
+                                startIcon={<Preview />}
+                                disabled={disabled}
+                                onClick={() => backHistory(history)}
+                              >
+                                View
+                              </Button>
+                              <Button
+                                size="small"
+                                color="primary"
+                                startIcon={<Edit />}
+                                disabled={disabled}
+                                onClick={() => {
+                                  setTempRename(history.name || "");
+                                  setSelectedHistory(history);
+                                  setRenameDialogOpen(true);
+                                }}
+                              >
+                                Rename
+                              </Button>
+                              {/*<Button*/}
+                              {/*  size="small"*/}
+                              {/*  color="primary"*/}
+                              {/*  startIcon={<FastRewind />}*/}
+                              {/*  disabled={disabled}*/}
+                              {/*  onClick={async () => {*/}
+                              {/*    setBackdropOpen(true);*/}
+                              {/*    await rewindHistory(*/}
+                              {/*      histories,*/}
+                              {/*      functions,*/}
+                              {/*      history,*/}
+                              {/*      backend*/}
+                              {/*    )*/}
+                              {/*      .then(() => {*/}
+                              {/*        rewindOver(history);*/}
+                              {/*      })*/}
+                              {/*      .catch((e) => {*/}
+                              {/*        console.error(e);*/}
+                              {/*        rewindOver(history);*/}
+                              {/*      });*/}
+                              {/*  }}*/}
+                              {/*>*/}
+                              {/*  Rewind*/}
+                              {/*</Button>*/}
+                              <Button
+                                size="small"
+                                color="primary"
+                                startIcon={<FileDownload />}
+                                onClick={() => exportHistory(history)}
+                              >
+                                Export
+                              </Button>
+                              <Button
+                                size="small"
+                                color="error"
+                                startIcon={<Delete />}
+                                onClick={() => removeHistory(history.timestamp)}
+                              >
+                                Delete
+                              </Button>
+                            </CardActions>
+                          </Card>
+                        </TimelineContent>
+                      </TimelineItem>
+                    );
+                  })}
+              </Timeline>
+              <Box
+                component="div"
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  marginTop: 2,
+                }}
+              >
+                <TablePagination
+                  count={histories.length}
+                  page={page}
+                  onPageChange={(_event, newPage) => setPage(newPage)}
+                  rowsPerPage={rowsPerPage}
+                  onRowsPerPageChange={(event) => {
+                    const newRowsPerPage = parseInt(event.target.value, 10);
+                    const newPage = Math.floor(
+                      (page * rowsPerPage) / newRowsPerPage
+                    );
+                    setRowsPerPage(newRowsPerPage);
+                    setPage(newPage);
+                  }}
+                  sx={{
+                    zIndex: 2000,
+                  }}
+                />
+              </Box>
+            </>
           )}
         </Container>
       </Dialog>
