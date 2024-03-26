@@ -5,13 +5,14 @@ from types import MappingProxyType
 from typing import Any
 
 from flask import Response
+
 from funix.config.switch import GlobalSwitchOption
-from funix.decorator.magic import (
-    get_type_widget_prop,
-    get_type_dict,
-    function_param_to_widget,
-)
 from funix.decorator.annnotation_analyzer import analyze
+from funix.decorator.magic import (
+    function_param_to_widget,
+    get_type_dict,
+    get_type_widget_prop,
+)
 from funix.session import get_global_variable
 
 dataframe_parse_metadata: dict[str, dict[str, list[str]]] = {}
@@ -309,9 +310,10 @@ def create_parse_type_metadata(function_id: str):
 def get_param_for_funix(
     pre_fill: dict | None,
     decorated_function: dict,
+    session_description: str,
 ):
+    new_decorated_function = deepcopy(decorated_function)
     if pre_fill is not None:
-        new_decorated_function = deepcopy(decorated_function)
         for argument_key, from_function_info in pre_fill.items():
             if isinstance(from_function_info, tuple):
                 last_result = get_global_variable(
@@ -326,8 +328,11 @@ def get_param_for_funix(
                 new_decorated_function["schema"]["properties"][argument_key][
                     "default"
                 ] = last_result
-        return Response(dumps(new_decorated_function), mimetype="application/json")
-    return Response(dumps(decorated_function), mimetype="application/json")
+    if session_description:
+        des = get_global_variable(session_description)
+        new_decorated_function["description"] = des
+        new_decorated_function["schema"]["description"] = des
+    return Response(dumps(new_decorated_function), mimetype="application/json")
 
 
 def get_dataframe_parse_metadata():

@@ -11,11 +11,11 @@ from flask import Flask
 from gitignore_parser import parse_gitignore
 
 import funix.decorator as decorator
-import funix.decorator.limit as limit
-import funix.decorator.theme as theme
-import funix.decorator.secret as secret
-import funix.decorator.lists as lists
 import funix.decorator.call as call
+import funix.decorator.limit as limit
+import funix.decorator.lists as lists
+import funix.decorator.secret as secret
+import funix.decorator.theme as theme
 import funix.hint as hint
 from funix.app import app, enable_funix_host_checker, privacy_policy
 from funix.frontend import OpenFrontend, run_open_frontend, start

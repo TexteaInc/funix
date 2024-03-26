@@ -1,6 +1,6 @@
 from json import dumps
 
-from flask import request, Response
+from flask import Response, request
 
 __decorated_id_to_function_dict: dict[str, str] = {}
 """

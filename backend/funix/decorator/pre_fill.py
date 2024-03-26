@@ -1,5 +1,6 @@
-from funix.hint import PreFillEmpty, PreFillType
 from typing import Union
+
+from funix.hint import PreFillEmpty, PreFillType
 
 pre_fill_metadata: dict[str, list[str | int | PreFillEmpty]] = {}
 """
