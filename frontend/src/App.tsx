@@ -310,20 +310,21 @@ const App = () => {
           return body.json();
         })
         .then((json: { text: string; log_level: number; hash: string }) => {
-          setPrivacyText(json.text);
-          setLogLevel(json.log_level);
-          setLastPrivacyHash(json.hash);
+          if (json.log_level !== 0) {
+            setPrivacyText(json.text);
+            setLogLevel(json.log_level);
+            setLastPrivacyHash(json.hash);
 
-          if (localStorage.getItem("privacy-hash") !== json.hash) {
-            setPrivacy(true);
-          } else {
-            setPrivacy(
-              json.log_level === 0
-                ? false
-                : getCookie("first-join") === undefined
-            );
+            if (localStorage.getItem("privacy-hash") !== json.hash) {
+              setPrivacy(true);
+            } else {
+              setPrivacy(
+                json.log_level === 0
+                  ? false
+                  : getCookie("first-join") === undefined
+              );
+            }
           }
-
           privacyDone.current = true;
         })
         .catch(() => {
