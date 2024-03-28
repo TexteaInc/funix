@@ -668,7 +668,7 @@ const App = () => {
               spacing={2}
             >
               <Typography variant="body2">
-                Power by <Link href="https://funix.io">Funix.io</Link>,
+                Powered by <Link href="https://funix.io">Funix.io</Link>,
                 minimally building apps in Python
               </Typography>
               <Box>

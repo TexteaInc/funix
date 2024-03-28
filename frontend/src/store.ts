@@ -1,6 +1,11 @@
 import { atom } from "jotai";
-import { FunctionPreview } from "./shared";
+import { FunctionPreview, PostCallResponse } from "./shared";
 import { History } from "./shared/useFunixHistory";
+
+export type LastStore = {
+  input: Record<any, any>;
+  output: PostCallResponse | string;
+};
 
 export type Store = {
   selectedFunction: null | FunctionPreview;
@@ -16,6 +21,7 @@ export type Store = {
   saveHistory: boolean;
   appSecret: null | string;
   histories: History[];
+  last: Record<string, LastStore>;
 };
 
 // atomWithStorage("saveHistory", true);
@@ -51,5 +57,6 @@ export const storeAtom = atom<Store>({
   backConsensus: [false, false, false],
   appSecret: null,
   histories: [],
+  last: {},
   ...fromLocalStorage(),
 });

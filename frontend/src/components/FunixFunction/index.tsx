@@ -22,7 +22,14 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
   // );
   const [detail, setDetail] = useState<FunctionDetail | null>(null);
   const [
-    { inputOutputWidth, functionSecret, backHistory, backConsensus, appSecret },
+    {
+      inputOutputWidth,
+      functionSecret,
+      backHistory,
+      backConsensus,
+      appSecret,
+      last,
+    },
     setStore,
   ] = useAtom(storeAtom);
   const [width, setWidth] = useState(inputOutputWidth);
@@ -129,8 +136,13 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
       .then((data: FunctionDetail) => {
         setDetail(data);
         setWarning(false);
+      })
+      .then(() => {
+        if (preview.keepLast && preview.id in last) {
+          setResponse(JSON.stringify(last[preview.id].output));
+        }
       });
-  }, [preview, backend]);
+  }, [preview, backend, last]);
 
   const needSecret = preview.secret;
 

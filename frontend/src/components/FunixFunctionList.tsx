@@ -215,7 +215,8 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
     return (
       <FunixList functionLength={state.length}>
         {state
-          .sort((a, b) => a.name.localeCompare(b.name))
+          // no sort for no tree
+          // .sort((a, b) => a.name.localeCompare(b.name))
           .map((functionPreview) => (
             <ListItemButton
               onClick={() => {
