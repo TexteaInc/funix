@@ -1,4 +1,4 @@
-import { PostCallResponse } from "./index";
+import type { PostCallResponse } from "./index";
 import * as localforage from "localforage";
 import { enqueueSnackbar } from "notistack";
 import { v4 as uuid4 } from "uuid";

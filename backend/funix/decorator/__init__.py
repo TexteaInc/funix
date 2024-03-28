@@ -236,6 +236,7 @@ def funix(
     autorun: bool = False,
     disable: bool = False,
     figure_to_image: bool = False,
+    keep_last: bool = False,
 ):
     """
     Decorator for functions to convert them to web apps
@@ -277,6 +278,7 @@ def funix(
         autorun(bool): allow users to use continuity runs on the front end
         disable(bool): disable this function
         figure_to_image(bool): convert matplotlib figure to image
+        keep_last(bool): keep the last input and output in the frontend
 
     Returns:
         function: the decorated function
@@ -453,6 +455,7 @@ def funix(
                     "websocket": need_websocket,
                     "reactive": has_reactive_params,
                     "autorun": autorun,
+                    "keepLast": keep_last,
                 }
             )
 

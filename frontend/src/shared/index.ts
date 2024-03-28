@@ -81,6 +81,10 @@ export type FunctionPreview = {
    * autorun
    */
   autorun: boolean;
+  /**
+   * keep last history
+   */
+  keepLast: boolean;
 };
 
 export type GetListResponse = {

@@ -9,7 +9,7 @@ import {
 import Card from "@mui/material/Card"; // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import Form from "@rjsf/material-ui/v5";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   callFunctionRaw,
   FunctionDetail,
@@ -36,7 +36,14 @@ const InputPanel = (props: {
   const [asyncWaiting, setAsyncWaiting] = useState(false);
   const [requestDone, setRequestDone] = useState(true);
   const [
-    { functionSecret, backHistory, backConsensus, saveHistory, appSecret },
+    {
+      functionSecret,
+      backHistory,
+      backConsensus,
+      saveHistory,
+      appSecret,
+      last,
+    },
     setStore,
   ] = useAtom(storeAtom);
   const { setInputOutput } = useFunixHistory();
@@ -45,6 +52,7 @@ const InputPanel = (props: {
   const [tempOutput, setTempOutput] = useState<string | null>(null);
   const tempOutputRef = React.useRef<string | null>(null);
   const [autoRun, setAutoRun] = useState(false);
+  const lock = useRef(false);
 
   const isLarge =
     Object.values(props.detail.schema.properties).findIndex((value) => {
@@ -56,6 +64,14 @@ const InputPanel = (props: {
         return largeWidgets.includes(newValue.widget);
       }
     }) !== -1;
+
+  useEffect(() => {
+    if (lock.current) return;
+    lock.current = true;
+    if (props.preview.keepLast && props.preview.id in last) {
+      setForm(last[props.preview.id].input);
+    }
+  }, []);
 
   useEffect(() => {
     setWaiting(() => !requestDone);
@@ -225,21 +241,35 @@ const InputPanel = (props: {
       socket.addEventListener("close", async function () {
         setWaiting(() => false);
         setRequestDone(() => true);
-        console.log(saveHistory, tempOutputRef.current, isLarge);
-        if (saveHistory && tempOutputRef.current && !isLarge) {
-          try {
-            await setInputOutput(
-              now,
-              props.preview.name,
-              props.preview.path,
-              newForm,
-              tempOutputRef.current
-            );
-          } catch (e) {
-            enqueueSnackbar("Failed to save history, check your console", {
-              variant: "error",
-            });
-            console.error(e);
+        if (tempOutputRef.current !== null) {
+          const currentOutput = tempOutputRef.current;
+          setStore((store) => {
+            const newLast = { ...store.last };
+            newLast[props.preview.id] = {
+              input: newForm,
+              output: JSON.parse(currentOutput),
+            };
+            return {
+              ...store,
+              last: newLast,
+            };
+          });
+
+          if (saveHistory && !isLarge) {
+            try {
+              await setInputOutput(
+                now,
+                props.preview.name,
+                props.preview.path,
+                newForm,
+                currentOutput
+              );
+            } catch (e) {
+              enqueueSnackbar("Failed to save history, check your console", {
+                variant: "error",
+              });
+              console.error(e);
+            }
           }
         }
       });
@@ -252,6 +282,18 @@ const InputPanel = (props: {
       props.setResponse(() => result);
       setWaiting(() => false);
       setRequestDone(() => true);
+
+      setStore((store) => {
+        const newLast = { ...store.last };
+        newLast[props.preview.id] = {
+          input: newForm,
+          output: JSON.parse(result),
+        };
+        return {
+          ...store,
+          last: newLast,
+        };
+      });
 
       if (saveHistory && !isLarge) {
         try {
