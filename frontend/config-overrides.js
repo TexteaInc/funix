@@ -62,11 +62,6 @@ module.exports = function override(config) {
 
   config.plugins.push(
     new ProgressBarPlugin(),
-    new webpack.IgnorePlugin({
-      checkResource(resource) {
-        return resource === "pdfjs-dist/build/pdf.worker.js";
-      },
-    })
   );
   return config;
 };

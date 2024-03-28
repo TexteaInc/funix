@@ -98,7 +98,7 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
   const [files, setFiles] = React.useState<File[]>([]);
   const [open, setOpen] = React.useState(false);
   const [cameraOpen, setCameraOpen] = React.useState(false);
-  const [preview, setPreview] = React.useState<string>("");
+  const [preview, setPreview] = React.useState<File | null>(null);
   const [previewType, setPreviewType] = React.useState<string>("");
   const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [audioRecoding, setAudioRecording] = React.useState(false);
@@ -289,15 +289,29 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
           )}
         </DialogActions>
       </Dialog>
-      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="lg">
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        maxWidth="lg"
+        fullWidth={previewType === "application/pdf"}
+        PaperProps={{
+          style: {
+            height: previewType === "application/pdf" ? "80vh" : "auto",
+          },
+        }}
+      >
         <DialogTitle>Media Preview</DialogTitle>
         <DialogContent>
-          <OutputMedias
-            medias={preview}
-            type={previewType}
-            backend={""}
-            outline={true}
-          />
+          {preview !== null ? (
+            <OutputMedias
+              medias={preview}
+              type={previewType}
+              backend={""}
+              outline={true}
+            />
+          ) : (
+            <Typography variant="body2">No preview available</Typography>
+          )}
         </DialogContent>
         <DialogActions
           sx={{
@@ -377,7 +391,7 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
                     title={item.name}
                     loading="lazy"
                     onClick={() => {
-                      setPreview(URL.createObjectURL(item));
+                      setPreview(item);
                       setPreviewType(item.type);
                       setOpen(true);
                     }}
@@ -437,11 +451,9 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
                             size="small"
                             startIcon={<Preview fontSize="small" />}
                             onClick={() => {
-                              fileToBase64(file).then((value) => {
-                                setPreview(value as string);
-                                setPreviewType(file.type);
-                                setOpen(true);
-                              });
+                              setPreviewType(file.type);
+                              setPreview(file);
+                              setOpen(true);
                             }}
                           >
                             Preview
