@@ -1,8 +1,10 @@
 import { Card, CardMedia } from "@mui/material";
 import PDFViewer from "../../Common/PDFViewer";
 
+type FileType = string | File;
+
 export default function OutputMedias(props: {
-  medias: string[] | string;
+  medias: FileType[] | FileType;
   type: string;
   backend: string;
   outline?: boolean;
@@ -22,22 +24,33 @@ export default function OutputMedias(props: {
   return (
     <>
       {medias.map((media, index) => {
-        const relativeMedia = media.startsWith("/file/")
-          ? new URL(media, props.backend).toString()
-          : media;
+        const relativeMedia =
+          typeof media === "string"
+            ? media.startsWith("/file/")
+              ? new URL(media, props.backend).toString()
+              : media
+            : URL.createObjectURL(media);
 
         const isPDF = component === "pdf" || relativeMedia.endsWith(".pdf");
 
-        return (
-          <Card
-            key={index}
-            sx={{
+        const sx = isPDF
+          ? {
+              width: "100%",
+              height: "100%",
+              overflow: "auto",
+            }
+          : {
               width: "100%",
               height: "auto",
               maxWidth: "100%",
               maxHeight: "100%",
               minWidth: "65%",
-            }}
+            };
+
+        return (
+          <Card
+            key={index}
+            sx={sx}
             variant={props.outline ? "outlined" : "elevation"}
           >
             {isPDF ? (
