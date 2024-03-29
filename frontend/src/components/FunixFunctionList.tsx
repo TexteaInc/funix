@@ -123,6 +123,10 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
             handleFetchFunctionDetail(preview[0]);
             setRadioGroupValue(preview[0].path);
           }
+        } else if (list.length >= 1) {
+          const preview = list[0];
+          handleFetchFunctionDetail(preview);
+          setRadioGroupValue(preview.path);
         }
       }
     }
