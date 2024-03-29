@@ -1,7 +1,13 @@
 from funix import funix, new_funix_type
 
 @new_funix_type(
-        widget = {"name":"password", "config":None}
+    # widget= 
+        {
+            "widget": "@mui/material/TextField",
+            "props": {
+                "type": "password",
+            },
+        }
     )
 class blackout(str):
     def print(self):
