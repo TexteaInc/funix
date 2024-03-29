@@ -38,6 +38,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
   const [verified, setVerified] = useState(!preview.secret);
   const queryLock = useRef(false);
   const [warning, setWarning] = useState(false);
+  const [outdated, setOutdated] = useState(false);
 
   useEffect(() => {
     if (preview.secret) {
@@ -68,6 +69,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
 
   useEffect(() => {
     if (backHistory === null) return;
+    setOutdated(true);
     if (backHistory.input !== null) {
       if ("__funix_secret" in backHistory.input) {
         setStore((store) => {
@@ -194,6 +196,12 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
       ) : (
         <></>
       )}
+      {outdated && (
+        <Alert severity="info">
+          <AlertTitle>Outdated</AlertTitle>
+          <InlineBox>You are viewing data from the history.</InlineBox>
+        </Alert>
+      )}
       <Stack spacing={2}>
         <Grid container direction={detail.direction} wrap="nowrap">
           <Grid
@@ -210,6 +218,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
               detail={detail}
               backend={backend}
               setResponse={setResponse}
+              setOutdated={setOutdated}
               preview={preview}
             />
           </Grid>
