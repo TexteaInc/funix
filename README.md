@@ -200,24 +200,24 @@ which is turned into an app by Funix like below:
 **Funix to Python is like CSS to HTML or macros to LaTeX.** It separates the core logic and the UI. 
 All UI stuff is centrally defined in a JSON-based theme to avoid the repetitiveness of individually configuring widgets and keep a consistent look across apps. Consequently, a data scientist or a machine learning engineer does not need to think about anything UI. Just leave it to the UI team and Funix. 
 
-Below is an example of a theme file. It defines the widget choices based on variable types and tweaks the `props` of UI components (currently only MUI ones are supported). To know more about how to define and apply a theme, please refer to [the Themes section in the reference manual](https://github.com/TexteaInc/funix-doc/blob/main/Reference.md#themes). 
+Below is an example of a theme file. It defines the widget choices based on variable types and tweaks the `props` of UI components (currently only MUI ones are supported). Funix exposes frontend components and their `props` to developers, requiring them to know nothing about frontend. To know more about how to define and apply a theme, please refer to [the Themes section in the reference manual](https://github.com/TexteaInc/funix-doc/blob/main/Reference.md#themes). 
 
 ```jsonc
 {
   "name": "test_theme",
   "widgets": {    // dict, map types to widgets
-    "str": "inputbox",
-    "int": "slider[0,100,2]",
-    "float": ["slider", { "min": 0, "max": 100, "step": 2 }],
+    "str": "inputbox", // using Funix' widget shorthand
+    "int": "slider[0,100,2]", // using Funix' widget shorthand
+    "float": {
+        "widget": "@mui/material/Slider", // using MUI's widget
+        // https://mui.com/material-ui/api/slider
+        "props": {
+            "min": 0,
+            "max": 100,
+            "step": 0.1
+        }
+    }, 
     "Literal": "radio"
-  },
-  "props": {  // props of UI components
-    "slider": { // Funix' sliders are MUI's Sliders
-      "color": "#99ff00" // an MUI's Slider has a prop called color
-    },
-    "radio": { // Funix' radio are MUI's radiobuttons
-      "size": "medium" // an MUI's radiobutton has a prop called size
-    }
   },
 }
 ```
@@ -228,8 +228,14 @@ To introduce a new data type, just declare a new Python class, and use a decorat
 from funix import funix, new_funix_type
 
 @new_funix_type(
-        widget = {"name":"password", "config":None}
-    )
+    widget = {
+        "widget": "@mui/material/TextField",
+        "props": {
+            "type": "password",
+            "placeholder": "Enter a secret here."
+        }
+    }
+)
 class blackout(str):
     def print(self):
         return self + " is the message."
