@@ -29,6 +29,7 @@ const InputPanel = (props: {
   detail: FunctionDetail;
   backend: URL;
   setResponse: React.Dispatch<React.SetStateAction<string | null>>;
+  setOutdated: React.Dispatch<React.SetStateAction<boolean>>;
   preview: FunctionPreview;
 }) => {
   const [form, setForm] = useState<Record<string, any>>({});
@@ -196,10 +197,12 @@ const InputPanel = (props: {
       const socket = new WebSocket(getWebsocketUrl());
       socket.addEventListener("open", function () {
         socket.send(JSON.stringify(newForm));
+        props.setOutdated(() => false);
       });
 
       socket.addEventListener("message", function (event) {
         props.setResponse(() => event.data);
+        props.setOutdated(() => false);
         setTempOutput(() => event.data);
       });
 
@@ -230,6 +233,7 @@ const InputPanel = (props: {
       socket.addEventListener("open", function () {
         setTempOutput(() => null);
         socket.send(JSON.stringify(newForm));
+        props.setOutdated(() => false);
       });
 
       socket.addEventListener("message", function (event) {
@@ -280,6 +284,7 @@ const InputPanel = (props: {
       );
       const result = response.toString();
       props.setResponse(() => result);
+      props.setOutdated(() => false);
       setWaiting(() => false);
       setRequestDone(() => true);
 
@@ -381,6 +386,7 @@ export default React.memo(InputPanel, (prevProps, nextProps) => {
   return (
     prevProps.detail === nextProps.detail &&
     prevProps.backend === nextProps.backend &&
-    prevProps.setResponse === nextProps.setResponse
+    prevProps.setResponse === nextProps.setResponse &&
+    prevProps.setOutdated === nextProps.setOutdated
   );
 });
