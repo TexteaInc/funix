@@ -22,6 +22,7 @@ import {
 } from "@mui/material";
 import {
   CameraAlt,
+  Close,
   Delete,
   FileUpload,
   KeyboardVoice,
@@ -168,7 +169,7 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
   useEffect(() => {
     fileRejections.forEach((file) => {
       enqueueSnackbar(
-        `${file.file.name} is bigger than 20MB, use WebAPI to call this function`,
+        `${file.file.name} is bigger than 15MB, use WebAPI to call this function`,
         {
           variant: "warning",
         }
@@ -232,6 +233,18 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
         fullWidth
       >
         <DialogTitle>Camera Preview</DialogTitle>
+        <Button
+          startIcon={<Close />}
+          color="error"
+          onClick={() => setCameraOpen(false)}
+          sx={{
+            position: "absolute",
+            right: 8,
+            top: 14,
+          }}
+        >
+          Close
+        </Button>
         <CameraPreviewVideo />
         <DialogActions>
           {(props.supportType === "file" || props.supportType === "image") && (
@@ -376,6 +389,48 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
             <Typography variant="caption">
               {files.length} {fileString} selected
             </Typography>
+            <Stack direction="row" spacing={2}>
+              <Button
+                color="primary"
+                startIcon={<CameraAlt />}
+                size="small"
+                disabled={!supportMediaDevices}
+                onClick={(event) => {
+                  setCameraOpen(true);
+                  event.stopPropagation();
+                }}
+              >
+                Webcam
+              </Button>
+              <Button
+                id="audioRecord"
+                color="primary"
+                startIcon={<KeyboardVoice />}
+                size="small"
+                disabled={
+                  !supportMediaDevices &&
+                  (props.supportType === "audio" ||
+                    props.supportType === "file")
+                }
+                onClick={(event) => {
+                  if (!audioRecoding) {
+                    setAudioRecording(true);
+                    funixRecorder.audioRecord((file) => {
+                      if (props.multiple) {
+                        setFiles([...files, file]);
+                      } else {
+                        setFiles([file]);
+                      }
+                      setUpdate(new Date().getTime());
+                      setAudioRecording(false);
+                    });
+                  }
+                  event.stopPropagation();
+                }}
+              >
+                {audioRecoding ? "Stop" : "Microphone"}
+              </Button>
+            </Stack>
             <br />
           </Stack>
         </Paper>
@@ -484,44 +539,9 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
                 </Button>
               </TableCell>
               <TableCell colSpan={2} align="right">
-                <Button
-                  color="primary"
-                  startIcon={<CameraAlt />}
-                  size="small"
-                  disabled={!supportMediaDevices}
-                  onClick={() => {
-                    setCameraOpen(true);
-                  }}
-                >
-                  Webcam
-                </Button>
-                <Button
-                  id="audioRecord"
-                  color="primary"
-                  startIcon={<KeyboardVoice />}
-                  size="small"
-                  disabled={
-                    !supportMediaDevices &&
-                    (props.supportType === "audio" ||
-                      props.supportType === "file")
-                  }
-                  onClick={() => {
-                    if (!audioRecoding) {
-                      setAudioRecording(true);
-                      funixRecorder.audioRecord((file) => {
-                        if (props.multiple) {
-                          setFiles([...files, file]);
-                        } else {
-                          setFiles([file]);
-                        }
-                        setUpdate(new Date().getTime());
-                        setAudioRecording(false);
-                      });
-                    }
-                  }}
-                >
-                  {audioRecoding ? "Stop" : "Microphone"}
-                </Button>
+                <Typography variant="caption" component="span">
+                  You can select up to 5 files, limited to 15MB for each file
+                </Typography>
               </TableCell>
             </TableFooter>
           </Table>
