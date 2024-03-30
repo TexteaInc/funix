@@ -63,7 +63,7 @@ def kumo_callback():
             pass
 
 
-def call(
+def funix_call(
     limiters: list[Limiter] | None,
     need_websocket: bool,
     use_pandas: bool,
