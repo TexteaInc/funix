@@ -20,7 +20,7 @@ from funix.decorator.annnotation_analyzer import (
     register_ipywidgets,
     register_pandera,
 )
-from funix.decorator.call import call
+from funix.decorator.call import funix_call
 from funix.decorator.file import (
     enable_file_service,
     get_static_uri,
@@ -609,7 +609,7 @@ def funix(
 
             @wraps(function)
             def wrapper(ws=None):
-                result = call(
+                result = funix_call(
                     limiters,
                     need_websocket,
                     __pandas_use,
