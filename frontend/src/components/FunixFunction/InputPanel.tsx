@@ -184,9 +184,13 @@ const InputPanel = (props: {
   };
 
   const getWebsocketUrl = () => {
-    return props.backend.protocol === "https:"
-      ? "wss"
-      : "ws" + "://" + props.backend.host + "/call/" + props.detail.id;
+    return (
+      (props.backend.protocol === "https:" ? "wss" : "ws") +
+      "://" +
+      props.backend.host +
+      "/call/" +
+      props.detail.id
+    );
   };
 
   const handleSubmitWithoutHistory = async () => {
