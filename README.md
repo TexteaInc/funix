@@ -536,6 +536,38 @@ def gray_it(image: funix.hint.BytesImage) -> funix.hint.Image:
     ```
     Add `--prefix=~/.local` if pip insists to install to system paths. See [#24](https://github.com/TexteaInc/funix/issues/24) and [#23](https://github.com/TexteaInc/funix/issues/23)
 
+### Additional type support
+
+1. If you want to use `matplotlib` features, install funix by:
+    
+    ```bash
+    pip install funix[plot]
+    ```
+
+2. If you want to use `pandas` features, install funix by:
+    
+    ```bash
+    pip install funix[pandas]
+    ```
+
+3. If you want to use `git` related features (use project from GitHub), install funix by:
+    
+    ```bash
+    pip install funix[git]
+    ```
+
+4. If you want to use `ipython` features, install funix by:
+    
+    ```bash
+    pip install funix[ipython]
+    ``
+
+5. If you need to have more than one feature, you can try installing them together:
+    
+    ```bash
+    pip install funix[all]
+    ```
+
 ### Building the frontend
 
 In the last two cases above, you will need to compile the frontend by yourself. Suppose you are in the `funix` folder. Then run the following commands:
