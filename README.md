@@ -538,31 +538,19 @@ def gray_it(image: funix.hint.BytesImage) -> funix.hint.Image:
 
 ### Additional type support
 
-1. If you want to use `matplotlib` features, install funix by:
-    
-    ```bash
-    pip install funix[plot]
-    ```
-
-2. If you want to use `pandas` features, install funix by:
-    
-    ```bash
-    pip install funix[pandas]
-    ```
-
-3. If you want to use `git` related features (use project from GitHub), install funix by:
+1.  If you want to use `git` related features (use project from GitHub), install funix by:
     
     ```bash
     pip install funix[git]
     ```
 
-4. If you want to use `ipython` features, install funix by:
+2. If you want to use `ipython` features, install funix by:
     
     ```bash
     pip install funix[ipython]
     ``
 
-5. If you need to have more than one feature, you can try installing them together:
+3. If you need to have more than one feature, you can try installing them together:
     
     ```bash
     pip install funix[all]
