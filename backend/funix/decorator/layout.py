@@ -21,7 +21,7 @@ def convert_row_item(row_item: dict, item_type: str) -> dict:
     return converted_item
 
 
-def handle_input_layout(input_layout: list) -> (list, dict):
+def handle_input_layout(input_layout: list) -> tuple[list, dict]:
     return_input_layout = []
     decorated_params = {}
     for row in input_layout:
@@ -46,7 +46,7 @@ def handle_input_layout(input_layout: list) -> (list, dict):
     return return_input_layout, decorated_params
 
 
-def handle_output_layout(output_layout: list) -> (list, list):
+def handle_output_layout(output_layout: list) -> tuple[list, list]:
     return_output_layout = []
     return_output_indexes = []
     for row in output_layout:

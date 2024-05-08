@@ -112,14 +112,18 @@ const OutputPanel = (props: {
             else if (props.selectedResponseViewType === "sheet")
               return (
                 <DataGrid
-                  columns={[{ field: "root" }]}
+                  columns={[
+                    { field: "id", headerName: "ID" },
+                    { field: "value", headerName: "Root" },
+                  ]}
                   rows={parsedResponse.map((rowValue, index) => ({
                     id: index,
-                    root: rowValue,
+                    value: rowValue,
                   }))}
                   components={{
                     Toolbar: GridToolbar,
                   }}
+                  sx={{ minHeight: 400 }}
                 />
               );
             else throw new Error("Unsupported selectedResponseViewType");

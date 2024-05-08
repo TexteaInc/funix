@@ -2,7 +2,7 @@
 Network utils for funix.
 """
 
-from ipaddress import IPv4Address, IPv6Address, ip_network
+from ipaddress import IPv4Address, IPv6Address
 from socket import AF_INET, SOCK_STREAM, socket
 
 
