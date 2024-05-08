@@ -120,6 +120,7 @@ const InputPanel = (props: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(formData),
+          credentials: "include",
         })
           .then((body) => {
             return body.json();

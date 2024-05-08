@@ -20,7 +20,8 @@ app = Flask(__name__)
 app.secret_key = GlobalSwitchOption.get_session_key()
 app.config.update(
     SESSION_COOKIE_PATH="/",
-    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SAMESITE="None",
+    SESSION_TYPE="filesystem",
 )
 sock = Sock(app)
 
@@ -69,11 +70,16 @@ def privacy_policy(message: str) -> None:
 
 @app.after_request
 def funix_auto_cors(response: Response) -> Response:
-    response.headers["Access-Control-Allow-Origin"] = "*"
+    if "HTTP_ORIGIN" not in request.environ:
+        response.headers["Access-Control-Allow-Origin"] = "*"
+    else:
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Origin"] = request.environ["HTTP_ORIGIN"]
     response.headers[
         "Access-Control-Allow-Methods"
     ] = "GET, HEAD, POST, OPTIONS, PUT, PATCH, DELETE"
-    response.headers["Access-Control-Allow-Headers"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, *"
+    
     return response
 
 
