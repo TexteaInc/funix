@@ -99,6 +99,7 @@ export async function getList(
   return f(url, {
     ...init,
     method: "GET",
+    credentials: "include",
   });
 }
 
@@ -164,6 +165,7 @@ export async function getParam(
   return f(url, {
     ...init,
     method: "GET",
+    credentials: "include",
   });
 }
 
@@ -196,6 +198,7 @@ export async function callFunction(
       ...init?.headers,
       "Content-Type": "application/json",
     },
+    credentials: "include",
   });
 }
 
@@ -212,6 +215,7 @@ export async function callFunctionRaw(
       ...init?.headers,
       "Content-Type": "application/json",
     },
+    credentials: "include",
   }).then((response) => response.text());
 }
 
@@ -228,6 +232,7 @@ export async function verifyToken(
       ...init?.headers,
       "Content-Type": "application/json",
     },
+    credentials: "include",
   }).then((response) => response.success);
 }
 

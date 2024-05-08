@@ -131,7 +131,9 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
       return;
     }
     queryLock.current = true;
-    fetch(new URL(`/param/${preview.id}`, backend).toString())
+    fetch(new URL(`/param/${preview.id}`, backend).toString(), {
+      credentials: "include",
+    })
       .then((body) => {
         return body.json();
       })
