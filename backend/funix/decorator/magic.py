@@ -585,7 +585,7 @@ def anal_function_result(
 
 def parse_function_annotation(
     function_signature: Signature, figure_to_image: bool
-) -> (bool, Any):
+) -> tuple[bool, Any]:
     cast_to_list_flag = False
     if function_signature.return_annotation is not Signature.empty:
         # TODO: Magic code, I've forgotten what it does, but it works, refactor it if you can

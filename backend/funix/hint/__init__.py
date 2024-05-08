@@ -298,7 +298,7 @@ For example: "https://example.org/imgs/1.png"
 """
 
 _Markdown = NewType("Markdown", type(Optional[str]))
-Markdown: TypeAlias = _Markdown
+Markdown: TypeAlias = _Markdown # type: ignore
 """
 Markdown type.
 For output.
@@ -307,7 +307,7 @@ Support Markdown like "**bold**" and "*italic*"
 """
 
 _HTML = NewType("HTML", type(Optional[str]))
-HTML: TypeAlias = _HTML
+HTML: TypeAlias = _HTML # type: ignore
 """
 HTML type.
 For output.
@@ -317,7 +317,7 @@ Support HTML like "<span style='color: red'>red</span>"
 """
 
 _Image = NewType("Images", type(BasicFileType))
-Image: TypeAlias = _Image
+Image: TypeAlias = _Image # type: ignore
 """
 Image type.
 For output.
@@ -326,7 +326,7 @@ See `BasicFileType` for more information.
 """
 
 _Video = NewType("Videos", type(BasicFileType))
-Video: TypeAlias = _Video
+Video: TypeAlias = _Video # type: ignore
 """
 Video type.
 For output.
@@ -335,7 +335,7 @@ See `BasicFileType` for more information.
 """
 
 _Audio = NewType("Audios", type(BasicFileType))
-Audio: TypeAlias = _Audio
+Audio: TypeAlias = _Audio # type: ignore
 """
 Audio type.
 For output.
@@ -344,7 +344,7 @@ See `BasicFileType` for more information.
 """
 
 _File = NewType("Files", type(BasicFileType))
-File: TypeAlias = _File
+File: TypeAlias = _File # type: ignore
 """
 File type.
 For output.
@@ -353,7 +353,7 @@ See `BasicFileType` for more information.
 """
 
 _Code = NewType("Code", type(Optional[str | CodeConfig]))
-Code: TypeAlias = _Code
+Code: TypeAlias = _Code # type: ignore
 """
 Code type.
 For output.

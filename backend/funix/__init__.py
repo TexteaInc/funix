@@ -17,15 +17,15 @@ import funix.decorator.lists as lists
 import funix.decorator.secret as secret
 import funix.decorator.theme as theme
 import funix.hint as hint
-from funix.app import app, enable_funix_host_checker, privacy_policy
-from funix.frontend import OpenFrontend, run_open_frontend, start
+from funix.app import app, enable_funix_host_checker
+from funix.frontend import run_open_frontend, start
 from funix.prep.global_to_session import get_new_python_file
 from funix.util.file import (
     create_safe_tempdir,
     get_path_difference,
     get_python_files_in_dir,
 )
-from funix.util.module import getsourcefile_safe, handle_module, import_module_from_file
+from funix.util.module import handle_module, import_module_from_file
 from funix.util.network import get_compressed_ip_address_as_str, get_unused_port_from
 
 # ---- Exports ----

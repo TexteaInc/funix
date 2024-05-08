@@ -90,7 +90,7 @@ def slider_config_update(*args) -> SliderConfig:
     return new_config
 
 
-def slider(*args, **kwargs) -> (str, SliderConfig):
+def slider(*args, **kwargs) -> tuple[str, SliderConfig]:
     """
     Create a slider widget config.
 
@@ -139,7 +139,7 @@ class CodeConfig(TypedDict):
     """
 
 
-def code(language: str = "plaintext") -> (str, CodeConfig):
+def code(language: str = "plaintext") -> tuple[str, CodeConfig]:
     """
     Create a code widget config.
 
@@ -179,7 +179,7 @@ class MultilineTextboxConfig(TypedDict):
     """
 
 
-def textarea(*args, **kwargs) -> (str, MultilineTextboxConfig):
+def textarea(*args, **kwargs) -> tuple[str, MultilineTextboxConfig]:
     """
     Create a multiline textbox widget config.
 
