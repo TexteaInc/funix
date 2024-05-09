@@ -549,7 +549,7 @@ def gray_it(image: funix.hint.BytesImage) -> funix.hint.Image:
 
     ```bash
     pip install funix[ipython]
-    ``
+    ```
 
 3. 或许未来有其他可选的新功能，您可以试着安装完全的 Funix：
 
