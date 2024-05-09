@@ -43,7 +43,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
   useEffect(() => {
     if (preview.secret) {
       const token =
-        preview.name in functionSecret
+        preview.path in functionSecret
           ? functionSecret[preview.path]
           : appSecret !== null
           ? appSecret
