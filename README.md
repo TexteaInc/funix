@@ -545,7 +545,7 @@ def gray_it(image: funix.hint.BytesImage) -> funix.hint.Image:
     
     ```bash
     pip install funix[ipython]
-    ``
+    ```
 
 3. If you need to have more than one feature, you can try installing them together:
     
