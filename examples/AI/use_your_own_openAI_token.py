@@ -5,7 +5,9 @@ import requests
 import IPython
 import ipywidgets
 
-import openai
+from openai import OpenAI
+
+client = OpenAI()
 
 import funix
 from funix.session import get_global_variable, set_global_variable
@@ -70,12 +72,10 @@ def ChatGPT_POST(
         return response.json()["choices"][0]["message"]["content"]
 
 
-# @funix.funix()
+@funix.funix()
 def ChatGPT(prompt: str) -> str:
-    completion = openai.ChatCompletion.create(
-        messages=[{"role": "user", "content": prompt}], model="gpt-3.5-turbo"
-    )
-    return completion["choices"][0]["message"]["content"]
+    completion = client.chat.completions.create(messages=[{"role": "user", "content": prompt}], model="gpt-3.5-turbo")
+    return completion.choices[0].message.content
 
 
 @funix.funix()
@@ -98,8 +98,8 @@ def dalle_POST(
 
 # @funix.funix()
 def dalle(Prompt: str) -> IPython.display.Image:
-    response = openai.Image.create(prompt=Prompt)
-    return response["data"][0]["url"]
+    response = client.images.generate(prompt=Prompt)
+    return response.data[0].url
 
 
 if __name__ == "__main__":

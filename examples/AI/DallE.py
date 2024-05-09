@@ -13,7 +13,7 @@ cfg = {
     'rate_limit': funix.decorator.Limiter.session(max_calls=1, period=60*60*24), 'show_source': True}
 
 @funix.funix(**cfg)
-def dalle(
+def dalle_create(
     Prompt: str = "a cat on a red jeep"
     ) -> IPython.display.Image:
 

@@ -5,16 +5,6 @@ import openai
 
 import funix
 
-
-# @funix.new_funix_type(
-#     {
-#         "name": "radio"
-#     }
-# )
-# class RadioRange(range):
-#     pass
-
-
 cfg = {  # declarative configuration, all in one place
     "description": """The ChatGPT app build in [Funix.io]""",
     "conditional_visible": [
