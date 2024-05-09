@@ -10,6 +10,7 @@ cfg = {
     "show_source":True
 }
 
+@funix.funix()
 def ChatGPT(prompt: str="Who is Cauchy?") -> IPython.display.Markdown:
     client = openai.OpenAI() # defaults to os.environ.get("OPENAI_API_KEY")
     response = client.chat.completions.create(

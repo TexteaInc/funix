@@ -1,36 +1,37 @@
 import os
-import openai
+import IPython     
+from openai import OpenAI
+import funix
 
-client = openai.OpenAI()
+client = OpenAI(api_key=os.environ.get("OPENAI_KEY"))
 
-import IPython
+messages  = []  # list of dicts, dict keys: role, content, system
 
-messages = []  # list of dicts, dict keys: role, content, system
-
+@funix.funix(
+    disable=True,
+)
 def print_messages_html(messages):
     printout = ""
     for message in messages:
         if message["role"] == "user":
-            align, left, name = "left", "0%", "You"
+            align, name = "left", "You"
         elif message["role"] == "assistant":
-            align, left, name = "right", "30%", "ChatGPT"
-        printout += f'<div style="position: relative; left: {left}; width: 70%"><b>{name}</b>: {message["content"]}</div>'
+            align, name = "right", "ChatGPT"
+        printout += f'<div style="width: 100%; text-align: {align}"><b>{name}</b>: {message["content"]}</div>'
     return printout
 
-import funix
 
-cfg = {
-    "rate_limit": funix.decorator.Limiter.session(max_calls=3, period=60 * 60 * 24),
-    "direction": "column-reverse",  # input is below log
-}
-
-@funix.funix(**cfg)
-def ChatGPT_multi_turn(current_message: str="Tell me a joke about Python the programming language.") -> IPython.display.HTML:
-    global messages # every user has his/her own chat session with ChatGPT
+@funix.funix(
+    direction="column-reverse",
+)
+def ChatGPT_multi_turn(current_message: str)  -> IPython.display.HTML:
     current_message = current_message.strip()
     messages.append({"role": "user", "content": current_message})
-    completion = client.chat.completions.create(messages=messages, model="gpt-3.5-turbo")
+    completion = client.chat.completions.create(messages=messages,
+    model='gpt-3.5-turbo',
+    max_tokens=100)
     chatgpt_response = completion.choices[0].message.content
     messages.append({"role": "assistant", "content": chatgpt_response})
 
+    # return print_messages_markdown(messages)
     return print_messages_html(messages)

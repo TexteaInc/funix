@@ -183,7 +183,7 @@ def ChatGPT(prompt: str) -> str:
             {"role": "user", "content": prompt}
         ]
     )
-    return completion.choices[0].message
+    return completion.choices[0].message.content
 ```
 
 which is turned into an app by Funix like below: 
@@ -343,12 +343,15 @@ A special case of passing data between functions is to use the return value of o
 ```python
 import funix
 
+@funix.funix()
 def first_action(x: int) -> int:
   return x - 1
 
+@funix.funix()
 def second_action(message: str) -> list[str]:
   return message.split(" ")
 
+@funix.funix()
 def third_action(x: int, y: int) -> dict:
   return {"x": x, "y": y}
 
@@ -415,34 +418,37 @@ More examples in <a href="https://github.com/TexteaInc/funix-doc/blob/main/Refer
   ```python
     import os
     import IPython     
-    import openai
-    openai.api_key = os.environ.get("OPENAI_KEY")
+    from openai import OpenAI
+    import funix
+
+    client = OpenAI(api_key=os.environ.get("OPENAI_KEY"))
 
     messages  = []  # list of dicts, dict keys: role, content, system
 
+    @funix.funix(
+        disable=True,
+    )
     def print_messages_html(messages):
         printout = ""
         for message in messages:
             if message["role"] == "user":
-                align, left, name = "left", "0%", "You"
+                align, name = "left", "You"
             elif message["role"] == "assistant":
-                align, left, name = "right", "30%", "ChatGPT"
-            printout += f'<div style="position: relative; left: {left}; width: 70%"><b>{name}</b>: {message["content"]}</div>'
+                align, name = "right", "ChatGPT"
+            printout += f'<div style="width: 100%; text-align: {align}"><b>{name}</b>: {message["content"]}</div>'
         return printout
 
-    import funix
+
     @funix.funix(
         direction="column-reverse",
     )
     def ChatGPT_multi_turn(current_message: str)  -> IPython.display.HTML:
         current_message = current_message.strip()
         messages.append({"role": "user", "content": current_message})
-        completion = openai.ChatCompletion.create(
-            messages=messages,
-            model='gpt-3.5-turbo',
-            max_tokens=100,
-        )
-        chatgpt_response = completion["choices"][0]["message"]["content"]
+        completion = client.chat.completions.create(messages=messages,
+        model='gpt-3.5-turbo',
+        max_tokens=100)
+        chatgpt_response = completion.choices[0].message.content
         messages.append({"role": "assistant", "content": chatgpt_response})
 
         # return print_messages_markdown(messages)
@@ -458,15 +464,17 @@ More examples in <a href="https://github.com/TexteaInc/funix-doc/blob/main/Refer
 
 ```python
 from funix import funix                      # add line one
-from funix.hint import Images                # add line two
-import openai  # pip install openai
+from funix.hint import Image                 # add line two
+from openai import OpenAI                    # pip install openai
 
-openai.api_key = os.environ.get("OPENAI_KEY")
+import os
+client = OpenAI(api_key=os.environ.get("OPENAI_KEY"))  
+
 
 @funix()                                     # add line three
 def dalle(prompt: str = "a cat") -> Image:
-    response = openai.Image.create(prompt=prompt)
-    return response["data"][0]["url"]
+    response = client.images.generate(prompt=prompt)
+    return response.data[0].url
 ```
 
 ![Dalle demo](https://github.com/TexteaInc/funix-doc/raw/main/screenshots/dalle.jpg)
