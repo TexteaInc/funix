@@ -1,18 +1,18 @@
 from funix import funix_method, funix_class
-
+from funix.hint import Markdown
 
 @funix_class()
 class A:
-#    @funix_method(title="Initialize A", print_to_web=True)
+    @funix_method(title="Initialize A", print_to_web=True)
     def __init__(self, a: int):
         self.a = a
         print(f"`self.a` has been initialized to {self.a}")
 
-    def update_a(self, b: int) -> str:
+    def update_a(self, b: int) -> Markdown:
         self.a = b
         return f"`self.a` has been updated to {self.a}"
 
-    def print_a(self) -> str:
+    def print_a(self) -> Markdown:
         return f"The value of `self.a` is {self.a}"
 
     @staticmethod
