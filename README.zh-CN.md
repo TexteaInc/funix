@@ -46,7 +46,7 @@ https://github.com/TexteaInc/funix/assets/438579/86868ab5-ed6e-46e5-8dc5-9e3e4a3
 
 ## 你好，世界
 
-1. 安装 Funix ([高级安装方式]](#安装)):
+1. 安装 Funix ([高级安装方式](#安装)):
 
     ```sh
     pip install funix

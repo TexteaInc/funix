@@ -1,5 +1,6 @@
 from funix import funix
 
+@funix(disable=True)
 def compute_tax(salary: float, income_tax_rate: float) -> int:
     return salary * income_tax_rate
 

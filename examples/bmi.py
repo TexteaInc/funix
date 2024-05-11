@@ -11,6 +11,6 @@ import funix
     }, 
     show_source=True,
 )
-def BMI(weight: float, height: float) -> str:
+def BMI(weight: float, height: float) -> funix.hint.Markdown:
     bmi = weight / (height**2)
-    return f"## Your BMI is: \n ###{bmi:.2f}"
+    return f"## Your BMI is: \n ### {bmi:.2f}"

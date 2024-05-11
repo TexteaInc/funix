@@ -10,5 +10,5 @@ def foo() -> None:
     Funix won't let your docstring go to waste.
     """
     print("It supports **Markdown**.")
-    print ("And <b>HTML</b>.")
+    print("And <b>HTML</b>.")
     return None

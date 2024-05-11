@@ -10,7 +10,7 @@ import pandas, pandera
 
 import funix
 
-
+@funix.funix(disable=True)
 def remove_3_prime_adapter_one(
     sRNA: str = "AAGCTCAGGAGGGATAGCGCCTCGTATGCCGTCTTCTGCTT",
     adapter_3_prime: str = "TCGTATGCCGTCTTCTGCTT",
@@ -54,6 +54,7 @@ def remove_3_prime_adapter_one(
     return return_code, return_seq
 
 
+@funix.funix(disable=True)
 def remove_3_prime_adapter_vectorized(
     sRNAs: typing.List[str] = [
         "AAGCTCAGGAGGGATAGCGCCTCGTATGCCGTCTTCTGC",  # shorter than full 3' adapter
@@ -87,7 +88,7 @@ def remove_3_prime_adapter_vectorized(
 
     return return_codes, return_seqs
 
-
+@funix.funix(disable=True)
 def test():
     return_codes, return_seqs = remove_3_prime_adapter_vectorized()  # all default value
     for code, seq in zip(return_codes, return_seqs):

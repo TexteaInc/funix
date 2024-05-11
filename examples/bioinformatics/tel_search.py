@@ -17,12 +17,14 @@ import funix
 
 #%%
 
+@funix.funix(disable=True)
 def reverse_complement(s:str):
     mapping = {"A":"T", "G":"C", "C":"G", "T":"A"}
     reverse = "".join([mapping.get(s0) for s0 in s])
     return reverse[::-1]
 
 #%%
+@funix.funix(disable=True)
 def gen_telomeres_forward(repeat, length:int=21):
 
     """Generate telomeres from a repeat
@@ -41,7 +43,7 @@ def gen_telomeres_forward(repeat, length:int=21):
 
     return telomeres
 
-
+@funix.funix(disable=True)
 def gen_telomeres(repeat, length=21, include_reverse:bool=True):
     """Generate telomeres from a repeat
     
@@ -57,6 +59,7 @@ def gen_telomeres(repeat, length=21, include_reverse:bool=True):
 
     return telomeres
 
+@funix.funix(disable=True)
 def get_telomere_hash_dict(repeat, include_reverse:bool=True):
     """Return the hash dictionary of telomeres 
 
@@ -70,6 +73,7 @@ def get_telomere_hash_dict(repeat, include_reverse:bool=True):
 
     return telomere_hash_dict
 
+@funix.funix(disable=True)
 def search_string_hash(pattern:str, telomere_hash_dict) -> bool:
     """Determine whether a string is a telomere of given  repeat
     """
@@ -90,6 +94,7 @@ def search_string_hash(pattern:str, telomere_hash_dict) -> bool:
     return False
 
 # %%
+@funix.funix(disable=True)
 def search_telomeres(sRNAs:typing.List[str], repeat:str, include_reverse:bool=True) -> typing.List[bool]:
     """Determine whether a list of strings are telomers of the given repeat 
     """
@@ -109,6 +114,7 @@ def search_telomeres(sRNAs:typing.List[str], repeat:str, include_reverse:bool=Tr
     return result
 
 # %%
+@funix.funix(disable=True)
 def test():
     sRNAs = ['CCCTAAACCCTAAACCCTAT',  # False
              'CCCTAAACCCTAAACCCTAA',   # True, 20-nt 
