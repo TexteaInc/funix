@@ -152,11 +152,11 @@ class A:
         self.a = a
         return f"`self.a` has been initialized to {self.a}"
 
-    def update_a(self, b: int) -> str:
+    def set(self, b: int) -> str:
         self.a = b
         return f"`self.a` has been updated to {self.a}"
 
-    def print_a(self) -> str:
+    def get(self) -> str:
         return f"The value of `self.a` is {self.a}"
 ```
 
@@ -464,14 +464,14 @@ More examples in <a href="https://github.com/TexteaInc/funix-doc/blob/main/Refer
 
 ```python
 from funix import funix                      # add line one
-from funix.hint import Image                 # add line two
+from IPython.display import Image
 from openai import OpenAI                    # pip install openai
 
 import os
 client = OpenAI(api_key=os.environ.get("OPENAI_KEY"))  
 
 
-@funix()                                     # add line three
+@funix()                                     # add line two
 def dalle(prompt: str = "a cat") -> Image:
     response = client.images.generate(prompt=prompt)
     return response.data[0].url
@@ -493,17 +493,18 @@ def dalle(prompt: str = "a cat") -> Image:
 <summary><code>examples/multimedia/rgb2gray.py</code> 👈 Toggle me to show source code</summary>
 
 ```python
-import  io # Python's native
+import  io # Python's native 
 
 import PIL # the Python Image Library
-import funix
+import IPython 
+import funix 
 
 @funix.funix(
     title="Convert color images to grayscale images",
 )
-def gray_it(image: funix.hint.BytesImage) -> funix.hint.Image:
+def gray_it(image: funix.hint.BytesImage) -> IPython.display.Image:
     img = PIL.Image.open(io.BytesIO(image))
-    gray = PIL.ImageOps.grayscale(img)
+    gray = PIL.ImageOps.grayscale(img) 
     output = io.BytesIO()
     gray.save(output, format="PNG")
     return output.getvalue()

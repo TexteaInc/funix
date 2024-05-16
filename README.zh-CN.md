@@ -152,11 +152,11 @@ class A:
         self.a = a
         return f"`self.a` has been initialized to {self.a}"
 
-    def update_a(self, b: int) -> str:
+    def set(self, b: int) -> str:
         self.a = b
         return f"`self.a` has been updated to {self.a}"
 
-    def print_a(self) -> str:
+    def get(self) -> str:
         return f"The value of `self.a` is {self.a}"
 ```
 
@@ -463,7 +463,7 @@ Link: http://127.0.0.1:3000/hello?secret=8c9f55d0eb74adbb3c87a445ea0ae92f
 
 ```python
 from funix import funix                      # add line one
-from funix.hint import Image                 # add line two
+from IPython.display import Image
 from openai import OpenAI                    # pip install openai
 
 import os
@@ -492,17 +492,18 @@ def dalle(prompt: str = "a cat") -> Image:
 <summary><code>examples/multimedia/rgb2gray.py</code> 👈 点我查看/收起源码 </summary>
 
 ```python
-import  io # Python's native
+import  io # Python's native 
 
 import PIL # the Python Image Library
-import funix
+import IPython 
+import funix 
 
 @funix.funix(
     title="Convert color images to grayscale images",
 )
-def gray_it(image: funix.hint.BytesImage) -> funix.hint.Image:
+def gray_it(image: funix.hint.BytesImage) -> IPython.display.Image:
     img = PIL.Image.open(io.BytesIO(image))
-    gray = PIL.ImageOps.grayscale(img)
+    gray = PIL.ImageOps.grayscale(img) 
     output = io.BytesIO()
     gray.save(output, format="PNG")
     return output.getvalue()
