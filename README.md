@@ -566,8 +566,13 @@ def gray_it(image: funix.hint.BytesImage) -> funix.hint.Image:
 In the last two cases above, you will need to compile the frontend by yourself. Suppose you are in the `funix` folder. Then run the following commands:
 
 1. `cd frontend`
-3. `yarn install` (you need install Node.JS and Yarn)
-4. `yarn funix:build`
+2. `yarn install` (you need install Node.JS and Yarn)
+3. `yarn funix:build`
+
+For debugging:
+
+1. `yarn funix:test` (Start development mode)
+2. `funix xxx -p 8080 -F` (Use 8080 port and no frontend mode)
 
 #### Building the frontend with MUI Pro
 
