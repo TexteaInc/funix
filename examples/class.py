@@ -1,5 +1,5 @@
 from funix import funix_method, funix_class
-from funix.hint import Markdown
+from IPython.display import Markdown
 
 @funix_class()
 class A:
@@ -8,11 +8,11 @@ class A:
         self.a = a
         print(f"`self.a` has been initialized to {self.a}")
 
-    def update_a(self, b: int) -> Markdown:
+    def set(self, b: int) -> Markdown:
         self.a = b
         return f"`self.a` has been updated to {self.a}"
 
-    def print_a(self) -> Markdown:
+    def get(self) -> Markdown:
         return f"The value of `self.a` is {self.a}"
 
     @staticmethod

@@ -1,5 +1,5 @@
 from funix import funix
-from funix.hint import StrCode, StrTextarea
+from funix.hint import StrCode
 import IPython
 
 

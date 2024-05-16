@@ -1,5 +1,6 @@
 # This example shows how to change display labels for arguments 
 
+import IPython.display
 import funix
 
 @funix.funix(
@@ -11,6 +12,6 @@ import funix
     }, 
     show_source=True,
 )
-def BMI(weight: float, height: float) -> funix.hint.Markdown:
+def BMI(weight: float, height: float) -> IPython.display.Markdown:
     bmi = weight / (height**2)
     return f"## Your BMI is: \n ### {bmi:.2f}"
