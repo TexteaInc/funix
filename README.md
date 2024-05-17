@@ -624,4 +624,5 @@ Funix draws inspiration from FastAPI and Python-Fire: building software interfac
 
 ## Contact
 
-hello at funix dot io
+Forrest dot Bao @ Gmail 
+
