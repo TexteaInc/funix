@@ -630,4 +630,5 @@ Funix 从 FastAPI 和 Google Fire 中汲取灵感：透过推断包含类型提�
 
 ## 联系方式
 
-hello at funix dot io
+Forrest dot Bao @ Gmail 
+

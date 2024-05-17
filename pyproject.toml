@@ -1,8 +1,8 @@
 [project]
 name = "funix"
-version = "0.5.7"
+version = "0.5.8"
 authors = [
-  {name = "Textea Inc.", email = "hello@funix.io"}
+  {name = "Textea Inc.", email = "forrestbao@gmail.com"}
 ]
 license = {file = "LICENSE"}
 description = "Building web apps without manually creating widgets"
