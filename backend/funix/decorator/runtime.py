@@ -181,6 +181,13 @@ class RuntimeClassVisitor(NodeVisitor):
             type_ignores=[],
         )
 
+        node_doc_string = None
+        if node.body:
+            if isinstance(node.body[0], Expr) and isinstance(
+                node.body[0].value, Constant
+            ):
+                node_doc_string = node.body[0].value.value
+
         if node.name == "__init__":
             # new_module.body[0].decorator_list[0].keywords = [
             #     keyword(arg="title", value=Constant(value=self._cls_name))
@@ -204,6 +211,8 @@ class RuntimeClassVisitor(NodeVisitor):
                     )
                 )
             ]
+            if node_doc_string:
+                function.body.insert(0, Expr(value=Constant(value=node_doc_string)))
         else:
             if is_static_method:
                 function.body = [
@@ -219,6 +228,8 @@ class RuntimeClassVisitor(NodeVisitor):
                         )
                     )
                 ]
+                if node_doc_string:
+                    function.body.insert(0, Expr(value=Constant(value=node_doc_string)))
             else:
                 function.body = [
                     Assign(
@@ -242,6 +253,8 @@ class RuntimeClassVisitor(NodeVisitor):
                         )
                     ),
                 ]
+                if node_doc_string:
+                    function.body.insert(0, Expr(value=Constant(value=node_doc_string)))
 
         globals()["__funix__module__"] = funix
         globals()[self._cls_name] = self._cls
