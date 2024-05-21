@@ -8,9 +8,8 @@ from threading import Timer
 from typing import Any
 from uuid import uuid4
 
-from flask import abort, send_file
+from flask import Flask, abort, send_file
 
-from funix.app import app
 from funix.config.switch import GlobalSwitchOption
 from funix.util.file import create_safe_tempdir
 from funix.util.uri import is_valid_uri
@@ -116,8 +115,8 @@ def get_static_uri(path: str | list[str | bytes] | bytes) -> str | list[str]:
         raise Exception("Unsupported path type")
 
 
-def enable_file_service():
-    @app.get("/file/<string:fid>")
+def enable_file_service(flask_app: Flask):
+    @flask_app.get("/file/<string:fid>")
     def __funix_export_file(fid: str):
         """
         Send the file. Funix does not store your file on disk, instead it just stores bytes and str.

@@ -11,11 +11,14 @@ from _ast import (
     Name,
     Return,
     Store,
+    Tuple,
+    keyword,
 )
 from ast import NodeVisitor, unparse
 from typing import Any
 
 import funix
+from funix.app import get_new_app_and_sock_for_jupyter
 from funix.hint import WrapperException
 from funix.session import get_global_variable, set_global_variable
 
@@ -80,6 +83,7 @@ class RuntimeClassVisitor(NodeVisitor):
         self._cls_name = cls_name
         self._cls = cls
         self._imports = []
+        self.class_app, self.class_sock = get_new_app_and_sock_for_jupyter()
 
         self.open_function = False
 
@@ -136,7 +140,18 @@ class RuntimeClassVisitor(NodeVisitor):
                 value=Name(id="__funix__module__", ctx=Load()), attr="funix", ctx=Load()
             ),
             args=[],
-            keywords=[],
+            keywords=[
+                keyword(
+                    arg="app_and_sock",
+                    value=Tuple(
+                        elts=[
+                            Name(id="class_app", ctx=Load()),
+                            Name(id="class_sock", ctx=Load()),
+                        ],
+                        ctx=Load(),
+                    ),
+                )
+            ],
         )
 
         for decorator in node.decorator_list:
@@ -258,6 +273,8 @@ class RuntimeClassVisitor(NodeVisitor):
 
         globals()["__funix__module__"] = funix
         globals()[self._cls_name] = self._cls
+        globals()["class_app"] = self.class_app
+        globals()["class_sock"] = self.class_sock
         code = unparse(new_module)
         try:
             exec(

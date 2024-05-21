@@ -18,7 +18,9 @@ import funix.decorator.secret as secret
 import funix.decorator.theme as theme
 import funix.hint as hint
 from funix.app import app, enable_funix_host_checker
+from funix.config.switch import GlobalSwitchOption
 from funix.frontend import run_open_frontend, start
+from funix.jupyter import jupyter
 from funix.prep.global_to_session import get_new_python_file
 from funix.util.file import (
     create_safe_tempdir,
@@ -26,7 +28,11 @@ from funix.util.file import (
     get_python_files_in_dir,
 )
 from funix.util.module import handle_module, import_module_from_file
-from funix.util.network import get_compressed_ip_address_as_str, get_unused_port_from
+from funix.util.network import (
+    get_compressed_ip_address_as_str,
+    get_unused_port_from,
+    is_port_used,
+)
 
 # ---- Exports ----
 # ---- Decorators ----
@@ -49,6 +55,11 @@ new_funix_type = hint.new_funix_type
 set_app_secret = secret.set_app_secret
 # ---- Util ----
 # ---- Exports ----
+
+if GlobalSwitchOption.IN_NOTEBOOK:
+    import logging
+
+    logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
 __use_git = False
 """
@@ -99,7 +110,7 @@ def __prep(
     if module_or_file:
         if is_module:
             if default:
-                lists.set_default_function_name(default)
+                lists.set_default_function_name(app.name, default)
             module = import_module(module_or_file)
             handle_module(module, need_path, base_dir, path_difference)
         else:
@@ -334,7 +345,7 @@ def get_flask_application(
     )
 
     if not no_frontend:
-        start()
+        start(app)
     return app
 
 
@@ -392,7 +403,7 @@ def run(
         default=default,
     )
 
-    if lists.is_empty_function_list():
+    if lists.is_empty_function_list(app.name):
         print(
             "No functions nor classes decorated by Funix. Please check your code: "
             "functions and classes that need to be handled by Funix should be public "
@@ -416,7 +427,7 @@ def run(
             print("-" * 15)
 
     if not no_frontend:
-        start()
+        start(app)
         print(f"Starting Funix at http://{host}:{parsed_port}")
     else:
         print(f"Starting Funix backend only at http://{host}:{parsed_port}")

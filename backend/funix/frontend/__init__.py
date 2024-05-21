@@ -8,9 +8,8 @@ from threading import Thread
 from uuid import uuid4
 from webbrowser import open
 
-from flask import send_from_directory, session
+from flask import Flask, send_from_directory, session
 
-from funix.app import app
 from funix.util.network import get_compressed_ip_address_as_str, is_port_used
 
 folder = abspath(join(abspath(__file__), "../../build"))  # Best abs path ever
@@ -74,12 +73,13 @@ def run_open_frontend(host: IPv4Address | IPv6Address, port: int) -> None:
     web_browser.start()
 
 
-def start() -> None:
+def start(flask_app: Flask) -> None:
     """
     Start the frontend.
     """
 
-    @app.route("/")
+    name = flask_app.name
+
     def __send_index():
         """
         Send the index.html file.
@@ -94,7 +94,9 @@ def start() -> None:
             session["__funix_id"] = uuid4().hex
         return send_from_directory(folder, "index.html")
 
-    @app.route("/<path:path>")
+    setattr(__send_index, "__name__", f"{name}__send_index")
+    flask_app.get("/")(__send_index)
+
     def __send_root_files(path):
         """
         Send the static files in root or the index.html file for funix frontend.
@@ -113,7 +115,9 @@ def start() -> None:
             return send_from_directory(folder, path)
         return send_from_directory(folder, "index.html")
 
-    @app.route("/static/<path:res>/<path:path>")
+    setattr(__send_root_files, "__name__", f"{name}__send_root_files")
+    flask_app.get("/<path:path>")(__send_root_files)
+
     def __send_static_files(res, path):
         """
         Send the static files.
@@ -129,3 +133,6 @@ def start() -> None:
             flask.Response: The static files.
         """
         return send_from_directory(abspath(join(folder, f"static/{res}/")), path)
+
+    setattr(__send_static_files, "__name__", f"{name}__send_static_files")
+    flask_app.get("/static/<path:res>/<path:path>")(__send_static_files)
