@@ -11,7 +11,10 @@ from types import ModuleType
 from typing import Callable, Optional, Union
 from uuid import uuid4
 
-from funix.app import app, sock
+from flask import Flask
+from flask_sock import Sock
+
+from funix.app import app, get_new_app_and_sock_for_jupyter, sock
 from funix.config import banned_function_name_and_path
 from funix.config.switch import GlobalSwitchOption
 from funix.decorator.all_of import parse_all_of
@@ -60,6 +63,7 @@ from funix.hint import (
     WhitelistType,
     WidgetsType,
 )
+from funix.jupyter import jupyter
 from funix.util.module import funix_menu_to_safe_function_name
 from funix.util.text import un_indent
 from funix.util.uri import get_endpoint
@@ -172,8 +176,8 @@ def enable_wrapper() -> None:
     if not __wrapper_enabled:
         __wrapper_enabled = True
 
-        enable_list()
-        enable_file_service()
+        enable_list(app)
+        enable_file_service(app)
 
 
 def object_is_handled(object_id: int) -> bool:
@@ -218,6 +222,7 @@ def funix(
     disable: bool = False,
     figure_to_image: bool = False,
     keep_last: bool = False,
+    app_and_sock: tuple[Flask, Sock] | None = None,
 ):
     """
     Decorator for functions to convert them to web apps
@@ -260,6 +265,8 @@ def funix(
         disable(bool): disable this function
         figure_to_image(bool): convert matplotlib figure to image
         keep_last(bool): keep the last input and output in the frontend
+        app_and_sock(tuple[Flask, Sock]): the Flask app and the Sock instance, if None, use the global app and sock.
+                                          In jupyter, funix automatically generates the new app and sock.
 
     Returns:
         function: the decorated function
@@ -267,6 +274,19 @@ def funix(
     Raises:
         Check code for details
     """
+    global __wrapper_enabled
+    if GlobalSwitchOption.IN_NOTEBOOK:
+        __wrapper_enabled = True
+        app_, sock_ = get_new_app_and_sock_for_jupyter()
+
+        enable_file_service(app_)
+        enable_list(app_)
+    else:
+        app_ = app
+        sock_ = sock
+
+    if app_and_sock:
+        app_, sock_ = app_and_sock
 
     def decorator(function: Callable) -> callable:
         """
@@ -286,16 +306,16 @@ def funix(
             return function
         if __wrapper_enabled:
             if menu:
-                push_counter(menu)
+                push_counter(app_.name, menu)
             elif now_module:
-                push_counter(now_module)
+                push_counter(app_.name, now_module)
             else:
-                push_counter("$Funix_Main")
+                push_counter(app_.name, "$Funix_Main")
 
             function_id = str(uuid4())
 
             if default:
-                set_default_function(function_id)
+                set_default_function(app_.name, function_id)
 
             safe_module_now = now_module
 
@@ -316,10 +336,10 @@ def funix(
 
             if dir_mode_default_info[0]:
                 if function_name == dir_mode_default_info[1]:
-                    set_default_function(function_id)
-            elif default_function_name_ := get_default_function_name():
+                    set_default_function(app_.name, function_id)
+            elif default_function_name_ := get_default_function_name(app_.name):
                 if function_name == default_function_name_:
-                    set_default_function(function_id)
+                    set_default_function(app_.name, function_id)
 
             unique_function_name: str | None = None  # Don't use it as id,
             # only when funix starts with `-R`, it will be not None
@@ -423,10 +443,11 @@ def funix(
                         f"{safe_module_now}_{_function_reactive_update.__name__}"
                     )
 
-                app.post(f"/update/{function_id}")(_function_reactive_update)
-                app.post(f"/update/{endpoint}")(_function_reactive_update)
+                app_.post(f"/update/{function_id}")(_function_reactive_update)
+                app_.post(f"/update/{endpoint}")(_function_reactive_update)
 
             decorated_functions_list_append(
+                app_.name,
                 {
                     "name": function_title,
                     "path": endpoint,
@@ -437,7 +458,7 @@ def funix(
                     "reactive": has_reactive_params,
                     "autorun": autorun,
                     "keepLast": keep_last,
-                }
+                },
             )
 
             if show_source:
@@ -523,8 +544,8 @@ def funix(
                 "source": source_code,
             }
 
-            get_wrapper_id = app.get(f"/param/{function_id}")
-            get_wrapper_endpoint = app.get(f"/param/{endpoint}")
+            get_wrapper_id = app_.get(f"/param/{function_id}")
+            get_wrapper_endpoint = app_.get(f"/param/{endpoint}")
 
             def decorated_function_param_getter():
                 """
@@ -556,8 +577,8 @@ def funix(
             get_wrapper_endpoint(decorated_function_param_getter)
 
             if secret_key:
-                verify_secret_id = app.post(f"/verify/{function_id}")
-                verify_secret_endpoint = app.post(f"/verify/{endpoint}")
+                verify_secret_id = app_.post(f"/verify/{function_id}")
+                verify_secret_endpoint = app_.post(f"/verify/{endpoint}")
 
                 def verify_secret():
                     """
@@ -613,12 +634,14 @@ def funix(
                 wrapper.__setattr__("__name__", safe_module_now + "_" + function_name)
 
             if need_websocket:
-                sock.route(f"/call/{function_id}")(wrapper)
+                sock_.route(f"/call/{function_id}")(wrapper)
             else:
-                app.post(f"/call/{endpoint}")(wrapper)
-                app.post(f"/call/{function_id}")(wrapper)
+                app_.post(f"/call/{endpoint}")(wrapper)
+                app_.post(f"/call/{function_id}")(wrapper)
         return function
 
+    if GlobalSwitchOption.IN_NOTEBOOK:
+        jupyter(app_)
     return decorator
 
 
@@ -642,15 +665,18 @@ def __funix_class(cls):
         f.visit(ast.parse(class_source_code))
         return cls
     else:
+        class_app, class_sock = get_new_app_and_sock_for_jupyter()
         for class_function in dir(cls):
             if not class_function.startswith("_"):
                 function = getattr(cls, class_function)
                 if callable(function):
                     org_id = id(getattr(type(cls), class_function))
                     if org_id not in class_method_ids_to_params:
-                        funix()(function)
+                        funix(app_and_sock=(class_app, class_sock))(function)
                     else:
                         params = class_method_ids_to_params[org_id]
                         args = params["args"]
                         kwargs = params["kwargs"]
-                        funix(*args, **kwargs)(function)
+                        funix(*args, **kwargs, app_and_sock=(class_app, class_sock))(
+                            function
+                        )

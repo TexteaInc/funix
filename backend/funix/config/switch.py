@@ -4,6 +4,7 @@ It's a global switch for quick turning on/off some key features in Funix.
 """
 
 from secrets import token_hex
+from sys import modules
 from typing import Union
 
 
@@ -27,6 +28,9 @@ class SwitchOption:
 
     BIGGER_DATA_SAVE_TO_TEMP: int = 1024 * 1024 * 10
     """The bigger data size to save to temp (bytes), -1 for always in memory"""
+
+    IN_NOTEBOOK: bool = "ipykernel" in modules
+    """Whether in notebook"""
 
     __session_key = None
 

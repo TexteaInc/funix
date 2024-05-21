@@ -7,6 +7,7 @@ import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
+from uuid import uuid4
 
 from flask import Flask, Response, abort, request
 from flask_sock import Sock
@@ -14,6 +15,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.pool import SingletonThreadPool
 
 from funix.config.switch import GlobalSwitchOption
+from funix.frontend import start
 from funix.hint import LogLevel
 
 app = Flask(__name__)
@@ -24,6 +26,44 @@ app.config.update(
     SESSION_TYPE="filesystem",
 )
 sock = Sock(app)
+
+
+def funix_auto_cors(response: Response) -> Response:
+    if "HTTP_ORIGIN" not in request.environ:
+        response.headers["Access-Control-Allow-Origin"] = "*"
+    else:
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Origin"] = request.environ["HTTP_ORIGIN"]
+    response.headers[
+        "Access-Control-Allow-Methods"
+    ] = "GET, HEAD, POST, OPTIONS, PUT, PATCH, DELETE"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, *"
+
+    return response
+
+
+def get_new_app_and_sock_for_jupyter() -> tuple[Flask, Sock]:
+    """
+    Get a new Flask app and a new Sock instance.
+    No telemetry, logging and visitor checks (fixed to 127.0.0.1)
+
+    Returns:
+        tuple[Flask, Sock]: The new Flask app and the new Sock instance.
+    """
+    new_app = Flask(f"Junix_{uuid4().hex}")
+    new_app.secret_key = "Jupiter"
+    new_app.config.update(
+        SESSION_COOKIE_PATH="/",
+        SESSION_COOKIE_SAMESITE="None",
+        SESSION_TYPE="filesystem",
+    )
+    new_sock = Sock(new_app)
+
+    new_app.after_request(funix_auto_cors)
+    start(new_app)
+
+    return new_app, new_sock
+
 
 funix_log_level = LogLevel.get_level()
 
@@ -68,19 +108,7 @@ def privacy_policy(message: str) -> None:
     privacy = message
 
 
-@app.after_request
-def funix_auto_cors(response: Response) -> Response:
-    if "HTTP_ORIGIN" not in request.environ:
-        response.headers["Access-Control-Allow-Origin"] = "*"
-    else:
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Allow-Origin"] = request.environ["HTTP_ORIGIN"]
-    response.headers[
-        "Access-Control-Allow-Methods"
-    ] = "GET, HEAD, POST, OPTIONS, PUT, PATCH, DELETE"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, *"
-    
-    return response
+app.after_request(funix_auto_cors)
 
 
 def __api_call_data(response: Response, dict_to_json: bool = False) -> dict | None:

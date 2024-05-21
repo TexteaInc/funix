@@ -48,7 +48,7 @@ def get_path_difference(base_path: str, target_path: str) -> str:
 
     if not target_path.startswith(base_path):
         raise ValueError("The base directory is not a prefix of the target directory.")
-    
+
     if len(base_components) == 1 and base_components[0] == ".":
         return ".".join(target_components)
 

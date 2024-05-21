@@ -32,7 +32,6 @@ Types:
     tuple: The name of the parameters, for example: `("a", "b", "c")`.
 """
 
-
 AcceptableWidgets = Literal[
     "inputbox",
     "slider",
@@ -143,7 +142,6 @@ Examples:
     {("a", "b"): "A"} -> The parameter `a` and `b` have the same label, and the label is `A`.
 """
 
-
 InputLayout = Optional[list[InputRow]]
 """
 The type of the `input_layout`.
@@ -198,7 +196,6 @@ ArgumentConfigKeys = Literal["treat_as", "whitelist", "example", "widget", "labe
 """
 The keys of `argument_config[widget]`.
 """
-
 
 ArgumentTreatAsType = str
 ArgumentWhitelistType = list[Any]  # Same as the widget type
@@ -298,7 +295,7 @@ For example: "https://example.org/imgs/1.png"
 """
 
 _Markdown = NewType("Markdown", type(Optional[str]))
-Markdown: TypeAlias = _Markdown # type: ignore
+Markdown: TypeAlias = _Markdown  # type: ignore
 """
 Markdown type.
 For output.
@@ -307,7 +304,7 @@ Support Markdown like "**bold**" and "*italic*"
 """
 
 _HTML = NewType("HTML", type(Optional[str]))
-HTML: TypeAlias = _HTML # type: ignore
+HTML: TypeAlias = _HTML  # type: ignore
 """
 HTML type.
 For output.
@@ -317,7 +314,7 @@ Support HTML like "<span style='color: red'>red</span>"
 """
 
 _Image = NewType("Images", type(BasicFileType))
-Image: TypeAlias = _Image # type: ignore
+Image: TypeAlias = _Image  # type: ignore
 """
 Image type.
 For output.
@@ -326,7 +323,7 @@ See `BasicFileType` for more information.
 """
 
 _Video = NewType("Videos", type(BasicFileType))
-Video: TypeAlias = _Video # type: ignore
+Video: TypeAlias = _Video  # type: ignore
 """
 Video type.
 For output.
@@ -335,7 +332,7 @@ See `BasicFileType` for more information.
 """
 
 _Audio = NewType("Audios", type(BasicFileType))
-Audio: TypeAlias = _Audio # type: ignore
+Audio: TypeAlias = _Audio  # type: ignore
 """
 Audio type.
 For output.
@@ -344,7 +341,7 @@ See `BasicFileType` for more information.
 """
 
 _File = NewType("Files", type(BasicFileType))
-File: TypeAlias = _File # type: ignore
+File: TypeAlias = _File  # type: ignore
 """
 File type.
 For output.
@@ -353,7 +350,7 @@ See `BasicFileType` for more information.
 """
 
 _Code = NewType("Code", type(Optional[str | CodeConfig]))
-Code: TypeAlias = _Code # type: ignore
+Code: TypeAlias = _Code  # type: ignore
 """
 Code type.
 For output.
@@ -368,7 +365,6 @@ Support Code like:
 
 or just a string like "print('hello world')"
 """
-
 
 # ---- Built-in Input Widgets ----
 IntInputBox: TypeAlias = builtin.IntInputBox
@@ -385,6 +381,8 @@ BytesImage: TypeAlias = builtin.BytesImage
 BytesVideo: TypeAlias = builtin.BytesVideo
 BytesAudio: TypeAlias = builtin.BytesAudio
 BytesFile: TypeAlias = builtin.BytesFile
+
+
 # ---- Built-in Input Widgets ----
 
 
