@@ -331,6 +331,80 @@ const TextExtendedWidget = ({
     multilineConfig.multiline = false;
   }
 
+  if (autocompleteOptions.length === 0) {
+    console.log("yes");
+    return (
+      <TextField
+        id={id}
+        placeholder={placeholder}
+        label={
+          displayLabel ? (
+            <MarkdownDiv
+              markdown={schema.title || label || "input"}
+              isRenderInline={true}
+            />
+          ) : null
+        }
+        fullWidth
+        autoFocus={autofocus}
+        required={required}
+        disabled={disabled || readonly}
+        type={
+          inputType === "number" || inputType === "integer"
+            ? "number"
+            : schema.widget === "password"
+            ? showPassword
+              ? "text"
+              : "password"
+            : "text"
+        }
+        value={value || value === 0 ? value : ""}
+        error={rawErrors.length > 0}
+        onBlur={_onBlur}
+        onFocus={_onFocus}
+        onChange={({
+          target: { value },
+        }: React.ChangeEvent<HTMLInputElement>) => {
+          _onValueChange(value);
+        }}
+        InputLabelProps={{
+          required: false,
+        }}
+        {...multilineConfig}
+        size="small"
+        inputProps={{
+          style: {
+            resize:
+              schema.widget !== "password" &&
+              inputType !== "number" &&
+              inputType !== "integer"
+                ? "vertical"
+                : "none",
+          },
+        }}
+        InputProps={{
+          endAdornment:
+            schema.widget === "password" ? (
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={() => setShowPassword((show) => !show)}
+                  onMouseDown={(e) => e.preventDefault()}
+                  edge="end"
+                  sx={{
+                    m: 0,
+                  }}
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            ) : (
+              <></>
+            ),
+        }}
+      />
+    );
+  }
+
   return (
     <Autocomplete
       disableClearable
