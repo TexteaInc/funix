@@ -3,14 +3,6 @@ import os  # Python's native
 import openai   
 import IPython  # a famous library for interactive python
 
-import funix
-
-cfg = {
-    "rate_limit":funix.decorator.Limiter.session(max_calls=2, period=60*60*24),
-    "show_source":True
-}
-
-@funix.funix()
 def ChatGPT(prompt: str="Who is Cauchy?") -> IPython.display.Markdown:
     client = openai.OpenAI() # defaults to os.environ.get("OPENAI_API_KEY")
     response = client.chat.completions.create(
@@ -22,7 +14,6 @@ def ChatGPT(prompt: str="Who is Cauchy?") -> IPython.display.Markdown:
     )
     return response.choices[0].message.content
 
-@funix.funix(**cfg)
 def ChatGPT_stream(prompt: str="Who is Cauchy?") -> IPython.display.Markdown:
     client = openai.OpenAI() # defaults to os.environ.get("OPENAI_API_KEY")
     response = client.chat.completions.create(

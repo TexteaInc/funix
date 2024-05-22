@@ -5,10 +5,9 @@ import openai
 
 import funix
 
-cfg = {  # declarative configuration, all in one place
-    "description": """The ChatGPT app build in [Funix.io]""",
+cfg = {
     "conditional_visible": [
-        {"when": {"show_advanced_options": True}, "show": ["max_tokens"]}
+        {"when": {"show_advanced_options": True}, "show": ["model", "max_tokens", "stream"]}
     ],
     # "rate_limit": funix.decorator.Limiter.session(max_calls=2, period=60 * 60 * 24),
 }
@@ -17,12 +16,14 @@ cfg = {  # declarative configuration, all in one place
 @funix.funix(**cfg)
 def ChatGPT_advanced_stream(
     prompt: str,
-    show_advanced_options: bool = True,
-    model: typing.Literal["gpt-3.5-turbo", "gpt-3.5-turbo-1106", "gpt-3.5-turbo-0301",
-                "gpt-3.5-turbo-0613"] = "gpt-3.5-turbo",
+    show_advanced_options: bool = False,
     stream: bool = True,
+    model: typing.Literal["gpt-3.5-turbo", "gpt-4"] = "gpt-3.5-turbo",
     max_tokens: range(100, 500, 50) = 150
 ) -> IPython.display.Markdown:
+    """
+    The ChatGPT app built in [Funix.io](http://funix.io)
+    """
     client = openai.OpenAI()  # defaults to os.environ.get("OPENAI_API_KEY")
     response = client.chat.completions.create(
         messages=[{"role": "user", "content": prompt}],
