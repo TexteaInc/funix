@@ -58,6 +58,7 @@ import { storeAtom } from "../../store";
 import { DataGrid } from "../../Key";
 import InnerHTML from "dangerously-set-html-content";
 import FunixCustom from "./FunixCustom";
+import MultipleInput from "./MultipleInput";
 
 let rowIdCounter = 0;
 
@@ -174,6 +175,23 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
         };
       }
     } else {
+      const hasWhitelist =
+        "whitelist" in elementProps.schema &&
+        Array.isArray(elementProps.schema.whitelist) &&
+        elementProps.schema.whitelist.length != 0;
+      if (hasWhitelist && !hasArrayExample) {
+        return {
+          type: "config",
+          element: (
+            <MultipleInput
+              widget={elementContent.props}
+              data={elementData}
+              useCheckbox={elementContent.props.schema.widget === "checkbox"}
+              whitelist={elementProps.schema.whitelist}
+            />
+          ),
+        };
+      }
       if (hasArrayExample || hasArrayWhitelist) {
         // Array Selector, Shared Part
         let arraySelectorCandidates: Array<any>[];

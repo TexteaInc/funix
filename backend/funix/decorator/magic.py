@@ -99,6 +99,17 @@ def get_type_dict(annotation: any) -> dict:
                     getattr(annotation, "_name") == "List"
                     or getattr(annotation, "_name") == "Dict"
                 ):
+                    if args := getattr(annotation, "__args__"):
+                        if getattr(args[0], "__name__") == "Literal":
+                            first_element = getattr(args[0], "__args__")[0]
+                            literal_first_type = get_type_dict(type(first_element))
+                            if literal_first_type is None:
+                                raise Exception("Unsupported typing")
+                            literal_first_type = literal_first_type["type"]
+                            return {
+                                "type": f"typing.List[{literal_first_type}]",
+                                "whitelist": getattr(args[0], "__args__"),
+                            }
                     return {"type": str(annotation)}
                 elif (
                     str(getattr(annotation, "__origin__")) == "typing.Literal"
@@ -219,6 +230,10 @@ def get_type_widget_prop(
                 widget = (
                     "radio" if len(function_annotation.__args__) < 8 else "inputbox"
                 )
+            elif function_annotation_name == "List":
+                if args := getattr(function_annotation, "__args__"):
+                    if getattr(args[0], "__name__") == "Literal":
+                        widget = "checkbox" if len(args[0].__args__) < 8 else "inputbox"
             elif function_annotation_name in builtin_widgets:
                 widget = builtin_widgets[function_annotation_name]
     if widget and anal_result:
