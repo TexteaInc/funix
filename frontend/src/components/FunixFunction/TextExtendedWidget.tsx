@@ -332,7 +332,6 @@ const TextExtendedWidget = ({
   }
 
   if (autocompleteOptions.length === 0) {
-    console.log("yes");
     return (
       <TextField
         id={id}
