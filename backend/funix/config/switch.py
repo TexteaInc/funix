@@ -20,6 +20,9 @@ class SwitchOption:
     AUTO_READ_DOCSTRING_TO_FUNCTION_DESCRIPTION: bool = True
     """Auto read docstring to function description"""
 
+    AUTO_READ_DOCSTRING_TO_PARSE: bool = True
+    """Auto parse docstring to function widgets and description"""
+
     USE_FIXED_SESSION_KEY: Union[bool, str] = False
     """Use fixed session key"""
 
