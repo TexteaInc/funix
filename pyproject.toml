@@ -29,6 +29,7 @@ dependencies = [
   "mpld3>=0.5.8",
   "pandera>=0.17.2",
   "pandas>=2.0.3",
+  "docstring_parser>=0.16",
 ]
 
 [project.optional-dependencies]

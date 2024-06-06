@@ -11,6 +11,7 @@ from types import ModuleType
 from typing import Callable, Optional, Union
 from uuid import uuid4
 
+from docstring_parser import parse
 from flask import Flask
 from flask_sock import Sock
 
@@ -361,11 +362,25 @@ def funix(
 
             function_title = title if title is not None else function_name_
 
+            function_docstring_parsed = None
+            function_docstring = getattr(function, "__doc__")
+            if GlobalSwitchOption.AUTO_READ_DOCSTRING_TO_PARSE:
+                if function_docstring:
+                    try:
+                        function_docstring_parsed = parse(function_docstring)
+                    except:
+                        # If something goes wrong, just ignore it
+                        # Use the original docstring
+                        pass
+
             function_description = description
             if function_description == "" or function_description is None:
                 if GlobalSwitchOption.AUTO_READ_DOCSTRING_TO_FUNCTION_DESCRIPTION:
-                    function_docstring = getattr(function, "__doc__")
-                    if function_docstring:
+                    if function_docstring_parsed is not None:
+                        function_description = un_indent(
+                            function_docstring_parsed.description
+                        )
+                    else:
                         function_description = un_indent(function_docstring)
 
             parsed_theme = get_parsed_theme_fot_funix(theme)
@@ -497,6 +512,24 @@ def funix(
                 examples,
                 whitelist,
             )
+
+            if function_docstring_parsed is not None:
+                if function_docstring_parsed.params:
+                    for param_ in function_docstring_parsed.params:
+                        if param_.arg_name in function_params:
+                            decorated_param_ = decorated_params.get(
+                                param_.arg_name, None
+                            )
+                            widget_ = param_.description.split(",")[0].strip()
+                            if decorated_param_ is None:
+                                decorated_params[param_.arg_name] = {
+                                    "widget": widget_,
+                                }
+                            else:
+                                if "widget" not in decorated_param_:  # no cover
+                                    decorated_params[param_.arg_name][
+                                        "widget"
+                                    ] = widget_
 
             safe_argument_config = {} if argument_config is None else argument_config
 
