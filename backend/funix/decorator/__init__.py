@@ -377,10 +377,10 @@ def funix(
             if function_description == "" or function_description is None:
                 if GlobalSwitchOption.AUTO_READ_DOCSTRING_TO_FUNCTION_DESCRIPTION:
                     if function_docstring_parsed is not None:
-                        function_description = un_indent(
-                            function_docstring_parsed.description
-                        )
-                    else:
+                        function_description_ = function_docstring_parsed.description
+                        if function_description_:
+                            function_description = un_indent(function_description_)
+                    elif function_docstring:
                         function_description = un_indent(function_docstring)
 
             parsed_theme = get_parsed_theme_fot_funix(theme)
