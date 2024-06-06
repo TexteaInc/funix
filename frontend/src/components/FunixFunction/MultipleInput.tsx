@@ -78,6 +78,7 @@ const MultipleInput = (props: MultipleInput) => {
       value={value}
       options={props.whitelist}
       getOptionLabel={(option) => (option as any).toString()}
+      disableCloseOnSelect
       onChange={(_event, newValue) => _setValue(newValue)}
       renderInput={(params) => (
         <TextField
