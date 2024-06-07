@@ -522,17 +522,42 @@ def funix(
                                 param_.arg_name, None
                             )
                             try:
-                                widget_ = param_.description.split(",")[0].strip()
-                                if widget_ in AcceptableWidgetsList:
-                                    if decorated_param_ is None:
-                                        decorated_params[param_.arg_name] = {
-                                            "widget": widget_,
-                                        }
-                                    else:
-                                        if "widget" not in decorated_param_:  # no cover
+                                if "|" in param_.description:
+                                    widget_ = param_.description.split("|")[0].strip()
+                                    label_ = "|".join(
+                                        param_.description.split(",")[1::1]
+                                    )
+                                    if widget_ not in AcceptableWidgetsList:
+                                        label_ = param_.description
+                                        widget_ = None
+                                else:
+                                    widget_ = None
+                                    label_ = param_.description
+                                if decorated_param_ is None:
+                                    decorated_params[param_.arg_name] = {}
+                                    if widget_:
+                                        decorated_params[param_.arg_name][
+                                            "widget"
+                                        ] = widget_
+                                    if label_.strip():
+                                        decorated_params[param_.arg_name][
+                                            "title"
+                                        ] = f"{param_.arg_name} ({label_})"
+                                else:
+                                    if "widget" not in decorated_param_ and widget_:
+                                        decorated_params[param_.arg_name][
+                                            "widget"
+                                        ] = widget_
+                                    if label_.strip():
+                                        if "title" not in decorated_param_:
                                             decorated_params[param_.arg_name][
-                                                "widget"
-                                            ] = widget_
+                                                "title"
+                                            ] = f"{param_.arg_name} (label_)"
+                                        else:
+                                            title_ = decorated_param_["title"]
+                                            decorated_params[param_.arg_name][
+                                                "title"
+                                            ] = f"{title_} ({label_})"
                             except:
                                 pass
 
