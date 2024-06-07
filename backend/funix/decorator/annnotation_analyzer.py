@@ -17,6 +17,57 @@ Key: The annotation.
 Value: The analyzer function.
 """
 
+__registered_convert__: dict[Any, Callable] = {}
+"""
+For call
+"""
+
+
+def register_convert(annotation: Any) -> callable:
+    """
+    Register an annotation analyzer.
+
+    Parameters:
+        annotation (Any): The annotation to register.
+
+    Returns:
+        The decorator.
+    """
+
+    @wraps(register_convert)
+    def decorator(func: Callable) -> callable:
+        """
+        Decorator for register an annotation analyzer.
+
+        Parameters:
+            func (Callable): The function.
+        """
+        __registered_convert__[annotation] = func
+        return func
+
+    return decorator
+
+
+def convert(type_: Any, value: Any) -> Any:
+    """
+    Convert the value to the type.
+
+    Parameters:
+        type_ (Any): The type.
+        value (Any): The value.
+
+    Returns:
+        Any: The converted value.
+    """
+    try:
+        if type_ in __registered_convert__:
+            return __registered_convert__[type_](value)
+    except:
+        try:
+            return type_(value)
+        except:
+            return value
+
 
 def is_hashable(t):
     try:
@@ -104,6 +155,34 @@ def register_ipywidgets():
     @register(ipywidgets.Password, Step.BOTH)
     def _ipywidgets(_: ipywidgets.Password) -> dict:
         return {"type": "string", "widget": "password"}
+
+    @register(ipywidgets.Image, Step.BOTH)
+    def _ipywidgets(_: ipywidgets.Image) -> dict:
+        return {"type": "object", "widget": "image"}
+
+    @register_convert(ipywidgets.Image)
+    def _ipywidgets_image(value: bytes) -> ipywidgets.Image:
+        return ipywidgets.Image(value=value)
+
+    @register(ipywidgets.Video, Step.BOTH)
+    def _ipywidgets(_: ipywidgets.Video) -> dict:
+        return {"type": "object", "widget": "video"}
+
+    @register_convert(ipywidgets.Video)
+    def _ipywidgets_video(value: bytes) -> ipywidgets.Video:
+        return ipywidgets.Video(value=value)
+
+    @register(ipywidgets.Audio, Step.BOTH)
+    def _ipywidgets(_: ipywidgets.Audio) -> dict:
+        return {"type": "object", "widget": "audio"}
+
+    @register_convert(ipywidgets.Audio)
+    def _ipywidgets_audio(value: bytes) -> ipywidgets.Audio:
+        return ipywidgets.Audio(value=value)
+
+    @register(ipywidgets.FileUpload, Step.BOTH)
+    def _ipywidgets(_: ipywidgets.FileUpload) -> dict:
+        return {"type": "object", "widget": "file"}
 
 
 def register_pandera():
