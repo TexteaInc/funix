@@ -366,6 +366,8 @@ def get_figure(figure) -> dict:
         Exception: If matplotlib or mpld3 is not installed
     """
     global mpld3
+    import matplotlib
+
     if __matplotlib_use:
         if mpld3 is None:
             try:
@@ -376,6 +378,7 @@ def get_figure(figure) -> dict:
                 raise Exception("if you use matplotlib, you must install mpld3")
 
         fig = mpld3.fig_to_dict(figure)
+        matplotlib.pyplot.close()
         return fig
     else:
         raise Exception("Install matplotlib to use this function")
@@ -391,6 +394,10 @@ def get_figure_image(figure) -> str:
     Returns:
         str: The converted image with static URI
     """
+    import matplotlib.pyplot
+
+    matplotlib.pyplot.close()
+
     with io.BytesIO() as buf:
         figure.savefig(buf, format="png")
         buf.seek(0)
