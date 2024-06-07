@@ -18,6 +18,7 @@ from ast import NodeVisitor, unparse
 from typing import Any
 
 import funix
+from funix.config.switch import GlobalSwitchOption
 from funix.app import get_new_app_and_sock_for_jupyter
 from funix.hint import WrapperException
 from funix.session import get_global_variable, set_global_variable
@@ -83,7 +84,11 @@ class RuntimeClassVisitor(NodeVisitor):
         self._cls_name = cls_name
         self._cls = cls
         self._imports = []
-        self.class_app, self.class_sock = get_new_app_and_sock_for_jupyter()
+        if GlobalSwitchOption.IN_NOTEBOOK:
+            self.class_app, self.class_sock = get_new_app_and_sock_for_jupyter()
+        else:
+            self.class_app = None
+            self.class_sock = None
 
         self.open_function = False
 
@@ -140,7 +145,11 @@ class RuntimeClassVisitor(NodeVisitor):
                 value=Name(id="__funix__module__", ctx=Load()), attr="funix", ctx=Load()
             ),
             args=[],
-            keywords=[
+            keywords=[],
+        )
+
+        if GlobalSwitchOption.IN_NOTEBOOK:
+            funix_decorator.keywords.append(
                 keyword(
                     arg="app_and_sock",
                     value=Tuple(
@@ -151,8 +160,7 @@ class RuntimeClassVisitor(NodeVisitor):
                         ctx=Load(),
                     ),
                 )
-            ],
-        )
+            )
 
         for decorator in node.decorator_list:
             if hasattr(decorator, "id") and decorator.id == "staticmethod":
@@ -276,6 +284,7 @@ class RuntimeClassVisitor(NodeVisitor):
         globals()["class_app"] = self.class_app
         globals()["class_sock"] = self.class_sock
         code = unparse(new_module)
+        print(code)
         try:
             exec(
                 code,
