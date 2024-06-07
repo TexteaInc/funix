@@ -179,11 +179,19 @@ def funix_call(
                 if isgeneratorfunction(function):
                     for single_result in function(**wrapped_function_kwargs):
                         if single_result:
-                            print(single_result)
+                            if isinstance(single_result, tuple):
+                                for single_result_item in single_result:
+                                    print(single_result_item)
+                            else:
+                                print(single_result)
                 else:
                     function_result_ = function(**wrapped_function_kwargs)
                     if function_result_:
-                        print(function_result_)
+                        if isinstance(function_result_, tuple):
+                            for single_result_item in function_result_:
+                                print(single_result_item)
+                        else:
+                            print(function_result_)
                 sys.stdout = org_stdout
             except:
                 ws.send(
