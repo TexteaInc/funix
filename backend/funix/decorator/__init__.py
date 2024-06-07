@@ -63,6 +63,7 @@ from funix.hint import (
     TreatAsType,
     WhitelistType,
     WidgetsType,
+    AcceptableWidgetsList,
 )
 from funix.jupyter import jupyter
 from funix.util.module import funix_menu_to_safe_function_name
@@ -520,16 +521,20 @@ def funix(
                             decorated_param_ = decorated_params.get(
                                 param_.arg_name, None
                             )
-                            widget_ = param_.description.split(",")[0].strip()
-                            if decorated_param_ is None:
-                                decorated_params[param_.arg_name] = {
-                                    "widget": widget_,
-                                }
-                            else:
-                                if "widget" not in decorated_param_:  # no cover
-                                    decorated_params[param_.arg_name][
-                                        "widget"
-                                    ] = widget_
+                            try:
+                                widget_ = param_.description.split(",")[0].strip()
+                                if widget_ in AcceptableWidgetsList:
+                                    if decorated_param_ is None:
+                                        decorated_params[param_.arg_name] = {
+                                            "widget": widget_,
+                                        }
+                                    else:
+                                        if "widget" not in decorated_param_:  # no cover
+                                            decorated_params[param_.arg_name][
+                                                "widget"
+                                            ] = widget_
+                            except:
+                                pass
 
             safe_argument_config = {} if argument_config is None else argument_config
 

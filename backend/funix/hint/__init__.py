@@ -49,6 +49,8 @@ AcceptableWidgets = Literal[
 Acceptable widgets. Implemented now.
 """
 
+AcceptableWidgetsList = list(getattr(AcceptableWidgets, "__args__"))
+
 WidgetsValue = (
     list[AcceptableWidgets | tuple[AcceptableWidgets, dict]]
     | AcceptableWidgets
