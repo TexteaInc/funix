@@ -175,7 +175,9 @@ def funix_call(
         def output_to_web_function(**wrapped_function_kwargs):
             try:
                 fake_stdout = StdoutToWebsocket(ws)
+                fake_stderr = StdoutToWebsocket(ws)
                 org_stdout, sys.stdout = sys.stdout, fake_stdout
+                org_stderr, sys.stderr = sys.stderr, fake_stderr
                 if isgeneratorfunction(function):
                     for single_result in function(**wrapped_function_kwargs):
                         if single_result:
@@ -193,6 +195,7 @@ def funix_call(
                         else:
                             print(function_result_)
                 sys.stdout = org_stdout
+                sys.stderr = org_stderr
             except:
                 ws.send(
                     dumps(

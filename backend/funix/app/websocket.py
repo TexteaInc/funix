@@ -10,6 +10,8 @@ class StdoutToWebsocket:
     """
     Stdout to websocket.
     """
+    
+    encoding = "utf-8"
 
     def __init__(self, ws):
         """
