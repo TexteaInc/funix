@@ -114,6 +114,7 @@ const MarkdownCode = (props: {
               : theme.palette.warning.main,
           paddingX: "0.25rem",
           borderRadius: "0.25rem",
+          whiteSpace: "pre-wrap",
         }}
       >
         {props.children}
