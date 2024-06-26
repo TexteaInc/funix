@@ -56,7 +56,7 @@ set_app_secret = secret.set_app_secret
 # ---- Util ----
 # ---- Exports ----
 
-if GlobalSwitchOption.IN_NOTEBOOK:
+if GlobalSwitchOption.in_notebook:
     import logging
 
     logging.getLogger("werkzeug").setLevel(logging.ERROR)
@@ -77,6 +77,10 @@ try:
     __use_git = True
 except:
     pass
+
+
+def set_notebook_auto_execution(value: bool):
+    GlobalSwitchOption.NOTEBOOK_AUTO_EXECUTION = value
 
 
 def __prep(
