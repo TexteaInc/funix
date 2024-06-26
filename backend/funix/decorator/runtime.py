@@ -84,7 +84,7 @@ class RuntimeClassVisitor(NodeVisitor):
         self._cls_name = cls_name
         self._cls = cls
         self._imports = []
-        if GlobalSwitchOption.IN_NOTEBOOK:
+        if GlobalSwitchOption.in_notebook:
             self.class_app, self.class_sock = get_new_app_and_sock_for_jupyter()
         else:
             self.class_app = None
@@ -148,20 +148,6 @@ class RuntimeClassVisitor(NodeVisitor):
             keywords=[],
         )
 
-        if GlobalSwitchOption.IN_NOTEBOOK:
-            funix_decorator.keywords.append(
-                keyword(
-                    arg="app_and_sock",
-                    value=Tuple(
-                        elts=[
-                            Name(id="class_app", ctx=Load()),
-                            Name(id="class_sock", ctx=Load()),
-                        ],
-                        ctx=Load(),
-                    ),
-                )
-            )
-
         for decorator in node.decorator_list:
             if hasattr(decorator, "id") and decorator.id == "staticmethod":
                 is_static_method = True
@@ -180,6 +166,27 @@ class RuntimeClassVisitor(NodeVisitor):
                             return
                     funix_decorator.keywords = decorator.keywords
                     funix_decorator.args = decorator.args
+
+        if GlobalSwitchOption.in_notebook:
+            funix_decorator.keywords.append(
+                keyword(
+                    arg="app_and_sock",
+                    value=Tuple(
+                        elts=[
+                            Name(id="class_app", ctx=Load()),
+                            Name(id="class_sock", ctx=Load()),
+                        ],
+                        ctx=Load(),
+                    ),
+                ),
+            )
+
+            funix_decorator.keywords.append(
+                keyword(
+                    arg="jupyter_class",
+                    value=Constant(value=True),
+                )
+            )
 
         if not is_static_method:
             # Yes .args
@@ -284,7 +291,7 @@ class RuntimeClassVisitor(NodeVisitor):
         globals()["class_app"] = self.class_app
         globals()["class_sock"] = self.class_sock
         code = unparse(new_module)
-        print(code)
+        # print(code)
         try:
             exec(
                 code,

@@ -27,15 +27,20 @@ class SwitchOption:
     """Use fixed session key"""
 
     FILE_LINK_EXPIRE_TIME: int = 60 * 60
-    """The file link expire time (secounds), -1 for never expire"""
+    """The file link expire time (seconds), -1 for never expire"""
 
     BIGGER_DATA_SAVE_TO_TEMP: int = 1024 * 1024 * 10
     """The bigger data size to save to temp (bytes), -1 for always in memory"""
 
-    IN_NOTEBOOK: bool = "ipykernel" in modules
-    """Whether in notebook"""
+    NOTEBOOK_AUTO_EXECUTION: bool = False
+    """In notebook, auto run the flask app"""
 
     __session_key = None
+
+    @property
+    def in_notebook(self) -> bool:
+        """Whether in notebook."""
+        return "ipykernel" in modules and self.NOTEBOOK_AUTO_EXECUTION
 
     def get_session_key(self) -> str:
         """Get the session key."""

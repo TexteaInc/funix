@@ -225,6 +225,7 @@ def funix(
     figure_to_image: bool = False,
     keep_last: bool = False,
     app_and_sock: tuple[Flask, Sock] | None = None,
+    jupyter_class: bool = False,
 ):
     """
     Decorator for functions to convert them to web apps
@@ -269,6 +270,7 @@ def funix(
         keep_last(bool): keep the last input and output in the frontend
         app_and_sock(tuple[Flask, Sock]): the Flask app and the Sock instance, if None, use the global app and sock.
                                           In jupyter, funix automatically generates the new app and sock.
+        jupyter_class(bool): whether this is a class method in jupyter
 
     Returns:
         function: the decorated function
@@ -277,18 +279,17 @@ def funix(
         Check code for details
     """
     global __wrapper_enabled
-    if GlobalSwitchOption.IN_NOTEBOOK:
-        __wrapper_enabled = True
-        app_, sock_ = get_new_app_and_sock_for_jupyter()
 
-        enable_file_service(app_)
-        enable_list(app_)
+    app_, sock_ = None, None
+    if app_and_sock:
+        app_, sock_ = app_and_sock
+    if GlobalSwitchOption.in_notebook:
+        __wrapper_enabled = True
+        if app_ is None or sock_ is None:
+            app_, sock_ = get_new_app_and_sock_for_jupyter()
     else:
         app_ = app
         sock_ = sock
-
-    if app_and_sock:
-        app_, sock_ = app_and_sock
 
     def decorator(function: Callable) -> callable:
         """
@@ -703,7 +704,7 @@ def funix(
                 app_.post(f"/call/{function_id}")(wrapper)
         return function
 
-    if GlobalSwitchOption.IN_NOTEBOOK:
+    if GlobalSwitchOption.in_notebook and not jupyter_class and not disable:
         jupyter(app_)
     return decorator
 
@@ -726,20 +727,38 @@ def __funix_class(cls):
             class_source_code = file_.read()
 
         f.visit(ast.parse(class_source_code))
+        if GlobalSwitchOption.in_notebook:
+            jupyter(f.class_app)
         return cls
     else:
-        class_app, class_sock = get_new_app_and_sock_for_jupyter()
+        if GlobalSwitchOption.in_notebook:
+            class_app, class_sock = get_new_app_and_sock_for_jupyter()
+        else:
+            class_app = None
+            class_sock = None
         for class_function in dir(cls):
             if not class_function.startswith("_"):
                 function = getattr(cls, class_function)
                 if callable(function):
                     org_id = id(getattr(type(cls), class_function))
                     if org_id not in class_method_ids_to_params:
-                        funix(app_and_sock=(class_app, class_sock))(function)
+                        if GlobalSwitchOption.in_notebook:
+                            funix(app_and_sock=(class_app, class_sock))(function)
+                        else:
+                            funix()(function)
                     else:
                         params = class_method_ids_to_params[org_id]
                         args = params["args"]
                         kwargs = params["kwargs"]
-                        funix(*args, **kwargs, app_and_sock=(class_app, class_sock))(
-                            function
-                        )
+                        if GlobalSwitchOption.in_notebook:
+                            funix(
+                                *args,
+                                **kwargs,
+                                app_and_sock=(class_app, class_sock),
+                                jupyter_class=True,
+                            )(function)
+                        else:
+                            funix(*args, **kwargs)(function)
+        if GlobalSwitchOption.in_notebook:
+            jupyter(class_app)
+        return cls

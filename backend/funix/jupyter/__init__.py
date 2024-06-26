@@ -5,11 +5,14 @@ from threading import Thread
 from flask import Flask
 
 from funix.app import GlobalSwitchOption
-from funix.frontend import start
+from funix.decorator.lists import enable_list
+from funix.decorator.file import enable_file_service
 from funix.util.network import get_unused_port_from, is_port_used
 
 
 def jupyter(app: Flask) -> None:
+    enable_file_service(app)
+    enable_list(app)
     from IPython.display import IFrame, display
 
     port = get_unused_port_from(randint(3000, 4000), ip_address("127.0.0.1"))
