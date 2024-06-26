@@ -79,7 +79,7 @@ except:
     pass
 
 
-def set_notebook_auto_execution(value: bool):
+def enable_jupyter(value: bool):
     GlobalSwitchOption.NOTEBOOK_AUTO_EXECUTION = value
 
 
