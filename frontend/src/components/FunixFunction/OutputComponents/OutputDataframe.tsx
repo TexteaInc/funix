@@ -19,16 +19,14 @@ export default function OutputDataframe(props: {
     });
   }
 
-  Object.keys(row)
-    .reverse()
-    .forEach((key) => {
-      columns.push({
-        field: key,
-        headerName: key,
-        width: 150,
-        editable: false,
-      });
+  Object.keys(row).forEach((key) => {
+    columns.push({
+      field: key,
+      headerName: key,
+      width: 150,
+      editable: false,
     });
+  });
 
   props.dataframe.forEach((row, index) => {
     if (!hasId) {
