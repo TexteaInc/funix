@@ -6,7 +6,7 @@ import typing
 import functools
 import multiprocessing
 
-import pandas, pandera
+import pandas
 
 import funix
 
@@ -95,14 +95,6 @@ def test():
         print(code, ":", seq)
 
 
-class InputSchema(pandera.DataFrameModel):
-    sRNAs: pandera.typing.Series[str]
-
-
-class OutputSchema(pandera.DataFrameModel):
-    original_sRNA: pandera.typing.Series[str]
-    adapter_removed: pandera.typing.Series[str]
-
 
 @funix.funix(
     description="Remove 3' prime adapter from the end of an RNA-seq",
@@ -111,7 +103,7 @@ def remove_3_prime_adapter(
     # adapter_3_prime: str="TCGTATGCCGTCTTCTGCTT",
     adapter_3_prime: str = "TCGTA",
     minimal_match_length: int = 8,
-    sRNAs: pandera.typing.DataFrame[InputSchema] = pandas.DataFrame(
+    sRNAs: pandas.DataFrame = pandas.DataFrame(
         {
             "sRNAs": [
                 "AAGCTCAGGAGGGATAGCGCCTCGTATGCCGTCTTCTGC",  # shorter than full 3' adapter
