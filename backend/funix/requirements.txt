@@ -8,5 +8,4 @@ flask-sock>=0.7.0
 SQLAlchemy>=2.0.23
 docstring_parser>=0.16
 matplotlib>=3.4.3
-pandera>=0.17.2
 pandas>=2.0.3
