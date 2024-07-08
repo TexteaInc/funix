@@ -429,12 +429,6 @@ const TextExtendedWidget = ({
               </InputAdornment>
             </>
           );
-        } else {
-          if (inputType !== "number" && inputType !== "integer") {
-            newParams.inputProps.style = {
-              resize: "vertical",
-            };
-          }
         }
         return (
           <TextField
