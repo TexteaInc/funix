@@ -112,7 +112,7 @@ def push_counter(app_name: str, module: str) -> None:
     """
     global module_functions_counter
     if app_name in module_functions_counter:
-        if module in module_functions_counter:
+        if module in module_functions_counter[app_name]:
             module_functions_counter[app_name][module] += 1
         else:
             module_functions_counter[app_name][module] = 1

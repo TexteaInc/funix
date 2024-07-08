@@ -308,19 +308,22 @@ def funix(
         if disable:
             return function
         if __wrapper_enabled:
-            if menu:
-                push_counter(app_.name, menu)
-            elif now_module:
-                push_counter(app_.name, now_module)
-            else:
-                push_counter(app_.name, "$Funix_Main")
-
             function_id = str(uuid4())
 
             if default:
                 set_default_function(app_.name, function_id)
 
-            safe_module_now = now_module
+            safe_module_now = now_module if now_module else menu
+
+            replace_module = None
+
+            if safe_module_now:
+                replace_module = safe_module_now
+
+            if safe_module_now:
+                push_counter(app_.name, safe_module_now)
+            else:
+                push_counter(app_.name, "$Funix_Main")
 
             if safe_module_now:
                 safe_module_now = funix_menu_to_safe_function_name(safe_module_now)
@@ -349,7 +352,7 @@ def funix(
 
             if safe_module_now:
                 unique_function_name = (
-                    now_module.replace(".", "/") + "/" + function_name
+                    safe_module_now.replace(".", "/") + "/" + function_name
                 )
 
             if function_name in banned_function_name_and_path:
@@ -409,14 +412,6 @@ def funix(
                     set_function_secret(secret, function_id, function_title)
 
             secret_key = get_secret_by_id(function_id) is not None
-
-            replace_module = None
-
-            if now_module:
-                replace_module = now_module
-
-            if menu:
-                replace_module = menu
 
             if unique_function_name:
                 __decorated_functions_names_list.append(unique_function_name)
