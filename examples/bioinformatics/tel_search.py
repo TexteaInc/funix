@@ -11,7 +11,7 @@ import typing
 import functools
 import multiprocessing
 
-import pandas, pandera
+import pandas
 
 import funix
 
@@ -127,10 +127,6 @@ def test():
     return search_telomeres(sRNAs, repeat)
 
 
-class InputSchema(pandera.DataFrameModel):
-    sRNAs: pandera.typing.Series[str]
-
-
 @funix.funix(
     description = "A telomere is a region of repetitive DNA sequences at the end of a chromosome. Enter a repeating unit, and a list of sRNAs in the table below, this telomere checker will tell whether each of the sRNAs is a telomere.",
     # destination = "column",
@@ -152,7 +148,7 @@ def telomere_check(
     #     "CCCTAAACCCTAAACCCTAAAC",  # True, 22-nt
     #     "CTAAACCCTAAACCCTAAACCCT"  # True, 25-nt
     # ],    
-    sRNAs: pandera.typing.DataFrame[InputSchema] =
+    sRNAs: pandas.DataFrame =
         pandas.DataFrame({"sRNAs": 
         [
             "CCCTAAACCCTAAACCCTAT",  # False
