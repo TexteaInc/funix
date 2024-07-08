@@ -188,6 +188,17 @@ class RuntimeClassVisitor(NodeVisitor):
                 )
             )
 
+        funix_decorator.keywords.append(
+            keyword(
+                arg="menu",
+                value=Constant(
+                    value=self._cls_name.replace("_", " ")
+                    if GlobalSwitchOption.AUTO_CONVERT_UNDERSCORE_TO_SPACE_IN_NAME
+                    else self._cls_name
+                ),
+            )
+        )
+
         if not is_static_method:
             # Yes .args
             args.args.pop(0)
