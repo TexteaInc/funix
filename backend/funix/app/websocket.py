@@ -1,7 +1,6 @@
 """
 Websocket class to redirect
 """
-import sys
 from io import StringIO
 from json import dumps
 

@@ -308,6 +308,7 @@ def create_parse_type_metadata(function_id: str):
 
 
 def get_param_for_funix(
+    app_name: str,
     pre_fill: dict | None,
     decorated_function: dict,
     session_description: str,
@@ -317,11 +318,13 @@ def get_param_for_funix(
         for argument_key, from_function_info in pre_fill.items():
             if isinstance(from_function_info, tuple):
                 last_result = get_global_variable(
-                    str(id(from_function_info[0])) + f"_{from_function_info[1]}"
+                    app_name
+                    + str(id(from_function_info[0]))
+                    + f"_{from_function_info[1]}"
                 )
             else:
                 last_result = get_global_variable(
-                    str(id(from_function_info)) + "_result"
+                    app_name + str(id(from_function_info)) + "_result"
                 )
             if last_result is not None:
                 new_decorated_function["params"][argument_key]["default"] = last_result

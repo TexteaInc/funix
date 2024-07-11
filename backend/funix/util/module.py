@@ -11,6 +11,7 @@ from typing import Any, Optional
 from uuid import uuid4
 
 from funix import decorator, hint
+from funix.app import app
 
 
 def getsourcefile_safe(obj: Any) -> str | None:
@@ -105,7 +106,7 @@ def handle_module(
             if getsourcefile_safe(module_member) != module.__file__:
                 continue
             in_funix = (
-                decorator.object_is_handled(id(module_member))
+                decorator.object_is_handled(app, id(module_member))
                 or id(module_member) in hint.custom_cls_ids
             )
             if in_funix:

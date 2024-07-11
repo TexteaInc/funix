@@ -82,7 +82,6 @@ try:
 except:
     pass
 
-
 __pandas_use = False
 """
 Whether Funix can handle pandas or pandera-related logic
@@ -101,9 +100,9 @@ try:
 except:
     pass
 
-__decorated_functions_names_list: list[str] = []
+__decorated_functions_names_list: dict[str, list[str]] = {}
 """
-A list, each element is the name of the decorated function.
+A dict, each element is the names of the decorated function.
 """
 
 __wrapper_enabled: bool = False
@@ -121,7 +120,7 @@ dir_mode_default_info: tuple[bool, str | None] = (False, None)
 Default dir mode info.
 """
 
-handled_object: list[int] = []
+handled_object: dict[str, list[int]] = {app.name: []}
 """
 Handled object ids.
 """
@@ -182,17 +181,18 @@ def enable_wrapper() -> None:
         enable_file_service(app)
 
 
-def object_is_handled(object_id: int) -> bool:
+def object_is_handled(app_: Flask, object_id: int) -> bool:
     """
     Check if the object is handled.
 
     Parameters:
+        app_ (Flask): The app.
         object_id (int): The object id.
 
     Returns:
         bool: True if handled, False otherwise.
     """
-    return object_id in handled_object
+    return app_.name in handled_object and object_id in handled_object[app_.name]
 
 
 def funix(
@@ -291,6 +291,12 @@ def funix(
         app_ = app
         sock_ = sock
 
+    if app_.name not in __decorated_functions_names_list:
+        __decorated_functions_names_list[app_.name] = []
+
+    if app_.name not in handled_object:
+        handled_object[app_.name] = []
+
     def decorator(function: Callable) -> callable:
         """
         Decorator for functions to convert them to web apps
@@ -304,7 +310,7 @@ def funix(
         Raises:
             Check code for details
         """
-        handled_object.append(id(function))
+        handled_object[app_.name].append(id(function))
         if disable:
             return function
         if __wrapper_enabled:
@@ -393,30 +399,32 @@ def funix(
             endpoint = get_endpoint(path, unique_function_name, function_name)
 
             if unique_function_name:
-                if unique_function_name in __decorated_functions_names_list:
+                if unique_function_name in __decorated_functions_names_list[app_.name]:
                     raise ValueError(
                         f"Function with name {function_name} already exists, you better check other files, they may "
                         f"have the same function name"
                     )
             else:
-                if function_title in __decorated_functions_names_list:
+                if function_title in __decorated_functions_names_list[app_.name]:
                     raise ValueError(
                         f"Function with name {function_title} already exists"
                     )
-            if app_secret := get_app_secret():
-                set_function_secret(app_secret, function_id, function_title)
+            if app_secret := get_app_secret(app_.name):
+                set_function_secret(app_.name, app_secret, function_id, function_title)
             elif secret:
                 if isinstance(secret, bool):
-                    set_function_secret(token_hex(16), function_id, function_title)
+                    set_function_secret(
+                        app_.name, token_hex(16), function_id, function_title
+                    )
                 else:
-                    set_function_secret(secret, function_id, function_title)
+                    set_function_secret(app_.name, secret, function_id, function_title)
 
-            secret_key = get_secret_by_id(function_id) is not None
+            secret_key = get_secret_by_id(app_.name, function_id) is not None
 
             if unique_function_name:
-                __decorated_functions_names_list.append(unique_function_name)
+                __decorated_functions_names_list[app_.name].append(unique_function_name)
             else:
-                __decorated_functions_names_list.append(function_title)
+                __decorated_functions_names_list[app_.name].append(function_title)
 
             need_websocket = isgeneratorfunction(function)
 
@@ -618,7 +626,7 @@ def funix(
                     flask.Response: The function's parameters
                 """
                 return get_param_for_funix(
-                    pre_fill, decorated_function, session_description
+                    app_.name, pre_fill, decorated_function, session_description
                 )
 
             decorated_function_param_getter_name = f"{function_name}_param_getter"
@@ -650,7 +658,7 @@ def funix(
                     Returns:
                         flask.Response: The verification result
                     """
-                    return check_secret(function_id)
+                    return check_secret(app_.name, function_id)
 
                 decorated_function_verify_secret_name = f"{function_name}_verify_secret"
 
@@ -671,6 +679,7 @@ def funix(
             @wraps(function)
             def wrapper(ws=None):
                 result = funix_call(
+                    app_.name,
                     limiters,
                     need_websocket,
                     __pandas_use,
@@ -711,7 +720,11 @@ def funix_class(disable: bool = False):
 
 
 def __funix_class(cls):
-    handled_object.append(id(cls))
+    if not GlobalSwitchOption.in_notebook:
+        if app.name in handled_object:
+            handled_object[app.name].append(id(cls))
+        else:
+            handled_object[app.name] = [id(cls)]
     if inspect.isclass(cls):
         if not hasattr(cls, "__init__"):
             raise Exception("Class must have __init__ method!")
@@ -723,6 +736,10 @@ def __funix_class(cls):
 
         f.visit(ast.parse(class_source_code))
         if GlobalSwitchOption.in_notebook:
+            if f.class_app.name in handled_object:
+                handled_object[f.class_app.name].append(id(cls))
+            else:
+                handled_object[f.class_app.name] = [id(cls)]
             jupyter(f.class_app)
         return cls
     else:

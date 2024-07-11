@@ -11,6 +11,10 @@ from funix.util.network import get_unused_port_from, is_port_used
 
 
 def jupyter(app: Flask) -> None:
+    if GlobalSwitchOption.in_notebook:
+        import logging
+
+        logging.getLogger("werkzeug").setLevel(logging.ERROR)
     enable_file_service(app)
     enable_list(app)
     from IPython.display import IFrame, display
