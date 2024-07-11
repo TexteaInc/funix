@@ -64,6 +64,7 @@ def kumo_callback():
 
 
 def funix_call(
+    app_name: str,
     limiters: list[Limiter] | None,
     need_websocket: bool,
     use_pandas: bool,
@@ -125,12 +126,12 @@ def funix_call(
                 for index_or_key in pre_fill_metadata:
                     if index_or_key is PreFillEmpty:
                         set_global_variable(
-                            function_call_address + "_result",
+                            app_name + function_call_address + "_result",
                             function_call_result,
                         )
                     else:
                         set_global_variable(
-                            function_call_address + f"_{index_or_key}",
+                            app_name + function_call_address + f"_{index_or_key}",
                             function_call_result[index_or_key],
                         )
 
@@ -243,7 +244,7 @@ def funix_call(
         if secret_key:
             if "__funix_secret" in function_kwargs:
                 if (
-                    not get_secret_by_id(function_id)
+                    not get_secret_by_id(app_name, function_id)
                     == function_kwargs["__funix_secret"]
                 ):
                     incorrect_secret_error = {

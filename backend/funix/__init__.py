@@ -56,11 +56,6 @@ set_app_secret = secret.set_app_secret
 # ---- Util ----
 # ---- Exports ----
 
-if GlobalSwitchOption.in_notebook:
-    import logging
-
-    logging.getLogger("werkzeug").setLevel(logging.ERROR)
-
 __use_git = False
 """
 Funix uses git to clone repo, now this feature is optional.
@@ -203,7 +198,7 @@ def import_from_config(
             raise Exception("GitPython is not installed, please install it first!")
 
     if app_secret and isinstance(app_secret, str):
-        set_app_secret(app_secret)
+        set_app_secret(app.name, app_secret)
 
     if dir_mode:
         base_dir = file_or_module_name
@@ -418,7 +413,7 @@ def run(
     parsed_ip = ip_address(host)
     parsed_port = get_unused_port_from(port, parsed_ip)
 
-    funix_secrets = secret.export_secrets()
+    funix_secrets = secret.export_secrets(app.name)
     if funix_secrets:
         local = get_compressed_ip_address_as_str(parsed_ip)
         print("Secrets:")
