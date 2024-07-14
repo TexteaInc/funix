@@ -208,7 +208,6 @@ def parse_param(
                 widget = "json"
             else:
                 if function_arg_type_dict["type"] in [
-                    "list",
                     "dict",
                     "typing.Dict",
                 ]:
