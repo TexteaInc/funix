@@ -51,5 +51,15 @@ homepage = "https://github.com/TexteaInc/funix"
 [project.scripts]
 funix = "funix.__main__:cli_main"
 
+[tool.pyright]
+include = ["src"]
+exclude = ["**/node_modules", "**/__pycache__"]
+strict = ["src"]
+typeCheckingMode = "strict"
+
+useLibraryCodeForTypes = true
+reportMissingImports = true
+reportMissingTypeStubs = false
+
 [tool.setuptools.packages.find]
 where = ["backend"]

@@ -8,7 +8,7 @@ from importlib import import_module
 from inspect import getsource, isgeneratorfunction, signature
 from secrets import token_hex
 from types import ModuleType
-from typing import Callable, Optional, Union
+from typing import Callable, Optional, Union, ParamSpec, TypeVar
 from uuid import uuid4
 
 from funix.app import app, sock
@@ -189,6 +189,11 @@ def object_is_handled(object_id: int) -> bool:
     return object_id in handled_object
 
 
+P = ParamSpec("P")
+R = TypeVar("R")
+
+RateLimiter = Union[Limiter, list['RateLimiter'], dict[str, 'RateLimiter'], None]
+
 def funix(
     path: Optional[str] = None,
     title: Optional[str] = None,
@@ -211,7 +216,7 @@ def funix(
     pre_fill: PreFillType = None,
     menu: Optional[str] = None,
     default: bool = False,
-    rate_limit: Union[Limiter, list, dict, None] = None,
+    rate_limit: RateLimiter = None,
     reactive: ReactiveType = None,
     print_to_web: bool = False,
     autorun: bool = False,
@@ -268,7 +273,7 @@ def funix(
         Check code for details
     """
 
-    def decorator(function: Callable) -> callable:
+    def decorator(function: Callable[P, R]) -> Callable[P, R]:
         """
         Decorator for functions to convert them to web apps
 
