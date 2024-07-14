@@ -23,7 +23,7 @@ DestinationType = Optional[Literal["column", "row", "sheet"]]
 For yodas only, the destination of the page.
 """
 
-Parameters = str | tuple
+Parameters = str | tuple[str, ...]
 """
 Parameters.
 
@@ -52,9 +52,9 @@ Acceptable widgets. Implemented now.
 AcceptableWidgetsList = list(getattr(AcceptableWidgets, "__args__"))
 
 WidgetsValue = (
-    list[AcceptableWidgets | tuple[AcceptableWidgets, dict]]
+    list[AcceptableWidgets | tuple[AcceptableWidgets, dict[str, Any]]]
     | AcceptableWidgets
-    | tuple[AcceptableWidgets, dict]
+    | tuple[AcceptableWidgets, dict[str, Any]]
 )
 """
 The value of the `widgets`.
@@ -97,7 +97,7 @@ Examples:
     {("a", "b"): "cell"} -> The parameter `a` and `b` are cells.
 """
 
-WhitelistValues = list[list] | list
+WhitelistValues = list[list[str]] | list[str]
 """
 The value of the `whitelist`.
 
@@ -116,7 +116,7 @@ Examples:
                                               `["a", "b"]`, for `b` the whitelist is `["c", "d"]`.
 """
 
-ExamplesValues = list[list] | list
+ExamplesValues = list[list[str]] | list[str]
 """
 The value of the `examples`.
 
@@ -225,7 +225,7 @@ Examples:
     {"a": {"widget": "sheet"}} -> The parameter `a` has a widget, and the widget is `sheet`.
 """
 
-PreFillArgumentFrom = Callable | tuple[Callable, int]
+PreFillArgumentFrom = Callable[..., Any] | tuple[Callable[..., Any], int]
 """
 Pre-fill argument from.
 
@@ -245,7 +245,7 @@ Examples:
 
 PreFillEmpty = TypeVar("PreFillEmpty")
 
-ReactiveType = Optional[dict[str, Callable | tuple[Callable, dict[str, str]]]]
+ReactiveType = Optional[dict[str, Callable[..., Any] | tuple[Callable[..., Any], dict[str, str]]]]
 """
 Document is on the way
 """

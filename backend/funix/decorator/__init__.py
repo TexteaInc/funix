@@ -8,7 +8,7 @@ from importlib import import_module
 from inspect import getsource, isgeneratorfunction, signature
 from secrets import token_hex
 from types import ModuleType
-from typing import Callable, Optional, Union
+from typing import Callable, Optional, Union, ParamSpec, TypeVar
 from uuid import uuid4
 
 from docstring_parser import parse
@@ -195,6 +195,11 @@ def object_is_handled(app_: Flask, object_id: int) -> bool:
     return app_.name in handled_object and object_id in handled_object[app_.name]
 
 
+P = ParamSpec("P")
+R = TypeVar("R")
+
+RateLimiter = Union[Limiter, list['RateLimiter'], dict[str, 'RateLimiter'], None]
+
 def funix(
     path: Optional[str] = None,
     title: Optional[str] = None,
@@ -217,7 +222,7 @@ def funix(
     pre_fill: PreFillType = None,
     menu: Optional[str] = None,
     default: bool = False,
-    rate_limit: Union[Limiter, list, dict, None] = None,
+    rate_limit: RateLimiter = None,
     reactive: ReactiveType = None,
     print_to_web: bool = False,
     autorun: bool = False,
@@ -297,7 +302,7 @@ def funix(
     if app_.name not in handled_object:
         handled_object[app_.name] = []
 
-    def decorator(function: Callable) -> callable:
+    def decorator(function: Callable[P, R]) -> Callable[P, R]:
         """
         Decorator for functions to convert them to web apps
 
