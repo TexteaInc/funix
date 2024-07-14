@@ -148,6 +148,13 @@ def get_type_dict(annotation: any) -> dict:
                 }
             else:
                 raise Exception("Unsupported annotation")
+        elif annotation_type_class_name == "GenericAlias":
+            if getattr(annotation, "__name__") == "list":
+                return {"type": "list"}
+            elif getattr(annotation, "__name__") == "dict":
+                return {"type": "dict"}
+            else:
+                raise Exception("Unsupported annotation")
         elif annotation_type_class_name == "_SpecialGenericAlias":
             if (
                 getattr(annotation, "_name") == "Dict"
@@ -230,7 +237,10 @@ def get_type_widget_prop(
                 widget = (
                     "radio" if len(function_annotation.__args__) < 8 else "inputbox"
                 )
-            elif function_annotation_name == "List":
+            elif function_annotation_name == "List" or (
+                function_annotation_name == "list"
+                and hasattr(function_annotation, "__args__")
+            ):
                 if args := getattr(function_annotation, "__args__"):
                     if getattr(args[0], "__name__") == "Literal":
                         widget = "checkbox" if len(args[0].__args__) < 8 else "inputbox"
@@ -249,6 +259,21 @@ def get_type_widget_prop(
     elif function_arg_type_name.startswith("range"):
         return {"type": "integer", "widget": widget}
     elif function_arg_type_name == "list":
+        if type(function_annotation).__name__ == "GenericAlias" and hasattr(
+            function_annotation, "__args__"
+        ):
+            arg = getattr(function_annotation, "__args__")[0]
+            return {
+                "type": "array",
+                "widget": widget,
+                "items": get_type_widget_prop(
+                    getattr(arg, "__name__"),
+                    index + 1,
+                    function_arg_widget,
+                    widget_type,
+                    arg,
+                ),
+            }
         return {
             "type": "array",
             "items": {"type": "any", "widget": ""},
