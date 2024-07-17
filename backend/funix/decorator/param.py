@@ -311,6 +311,8 @@ def get_param_for_funix(
     pre_fill: dict | None,
     decorated_function: dict,
     session_description: str,
+    param_widget_whitelist_callable: dict,
+    param_widget_example_callable: dict,
 ):
     new_decorated_function = deepcopy(decorated_function)
     if pre_fill is not None:
@@ -330,6 +332,24 @@ def get_param_for_funix(
                 new_decorated_function["schema"]["properties"][argument_key][
                     "default"
                 ] = last_result
+    if param_widget_whitelist_callable:
+        for (
+            whitelist_,
+            whitelist_value_callable,
+        ) in param_widget_whitelist_callable.items():
+            whitelist_value = whitelist_value_callable()
+            new_decorated_function["params"][whitelist_]["whitelist"] = whitelist_value
+            new_decorated_function["schema"]["properties"][whitelist_][
+                "whitelist"
+            ] = whitelist_value
+
+    if param_widget_example_callable:
+        for example_, example_value_callable in param_widget_example_callable.items():
+            example_value = example_value_callable()
+            new_decorated_function["params"][example_]["example"] = example_value
+            new_decorated_function["schema"]["properties"][example_][
+                "example"
+            ] = example_value
     if session_description:
         des = get_global_variable(session_description)
         new_decorated_function["description"] = des
