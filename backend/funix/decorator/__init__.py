@@ -198,7 +198,8 @@ def object_is_handled(app_: Flask, object_id: int) -> bool:
 P = ParamSpec("P")
 R = TypeVar("R")
 
-RateLimiter = Union[Limiter, list['RateLimiter'], dict[str, 'RateLimiter'], None]
+RateLimiter = Union[Limiter, list["RateLimiter"], dict[str, "RateLimiter"], None]
+
 
 def funix(
     path: Optional[str] = None,
@@ -493,6 +494,8 @@ def funix(
 
             decorated_params = {}
             json_schema_props = {}
+            param_widget_whitelist_callable = {}
+            param_widget_example_callable = {}
 
             cast_to_list_flag, return_type_parsed = parse_function_annotation(
                 function_signature, figure_to_image
@@ -521,6 +524,8 @@ def funix(
                 treat_as,
                 examples,
                 whitelist,
+                param_widget_whitelist_callable,
+                param_widget_example_callable,
             )
 
             if function_docstring_parsed is not None:
@@ -631,7 +636,12 @@ def funix(
                     flask.Response: The function's parameters
                 """
                 return get_param_for_funix(
-                    app_.name, pre_fill, decorated_function, session_description
+                    app_.name,
+                    pre_fill,
+                    decorated_function,
+                    session_description,
+                    param_widget_whitelist_callable,
+                    param_widget_example_callable,
                 )
 
             decorated_function_param_getter_name = f"{function_name}_param_getter"

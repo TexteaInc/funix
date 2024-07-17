@@ -97,13 +97,14 @@ Examples:
     {("a", "b"): "cell"} -> The parameter `a` and `b` are cells.
 """
 
-WhitelistValues = list[list[str]] | list[str]
+WhitelistValues = list[list[str]] | list[str] | Callable[..., Any]
 """
 The value of the `whitelist`.
 
 Types:
     list[list]: The whitelist, for example: [["a", "b"], ["c", "d"]].
     list: The whitelist, for example: ["a", "b"].
+    function: return a list of values.
 """
 
 WhitelistType = Optional[dict[Parameters, WhitelistValues]]
@@ -116,13 +117,14 @@ Examples:
                                               `["a", "b"]`, for `b` the whitelist is `["c", "d"]`.
 """
 
-ExamplesValues = list[list[str]] | list[str]
+ExamplesValues = list[list[str]] | list[str] | Callable[..., Any]
 """
 The value of the `examples`.
 
 Types:
     list[list]: The examples, for example: [["a", "b"], ["c", "d"]].
     list: The examples, for example: ["a", "b"].
+    function: return a list of values.
 """
 
 ExamplesType = Optional[dict[Parameters, ExamplesValues]]
@@ -245,7 +247,9 @@ Examples:
 
 PreFillEmpty = TypeVar("PreFillEmpty")
 
-ReactiveType = Optional[dict[str, Callable[..., Any] | tuple[Callable[..., Any], dict[str, str]]]]
+ReactiveType = Optional[
+    dict[str, Callable[..., Any] | tuple[Callable[..., Any], dict[str, str]]]
+]
 """
 Document is on the way
 """

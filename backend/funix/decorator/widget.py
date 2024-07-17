@@ -217,6 +217,8 @@ def widget_parse(
     treat_as: dict,
     examples: dict,
     whitelist: dict,
+    param_widget_whitelist_callable: dict,
+    param_widget_example_callable: dict,
 ):
     function_params_name: list[str] = list(function_params.keys())
 
@@ -235,6 +237,15 @@ def widget_parse(
             function_name,
             i[2],
         )
+    if examples:
+        for example, example_value in examples.items():
+            if callable(example_value):
+                param_widget_example_callable[example] = example_value
+
+    if whitelist:
+        for whitelist_, whitelist_value in whitelist.items():
+            if callable(whitelist_value):
+                param_widget_whitelist_callable[whitelist_] = whitelist_value
 
 
 def parse_argument_config(
