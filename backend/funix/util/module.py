@@ -104,7 +104,11 @@ def handle_module(
         is_cls = isclass(module_member)
         if is_func or is_cls:
             if getsourcefile_safe(module_member) != module.__file__:
-                continue
+                if hasattr(module_member, "__wrapped__"):
+                    if getsourcefile_safe(module_member.__wrapped__) != module.__file__:
+                        continue
+                else:
+                    continue
             in_funix = (
                 decorator.object_is_handled(app, id(module_member))
                 or id(module_member) in hint.custom_cls_ids
