@@ -42,6 +42,8 @@ export default function OutputDataframe(props: {
   return (
     <Box sx={{ height: 400, width: "100%" }}>
       <DataGrid
+        pagination
+        autoPageSize
         rows={newDataframe}
         columns={columns}
         components={{
