@@ -98,8 +98,9 @@ def funix_call(
                     big_dict = {}
                     get_args = dataframe_metadata[need_argument]
                     for get_arg in get_args:
-                        big_dict[get_arg] = deepcopy(function_kwargs[get_arg])
-                        del function_kwargs[get_arg]
+                        if get_arg in function_kwargs:
+                            big_dict[get_arg] = deepcopy(function_kwargs[get_arg])
+                            del function_kwargs[get_arg]
                     function_kwargs[need_argument] = pandas_module.DataFrame(big_dict)
         if function_id in get_parse_type_metadata():
             for func_arg, func_arg_type_class in get_parse_type_metadata()[
