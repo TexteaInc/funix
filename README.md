@@ -580,10 +580,9 @@ For debugging:
 Our table widget uses advanced features in MUI Pro. If you have a MUI Pro license, you can build the frontend with MUI Pro by following the steps below:
 
 1. Install Node.js and Yarn;
-2. Create a file called `.env` in the `frontend` folder;
-3. Add `MUI_PRO_LICENSE_KEY=[your_key]` to the file;
-4. Run `yarn install && yarn funix:build` to build the frontend;
-5. Done!
+2. Run `export MUI_PRO_LICENSE_KEY=[MUI_KEY]`;
+3. Run `yarn install && yarn funix:build` to build the frontend;
+4. Done!
 
 ### Command line options
 
