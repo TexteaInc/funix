@@ -586,10 +586,9 @@ def gray_it(image: funix.hint.BytesImage) -> IPython.display.Image:
 我们的表格组件可以使用 MUI Pro 中的高级功能。如果你有一个 MUI Pro 的证书许可，你可以使用自己的 MUI Pro 证书并构建前端：
 
 1. 确保安装了 Node.js 和 Yarn；
-2. 在 `frontend` 文件夹中创建 `.env` 文件；
-3. 添加 `MUI_PRO_LICENSE_KEY=[your_key]` 到你的文件；
-4. 运行 `yarn install && yarn funix:build` 构建前端；
-5. 万事大吉！
+2. 运行 `export MUI_PRO_LICENSE_KEY=[MUI_KEY]`；
+3. 运行 `yarn install && yarn funix:build` 构建前端；
+4. 万事大吉！
 
 ### 命令行选项
 
