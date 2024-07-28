@@ -315,6 +315,8 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
                       Column Preview
                     </Typography>
                     <DataGrid
+                      pagination
+                      autoPageSize
                       columns={[{ field: elementProps.name, minWidth: 350 }]}
                       rows={candidateRows}
                       sx={{ minHeight: 400 }}
@@ -956,6 +958,8 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
             </Stack>
             <Box sx={{ height: 400, mt: 1, paddingRight: 1 }}>
               <DataGrid
+                pagination
+                autoPageSize
                 columns={columns}
                 columnVisibilityModel={{
                   id: false,
