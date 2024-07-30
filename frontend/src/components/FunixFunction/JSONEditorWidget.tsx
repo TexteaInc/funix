@@ -1,10 +1,10 @@
-import { WidgetProps } from "@rjsf/core";
 import React, { useEffect } from "react";
 import type { InteractionProps } from "react-json-view";
 import { Stack } from "@mui/material";
 import { castValue, getInitValue } from "../Common/ValueOperation";
 import MarkdownDiv from "../Common/MarkdownDiv";
 import ThemeReactJson from "../Common/ThemeReactJson";
+import { WidgetProps } from "@rjsf/utils";
 
 interface JSONEditorWidgetInterface {
   widget: WidgetProps;
@@ -27,13 +27,13 @@ const JSONEditorWidget = (props: JSONEditorWidgetInterface) => {
   }
 
   const [src, setSrc] = React.useState<object>(
-    props.data || props.widget.value || props.widget.schema.default || value
+    props.data || props.widget.value || props.widget.schema.default || value,
   );
 
   useEffect(() => {
     if (props.data === src) return;
     setSrc(
-      props.data || props.widget.value || props.widget.schema.default || value
+      props.data || props.widget.value || props.widget.schema.default || value,
     );
   }, [props.data]);
 
@@ -51,7 +51,7 @@ const JSONEditorWidget = (props: JSONEditorWidgetInterface) => {
         if (key in props.keys) {
           formatDict[key] = castValue(
             JSONTypedUpdatedSource[key],
-            props.keys[key]
+            props.keys[key],
           );
         }
       }

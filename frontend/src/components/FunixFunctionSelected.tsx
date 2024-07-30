@@ -22,7 +22,7 @@ const FunixFunctionSelected: React.FC<FunctionSelectedProps> = ({
   const [{ selectedFunction }] = useAtom(storeAtom);
   const { pathname } = useLocation();
   const pathParams = useState(
-    pathname.split("/").filter((value) => value !== "")
+    pathname.split("/").filter((value) => value !== ""),
   );
 
   if (pathParams[0].length !== 0 && !selectedFunction) {

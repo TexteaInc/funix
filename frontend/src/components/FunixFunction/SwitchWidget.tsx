@@ -1,4 +1,3 @@
-import { WidgetProps } from "@rjsf/core";
 import {
   Checkbox,
   FormControl,
@@ -8,10 +7,11 @@ import {
 } from "@mui/material";
 import React, { useEffect } from "react";
 import MarkdownDiv from "../Common/MarkdownDiv";
+import { WidgetProps } from "@rjsf/utils";
 
 const SwitchWidget = (props: WidgetProps) => {
   const [checked, setChecked] = React.useState<boolean>(
-    !!(props.value || props.schema.default)
+    !!(props.value || props.schema.default),
   );
 
   useEffect(() => {

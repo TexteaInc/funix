@@ -6,9 +6,7 @@ import {
   FormControlLabel,
   Grid,
 } from "@mui/material";
-import Card from "@mui/material/Card"; // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import Form from "@rjsf/material-ui/v5";
+import Card from "@mui/material/Card";
 import React, { useEffect, useRef, useState } from "react";
 import {
   callFunctionRaw,
@@ -24,6 +22,9 @@ import { storeAtom } from "../../store";
 import useFunixHistory from "../../shared/useFunixHistory";
 import { useSnackbar } from "notistack";
 import _ from "lodash";
+import { Form } from "@rjsf/mui";
+import validator from "@rjsf/validator-ajv8";
+import { RJSFSchema } from "@rjsf/utils";
 
 const InputPanel = (props: {
   detail: FunctionDetail;
@@ -176,11 +177,11 @@ const InputPanel = (props: {
             __funix_secret: functionSecret[props.preview.path],
           }
         : appSecret !== null
-        ? {
-            ...form,
-            __funix_secret: appSecret,
-          }
-        : form
+          ? {
+              ...form,
+              __funix_secret: appSecret,
+            }
+          : form
       : form;
   };
 
@@ -218,7 +219,7 @@ const InputPanel = (props: {
     } else {
       const response = await callFunctionRaw(
         new URL(`/call/${props.detail.id}`, props.backend),
-        newForm
+        newForm,
       );
       const result = response.toString();
       props.setResponse(() => result);
@@ -271,7 +272,7 @@ const InputPanel = (props: {
                 props.preview.name,
                 props.preview.path,
                 newForm,
-                currentOutput
+                currentOutput,
               );
             } catch (e) {
               enqueueSnackbar("Failed to save history, check your console", {
@@ -285,7 +286,7 @@ const InputPanel = (props: {
     } else {
       const response = await callFunctionRaw(
         new URL(`/call/${props.detail.id}`, props.backend),
-        newForm
+        newForm,
       );
       const result = response.toString();
       props.setResponse(() => result);
@@ -312,7 +313,7 @@ const InputPanel = (props: {
             props.preview.name,
             props.preview.path,
             newForm,
-            result
+            result,
           );
         } catch (e) {
           enqueueSnackbar("Failed to save history, check your console", {
@@ -338,12 +339,12 @@ const InputPanel = (props: {
         }}
       >
         <Form
-          schema={props.detail.schema}
+          validator={validator}
+          schema={props.detail.schema as RJSFSchema}
           formData={form}
           onChange={handleChange}
           widgets={widgets}
           uiSchema={uiSchema}
-          safeRenderCompletion
         />
         <Grid
           container

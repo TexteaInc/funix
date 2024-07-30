@@ -13,8 +13,7 @@ export default function OutputPlot(props: {
     }
     if (document.querySelector(`#plot-${props.indexId}`)?.innerHTML === "") {
       const plot = JSON.parse(props.plotCode);
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
+      // @ts-expect-error: i got mpld3 here
       mpld3.draw_figure(`plot-${props.indexId}`, plot);
       drawLock.current = true;
     }

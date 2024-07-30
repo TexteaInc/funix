@@ -49,22 +49,21 @@ export type UnionToIntersection<U> = (
   ? I
   : never;
 
-export type LastOf<T> = UnionToIntersection<
-  T extends any ? () => T : never
-> extends () => infer R
-  ? R
-  : never;
+export type LastOf<T> =
+  UnionToIntersection<T extends any ? () => T : never> extends () => infer R
+    ? R
+    : never;
 
 export type Push<T extends any[], V> = [...T, V];
 export type TupleUnion<
   T,
   L = LastOf<T>,
-  N = [T] extends [never] ? true : false
+  N = [T] extends [never] ? true : false,
 > = true extends N ? [] : Push<TupleUnion<Exclude<T, L>>, L>;
 export type ObjValueTuple<
   T,
   KS extends any[] = TupleUnion<keyof T>,
-  R extends any[] = []
+  R extends any[] = [],
 > = KS extends [infer K, ...infer KT]
   ? ObjValueTuple<T, KT, [...R, T[K & keyof T]]>
   : R;
@@ -73,14 +72,14 @@ export type InferIOItemToJSType<T extends IOItem> = T extends { type: infer U }
   ? U extends CellTypes["Array"]
     ? unknown[]
     : U extends CellTypes["Boolean"]
-    ? boolean
-    : U extends CellTypes["Json"]
-    ? object
-    : U extends CellTypes["Number"]
-    ? number
-    : U extends CellTypes["String"]
-    ? string
-    : never
+      ? boolean
+      : U extends CellTypes["Json"]
+        ? object
+        : U extends CellTypes["Number"]
+          ? number
+          : U extends CellTypes["String"]
+            ? string
+            : never
   : never;
 
 export type Arg<T extends unknown[]> = T extends [infer U, ...infer V]
@@ -98,7 +97,7 @@ export interface SheetFunction<
   Type extends SheetFunctionType = SheetFunctionType,
   Inputs extends IO = IO,
   Outputs extends IO = IO,
-  Config extends Record<string, unknown> = Record<string, any>
+  Config extends Record<string, unknown> = Record<string, any>,
 > {
   /**
    * UUID4
@@ -118,7 +117,7 @@ export const createSheetFunction = <
   Type extends SheetFunctionType,
   Inputs extends IO,
   Outputs extends IO,
-  Config extends Record<string, unknown>
+  Config extends Record<string, unknown>,
 >(
   id: string,
   name: string,
@@ -128,7 +127,7 @@ export const createSheetFunction = <
   defaultConfig: Config,
   fn: SheetFunction<Type, Inputs, Outputs, Config>["fn"],
   configPanel?: SheetFunction<Type, Inputs, Outputs, Config>["configPanel"],
-  description?: SheetFunction<Type, Inputs, Outputs, Config>["description"]
+  description?: SheetFunction<Type, Inputs, Outputs, Config>["description"],
 ): SheetFunction<Type, Inputs, Outputs, Config> => {
   return {
     id,
@@ -172,5 +171,5 @@ export const getExample = () =>
       };
     },
     undefined,
-    undefined
+    undefined,
   );

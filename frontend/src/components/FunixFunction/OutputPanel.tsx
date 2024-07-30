@@ -15,7 +15,7 @@ import {
   Typography,
 } from "@mui/material";
 import { GridRowModel, GridToolbar } from "@mui/x-data-grid";
-import React from "react";
+import React, { ReactElement } from "react";
 import { BaseType, FunctionDetail, ReturnType } from "../../shared";
 import OutputError from "./OutputComponents/OutputError";
 import { outputRow } from "json-schema";
@@ -61,7 +61,7 @@ const OutputPanel = (props: {
       try {
         const parsedResponse: object = JSON.parse(response);
         if (!Array.isArray(parsedResponse)) {
-          if (parsedResponse.hasOwnProperty("error_body")) {
+          if ("error_body" in parsedResponse) {
             return <OutputError error={parsedResponse as any} />;
           }
         }
@@ -120,8 +120,8 @@ const OutputPanel = (props: {
                     id: index,
                     value: rowValue,
                   }))}
-                  components={{
-                    Toolbar: GridToolbar,
+                  slots={{
+                    toolbar: GridToolbar,
                   }}
                   sx={{ minHeight: 400 }}
                 />
@@ -179,8 +179,8 @@ const OutputPanel = (props: {
                     }))}
                     rows={rows}
                     sx={{ minHeight: 400 }}
-                    components={{
-                      Toolbar: GridToolbar,
+                    slots={{
+                      toolbar: GridToolbar,
                     }}
                   />
                 );
@@ -213,8 +213,8 @@ const OutputPanel = (props: {
   const getTypedElement = (
     elementType: ReturnType,
     response: any,
-    index: number
-  ): JSX.Element => {
+    index: number,
+  ) => {
     switch (elementType) {
       case "Figure":
         return (
@@ -291,7 +291,7 @@ const OutputPanel = (props: {
       );
     } else {
       if (
-        typeof returnType !== undefined &&
+        returnType !== undefined &&
         (Array.isArray(returnType) || typeof returnType === "string")
       ) {
         const listReturnType =
@@ -303,11 +303,11 @@ const OutputPanel = (props: {
         if (!Array.isArray(parsedResponse))
           return <GuessingDataView response={response} />;
         const output: outputRow[] = props.detail.schema.output_layout;
-        const layout: JSX.Element[] = [];
+        const layout: ReactElement[] = [];
         output.forEach((row) => {
-          const rowElements: JSX.Element[] = [];
+          const rowElements: ReactElement[] = [];
           row.forEach((item) => {
-            let itemElement: JSX.Element;
+            let itemElement: ReactElement;
             switch (item.type) {
               case "markdown":
                 itemElement = (
@@ -336,7 +336,9 @@ const OutputPanel = (props: {
                 itemElement =
                   item.content !== undefined ? (
                     <Divider textAlign={item.position || "left"}>
-                      {item.content}
+                      {Array.isArray(item.content)
+                        ? item.content[0]
+                        : item.content}
                     </Divider>
                   ) : (
                     <Divider />
@@ -383,7 +385,7 @@ const OutputPanel = (props: {
                         {getTypedElement(
                           listReturnType[index],
                           parsedResponse[index],
-                          index
+                          index,
                         )}
                       </>
                     );
@@ -392,7 +394,7 @@ const OutputPanel = (props: {
                   itemElement = getTypedElement(
                     listReturnType[item.index || 0],
                     parsedResponse[item.index || 0],
-                    item.index || 0
+                    item.index || 0,
                   );
                 }
                 break;
@@ -402,13 +404,13 @@ const OutputPanel = (props: {
             rowElements.push(
               <Grid2 xs={item.width || true} mdOffset={item.offset}>
                 {itemElement}
-              </Grid2>
+              </Grid2>,
             );
           });
           layout.push(
             <Grid2 container spacing={2} alignItems="center">
-              {rowElements}
-            </Grid2>
+              {rowElements.map((rowElement) => rowElement)}
+            </Grid2>,
           );
         });
         const columns = parsedResponse
@@ -426,8 +428,8 @@ const OutputPanel = (props: {
           });
         return (
           <>
-            {layout}
-            {columns}
+            {layout.map((item) => item)}
+            {columns.map((item) => item)}
           </>
         );
       } else if (returnType === null) {

@@ -39,7 +39,7 @@ export function matchType(type: BaseType): CellType {
     case "int": {
       return cellTypes.Number;
     }
-    case "list": {
+    case `list[]`: {
       return cellTypes.Array;
     }
     case "dict": {
@@ -94,7 +94,7 @@ export type GetListResponse = {
 
 export async function getList(
   url: URL,
-  init?: RequestInit
+  init?: RequestInit,
 ): Promise<GetListResponse> {
   return f(url, {
     ...init,
@@ -160,7 +160,7 @@ export type FunctionDetail = {
 
 export async function getParam(
   url: URL,
-  init?: RequestInit
+  init?: RequestInit,
 ): Promise<FunctionDetail> {
   return f(url, {
     ...init,
@@ -188,7 +188,7 @@ export type PostCallResponse = PostCallResponseSuccess | PostCallResponseError;
 export async function callFunction(
   url: URL,
   body: CallBody,
-  init?: RequestInit
+  init?: RequestInit,
 ): Promise<PostCallResponse> {
   return f(url, {
     ...init,
@@ -205,7 +205,7 @@ export async function callFunction(
 export async function callFunctionRaw(
   url: URL,
   body: CallBody,
-  init?: RequestInit
+  init?: RequestInit,
 ): Promise<string | PostCallResponseError> {
   return fetch(url, {
     ...init,
@@ -222,7 +222,7 @@ export async function callFunctionRaw(
 export async function verifyToken(
   url: URL,
   secret: string,
-  init?: RequestInit
+  init?: RequestInit,
 ): Promise<boolean> {
   return f(url, {
     ...init,
@@ -242,7 +242,7 @@ export function exportHistories(histories: History[]) {
   a.href = URL.createObjectURL(
     new Blob([JSON.stringify(histories, null, 2)], {
       type: "application/json",
-    })
+    }),
   );
   a.setAttribute("download", `${now}_Histories_Export.json`);
   document.body.appendChild(a);
@@ -256,7 +256,7 @@ export function exportHistory(history: History) {
   a.href = URL.createObjectURL(
     new Blob([JSON.stringify(history, null, 2)], {
       type: "application/json",
-    })
+    }),
   );
   a.setAttribute("download", `${now}_${history.functionName}_Export.json`);
   document.body.appendChild(a);
@@ -283,8 +283,7 @@ function recursiveSort(arr: (string | object)[]): (string | object)[] {
   for (const item of arr) {
     if (typeof item === "object") {
       const key = Object.keys(item)[0];
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
+      // @ts-expect-error: it works, so...
       item[key] = recursiveSort(item[key]);
     }
   }
@@ -298,12 +297,12 @@ export function objArraySort(obj: object[]): object[] {
   }
   const result: object[] = [];
   const topLevelObjects = obj.filter(
-    (item) => Object.keys(item).length === 1 && Object.keys(item)[0] === ""
+    (item) => Object.keys(item).length === 1 && Object.keys(item)[0] === "",
   );
   const topLevelArray: Record<string, any> = {};
   if (topLevelObjects.length > 0) {
     topLevelArray[""] = ((topLevelObjects[0] as any)[""] as string[]).sort(
-      (a, b) => a.localeCompare(b)
+      (a, b) => a.localeCompare(b),
     );
   }
 
@@ -314,8 +313,7 @@ export function objArraySort(obj: object[]): object[] {
     .forEach((item) => {
       if (Object.keys(item).length === 1 && Object.keys(item)[0] !== "") {
         const key = Object.keys(item)[0];
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
+        // @ts-expect-error: it works, so...
         const value = item[key];
         result.push({
           [key]: recursiveSort(value),

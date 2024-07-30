@@ -92,7 +92,7 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
         selectedFunction: functionPreview,
       }));
     },
-    []
+    [],
   );
 
   useEffect(() => {
@@ -103,7 +103,7 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
     }));
     async function queryData() {
       const { list, default_function } = await getList(
-        new URL("/list", backend)
+        new URL("/list", backend),
       );
       setState(list);
       setStore((store) => ({
@@ -117,7 +117,7 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
       } else {
         if (default_function !== null) {
           const preview = list.filter(
-            (preview) => preview.id === default_function
+            (preview) => preview.id === default_function,
           );
           if (preview.length === 1) {
             handleFetchFunctionDetail(preview[0]);
@@ -159,7 +159,7 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
 
   const changeRadioGroupValueById = (functionId: string) => {
     const selectedFunctionPreview = state.filter(
-      (preview) => preview.id === functionId
+      (preview) => preview.id === functionId,
     );
     if (selectedFunctionPreview.length !== 1) {
       setRadioGroupValue(null);
@@ -172,7 +172,7 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
 
   const changeRadioGroupValueByPath = (functionPath: string) => {
     const selectedFunctionPreview = state.filter(
-      (preview) => preview.path === functionPath
+      (preview) => preview.path === functionPath,
     );
     if (selectedFunctionPreview.length !== 1) {
       setRadioGroupValue(null);
@@ -188,7 +188,7 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
     if (pathParam !== radioGroupValue) {
       const functionPath = decodeURIComponent(pathParam);
       const selectedFunctionPreview = state.filter(
-        (preview) => preview.path === functionPath
+        (preview) => preview.path === functionPath,
       );
       if (selectedFunctionPreview.length !== 0) {
         setStore((store) => ({
@@ -287,9 +287,7 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
           onClick={() => {
             setTreeState((state) => ({
               ...state,
-              [`${k}${v}`]: state.hasOwnProperty(`${k}${v}`)
-                ? !state[`${k}${v}`]
-                : true,
+              [`${k}${v}`]: `${k}${v}` in state ? !state[`${k}${v}`] : true,
             }));
           }}
           sx={{
@@ -302,7 +300,7 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
               wordWrap: "break-word",
             }}
           />
-          {treeState.hasOwnProperty(`${k}${v}`) ? (
+          {`${k}${v}` in treeState ? (
             treeState[`${k}${v}`] ? (
               <ExpandLess />
             ) : (
@@ -313,9 +311,7 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
           )}
         </ListItemButton>
         <Collapse
-          in={
-            treeState.hasOwnProperty(`${k}${v}`) ? treeState[`${k}${v}`] : false
-          }
+          in={`${k}${v}` in treeState ? treeState[`${k}${v}`] : false}
           timeout="auto"
           unmountOnExit
         >

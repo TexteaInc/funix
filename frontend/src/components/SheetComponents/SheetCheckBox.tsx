@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 
 export default function SheetCheckBox(
-  props: SheetInterface & { isSwitch: boolean }
+  props: SheetInterface & { isSwitch: boolean },
 ) {
   const [checked, setChecked] = React.useState<boolean>(props.params.value);
 
@@ -22,7 +22,7 @@ export default function SheetCheckBox(
     props.customChange(
       props.params.row.id,
       props.params.field,
-      event.target.checked
+      event.target.checked,
     );
   };
 

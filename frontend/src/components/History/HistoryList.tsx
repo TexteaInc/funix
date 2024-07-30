@@ -69,7 +69,7 @@ const HistoryList = (props: { isOpen: boolean }) => {
   const filteredHistories = histories.filter(
     (history) =>
       history.functionName === selectedFunction.name &&
-      history.functionPath === selectedFunction.path
+      history.functionPath === selectedFunction.path,
   );
 
   const handleRenameDialogClose = () => {
@@ -99,7 +99,7 @@ const HistoryList = (props: { isOpen: boolean }) => {
                 setHistoryNameAndPath(
                   selectedHistory.timestamp,
                   tempRename,
-                  selectedHistory.functionPath
+                  selectedHistory.functionPath,
                 );
               }
               handleRenameDialogClose();

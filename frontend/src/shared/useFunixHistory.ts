@@ -23,7 +23,7 @@ const getHistoryOrMakeAnEmptyOne = async (
   keys: string[],
   functionName: string,
   functionPath: string,
-  timestamp: number
+  timestamp: number,
 ) => {
   return keys.indexOf(historyKey) !== -1
     ? await localforage.getItem<History>(historyKey)
@@ -58,7 +58,7 @@ const useFunixHistory = () => {
     timestamp: number,
     functionName: string,
     functionPath: string,
-    input: Record<any, any>
+    input: Record<any, any>,
   ) => {
     const historyKey = `funix-history-${timestamp}`;
 
@@ -67,7 +67,7 @@ const useFunixHistory = () => {
       await localforage.keys(),
       functionName,
       functionPath,
-      timestamp
+      timestamp,
     );
 
     if (history !== null) {
@@ -82,7 +82,7 @@ const useFunixHistory = () => {
     timestamp: number,
     functionName: string,
     functionPath: string,
-    output: PostCallResponse | string
+    output: PostCallResponse | string,
   ) => {
     const historyKey = `funix-history-${timestamp}`;
 
@@ -100,7 +100,7 @@ const useFunixHistory = () => {
       await localforage.keys(),
       functionName,
       functionPath,
-      timestamp
+      timestamp,
     );
 
     if (history !== null) {
@@ -116,7 +116,7 @@ const useFunixHistory = () => {
     functionName: string,
     functionPath: string,
     input: Record<any, any>,
-    output: string | PostCallResponse
+    output: string | PostCallResponse,
   ) => {
     // await setInput(timestamp, functionName, functionPath, input);
     // await setOutput(timestamp, functionName, functionPath, output);
@@ -136,7 +136,7 @@ const useFunixHistory = () => {
       await localforage.keys(),
       functionName,
       functionPath,
-      timestamp
+      timestamp,
     );
 
     if (history !== null) {
@@ -162,7 +162,7 @@ const useFunixHistory = () => {
   const setHistoryNameAndPath = (
     timestamp: number,
     name: string,
-    path: string
+    path: string,
   ) => {
     localforage.keys().then((keys) => {
       const historyKey = `funix-history-${timestamp}`;
@@ -184,7 +184,7 @@ const useFunixHistory = () => {
                   "Cannot save input to history, check your console for more information",
                   {
                     variant: "error",
-                  }
+                  },
                 );
                 console.error("Funix History Error:");
                 console.error(error);

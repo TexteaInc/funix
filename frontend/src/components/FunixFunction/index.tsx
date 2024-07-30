@@ -1,6 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 import { FunctionDetail, FunctionPreview, verifyToken } from "../../shared";
 import { Alert, AlertTitle, Box, Grid, Stack } from "@mui/material";
 import { useAtom } from "jotai";
@@ -46,8 +44,8 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
         preview.path in functionSecret
           ? functionSecret[preview.path]
           : appSecret !== null
-          ? appSecret
-          : "";
+            ? appSecret
+            : "";
       verifyToken(new URL(`/verify/${preview.id}`, backend), token || "")
         .then((result) => {
           setVerified(result);
@@ -260,7 +258,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
                   document.body.addEventListener(
                     "pointermove",
                     handleResize,
-                    true
+                    true,
                   );
                   document.body.addEventListener("pointerup", () => {
                     document.body.style.cursor = "default";
@@ -268,7 +266,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
                     document.body.removeEventListener(
                       "pointermove",
                       handleResize,
-                      true
+                      true,
                     );
                   });
                 }}

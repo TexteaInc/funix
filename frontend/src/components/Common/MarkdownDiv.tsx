@@ -126,8 +126,8 @@ const MarkdownCode = (props: {
     ? props.className.startsWith("```")
       ? props.className.substring(3)
       : props.className.startsWith("language-")
-      ? props.className.substring(9)
-      : "plaintext"
+        ? props.className.substring(9)
+        : "plaintext"
     : "plaintext";
 
   return (
@@ -193,7 +193,13 @@ export default function MarkdownDiv(props: MarkdownDivProps) {
       ]}
       components={{
         p: "span",
-        pre: React.Fragment,
+        pre: (props) => (
+          <MarkdownCode
+            children={props.children}
+            className={props.className}
+            inline={false}
+          />
+        ),
         ul: (props) =>
           isRenderInline ? (
             <ul className="text-style">{props.children}</ul>
@@ -284,7 +290,7 @@ export default function MarkdownDiv(props: MarkdownDivProps) {
         code: (props) => (
           <MarkdownCode
             children={props.children}
-            inline={props.inline}
+            inline={true}
             className={props.className}
           />
         ),
@@ -325,14 +331,14 @@ export default function MarkdownDiv(props: MarkdownDivProps) {
         input: (props) => (
           <MarkdownCheckbox disabled={props.disabled} checked={props.checked} />
         ),
-        thead: TableHead,
-        tbody: TableBody,
+        thead: TableHead as any,
+        tbody: TableBody as any,
         th: TableCell as any,
-        tr: TableRow,
+        tr: TableRow as any,
         td: TableCell as any,
         table: (props) => (
           <TableContainer component={Paper} elevation={0}>
-            <Table {...props} size="small" />
+            <Table {...(props as any)} size="small" />
           </TableContainer>
         ),
       }}

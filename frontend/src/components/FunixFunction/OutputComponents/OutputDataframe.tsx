@@ -5,7 +5,7 @@ import { Box } from "@mui/material";
 export default function OutputDataframe(props: {
   dataframe: { [key: string]: any }[];
 }) {
-  const hasId = props.dataframe[0].hasOwnProperty("id");
+  const hasId = "id" in props.dataframe[0];
   const columns: GridColDef[] = [];
   const newDataframe: { [key: string]: any }[] = [];
 
@@ -44,8 +44,8 @@ export default function OutputDataframe(props: {
       <DataGrid
         rows={newDataframe}
         columns={columns}
-        components={{
-          Toolbar: GridToolbar,
+        slots={{
+          toolbar: GridToolbar,
         }}
         checkboxSelection
         initialState={{

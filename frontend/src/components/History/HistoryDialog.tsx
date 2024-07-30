@@ -111,7 +111,7 @@ const HistoryDialog = (props: {
   const [isAscending, setAscending] = React.useState(true);
   const [clearDialogOpen, setClearDialogOpen] = React.useState(false);
   const [selectedHistory, setSelectedHistory] = React.useState<History | null>(
-    null
+    null,
   );
   const [renameDialogOpen, setRenameDialogOpen] = React.useState(false);
   const [tempRename, setTempRename] = React.useState("");
@@ -227,7 +227,7 @@ const HistoryDialog = (props: {
                 setHistoryNameAndPath(
                   selectedHistory.timestamp,
                   tempRename,
-                  selectedHistory.functionPath
+                  selectedHistory.functionPath,
                 );
               }
               setRenameDialogOpen(false);
@@ -605,7 +605,7 @@ const HistoryDialog = (props: {
                   onRowsPerPageChange={(event) => {
                     const newRowsPerPage = parseInt(event.target.value, 10);
                     const newPage = Math.floor(
-                      (page * rowsPerPage) / newRowsPerPage
+                      (page * rowsPerPage) / newRowsPerPage,
                     );
                     setRowsPerPage(newRowsPerPage);
                     setPage(newPage);

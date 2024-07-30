@@ -9,8 +9,8 @@ const ThemeReactJson = (props: ReactJsonViewProps) => {
     "theme" in props
       ? props.theme
       : muiTheme.palette.mode === "dark"
-      ? "summerfruit"
-      : "rjv-default";
+        ? "summerfruit"
+        : "rjv-default";
 
   return <ReactJson {...props} theme={theme} />;
 };

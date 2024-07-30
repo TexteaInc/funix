@@ -38,10 +38,10 @@ export const getHistoryInfo = (history: History): HistoryInfoProps => {
   if (history.output !== null && history.output !== undefined) {
     try {
       let output = history.output;
-      if (typeof history.output === "string") {
-        output = JSON.parse(history.output);
+      if (typeof output === "string") {
+        output = JSON.parse(output);
       }
-      if (output.hasOwnProperty("error_body")) {
+      if (typeof output === "object" && "error_body" in output) {
         status = HistoryEnum.Error;
       }
     } catch {
@@ -59,8 +59,8 @@ export const FunixHistoryStepper = (props: { status: HistoryEnum }) => {
     props.status === HistoryEnum.Done || props.status === HistoryEnum.Error
       ? 2
       : props.status === HistoryEnum.Pending
-      ? 1
-      : 0;
+        ? 1
+        : 0;
   return (
     <Stepper
       activeStep={activeStep}
@@ -83,8 +83,8 @@ export const getHistoryStatusColor = (status: HistoryEnum) => {
   return status === HistoryEnum.Done
     ? "success"
     : status === HistoryEnum.Error
-    ? "error"
-    : "primary";
+      ? "error"
+      : "primary";
 };
 
 export const getHistoryStatusIcon = (status: HistoryEnum) => {

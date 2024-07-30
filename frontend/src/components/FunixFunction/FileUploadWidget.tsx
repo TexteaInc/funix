@@ -1,4 +1,3 @@
-import { WidgetProps } from "@rjsf/core";
 import { DropzoneOptions, useDropzone } from "react-dropzone";
 import React, { useCallback, useEffect, useLayoutEffect } from "react";
 import {
@@ -33,6 +32,7 @@ import { useAtom } from "jotai";
 import { storeAtom } from "../../store";
 import { enqueueSnackbar } from "notistack";
 import FunixRecorder from "../../shared/media";
+import { WidgetProps } from "@rjsf/utils";
 
 interface FileUploadWidgetInterface {
   widget: WidgetProps;
@@ -134,7 +134,7 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
               "Files are limited to 5, use WebAPI to call this function",
               {
                 variant: "warning",
-              }
+              },
             );
           } else {
             setFiles([...files, ...acceptedFiles]);
@@ -145,7 +145,7 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
           }
         }
       },
-      [files]
+      [files],
     ),
   };
 
@@ -172,7 +172,7 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
         `${file.file.name} is bigger than 15MB, use WebAPI to call this function`,
         {
           variant: "warning",
-        }
+        },
       );
     });
   }, [fileRejections]);
@@ -186,7 +186,7 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
         setFiles([base64stringToFile(data)]);
       } else {
         const newFiles = (data as string[]).map((data) =>
-          base64stringToFile(data)
+          base64stringToFile(data),
         );
         setFiles(newFiles);
       }
@@ -252,7 +252,7 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
               onClick={() => {
                 const canvas = document.createElement("canvas");
                 const video = document.getElementById(
-                  "videoPreview"
+                  "videoPreview",
                 ) as HTMLVideoElement;
                 const videoRect = video.getBoundingClientRect();
                 canvas.width = videoRect.width;

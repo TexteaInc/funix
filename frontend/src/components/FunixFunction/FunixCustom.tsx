@@ -1,6 +1,6 @@
 import { Checkbox, Rating, Slider, Switch, TextField } from "@mui/material";
 import React from "react";
-import { WidgetProps } from "@rjsf/core";
+import { WidgetProps } from "@rjsf/utils";
 
 export interface FunixCustomProps {
   component: string;

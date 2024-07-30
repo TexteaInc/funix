@@ -1,4 +1,3 @@
-import { ObjectFieldProps } from "@rjsf/core/lib/components/fields/ObjectField";
 import {
   Box,
   Button,
@@ -15,33 +14,27 @@ import {
   Select,
   SelectChangeEvent,
   Stack,
-  Typography,
+  Typography
 } from "@mui/material";
-import React, { SyntheticEvent, useEffect, useRef, useState } from "react";
+import React, { ReactElement, SyntheticEvent, useEffect, useRef, useState } from "react";
 import SchemaField from "@rjsf/core/lib/components/fields/SchemaField";
 import {
-  GridCellEditCommitParams,
   GridCellParams,
   GridColDef,
+  GridColumnMenuColumnsItem,
   GridColumnMenuContainer,
+  GridColumnMenuFilterItem,
+  GridColumnMenuHideItem,
   GridColumnMenuProps,
-  GridColumnsMenuItem,
-  GridFilterMenuItem,
+  GridColumnMenuSortItem,
   GridPreProcessEditCellProps,
   GridRowId,
+  GridRowSelectionModel,
   GridRowsProp,
-  GridSelectionModel,
   GridValidRowModel,
-  HideGridColMenuItem,
-  MuiEvent,
-  SortGridMenuItems,
+  MuiEvent
 } from "@mui/x-data-grid";
-import {
-  bindHover,
-  bindMenu,
-  bindPopover,
-  bindTrigger,
-} from "material-ui-popup-state";
+import { bindHover, bindMenu, bindPopover, bindTrigger } from "material-ui-popup-state";
 import HoverPopover from "material-ui-popup-state/HoverPopover";
 import { usePopupState } from "material-ui-popup-state/hooks";
 import SheetSlider from "../SheetComponents/SheetSlider";
@@ -59,15 +52,16 @@ import { DataGrid } from "../../Key";
 import InnerHTML from "dangerously-set-html-content";
 import FunixCustom from "./FunixCustom";
 import MultipleInput from "./MultipleInput";
+import { ObjectFieldTemplateProps } from "@rjsf/utils";
 
 let rowIdCounter = 0;
 
 const stopEventPropagation = (e: SyntheticEvent) => e.stopPropagation();
 
-const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
+const ObjectFieldExtendedTemplate = (props: ObjectFieldTemplateProps) => {
   const deepClonedFormData = JSON.parse(JSON.stringify(props.formData));
-  const configElements: (SchemaField | JSX.Element)[] = [];
-  const rowElements: JSX.Element[] = [];
+  const configElements: (SchemaField | ReactElement)[] = [];
+  const rowElements: ReactElement[] = [];
   const arrayElementsInSheet: any[] = [];
   const columns: GridColDef[] = [
     {
@@ -76,16 +70,16 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
       type: "number",
     },
   ];
-  const arraySimpleSelectors: JSX.Element[] = [];
+  const arraySimpleSelectors: ReactElement[] = [];
   let arraySheetSelectors: Record<string, any> = {};
   let lengthLongestWhitelistColumnInSheet = 0;
   type propElementToJSXElementReturn = {
     type: "config" | "sheet";
-    element: JSX.Element;
+    element: ReactElement;
   };
 
   const propElementToJSXElement = (
-    element: any
+    element: any,
   ): propElementToJSXElementReturn => {
     const elementContent = element.content;
     const elementProps = elementContent.props;
@@ -203,7 +197,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
           arraySelectorCandidates.map((candidate) => {
             lengthLongestWhitelistColumnInSheet = Math.max(
               lengthLongestWhitelistColumnInSheet,
-              candidate.length
+              candidate.length,
             );
           });
         }
@@ -218,7 +212,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
         const handleCandidateSelection = (newSelection: string) => {
           const targetArray: any[] = JSON.parse(newSelection);
           const possiblySheetColumns = columns.filter(
-            (column) => column.field == elementProps.name
+            (column) => column.field == elementProps.name,
           );
           if (possiblySheetColumns.length !== 0) {
             if (rows.length < targetArray.length) {
@@ -250,7 +244,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
         const getMenuItems = (
           candidates: Array<any>[],
           type: MenuItemGetterType,
-          props: any
+          props: any,
         ) =>
           candidates.map((candidate) => {
             const candidateJson = JSON.stringify(candidate, null, 1);
@@ -266,7 +260,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
                     ? rowValueJsonStr
                     : candidateRowValue,
                 };
-              }
+              },
             );
             const popupState = usePopupState({
               variant: "popover",
@@ -350,7 +344,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
                     {getMenuItems(
                       arraySelectorCandidates,
                       MenuItemGetterType.SimpleSelectorWhitelist,
-                      {}
+                      {},
                     )}
                   </Select>
                 </FormControl>
@@ -371,7 +365,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
                       MenuItemGetterType.SimpleSelectorExample,
                       {
                         parentPopupState: popupState,
-                      }
+                      },
                     )}
                   </Menu>
                 </div>
@@ -391,7 +385,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
               menuItems: getMenuItems(
                 arraySelectorCandidates,
                 MenuItemGetterType.SheetSelector,
-                props
+                props,
               ),
             }),
           };
@@ -446,7 +440,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
         const handleCustomComponentChange = (
           rowId: GridRowId,
           field: string,
-          value: any
+          value: any,
         ) => {
           setRows((prevRows) => {
             const newRows = [...prevRows];
@@ -537,9 +531,9 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
   };
 
   props.schema.input_layout.forEach((row) => {
-    const rowGrid: JSX.Element[] = [];
+    const rowGrid: ReactElement[] = [];
     row.forEach((rowItem) => {
-      let rowElement: JSX.Element | null = <></>;
+      let rowElement: ReactElement | null = <></>;
       switch (rowItem.type) {
         case "markdown":
           rowElement = (
@@ -557,14 +551,16 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
           );
           break;
         case "argument":
-          const result = props.properties.filter(
-            (prop: any) => prop.name === rowItem.argument
-          );
-          // console.log(rowItem, result);
-          if (result.length === 0) {
-            rowElement = null;
-          } else {
-            rowElement = <>{propElementToJSXElement(result[0]).element}</>;
+          {
+            const result = props.properties.filter(
+              (prop: any) => prop.name === rowItem.argument,
+            );
+            // console.log(rowItem, result);
+            if (result.length === 0) {
+              rowElement = null;
+            } else {
+              rowElement = <>{propElementToJSXElement(result[0]).element}</>;
+            }
           }
           break;
         case "divider":
@@ -598,7 +594,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
       rowElements.push(
         <Grid2 container spacing={2} alignItems="center">
           {rowGrid.map((item) => item)}
-        </Grid2>
+        </Grid2>,
       );
     }
   });
@@ -651,7 +647,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
             type: element.props.schema.items.type,
           };
         }
-      }
+      },
     );
     const newRows = [];
     for (let i = 0; i < maxLength; i++) {
@@ -687,7 +683,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
   // });
 
   const [selectionModel, setSelectionModel] =
-    React.useState<GridSelectionModel>([]);
+    React.useState<GridRowSelectionModel>([]);
 
   let gridData: Record<string, Array<any>> = {};
   let updateRJSFObjectFieldOpIdCounter = 0;
@@ -698,7 +694,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
     for (const column of columns) {
       if (column.field === "id") continue;
       const arrayElementsWithKey = arrayElementsInSheet.filter(
-        (element) => element.key === column.field
+        (element) => element.key === column.field,
       );
       for (const element of arrayElementsWithKey) {
         const key = element.key;
@@ -708,7 +704,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
       }
     }
     const longestArrayLength = Math.max(
-      ...Object.values(newSheet).map((array) => array.length)
+      ...Object.values(newSheet).map((array) => array.length),
     );
     const keysInNewSheet = Object.keys(newSheet);
     for (let i = 0; i < longestArrayLength; i++) {
@@ -741,12 +737,12 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
     for (const column of columns) {
       if (column.field == "id") continue;
       const arrayElementsWithKey = arrayElementsInSheet.filter(
-        (arrayElement) => arrayElement.key === column.field
+        (arrayElement) => arrayElement.key === column.field,
       );
       for (const arrayElementWithKey of arrayElementsWithKey) {
         arrayElementWithKey.props.onChange(gridData[arrayElementWithKey.key]);
         const promiseCheckSyncFunction = (
-          resolve: (value: void | PromiseLike<void>) => void
+          resolve: (value: void | PromiseLike<void>) => void,
         ) => {
           const checkIfFormDataSynced = () =>
             props.formData[arrayElementWithKey.key] !==
@@ -788,13 +784,13 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
       line
         .trim()
         .split(/\t+/)
-        .map((element: string) => element.trim())
+        .map((element: string) => element.trim()),
     );
   };
 
   const clipSheetArrayInsertToSheet = (
     rowId: GridRowId,
-    clipSheetTextArray: (string[] | undefined)[]
+    clipSheetTextArray: (string[] | undefined)[],
   ) => {
     const newRows: { [key: string]: any }[] = [];
     clipSheetTextArray.forEach((lineArray: string[] | undefined) => {
@@ -862,7 +858,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
 
   const handleCopyRows = () => {
     const filteredRows = rows.filter((row: GridRowModel) =>
-      selectionModel.includes(row.id)
+      selectionModel.includes(row.id),
     );
     copyRows(filteredRows);
   };
@@ -876,7 +872,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
     const newRows = rows.filter(
       (row, index) =>
         !selectionModel.includes(row.id) ||
-        index < lengthLongestWhitelistColumnInSheet
+        index < lengthLongestWhitelistColumnInSheet,
     );
     setRows(newRows);
   };
@@ -887,21 +883,9 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
   };
 
   const handleSelectionModelChange = (
-    newSelectionModel: GridSelectionModel
+    newSelectionModel: GridRowSelectionModel,
   ): void => {
     setSelectionModel(newSelectionModel);
-  };
-
-  const handleCellEditCommit = (params: GridCellEditCommitParams) => {
-    setRows((prevRows) => {
-      const newRows = [...prevRows];
-      newRows.map((row) => {
-        if (row.id === params.id) {
-          row[params.field] = params.value;
-        }
-      });
-      return newRows;
-    });
   };
 
   const insertRows = (rowId: GridRowId) => {
@@ -912,7 +896,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
 
   const handleCellKeyDown = (
     params: GridCellParams,
-    event: MuiEvent<React.KeyboardEvent>
+    event: MuiEvent<React.KeyboardEvent>,
   ): void => {
     if (event.key === "Delete") {
       if (selectionModel.length === 0) handleDeleteRow(params.id);
@@ -958,21 +942,33 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
             </Stack>
             <Box sx={{ height: 400, mt: 1, paddingRight: 1 }}>
               <DataGrid
+                editMode="row"
                 columns={columns}
                 columnVisibilityModel={{
                   id: false,
                 }}
                 rows={rows}
                 checkboxSelection={true}
-                selectionModel={selectionModel}
-                onSelectionModelChange={handleSelectionModelChange}
-                onCellEditCommit={handleCellEditCommit}
-                disableSelectionOnClick={true}
-                components={{
-                  ColumnMenu: GridColumnMenu,
+                rowSelectionModel={selectionModel}
+                onRowSelectionModelChange={handleSelectionModelChange}
+                disableRowSelectionOnClick={true}
+                slots={{
+                  columnMenu: GridColumnMenu,
                 }}
                 sx={{ marginRight: 1 }}
                 onCellKeyDown={handleCellKeyDown}
+                processRowUpdate={(updatedRow: GridRowModel) => {
+                  setRows((prevRows) => {
+                    return prevRows.map((row) => {
+                      if (row.id === updatedRow.id) {
+                        return updatedRow;
+                      }
+                      return row;
+                    });
+                  });
+
+                  return updatedRow;
+                }}
               />
             </Box>
           </Box>
@@ -984,18 +980,17 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const [dialogTitle, setDialogTitle] = useState<string>("");
   const [dialogMenuListContent, setDialogMenuListContent] = useState<any>(
-    <></>
+    <></>,
   );
   const GridColumnMenu = React.forwardRef<
     HTMLUListElement,
     GridColumnMenuProps
   >(function GridColumnMenu(props: GridColumnMenuProps, ref) {
-    const { hideMenu, currentColumn } = props;
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const forcedCurrentColumn = currentColumn!;
+    const { hideMenu, colDef } = props;
+    const forcedCurrentColumn = colDef!;
     const fieldName = forcedCurrentColumn.field;
     let extraMenuItem = <></>;
-    if (arraySheetSelectors.hasOwnProperty(fieldName)) {
+    if (fieldName in arraySheetSelectors) {
       const arraySheetSelector = arraySheetSelectors[fieldName]({
         setDialogOpen: setDialogOpen,
       });
@@ -1015,10 +1010,22 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
     }
     return (
       <GridColumnMenuContainer ref={ref} {...props}>
-        <SortGridMenuItems onClick={hideMenu} column={forcedCurrentColumn} />
-        <GridFilterMenuItem onClick={hideMenu} column={forcedCurrentColumn} />
-        <HideGridColMenuItem onClick={hideMenu} column={forcedCurrentColumn} />
-        <GridColumnsMenuItem onClick={hideMenu} column={forcedCurrentColumn} />
+        <GridColumnMenuSortItem
+          onClick={hideMenu}
+          colDef={forcedCurrentColumn}
+        />
+        <GridColumnMenuFilterItem
+          onClick={hideMenu}
+          colDef={forcedCurrentColumn}
+        />
+        <GridColumnMenuHideItem
+          onClick={hideMenu}
+          colDef={forcedCurrentColumn}
+        />
+        <GridColumnMenuColumnsItem
+          onClick={hideMenu}
+          colDef={forcedCurrentColumn}
+        />
         {extraMenuItem}
       </GridColumnMenuContainer>
     );

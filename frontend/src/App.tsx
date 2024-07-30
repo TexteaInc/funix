@@ -61,7 +61,7 @@ const drawerWidth = 240;
 const calcDrawerWidth = (
   leftOpen: boolean | undefined,
   rightOpen: boolean | undefined,
-  functionListWidth: number
+  functionListWidth: number,
 ) => {
   return (
     Number(!!leftOpen) * functionListWidth + Number(!!rightOpen) * drawerWidth
@@ -132,7 +132,7 @@ const AppBar = styled(MuiAppBar, {
     width: `calc(100% - ${calcDrawerWidth(
       leftOpen,
       rightOpen,
-      functionListWidth
+      functionListWidth,
     )}px)`,
     marginLeft: `${functionListWidth}px`,
     transition: theme.transitions.create(["margin", "width"], {
@@ -144,7 +144,7 @@ const AppBar = styled(MuiAppBar, {
     width: `calc(100% - ${calcDrawerWidth(
       leftOpen,
       rightOpen,
-      functionListWidth
+      functionListWidth,
     )}px)`,
     marginRight: `${drawerWidth}px`,
     transition: theme.transitions.create(["margin", "width"], {
@@ -176,7 +176,7 @@ const TransitionFooter = styled(MuiPaper, {
     width: `calc(100% - ${calcDrawerWidth(
       leftOpen,
       rightOpen,
-      functionListWidth
+      functionListWidth,
     )}px)`,
     transition: theme.transitions.create("width", {
       easing: theme.transitions.easing.easeOut,
@@ -218,7 +218,7 @@ const App = () => {
   const [backend, setBackend] = useState(funixBackend);
   const [logLevel, setLogLevel] = useState(0);
   const [backendURL, setBackendURL] = useState<URL | undefined>(
-    backend ? new URL(backend) : undefined
+    backend ? new URL(backend) : undefined,
   );
   const [tempBackend, setTempBackend] = useState(backend);
   const [privacy, setPrivacy] = useState(false);
@@ -245,7 +245,7 @@ const App = () => {
     document.removeEventListener(
       "pointermove",
       handlePointerMoveLeftSidebar,
-      true
+      true,
     );
     document.removeEventListener("pointerup", handlePointerUpLeftSidebar, true);
   };
@@ -255,7 +255,7 @@ const App = () => {
     document.addEventListener(
       "pointermove",
       handlePointerMoveLeftSidebar,
-      true
+      true,
     );
     document.addEventListener("pointerup", handlePointerUpLeftSidebar, true);
   };
@@ -321,7 +321,7 @@ const App = () => {
               setPrivacy(
                 json.log_level === 0
                   ? false
-                  : getCookie("first-join") === undefined
+                  : getCookie("first-join") === undefined,
               );
             }
           }
@@ -450,7 +450,7 @@ const App = () => {
                     const value = event.target.checked;
                     localStorage.setItem(
                       "showFunctionDetail",
-                      value.toString()
+                      value.toString(),
                     );
                     setStore((store) => ({
                       ...store,

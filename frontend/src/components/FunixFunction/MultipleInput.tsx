@@ -1,4 +1,3 @@
-import { WidgetProps } from "@rjsf/core";
 import React from "react";
 import {
   Autocomplete,
@@ -11,6 +10,7 @@ import {
   TextField,
 } from "@mui/material";
 import MarkdownDiv from "../Common/MarkdownDiv";
+import { WidgetProps } from "@rjsf/utils";
 
 interface MultipleInput {
   widget: WidgetProps;

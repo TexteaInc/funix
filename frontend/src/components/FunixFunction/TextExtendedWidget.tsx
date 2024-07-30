@@ -2,7 +2,6 @@
 // Ref: https://github.com/rjsf-team/react-jsonschema-form/blob/4049011ea59737232a86c193d96131ce61be85fa/packages/material-ui/src/TextWidget/TextWidget.tsx
 
 import React, { useEffect } from "react";
-import { WidgetProps, utils } from "@rjsf/core";
 import {
   Autocomplete,
   AutocompleteRenderInputParams,
@@ -28,8 +27,8 @@ import { castValue } from "../Common/ValueOperation";
 import MarkdownDiv from "../Common/MarkdownDiv";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import Editor from "@monaco-editor/react";
-
-const { getDisplayLabel } = utils;
+import { getDisplayLabel, WidgetProps } from "@rjsf/utils";
+import validator from "@rjsf/validator-ajv8";
 
 type MultilineProps = {
   multiline?: boolean;
@@ -78,39 +77,63 @@ const TextExtendedWidget = ({
     }, [value]);
 
     const customSetSliderValue = (
-      value: number | string | Array<number | string>
+      value: number | string | Array<number | string>,
     ) => {
       setSliderValue(value);
       onChange(value);
     };
 
-    const handleSliderChange = (event: Event, newValue: number | number[]) =>
+    const handleSliderChange = (_event: Event, newValue: number | number[]) =>
       customSetSliderValue(newValue);
 
     const handleSliderInputChange = (
-      event: React.ChangeEvent<HTMLInputElement>
+      event: React.ChangeEvent<HTMLInputElement>,
     ) => {
       customSetSliderValue(
         event.target.value === ""
           ? ""
           : schema.type === "integer"
-          ? parseInt(event.target.value)
-          : parseFloat(event.target.value)
+            ? parseInt(event.target.value)
+            : parseFloat(event.target.value),
       );
     };
 
     const handleSliderInputBlur = () => {
-      if (sliderValue < min) {
-        customSetSliderValue(min);
-      } else if (sliderValue > max) {
-        customSetSliderValue(max);
+      if (Array.isArray(sliderValue)) {
+        const newValue = (sliderValue as Array<number | string>).map((v) => {
+          const value =
+            typeof v === "number"
+              ? v
+              : schema.type === "integer"
+                ? parseInt(v)
+                : parseFloat(v);
+          if (value < min) {
+            return min;
+          } else if (value > max) {
+            return max;
+          }
+          return value;
+        });
+        customSetSliderValue(newValue);
+      } else {
+        const newValue =
+          typeof sliderValue === "number"
+            ? sliderValue
+            : schema.type === "integer"
+              ? parseInt(sliderValue)
+              : parseFloat(sliderValue);
+        if (newValue < min) {
+          customSetSliderValue(min);
+        } else if (newValue > max) {
+          customSetSliderValue(max);
+        }
       }
     };
 
     return (
       <FormControl fullWidth>
         <Grid container spacing={2} alignItems="center">
-          {!!label ? (
+          {label ? (
             <Grid item>
               <MarkdownDiv
                 markdown={label || schema.title || ""}
@@ -124,18 +147,18 @@ const TextExtendedWidget = ({
                 typeof sliderValue === "number"
                   ? sliderValue
                   : typeof sliderValue === "string"
-                  ? schema.type === "integer"
-                    ? parseInt(sliderValue)
-                    : parseFloat(sliderValue)
-                  : min
+                    ? schema.type === "integer"
+                      ? parseInt(sliderValue)
+                      : parseFloat(sliderValue)
+                    : min
               }
               min={min}
               max={max}
               step={step}
               onChange={handleSliderChange}
               valueLabelDisplay="on"
-              components={{
-                ValueLabel: SliderValueLabel,
+              slots={{
+                valueLabel: SliderValueLabel,
               }}
             />
           </Grid>
@@ -200,7 +223,7 @@ const TextExtendedWidget = ({
         onMount={(editor) => {
           editor.onDidChangeModelContent(() => {
             setHeight(
-              Math.max(450, editor.getModel().getLineCount() * 20 + 20)
+              Math.max(450, editor.getModel().getLineCount() * 20 + 20),
             );
           });
         }}
@@ -223,7 +246,7 @@ const TextExtendedWidget = ({
         ? schema.default
           ? `${schema.default}`
           : ""
-        : `${value}`
+        : `${value}`,
     );
 
     useEffect(() => {
@@ -233,7 +256,7 @@ const TextExtendedWidget = ({
           ? schema.default
             ? `${schema.default}`
             : ""
-          : `${value}`
+          : `${value}`,
       );
     }, [value]);
 
@@ -256,7 +279,7 @@ const TextExtendedWidget = ({
                 label={item}
                 control={<Radio />}
               />
-            )
+            ),
           )}
         </RadioGroup>
       </FormControl>
@@ -280,7 +303,7 @@ const TextExtendedWidget = ({
   }: React.FocusEvent<HTMLInputElement>) => onFocus(id, value);
 
   const { rootSchema } = registry;
-  const displayLabel = getDisplayLabel(schema, uiSchema, rootSchema);
+  const displayLabel = getDisplayLabel(validator, schema, uiSchema, rootSchema);
   const inputType =
     (type || schema.type) === "string" ? "text" : `${type || schema.type}`;
   const enum ContentPolicy {
@@ -291,14 +314,14 @@ const TextExtendedWidget = ({
   const contentPolicy: ContentPolicy = rawSchema["whitelist"]
     ? ContentPolicy.Whitelist
     : rawSchema["example"]
-    ? ContentPolicy.Example
-    : ContentPolicy.Free;
+      ? ContentPolicy.Example
+      : ContentPolicy.Free;
   const autocompleteOptions =
     contentPolicy == ContentPolicy.Whitelist
       ? rawSchema["whitelist"]
       : contentPolicy == ContentPolicy.Example
-      ? rawSchema["example"]
-      : [];
+        ? rawSchema["example"]
+        : [];
 
   const freeSolo: boolean = contentPolicy != ContentPolicy.Whitelist;
 
@@ -352,10 +375,10 @@ const TextExtendedWidget = ({
           inputType === "number" || inputType === "integer"
             ? "number"
             : schema.widget === "password"
-            ? showPassword
-              ? "text"
-              : "password"
-            : "text"
+              ? showPassword
+                ? "text"
+                : "password"
+              : "text"
         }
         value={value || value === 0 ? value : ""}
         error={rawErrors.length > 0}
@@ -452,10 +475,10 @@ const TextExtendedWidget = ({
               inputType === "number" || inputType === "integer"
                 ? "number"
                 : schema.widget === "password"
-                ? showPassword
-                  ? "text"
-                  : "password"
-                : "text"
+                  ? showPassword
+                    ? "text"
+                    : "password"
+                  : "text"
             }
             value={inputValue}
             error={rawErrors.length > 0}

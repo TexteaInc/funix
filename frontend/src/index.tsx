@@ -10,7 +10,7 @@ import { Close } from "@mui/icons-material";
 import { registerLicense } from "./Key";
 
 const root = ReactDOM.createRoot(
-  document.getElementById("root") as HTMLElement
+  document.getElementById("root") as HTMLElement,
 );
 
 registerLicense();
@@ -38,5 +38,5 @@ root.render(
         </SnackbarProvider>
       </BrowserRouter>
     </SWRConfig>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

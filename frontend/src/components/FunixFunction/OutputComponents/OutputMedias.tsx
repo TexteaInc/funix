@@ -16,10 +16,10 @@ export default function OutputMedias(props: {
     props.type.toLowerCase().startsWith("figure")
       ? "img"
       : props.type.toLowerCase().startsWith("video")
-      ? "video"
-      : props.type.toLowerCase().startsWith("application/pdf")
-      ? "pdf"
-      : "audio";
+        ? "video"
+        : props.type.toLowerCase().startsWith("application/pdf")
+          ? "pdf"
+          : "audio";
 
   return (
     <>
