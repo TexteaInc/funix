@@ -112,8 +112,6 @@ const OutputPanel = (props: {
             else if (props.selectedResponseViewType === "sheet")
               return (
                 <DataGrid
-                  pagination
-                  autoPageSize
                   columns={[
                     { field: "id", headerName: "ID" },
                     { field: "value", headerName: "Root" },
@@ -176,8 +174,6 @@ const OutputPanel = (props: {
                 }
                 const grid = (
                   <DataGrid
-                    pagination
-                    autoPageSize
                     columns={keysOfArraysInSheet.map((key) => ({
                       field: key,
                     }))}

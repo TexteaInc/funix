@@ -958,8 +958,6 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldProps) => {
             </Stack>
             <Box sx={{ height: 400, mt: 1, paddingRight: 1 }}>
               <DataGrid
-                pagination
-                autoPageSize
                 columns={columns}
                 columnVisibilityModel={{
                   id: false,
