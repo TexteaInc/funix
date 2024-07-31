@@ -13,7 +13,7 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { Components } from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import React from "react";
 import { Variant } from "@mui/material/styles/createTypography";
@@ -95,12 +95,16 @@ const MarkdownBlockquote = (props: {
   );
 };
 
-const MarkdownCode = (props: {
-  children: React.ReactNode;
-  inline?: boolean;
-  className?: string;
+const MarkdownCode: Components["code"] = ({
+  children,
+  className = "",
+  node,
 }) => {
-  if (props.inline) {
+  if (!node?.position || !children) {
+    return <>{children}</>;
+  }
+
+  if (node.position.start.line == node.position.end.line) {
     return (
       <Typography
         component="span"
@@ -117,22 +121,47 @@ const MarkdownCode = (props: {
           whiteSpace: "pre-wrap",
         }}
       >
-        {props.children}
+        {children}
       </Typography>
     );
   }
 
-  const language = props.className
-    ? props.className.startsWith("```")
-      ? props.className.substring(3)
-      : props.className.startsWith("language-")
-        ? props.className.substring(9)
-        : "plaintext"
-    : "plaintext";
-
-  return (
-    <SyntaxHighlighter language={language} style={monokai} showLineNumbers>
-      {(props.children ?? "").toString()}
+  const [, langauge] = className.split("-");
+  return Array.isArray(children) ? (
+    <>
+      {children.map((child: any) => (
+        <SyntaxHighlighter
+          language={langauge || "plaintext"}
+          style={monokai}
+          showLineNumbers
+          wrapLines
+          wrapLongLines
+          lineProps={{
+            style: {
+              wordBreak: "break-all",
+              whiteSpace: "pre-wrap",
+            },
+          }}
+        >
+          {child.props.value}
+        </SyntaxHighlighter>
+      ))}
+    </>
+  ) : (
+    <SyntaxHighlighter
+      language={langauge || "plaintext"}
+      style={monokai}
+      showLineNumbers
+      wrapLines
+      wrapLongLines
+      lineProps={{
+        style: {
+          wordBreak: "break-all",
+          whiteSpace: "pre-wrap",
+        },
+      }}
+    >
+      {children as string}
     </SyntaxHighlighter>
   );
 };
@@ -193,13 +222,6 @@ export default function MarkdownDiv(props: MarkdownDivProps) {
       ]}
       components={{
         p: "span",
-        pre: (props) => (
-          <MarkdownCode
-            children={props.children}
-            className={props.className}
-            inline={false}
-          />
-        ),
         ul: (props) =>
           isRenderInline ? (
             <ul className="text-style">{props.children}</ul>
@@ -287,13 +309,7 @@ export default function MarkdownDiv(props: MarkdownDivProps) {
             isInline={isRenderInline}
           />
         ),
-        code: (props) => (
-          <MarkdownCode
-            children={props.children}
-            inline={true}
-            className={props.className}
-          />
-        ),
+        code: MarkdownCode,
         em: (props) => (
           <Typography
             component="span"
