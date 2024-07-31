@@ -30,6 +30,42 @@ A list, each element is a dict, record the information of the decorated function
 See `DecoratedFunctionListItem` for more information.
 """
 
+uuid_with_name: dict[str, dict[str, str]] = {}
+"""
+A dict, key is the app name, value is a dict, key is the UUID, value is the function name.
+"""
+
+
+def set_uuid_with_name(app_name: str, _id: str, name: str) -> None:
+    """
+    Set the UUID with the name.
+
+    Parameters:
+        app_name (str): The app name.
+        _id (str): The UUID.
+        name (str): The function name.
+    """
+    global uuid_with_name
+    if app_name in uuid_with_name:
+        uuid_with_name[app_name][_id] = name
+    else:
+        uuid_with_name[app_name] = {_id: name}
+
+
+def get_uuid_with_name(app_name: str, _id: str) -> str:
+    """
+    Get the function name by UUID.
+
+    Parameters:
+        app_name (str): The app name.
+        _id (str): The UUID.
+
+    Returns:
+        str: The function name.
+    """
+    global uuid_with_name
+    return uuid_with_name.get(app_name, {}).get(_id, "Unknown")
+
 
 def set_default_function_name(app_name: str, name: str) -> None:
     """

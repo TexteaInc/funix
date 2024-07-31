@@ -193,3 +193,19 @@ def handle_ipython_audio_image_video(obj: Any) -> str:
             raise RuntimeError("No data, url, filename found!")
     else:
         raise RuntimeError("Unsupported type")
+
+
+def get_file_info(file_id: str) -> str:
+    if file_id in __files_dict:
+        result = __files_dict[file_id]
+        if isinstance(result, str):
+            return result
+        else:
+            size = len(result)
+            if size > 16:
+                first_16_bytes = result[:16].hex()
+            else:
+                first_16_bytes = result.hex()
+            return f"Binary, Size: {size}, First bytes: {first_16_bytes}"
+    else:
+        return "Not found"

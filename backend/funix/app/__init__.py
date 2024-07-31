@@ -8,6 +8,7 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
+from urllib.parse import urlparse
 
 from flask import Flask, Response, abort, request
 from flask_sock import Sock
@@ -15,6 +16,8 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.pool import SingletonThreadPool
 
 from funix.config.switch import GlobalSwitchOption
+from funix.decorator.file import get_file_info
+from funix.decorator.lists import get_uuid_with_name
 from funix.frontend import start
 from funix.hint import LogLevel
 
@@ -112,34 +115,64 @@ def privacy_policy(message: str) -> None:
 app.after_request(funix_auto_cors)
 
 
-def __api_call_data(response: Response, dict_to_json: bool = False) -> dict | None:
-    do_not_log_me = (
-        request.cookies.get("DO_NOT_LOG_ME") and funix_log_level != LogLevel.MANDATORY
-    )
-    if do_not_log_me is not None and do_not_log_me == "YES":
+def get_real_ip() -> str:
+    # I don't think this is a good way for all reverse proxies
+    # ip = request.remote_addr
+    forwarded_for = request.headers.get("X-Forwarded-For")
+    if forwarded_for:
+        return forwarded_for.split(",")[0]
+    return request.remote_addr
+
+
+def __api_call_data(
+    app_name: str, response: Response, dict_to_json: bool = False
+) -> dict | None:
+    if funix_log_level == LogLevel.OFF:
+        return
+
+    if (
+        funix_log_level == LogLevel.OPTIONAL
+        and request.cookies.get("DO_NOT_LOG_ME") == "YES"
+    ):
         return
 
     try:
         req_json = request.json
     except:
-        return
-
-    if req_json is None:
-        return
+        req_json = None
 
     try:
         resp_json = response.json
     except:
-        return
+        resp_json = None
 
-    if resp_json is None:
-        return
+    url = request.url
+    path = urlparse(url).path
 
     dumped_req = {
-        "url": request.url,
+        "ip": get_real_ip(),
+        "url": url,
         "headers": dict(request.headers),
         "data": req_json,
     }
+
+    if (
+        path.startswith("/call/")
+        or path.startswith("/param/")
+        or path.startswith("/verify/")
+    ):
+        result = path.split("/")
+        if len(result) < 3:
+            return
+        id_ = "/".join(result[2:])
+        dumped_req["function"] = get_uuid_with_name(app_name, id_)
+
+    if path.startswith("/file/"):
+        result = path.split("/")
+        if len(result) < 3:
+            return
+        id_ = result[-1]
+        dumped_req["file"] = get_file_info(id_)
 
     now = datetime.now(timezone.utc).isoformat()
 
@@ -178,7 +211,7 @@ if funix_log_level != LogLevel.OFF:
         def funix_database_logger(response: Response) -> Response:
             global con
 
-            data = __api_call_data(response, dict_to_json=True)
+            data = __api_call_data(app.name, response, dict_to_json=True)
             if data is None:
                 return response
 
@@ -200,7 +233,7 @@ if funix_log_level != LogLevel.OFF:
         def funix_database_logger(response: Response) -> Response:
             global jsonl_file
 
-            data = __api_call_data(response)
+            data = __api_call_data(app.name, response)
             if data is None:
                 return response
 

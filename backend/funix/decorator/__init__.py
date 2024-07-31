@@ -30,6 +30,7 @@ from funix.decorator.lists import (
     get_default_function_name,
     push_counter,
     set_default_function,
+    set_uuid_with_name,
 )
 from funix.decorator.magic import parse_function_annotation
 from funix.decorator.param import (
@@ -486,6 +487,18 @@ def funix(
                     "keepLast": keep_last,
                 },
             )
+
+            log_name = function.__name__
+
+            try:
+                path_ = inspect.getsourcefile(function)
+                if path_:
+                    log_name = path_ + ":" + log_name
+            except:
+                pass
+
+            set_uuid_with_name(app_.name, function_id, log_name)
+            set_uuid_with_name(app_.name, endpoint, log_name)
 
             if show_source:
                 source_code = getsource(function)
