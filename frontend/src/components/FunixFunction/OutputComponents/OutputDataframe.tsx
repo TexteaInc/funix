@@ -23,8 +23,8 @@ export default function OutputDataframe(props: {
     columns.push({
       field: key,
       headerName: key,
-      width: 150,
       editable: false,
+      display: "flex" as const,
     });
   });
 

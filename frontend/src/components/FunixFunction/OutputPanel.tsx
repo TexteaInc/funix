@@ -113,8 +113,12 @@ const OutputPanel = (props: {
               return (
                 <DataGrid
                   columns={[
-                    { field: "id", headerName: "ID" },
-                    { field: "value", headerName: "Root" },
+                    { field: "id", headerName: "ID", display: "flex" as const },
+                    {
+                      field: "value",
+                      headerName: "Root",
+                      display: "flex" as const,
+                    },
                   ]}
                   rows={parsedResponse.map((rowValue, index) => ({
                     id: index,
@@ -176,6 +180,7 @@ const OutputPanel = (props: {
                   <DataGrid
                     columns={keysOfArraysInSheet.map((key) => ({
                       field: key,
+                      display: "flex" as const,
                     }))}
                     rows={rows}
                     sx={{ minHeight: 400 }}

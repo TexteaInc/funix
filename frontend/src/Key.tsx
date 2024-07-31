@@ -12,9 +12,18 @@ const registerLicense = () => {
 
 const WrappedDataGrid = (props: DataGridProps & DataGridProProps) => {
   return LICENSE_KEY ? (
-    <DataGridPro pagination pageSizeOptions={[5, 10, 20, 50, 100]} {...props} />
+    <DataGridPro
+      autosizeOnMount
+      pagination
+      pageSizeOptions={[5, 10, 20, 50, 100]}
+      {...props}
+    />
   ) : (
-    <DataGrid pageSizeOptions={[5, 10, 20, 50, 100]} {...props} />
+    <DataGrid
+      autosizeOnMount
+      pageSizeOptions={[5, 10, 20, 50, 100]}
+      {...props}
+    />
   );
 };
 

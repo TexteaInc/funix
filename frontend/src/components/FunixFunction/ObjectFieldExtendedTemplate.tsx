@@ -14,9 +14,15 @@ import {
   Select,
   SelectChangeEvent,
   Stack,
-  Typography
+  Typography,
 } from "@mui/material";
-import React, { ReactElement, SyntheticEvent, useEffect, useRef, useState } from "react";
+import React, {
+  ReactElement,
+  SyntheticEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import SchemaField from "@rjsf/core/lib/components/fields/SchemaField";
 import {
   GridCellParams,
@@ -32,9 +38,14 @@ import {
   GridRowSelectionModel,
   GridRowsProp,
   GridValidRowModel,
-  MuiEvent
+  MuiEvent,
 } from "@mui/x-data-grid";
-import { bindHover, bindMenu, bindPopover, bindTrigger } from "material-ui-popup-state";
+import {
+  bindHover,
+  bindMenu,
+  bindPopover,
+  bindTrigger,
+} from "material-ui-popup-state";
 import HoverPopover from "material-ui-popup-state/HoverPopover";
 import { usePopupState } from "material-ui-popup-state/hooks";
 import SheetSlider from "../SheetComponents/SheetSlider";
@@ -68,6 +79,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldTemplateProps) => {
       field: "id",
       headerName: "ID",
       type: "number",
+      display: "flex" as const,
     },
   ];
   const arraySimpleSelectors: ReactElement[] = [];
@@ -311,7 +323,9 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldTemplateProps) => {
                     <DataGrid
                       pagination
                       autoPageSize
-                      columns={[{ field: elementProps.name, minWidth: 350 }]}
+                      columns={[
+                        { field: elementProps.name, display: "flex" as const },
+                      ]}
                       rows={candidateRows}
                       sx={{ minHeight: 400 }}
                     />
@@ -433,6 +447,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldTemplateProps) => {
           field: elementProps.name,
           type: gridColType,
           editable: !hasArrayWhitelist,
+          display: "flex" as const,
         };
         if ("title" in elementProps.schema) {
           newColumn["headerName"] = elementProps.schema.title;
