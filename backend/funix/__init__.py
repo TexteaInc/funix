@@ -61,7 +61,7 @@ __use_git = False
 Funix uses git to clone repo, now this feature is optional.
 """
 
-__now_path = getcwd()
+now_path = getcwd()
 """
 The current path. For switching the path.
 """
@@ -120,19 +120,17 @@ def __prep(
                 decorator.set_now_module(path_difference)
                 if default:
                     python_file, function_name = default.strip().split(":")
-                    if abspath(join(__now_path, module_or_file)) == abspath(
-                        join(__now_path, base_dir, python_file)
+                    if abspath(join(now_path, module_or_file)) == abspath(
+                        join(now_path, base_dir, python_file)
                     ):
                         decorator.set_dir_mode_default_info((True, function_name))
                     else:
                         decorator.set_dir_mode_default_info((False, None))
-            module = import_module_from_file(
-                join(__now_path, module_or_file), need_name
-            )
+            module = import_module_from_file(join(now_path, module_or_file), need_name)
             handle_module(module, need_path, base_dir, path_difference)
             if base_dir:
                 decorator.clear_now_module()
-            chdir(__now_path)
+            chdir(now_path)
     else:
         print(
             "Error: No Python file, module or directory provided. "
@@ -171,6 +169,7 @@ def import_from_config(
     Raises:
         See code for more info.
     """
+    global now_path
     if transform and (dir_mode or package_mode):
         raise ValueError("Transform mode is not supported for dir or package mode!")
 
@@ -184,6 +183,7 @@ def import_from_config(
                 new_path = join(tempdir, repo_dir)
             path.append(new_path)
             chdir(abspath(new_path))
+            now_path = getcwd()
 
             if file_or_module_name:
                 pass
