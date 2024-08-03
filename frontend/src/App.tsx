@@ -15,6 +15,7 @@ import {
   FormControlLabel,
   FormGroup,
   IconButton,
+  InputAdornment,
   Link,
   List,
   ListItem,
@@ -34,11 +35,14 @@ import { useNavigate } from "react-router-dom";
 import {
   ArrowBack,
   ArrowForward,
+  Code,
+  ContentCopy,
   EventNote,
   Functions,
   GitHub,
   History,
   Settings,
+  Share,
   Sick,
   Token,
 } from "@mui/icons-material";
@@ -55,6 +59,7 @@ import InlineBox from "./components/Common/InlineBox";
 import useFunixHistory from "./shared/useFunixHistory";
 import { getCookie, setCookie } from "typescript-cookie";
 import MarkdownDiv from "./components/Common/MarkdownDiv";
+import { useSnackbar } from "notistack";
 
 const drawerWidth = 240;
 
@@ -234,7 +239,11 @@ const App = () => {
   const historyLoaded = useRef<boolean>(false);
   const [privacyText, setPrivacyText] = useState("");
   const [lastPrivacyHash, setLastPrivacyHash] = useState("");
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareUrl, setShareUrl] = useState(window.location.href);
   const privacyDone = useRef(false);
+
+  const { enqueueSnackbar } = useSnackbar();
 
   const handlePointerMoveLeftSidebar = useCallback((e: PointerEvent | any) => {
     setFunctionListWidth(e.clientX - document.body.offsetLeft);
@@ -421,6 +430,59 @@ const App = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      <Dialog
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        fullWidth
+        maxWidth="md"
+      >
+        <DialogTitle>Share</DialogTitle>
+        <DialogContent>
+          <TextField
+            margin="dense"
+            label="URL"
+            fullWidth
+            variant="outlined"
+            value={shareUrl}
+            onChange={(e) => setShareUrl(e.target.value)}
+            error={!checkURL(shareUrl)}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    edge="end"
+                    onClick={() => {
+                      navigator.clipboard.writeText(shareUrl).then(() => {
+                        enqueueSnackbar("Copied URL", { variant: "success" });
+                      });
+                    }}
+                  >
+                    <ContentCopy />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Button
+            color="primary"
+            startIcon={<Code />}
+            onClick={() => {
+              navigator.clipboard
+                .writeText(
+                  `<iframe src="${shareUrl}" width="100%" height="100%" style="border: none"></iframe>`,
+                )
+                .then(() => {
+                  enqueueSnackbar("Copied iframe", { variant: "success" });
+                });
+            }}
+          >
+            Copy Iframe
+          </Button>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShareOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle>Settings</DialogTitle>
         <DialogContent>
@@ -552,6 +614,17 @@ const App = () => {
             onClick={() => setHistorySideBarOpen((prevState) => !prevState)}
           >
             <EventNote />
+          </IconButton>
+          <IconButton
+            size="large"
+            color="inherit"
+            edge="end"
+            onClick={() => {
+              setShareOpen(true);
+              setShareUrl(window.location.href);
+            }}
+          >
+            <Share />
           </IconButton>
           <IconButton
             size="large"
