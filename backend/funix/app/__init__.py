@@ -156,11 +156,7 @@ def __api_call_data(
         "data": req_json,
     }
 
-    if (
-        path.startswith("/call/")
-        or path.startswith("/param/")
-        or path.startswith("/verify/")
-    ):
+    if path.startswith(("/call/", "/param/", "/verify/", "/update/")):
         result = path.split("/")
         if len(result) < 3:
             return

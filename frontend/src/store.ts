@@ -12,7 +12,6 @@ export type Store = {
   functions: null | string[];
   theme: null | Record<string, any>;
   showFunctionDetail: boolean;
-  inputOutputWidth: string[];
   viewType: "json" | "sheet";
   functionSecret: Record<string, string | null>;
   backend: null | URL;
@@ -49,7 +48,6 @@ export const storeAtom = atom<Store>({
   selectedFunction: null,
   functions: null,
   theme: null,
-  inputOutputWidth: ["50%", "50%"],
   viewType: "json",
   functionSecret: {},
   backend: null,

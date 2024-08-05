@@ -20,17 +20,10 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
   // );
   const [detail, setDetail] = useState<FunctionDetail | null>(null);
   const [
-    {
-      inputOutputWidth,
-      functionSecret,
-      backHistory,
-      backConsensus,
-      appSecret,
-      last,
-    },
+    { functionSecret, backHistory, backConsensus, appSecret, last },
     setStore,
   ] = useAtom(storeAtom);
-  const [width, setWidth] = useState(inputOutputWidth);
+  const [width, setWidth] = useState(preview.width);
   const [onResizing, setOnResizing] = useState(false);
   const [response, setResponse] = useState<string | null>(null);
   const [verified, setVerified] = useState(!preview.secret);
@@ -110,13 +103,6 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
   }, [backConsensus]);
 
   useEffect(() => {
-    setStore((store) => ({
-      ...store,
-      inputOutputWidth: width,
-    }));
-  }, [onResizing]);
-
-  useEffect(() => {
     if (detail == null) return;
     setStore((store) => ({
       ...store,
@@ -159,14 +145,6 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
       `${(newLeftWidth * 100).toFixed(3)}%`,
       `${(newRightWidth * 100).toFixed(3)}%`,
     ]);
-  };
-
-  const resetWidth = () => {
-    setWidth(["50%", "50%"]);
-    setStore((store) => ({
-      ...store,
-      inputOutputWidth: ["50%", "50%"],
-    }));
   };
 
   return detail !== null ? (
@@ -249,7 +227,6 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
                 }}
                 onContextMenu={(event) => {
                   event.preventDefault();
-                  resetWidth();
                 }}
                 onPointerDown={(event) => {
                   event.preventDefault();

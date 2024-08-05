@@ -233,6 +233,7 @@ def funix(
     keep_last: bool = False,
     app_and_sock: tuple[Flask, Sock] | None = None,
     jupyter_class: bool = False,
+    width: Optional[list[str]] = None,
 ):
     """
     Decorator for functions to convert them to web apps
@@ -278,6 +279,7 @@ def funix(
         app_and_sock(tuple[Flask, Sock]): the Flask app and the Sock instance, if None, use the global app and sock.
                                           In jupyter, funix automatically generates the new app and sock.
         jupyter_class(bool): whether this is a class method in jupyter
+        width(list[str]): width of the input/output panel
 
     Returns:
         function: the decorated function
@@ -485,6 +487,7 @@ def funix(
                     "reactive": has_reactive_params,
                     "autorun": autorun,
                     "keepLast": keep_last,
+                    "width": width if width else ["50%", "50%"],
                 },
             )
 

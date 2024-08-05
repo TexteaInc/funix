@@ -85,6 +85,10 @@ export type FunctionPreview = {
    * keep last history
    */
   keepLast: boolean;
+  /**
+   * input panel and output panel width
+   */
+  width: string[];
 };
 
 export type GetListResponse = {
