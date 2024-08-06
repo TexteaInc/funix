@@ -43,7 +43,7 @@ def set_default_theme(theme: str) -> None:
 
 def import_theme(
     source: str | dict,
-    alias: Optional[str],
+    alias: Optional[str] = None,
 ) -> None:
     """
     Import a theme from path, url or dict.
