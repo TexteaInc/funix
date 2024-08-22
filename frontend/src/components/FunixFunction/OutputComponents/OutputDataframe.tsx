@@ -24,7 +24,6 @@ export default function OutputDataframe(props: {
       field: key,
       headerName: key,
       editable: false,
-      display: "flex" as const,
     });
   });
 
@@ -40,7 +39,7 @@ export default function OutputDataframe(props: {
   });
 
   return (
-    <Box sx={{ height: 400, width: "100%" }}>
+    <Box sx={{ minHeight: 400, width: "100%" }}>
       <DataGrid
         rows={newDataframe}
         columns={columns}

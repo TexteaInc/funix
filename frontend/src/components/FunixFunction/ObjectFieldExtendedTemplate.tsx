@@ -79,7 +79,6 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldTemplateProps) => {
       field: "id",
       headerName: "ID",
       type: "number",
-      display: "flex" as const,
     },
   ];
   const arraySimpleSelectors: ReactElement[] = [];
@@ -447,7 +446,6 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldTemplateProps) => {
           field: elementProps.name,
           type: gridColType,
           editable: !hasArrayWhitelist,
-          display: "flex" as const,
         };
         if ("title" in elementProps.schema) {
           newColumn["headerName"] = elementProps.schema.title;
@@ -955,7 +953,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldTemplateProps) => {
                 Paste
               </Button>
             </Stack>
-            <Box sx={{ height: 400, mt: 1, paddingRight: 1 }}>
+            <Box sx={{ minHeight: 400, mt: 1, paddingRight: 1 }}>
               <DataGrid
                 editMode="row"
                 columns={columns}
