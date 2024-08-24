@@ -52,8 +52,8 @@
     "build": "react-app-rewired build",
     "test": "react-app-rewired test",
     "eject": "react-scripts eject",
-    "lint": "eslint -c .eslintrc.js . --ext .ts,.tsx,.js --cache --fix",
-    "lint:ci": "eslint -c .eslintrc.js . --ext .ts,.tsx,.js --cache",
+    "lint": "npx eslint . -c eslint.config.mjs --cache --fix",
+    "lint:ci": "npx eslint . -c eslint.config.mjs --cache",
     "funix:test": "env REACT_APP_FUNIX_BACKEND=http://127.0.0.1:8080 react-app-rewired start",
     "funix:build": "env BUILD_PATH=../backend/funix/build GENERATE_SOURCEMAP=false REACT_APP_IN_FUNIX=true react-app-rewired build"
   },

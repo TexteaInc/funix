@@ -92,6 +92,9 @@ class RuntimeClassVisitor(NodeVisitor):
 
         self.open_function = False
 
+        # keep order number track
+        self.number_tracker = 0
+
     def visit_Import(self, node):
         """
         Visit the import node, and append it to the imports.
@@ -196,6 +199,20 @@ class RuntimeClassVisitor(NodeVisitor):
                     if GlobalSwitchOption.AUTO_CONVERT_UNDERSCORE_TO_SPACE_IN_NAME
                     else self._cls_name
                 ),
+            )
+        )
+
+        funix_decorator.keywords.append(
+            keyword(
+                arg="is_class_method",
+                value=Constant(value=True),
+            )
+        )
+
+        funix_decorator.keywords.append(
+            keyword(
+                arg="order",
+                value=Constant(value=self.number_tracker),
             )
         )
 
@@ -309,6 +326,7 @@ class RuntimeClassVisitor(NodeVisitor):
                 globals(),
                 locals(),
             )
+            self.number_tracker += 1
         except Exception as e:
             print("=== Executed code start ===")
             print(code)

@@ -234,6 +234,8 @@ def funix(
     app_and_sock: tuple[Flask, Sock] | None = None,
     jupyter_class: bool = False,
     width: Optional[list[str]] = None,
+    is_class_method: bool = False,
+    order: Optional[int] = None,
 ):
     """
     Decorator for functions to convert them to web apps
@@ -280,6 +282,8 @@ def funix(
                                           In jupyter, funix automatically generates the new app and sock.
         jupyter_class(bool): whether this is a class method in jupyter
         width(list[str]): width of the input/output panel
+        is_class_method(bool): whether this is a class method
+        order(int): the order of the function
 
     Returns:
         function: the decorated function
@@ -488,6 +492,8 @@ def funix(
                     "autorun": autorun,
                     "keepLast": keep_last,
                     "width": width if width else ["50%", "50%"],
+                    "class": is_class_method,
+                    "order": order,
                 },
             )
 
@@ -744,7 +750,7 @@ def funix(
     return decorator
 
 
-def funix_class(disable: bool = False):
+def funix_class(disable: bool = False, menu: Optional[str] = None):
     if disable:
         return lambda cls: cls
     return __funix_class

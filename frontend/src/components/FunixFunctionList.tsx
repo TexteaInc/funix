@@ -3,6 +3,7 @@ import {
   Collapse,
   List,
   ListItemButton,
+  ListItemIcon,
   ListItemText,
   ListSubheader,
 } from "@mui/material";
@@ -10,7 +11,13 @@ import { storeAtom } from "../store";
 import { useAtom } from "jotai";
 import { FunctionPreview, getList, objArraySort } from "../shared";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ExpandLess, ExpandMore } from "@mui/icons-material";
+import {
+  DataObject,
+  ExpandLess,
+  ExpandMore,
+  Folder,
+  Functions,
+} from "@mui/icons-material";
 
 export type FunctionListProps = {
   backend: URL;
@@ -49,6 +56,14 @@ const treeToList = (tree: TreeNode): any[] => {
   }
 
   return list;
+};
+
+const safeParseInt = (str: string) => {
+  const result = parseInt(str);
+  if (isNaN(result)) {
+    return Number.MAX_SAFE_INTEGER;
+  }
+  return result;
 };
 
 // Just need children
@@ -110,7 +125,11 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
         ...store,
         functions: list.map((f) => f.name),
       }));
-      setTree(list.some((f) => typeof f.module === "string"));
+      if (list.some((f) => typeof f.module === "string")) {
+        setTree(!list.every((f) => f.module === list[0].module));
+      } else {
+        setTree(false);
+      }
       if (list.length === 1) {
         handleFetchFunctionDetail(list[0]);
         setRadioGroupValue(list[0].path);
@@ -229,6 +248,9 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
               key={functionPreview.name}
               selected={radioGroupValue === functionPreview.path}
             >
+              <ListItemIcon>
+                <Functions />
+              </ListItemIcon>
               <ListItemText primary={functionPreview.name} disableTypography />
             </ListItemButton>
           ))}
@@ -242,14 +264,16 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
   state.forEach((preview) => {
     const path = preview.module ?? "";
     const pathList = path.split(".");
-    pathList.push(`${preview.name}#${preview.path}`);
+    pathList.push(
+      `${preview.name}#${preview.path}#${preview.class}#${preview.order}`,
+    );
     addFileToTree(fileTree, pathList);
   });
 
   const treeList = treeToList(fileTree);
 
   const renderNodeString = (node: string, now: number) => {
-    const [name, path] = node.split("#");
+    const [name, path, _isClass, _order] = node.split("#");
 
     return (
       <ListItemButton
@@ -262,6 +286,9 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
           paddingLeft: `${2 + now}rem`,
         }}
       >
+        <ListItemIcon>
+          <Functions />
+        </ListItemIcon>
         <ListItemText
           primary={name}
           sx={{
@@ -279,21 +306,66 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
 
     const [k, v] = Object.entries(node)[0];
     if (k == "") {
+      const needSort = (v as string[]).some(
+        (element) => element.split("#")[3] != "null",
+      );
+      if (needSort) {
+        return (v as string[])
+          .sort((a, b) => {
+            const [_a, __a, ___a, aOrder] = a.split("#");
+            const [_b, __b, ___b, bOrder] = b.split("#");
+            return safeParseInt(aOrder) - safeParseInt(bOrder);
+          })
+          .map((element) => renderNodeString(element, now));
+      }
       return (v as string[]).map((element) => renderNodeString(element, now));
     }
+
+    const hasClassMethod = Array.isArray(v)
+      ? (v as any[]).every(
+          (element) =>
+            typeof element === "string" && element.split("#")[2] == "true",
+        )
+      : false;
+    const needSort = Array.isArray(v)
+      ? (v as any[]).some(
+          (element) =>
+            typeof element === "string" && element.split("#")[3] != "null",
+        )
+      : false;
+
+    const newV = needSort
+      ? (v as any[]).sort((a, b) => {
+          if (typeof a !== "string") {
+            return -1;
+          }
+
+          if (typeof b !== "string") {
+            return 1;
+          }
+
+          const [_a, __a, ___a, aOrder] = a.split("#");
+          const [_b, __b, ___b, bOrder] = b.split("#");
+          return safeParseInt(aOrder) - safeParseInt(bOrder);
+        })
+      : v;
     return (
       <React.Fragment key={k}>
         <ListItemButton
           onClick={() => {
             setTreeState((state) => ({
               ...state,
-              [`${k}${v}`]: `${k}${v}` in state ? !state[`${k}${v}`] : true,
+              [`${k}${newV}`]:
+                `${k}${newV}` in state ? !state[`${k}${newV}`] : true,
             }));
           }}
           sx={{
             paddingLeft: `${2 + now}rem`,
           }}
         >
+          <ListItemIcon>
+            {hasClassMethod ? <DataObject /> : <Folder />}
+          </ListItemIcon>
           <ListItemText
             primary={k}
             sx={{
@@ -301,7 +373,7 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
             }}
           />
           {`${k}${v}` in treeState ? (
-            treeState[`${k}${v}`] ? (
+            treeState[`${k}${newV}`] ? (
               <ExpandLess />
             ) : (
               <ExpandMore />
@@ -315,7 +387,7 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
           timeout="auto"
           unmountOnExit
         >
-          <List>{renderRoot(v as any[], now + 1)}</List>
+          <List>{renderRoot(newV as any[], now + 1)}</List>
         </Collapse>
       </React.Fragment>
     );

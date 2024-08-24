@@ -89,6 +89,14 @@ export type FunctionPreview = {
    * input panel and output panel width
    */
   width: string[];
+  /**
+   * Is class method
+   */
+  class: boolean;
+  /**
+   * Order of the folder or class
+   */
+  order: number | null;
 };
 
 export type GetListResponse = {
