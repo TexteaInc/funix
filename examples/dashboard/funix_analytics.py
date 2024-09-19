@@ -7,7 +7,9 @@ import json
 from typing import Tuple
 import os
 import geoip2.database
+from datetime import datetime, timedelta
 from pandas import DataFrame
+from funix.session import get_global_variable
 
 
 geolite_2_country_db = os.getenv("GEOLITE_2_COUNTRY_DB_PATH")
@@ -16,6 +18,14 @@ if geolite_2_country_db is None:
 
 
 reader = geoip2.database.Reader(geolite_2_country_db)
+
+
+@funix(disable=True)
+def get_all_functions() -> list[str]:
+    class_instance = get_global_variable("__FUNIX_Analytics")
+    if class_instance is None:
+        return []
+    return list(class_instance.functions)
 
 
 @funix(disable=True)
@@ -51,6 +61,37 @@ def create_max_full_flex_box(children: list[HTML]) -> HTML:
 </div>"""
 
 
+@funix(disable=True)
+def handle_json_line(file: BytesIO) -> pd.DataFrame:
+    first_read = pd.read_json(file, lines=True)
+    result_dataframe = pd.DataFrame(
+        columns=[
+            "time",
+            "response",
+            "ip",
+            "url",
+            "headers",
+            "request",
+            "function",
+            "file",
+        ]
+    )
+    for i in range(first_read.shape[0]):
+        row = first_read.iloc[i]
+        result_dataframe.loc[i] = [
+            datetime.fromisoformat(row["time"]),
+            row["response"],
+            row["request"]["ip"],
+            row["request"]["url"],
+            row["request"]["headers"],
+            row["request"]["data"],
+            row["request"].get("function", None),
+            row["request"].get("file", None),
+        ]
+
+    return result_dataframe
+
+
 @funix_class()
 class Analytics:
     @funix_method(title="Load log file", print_to_web=True)
@@ -59,7 +100,7 @@ class Analytics:
         Load your Funix log file (only support jsonl format).
         """
         buffer = BytesIO(file)
-        self.df = pd.read_json(buffer, lines=True)
+        self.df = handle_json_line(buffer)
 
         self.requests_count = self.df.shape[0]
         self.funix_ids = set()
@@ -68,10 +109,11 @@ class Analytics:
 
         self.countries = set()
         self.countries_times = {}
+        self.error_reports = []
 
-        for request in self.df["request"]:
-            if "ip" in request:
-                ip = request["ip"]
+        for _, single_item in self.df.iterrows():
+            if "ip" in single_item:
+                ip = single_item["ip"]
                 try:
                     response = reader.country(ip)
                     country = response.country.name
@@ -79,23 +121,28 @@ class Analytics:
                     country = "Unknown"
                 self.countries.add(country)
                 self.countries_times[country] = self.countries_times.get(country, 0) + 1
-            if "function" in request:
-                function = request["function"]
+
+            if "function" in single_item and single_item["function"] is not None:
+                function = single_item["function"]
                 self.functions.add(function)
                 self.functions_times[function] = (
                     self.functions_times.get(function, 0) + 1
                 )
 
-            if "headers" in request and "Cookie" in request["headers"]:
-                cookie = request["headers"]["Cookie"]
+            if "headers" in single_item and "Cookie" in single_item["headers"]:
+                cookie = single_item["headers"]["Cookie"]
                 id_ = get_funix_id(cookie)
                 if id_ is not None:
                     self.funix_ids.add(id_)
+
+            if (
+                "response" in single_item
+                and isinstance(single_item["response"], dict)
+                and "error_type" in single_item["response"]
+            ):
+                self.error_reports.append(single_item["response"])
+
         self.functions_count = len(self.functions)
-        self.error_reports = []
-        for response in self.df["response"]:
-            if isinstance(response, dict) and "error_type" in response:
-                self.error_reports.append(response)
 
         print("File loaded successfully.")
 
@@ -106,6 +153,7 @@ class Analytics:
             [{"return_index": 1}, {"return_index": 2}],
         ],
         direction="column",
+        just_run=True,
     )
     def dashboard(self) -> Tuple[HTML, DataFrame, DataFrame]:
         """
@@ -148,3 +196,69 @@ class Analytics:
             functions_data,
             countries_data,
         )
+
+    @funix_method(disable=True)
+    def get_functions_call_details(self, function_name: str, time: datetime) -> list:
+        result = []
+        for index, row in self.df.iterrows():
+            if row["function"] == function_name and row["time"] >= time.replace(
+                tzinfo=row["time"].tzinfo
+            ):
+                result.append(row)
+        return result
+
+    @funix_method(
+        title="Analyse Function",
+        whitelist={
+            "time": ["Day", "Week", "Month", "Year"],
+        },
+    )
+    def anal_one_function(
+        self, function_name: str, time: str
+    ) -> Tuple[HTML, DataFrame]:
+        if function_name not in self.functions:
+            return create_card("No data", "No data found."), DataFrame()
+        time_diff = None
+        if time == "Day":
+            time_diff = 1
+        elif time == "Week":
+            time_diff = 7
+        elif time == "Month":
+            time_diff = 30
+        elif time == "Year":
+            time_diff = 365
+
+        time_diff = datetime.now() - timedelta(days=time_diff)
+        call_details = self.get_functions_call_details(function_name, time_diff)
+
+        if len(call_details) == 0:
+            return create_card("No data", "No data found."), DataFrame()
+
+        function_full_call_times = self.df.loc[
+            self.df["function"] == function_name
+        ].shape[0]
+        function_call_times = len(call_details)
+
+        function_call_percent = function_call_times / function_full_call_times * 100
+
+        function_call_card = create_card(
+            "Function Call",
+            f"{function_call_times} times ({function_call_percent:.2f}%)",
+        )
+
+        countries = {}
+
+        for item in call_details:
+            ip = item["ip"]
+            try:
+                response = reader.country(ip)
+                country = response.country.name
+            except:
+                country = "Unknown"
+            countries[country] = countries.get(country, 0) + 1
+
+        countries_dataframe = DataFrame(
+            {"Country": list(countries.keys()), "Times": list(countries.values())}
+        )
+
+        return function_call_card, countries_dataframe
