@@ -1,10 +1,27 @@
 import { GridColDef, GridToolbar } from "@mui/x-data-grid";
 import { DataGrid } from "../../../Key";
-import { Box } from "@mui/material";
+import { Box, Stack, Typography } from "@mui/material";
 
 export default function OutputDataframe(props: {
   dataframe: { [key: string]: any }[];
 }) {
+  const isEmptyDataframe = props.dataframe.length === 0;
+
+  if (isEmptyDataframe) {
+    return (
+      <Stack
+        sx={{
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: 400,
+          width: "100%",
+        }}
+      >
+        <Typography>No data available</Typography>
+      </Stack>
+    );
+  }
+
   const hasId = "id" in props.dataframe[0];
   const columns: GridColDef[] = [];
   const newDataframe: { [key: string]: any }[] = [];
