@@ -236,6 +236,7 @@ def funix(
     width: Optional[list[str]] = None,
     is_class_method: bool = False,
     order: Optional[int] = None,
+    just_run: bool = False,
 ):
     """
     Decorator for functions to convert them to web apps
@@ -284,6 +285,7 @@ def funix(
         width(list[str]): width of the input/output panel
         is_class_method(bool): whether this is a class method
         order(int): the order of the function
+        just_run(bool): just run the function, no input panel for the function
 
     Returns:
         function: the decorated function
@@ -494,6 +496,7 @@ def funix(
                     "width": width if width else ["50%", "50%"],
                     "class": is_class_method,
                     "order": order,
+                    "justRun": just_run,
                 },
             )
 

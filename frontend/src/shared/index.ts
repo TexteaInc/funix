@@ -97,6 +97,10 @@ export type FunctionPreview = {
    * Order of the folder or class
    */
   order: number | null;
+  /**
+   * No input panel for function
+   */
+  justRun: boolean;
 };
 
 export type GetListResponse = {

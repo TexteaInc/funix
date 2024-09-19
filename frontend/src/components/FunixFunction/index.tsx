@@ -1,5 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
-import { FunctionDetail, FunctionPreview, verifyToken } from "../../shared";
+import {
+  callFunctionRaw,
+  FunctionDetail,
+  FunctionPreview,
+  verifyToken,
+} from "../../shared";
 import { Alert, AlertTitle, Box, Grid, Stack } from "@mui/material";
 import { useAtom } from "jotai";
 import { storeAtom } from "../../store";
@@ -129,6 +134,16 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
         if (preview.keepLast && preview.id in last) {
           setResponse(JSON.stringify(last[preview.id].output));
         }
+      })
+      .then(() => {
+        if (preview.justRun) {
+          // simple run
+          callFunctionRaw(new URL(`/call/${preview.id}`, backend), {}).then(
+            (rsp) => {
+              setResponse(rsp.toString());
+            },
+          );
+        }
       });
   }, [preview, backend, last]);
 
@@ -180,101 +195,118 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
           <InlineBox>You are viewing data from the history.</InlineBox>
         </Alert>
       )}
-      <Stack spacing={2}>
-        <Grid container direction={detail.direction} wrap="nowrap">
-          <Grid
-            item
-            sx={
-              detail.direction === "row" || detail.direction === "row-reverse"
-                ? {
-                    width: `calc(${width[0]} - 16px)`,
-                  }
-                : undefined
-            }
-          >
-            <InputPanel
-              detail={detail}
-              backend={backend}
-              setResponse={setResponse}
-              setOutdated={setOutdated}
-              preview={preview}
-            />
-          </Grid>
-          {detail.direction === "row" || detail.direction === "row-reverse" ? (
-            <Grid
-              item
-              sx={{
-                width: "1rem",
-              }}
-            >
-              <Box
-                id="resize-line"
-                sx={{
-                  height: "100%",
-                  width: "65%",
-                  margin: "0 auto",
-                  backgroundColor: (theme) =>
-                    `${
-                      theme.palette.mode === "dark" && onResizing && "grey.900"
-                    }`,
-                  "&:hover": {
-                    backgroundColor: (theme) =>
-                      `${
-                        theme.palette.mode === "dark" ? "grey.900" : "grey.100"
-                      }`,
-                    cursor: "ew-resize",
-                  },
-                }}
-                onContextMenu={(event) => {
-                  event.preventDefault();
-                }}
-                onPointerDown={(event) => {
-                  event.preventDefault();
-                  setOnResizing(true);
-                  document.body.style.cursor = "col-resize";
-                  document.body.addEventListener(
-                    "pointermove",
-                    handleResize,
-                    true,
-                  );
-                  document.body.addEventListener("pointerup", () => {
-                    document.body.style.cursor = "default";
-                    setOnResizing(false);
-                    document.body.removeEventListener(
-                      "pointermove",
-                      handleResize,
-                      true,
-                    );
-                  });
-                }}
-              />
-            </Grid>
-          ) : (
-            <Grid
-              item
-              sx={{
-                height: "1rem",
-              }}
-            ></Grid>
-          )}
-          <Grid
-            item
-            sx={
-              detail.direction === "row" || detail.direction === "row-reverse"
-                ? {
-                    width: `calc(${width[1]})`,
-                  }
-                : undefined
-            }
-          >
+      {preview.justRun ? (
+        <Stack spacing={2}>
+          <Grid item>
             <OutputPanel
               detail={detail}
               backend={backend}
               response={response}
             />
           </Grid>
-        </Grid>
-      </Stack>
+        </Stack>
+      ) : (
+        <Stack spacing={2}>
+          <Grid container direction={detail.direction} wrap="nowrap">
+            <Grid
+              item
+              sx={
+                detail.direction === "row" || detail.direction === "row-reverse"
+                  ? {
+                      width: `calc(${width[0]} - 16px)`,
+                    }
+                  : undefined
+              }
+            >
+              <InputPanel
+                detail={detail}
+                backend={backend}
+                setResponse={setResponse}
+                setOutdated={setOutdated}
+                preview={preview}
+              />
+            </Grid>
+            {detail.direction === "row" ||
+            detail.direction === "row-reverse" ? (
+              <Grid
+                item
+                sx={{
+                  width: "1rem",
+                }}
+              >
+                <Box
+                  id="resize-line"
+                  sx={{
+                    height: "100%",
+                    width: "65%",
+                    margin: "0 auto",
+                    backgroundColor: (theme) =>
+                      `${
+                        theme.palette.mode === "dark" &&
+                        onResizing &&
+                        "grey.900"
+                      }`,
+                    "&:hover": {
+                      backgroundColor: (theme) =>
+                        `${
+                          theme.palette.mode === "dark"
+                            ? "grey.900"
+                            : "grey.100"
+                        }`,
+                      cursor: "ew-resize",
+                    },
+                  }}
+                  onContextMenu={(event) => {
+                    event.preventDefault();
+                  }}
+                  onPointerDown={(event) => {
+                    event.preventDefault();
+                    setOnResizing(true);
+                    document.body.style.cursor = "col-resize";
+                    document.body.addEventListener(
+                      "pointermove",
+                      handleResize,
+                      true,
+                    );
+                    document.body.addEventListener("pointerup", () => {
+                      document.body.style.cursor = "default";
+                      setOnResizing(false);
+                      document.body.removeEventListener(
+                        "pointermove",
+                        handleResize,
+                        true,
+                      );
+                    });
+                  }}
+                />
+              </Grid>
+            ) : (
+              <Grid
+                item
+                sx={{
+                  height: "1rem",
+                }}
+              ></Grid>
+            )}
+            <Grid
+              item
+              sx={
+                detail.direction === "row" || detail.direction === "row-reverse"
+                  ? {
+                      width: `calc(${width[1]})`,
+                    }
+                  : undefined
+              }
+            >
+              <OutputPanel
+                detail={detail}
+                backend={backend}
+                response={response}
+              />
+            </Grid>
+          </Grid>
+        </Stack>
+      )}
     </>
   ) : warning ? (
     <Alert severity="warning">
