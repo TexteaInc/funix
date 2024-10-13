@@ -26,6 +26,7 @@ app.secret_key = GlobalSwitchOption.get_session_key()
 app.config.update(
     SESSION_COOKIE_PATH="/",
     SESSION_COOKIE_SAMESITE="None",
+    SESSION_COOKIE_SECURE=True,
     SESSION_TYPE="filesystem",
 )
 app.json.sort_keys = False
