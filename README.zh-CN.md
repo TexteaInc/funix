@@ -581,12 +581,12 @@ def gray_it(image: funix.hint.BytesImage) -> IPython.display.Image:
 
 这样，您应该可以调试Funix 的前后端与您的应用程序了。
 
-#### 使用 MUI Pro
+#### 使用 MUI Pro 或 MUI Premium
 
-我们的表格组件可以使用 MUI Pro 中的高级功能。如果你有一个 MUI Pro 的证书许可，你可以使用自己的 MUI Pro 证书并构建前端：
+我们的表格组件可以使用 MUI Pro 或 Premium 中的高级功能。如果你有一个 MUI Pro 的证书许可，你可以使用自己的 MUI Pro 证书并构建前端：
 
 1. 确保安装了 Node.js 和 Yarn；
-2. 运行 `export MUI_PRO_LICENSE_KEY=[MUI_KEY]`；
+2. 运行 `export MUI_PRO_LICENSE_KEY=[MUI_KEY]` 或 `export MUI_PREMIUM_LICENSE_KEY=[MUI_KEY]`；
 3. 运行 `yarn install && yarn funix:build` 构建前端；
 4. 万事大吉！
 
@@ -630,4 +630,3 @@ Funix 从 FastAPI 和 Google Fire 中汲取灵感：透过推断包含类型提�
 ## 联系方式
 
 Forrest dot Bao @ Gmail 
-

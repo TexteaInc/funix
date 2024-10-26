@@ -575,12 +575,12 @@ For debugging:
 1. `yarn funix:test` (Start development mode)
 2. `funix xxx -p 8080 -F` (Use 8080 port and no frontend mode)
 
-#### Building the frontend with MUI Pro
+#### Building the frontend with MUI Pro or MUI Premium
 
-Our table widget uses advanced features in MUI Pro. If you have a MUI Pro license, you can build the frontend with MUI Pro by following the steps below:
+Our table widget uses advanced features in MUI Pro or MUI Premium. If you have a MUI Pro or MUI premium license, you can build the frontend with MUI Pro by following the steps below:
 
 1. Install Node.js and Yarn;
-2. Run `export MUI_PRO_LICENSE_KEY=[MUI_KEY]`;
+2. Run `export MUI_PRO_LICENSE_KEY=[MUI_KEY]` or `export MUI_PREMIUM_LICENSE_KEY=[MUI_KEY]`;
 3. Run `yarn install && yarn funix:build` to build the frontend;
 4. Done!
 
@@ -624,4 +624,3 @@ Funix draws inspiration from FastAPI and Python-Fire: building software interfac
 ## Contact
 
 Forrest dot Bao @ Gmail 
-
