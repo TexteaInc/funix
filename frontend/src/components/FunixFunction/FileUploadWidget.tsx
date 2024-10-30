@@ -168,12 +168,21 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
 
   useEffect(() => {
     fileRejections.forEach((file) => {
-      enqueueSnackbar(
-        `${file.file.name} is bigger than 15MB, use WebAPI to call this function`,
-        {
-          variant: "warning",
-        },
-      );
+      if (file.file.size >= 1024 * 1024 * 15) {
+        enqueueSnackbar(
+          `${file.file.name} is bigger than 15MB, use WebAPI to call this function`,
+          {
+            variant: "warning",
+          },
+        );
+      } else {
+        enqueueSnackbar(
+          `${file.file.name} is not a valid ${props.supportType}`,
+          {
+            variant: "warning",
+          },
+        );
+      }
     });
   }, [fileRejections]);
 
