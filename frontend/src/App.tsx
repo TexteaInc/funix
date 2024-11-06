@@ -60,6 +60,7 @@ import useFunixHistory from "./shared/useFunixHistory";
 import { getCookie, setCookie } from "typescript-cookie";
 import MarkdownDiv from "./components/Common/MarkdownDiv";
 import { useSnackbar } from "notistack";
+import TemplateString from "./components/Common/TemplateString";
 
 const drawerWidth = 240;
 
@@ -584,7 +585,20 @@ const App = () => {
             {theme?.direction === "ltr" ? <ArrowBack /> : <ArrowForward />}
           </IconButton>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            {selectedFunction?.name || "Funix"}
+            <TemplateString
+              template={theme?.funix_header || "{{org}}"}
+              records={{
+                org: selectedFunction?.name || "Funix",
+                functionName: selectedFunction?.name || "No name",
+                functionPath: selectedFunction?.path || "No path",
+                functionId: selectedFunction?.id || "No id",
+                functionHasSecret: selectedFunction?.secret ? "Yes" : "No",
+                functionHasWebsocket: selectedFunction?.websocket
+                  ? "Yes"
+                  : "No",
+                functionModule: selectedFunction?.module || "No module",
+              }}
+            />
           </Typography>
           {selectedFunction && selectedFunction.secret && (
             <IconButton
@@ -742,20 +756,34 @@ const App = () => {
               spacing={2}
             >
               <Typography variant="body2">
-                Powered by <Link href="https://funix.io">Funix.io</Link>,
-                minimally building apps in Python
+                <TemplateString
+                  template={theme?.funix_footer || "{{org}}"}
+                  records={{
+                    org: [
+                      "Powered by ",
+                      <Link href="https://funix.io">Funix.io</Link>,
+                      ", minimally building apps in Python",
+                    ],
+                    year: new Date().getFullYear().toString(),
+                    funixLink: <Link href="https://funix.io">Funix.io</Link>,
+                  }}
+                />
               </Typography>
               <Box>
-                <Link href="https://github.com/TexteaInc/funix">
-                  <IconButton>
-                    <GitHub />
-                  </IconButton>
-                </Link>
-                <Link href="https://discord.gg/sxHQE3mvuZ">
-                  <IconButton>
-                    <SiDiscord />
-                  </IconButton>
-                </Link>
+                {theme?.funix_disable_footer_icons !== true ? (
+                  <>
+                    <Link href="https://github.com/TexteaInc/funix">
+                      <IconButton>
+                        <GitHub />
+                      </IconButton>
+                    </Link>
+                    <Link href="https://discord.gg/sxHQE3mvuZ">
+                      <IconButton>
+                        <SiDiscord />
+                      </IconButton>
+                    </Link>
+                  </>
+                ) : null}
                 {/* <Link href="https://twitter.com/texteaInc">
                 <IconButton>
                   <Twitter />

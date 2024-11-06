@@ -63,7 +63,13 @@ def get_full_style_from_sugar(key: str, value: any) -> dict:
     return dict_replace(sugar_info, "${value}", value)
 
 
-def get_mui_theme(theme: dict, colors: dict, typography: dict, overrides: dict) -> dict:
+def get_mui_theme(
+    theme: dict,
+    colors: dict,
+    typography: dict,
+    overrides: dict,
+    funix_options: dict,
+) -> dict:
     """
     Generate MUI theme from widget style, palette and typography.
     Again, there are no detailed type annotations, please read the Funix documentation and the TS types for MUI Theme.
@@ -72,6 +78,8 @@ def get_mui_theme(theme: dict, colors: dict, typography: dict, overrides: dict) 
         theme (dict): The theme.
         colors (dict): The colors.
         typography (dict): The typography.
+        overrides (dict): The overrides.
+        funix_options (dict): The funix options.
 
     Returns:
         dict: The MUI theme.
@@ -80,6 +88,11 @@ def get_mui_theme(theme: dict, colors: dict, typography: dict, overrides: dict) 
         "components": {},
         "palette": {},
         "typography": {},
+        # funix only
+        "funix_header": "{{org}}",
+        "funix_footer": "{{org}}",
+        "funix_disable_footer_icons": False,
+        "funix_disable_input_title": True,
     }
     temp_colors = {}
     if colors:
@@ -151,6 +164,11 @@ def get_mui_theme(theme: dict, colors: dict, typography: dict, overrides: dict) 
                 ] = theme[widget_name][prop_name]
     if overrides:
         mui_theme["components"].update(overrides)
+    if funix_options:
+        funix_options_add_funix_prefix = {
+            "funix_" + key: funix_options[key] for key in funix_options.keys()
+        }
+        mui_theme.update(funix_options_add_funix_prefix)
     return mui_theme
 
 
@@ -177,6 +195,7 @@ def parse_theme(theme: dict) -> tuple[list[str], dict, dict, dict, dict]:
     custom_palette = {}
     custom_typography = {}
     raw_overrides = {}
+    funix_options = {}
 
     if "widgets" in theme:
         # for type_name in theme["widgets"]:
@@ -262,8 +281,12 @@ def parse_theme(theme: dict) -> tuple[list[str], dict, dict, dict, dict]:
         custom_typography = theme["typography"]
     if "overrides" in theme:
         raw_overrides = theme["overrides"]
+
+    if "funix" in theme:
+        funix_options = theme["funix"]
+
     mui_theme = get_mui_theme(
-        widget_style, custom_palette, custom_typography, raw_overrides
+        widget_style, custom_palette, custom_typography, raw_overrides, funix_options
     )
     return type_names, type_widget_dict, widget_style, custom_palette, mui_theme
 

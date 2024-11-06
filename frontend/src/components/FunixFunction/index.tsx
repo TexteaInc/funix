@@ -112,6 +112,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
     setStore((store) => ({
       ...store,
       theme: detail.theme,
+      showFunctionTitle: !detail.theme?.funix_disable_function_title,
     }));
   }, [detail]);
 

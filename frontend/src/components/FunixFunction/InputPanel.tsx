@@ -5,6 +5,7 @@ import {
   CircularProgress,
   FormControlLabel,
   Grid,
+  Typography,
 } from "@mui/material";
 import Card from "@mui/material/Card";
 import React, { useEffect, useRef, useState } from "react";
@@ -45,6 +46,7 @@ const InputPanel = (props: {
       saveHistory,
       appSecret,
       last,
+      showFunctionTitle,
     },
     setStore,
   ] = useAtom(storeAtom);
@@ -338,6 +340,16 @@ const InputPanel = (props: {
           paddingY: 1,
         }}
       >
+        {showFunctionTitle && (
+          <Typography
+            variant="h5"
+            sx={{
+              marginBottom: 2,
+            }}
+          >
+            {props.preview.name}
+          </Typography>
+        )}
         <Form
           validator={validator}
           schema={props.detail.schema as RJSFSchema}
