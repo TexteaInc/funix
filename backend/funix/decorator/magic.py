@@ -432,11 +432,12 @@ def get_figure_image(figure) -> str:
 
 
 class LambdaVisitor(ast.NodeVisitor):
-    def __init__(self, app_name: str, _globals: dict = None):
+    def __init__(self, app_name: str, _globals: dict = None, _locals: dict = None):
         self.lambda_call_function = None
         self.args = {}
         self.app_name = app_name
         self.globals = _globals
+        self.locals = _locals
 
     def visit_Lambda(self, node):
         if isinstance(node.body, ast.Call):
@@ -446,6 +447,7 @@ class LambdaVisitor(ast.NodeVisitor):
             self.lambda_call_function = eval(
                 compile(func_expr, filename="<ast>", mode="eval"),
                 self.globals,
+                self.locals,
             )
             if (
                 get_function_uuid_with_id(self.app_name, id(self.lambda_call_function))
@@ -457,6 +459,7 @@ class LambdaVisitor(ast.NodeVisitor):
                     eval(
                         compile(ast.Expression(arg), filename="<ast>", mode="eval"),
                         self.globals,
+                        self.locals,
                     )
                     for arg in node.body.args
                 ]
@@ -466,6 +469,7 @@ class LambdaVisitor(ast.NodeVisitor):
                             ast.Expression(keyword.value), filename="<ast>", mode="eval"
                         ),
                         self.globals,
+                        self.locals,
                     )
                     for keyword in node.body.keywords
                 }
@@ -475,9 +479,11 @@ class LambdaVisitor(ast.NodeVisitor):
                 self.args = sign.arguments
 
 
-def get_callable_result(app_name: str, function: Callable) -> dict:
+def get_callable_result(
+    app_name: str, function: Callable, function_locals: dict
+) -> dict:
     if function.__name__ == "<lambda>":
-        visitor = LambdaVisitor(app_name, function.__globals__)
+        visitor = LambdaVisitor(app_name, function.__globals__, function_locals)
         visitor.visit(ast.parse(getsource(function).strip()))
         if visitor.lambda_call_function is None:
             return {"jump": "#", "title": "No jump"}
@@ -497,6 +503,7 @@ def get_callable_result(app_name: str, function: Callable) -> dict:
 
 
 def anal_function_result(
+    frame: Any,
     app_name: str,
     function_call_result: Any,
     return_type_parsed: Any,
@@ -506,6 +513,7 @@ def anal_function_result(
     Analyze the function result to get the frontend-readable data.
 
     Parameters:
+        frame (Any): The frame.
         app_name (str): The app name.
         function_call_result (Any): The function call result.
         return_type_parsed (Any): The parsed return type.
@@ -526,7 +534,7 @@ def anal_function_result(
         return [get_dataframe_json(call_result)]
 
     if return_type_parsed == "Callable":
-        return [get_callable_result(app_name, call_result)]
+        return [get_callable_result(app_name, call_result, frame.f_locals)]
 
     if return_type_parsed in supported_basic_file_types:
         if __ipython_use:
@@ -608,7 +616,7 @@ def anal_function_result(
 
                     if single_return_type == "Callable":
                         call_result[position] = get_callable_result(
-                            app_name, call_result[position]
+                            app_name, call_result[position], frame.f_locals
                         )
 
                     if single_return_type == "Dataframe":
@@ -666,7 +674,9 @@ def anal_function_result(
                 if return_type_parsed == "Dataframe":
                     call_result = [get_dataframe_json(call_result[0])]
                 if return_type_parsed == "Callable":
-                    call_result = [get_callable_result(app_name, call_result[0])]
+                    call_result = [
+                        get_callable_result(app_name, call_result[0], frame.f_locals)
+                    ]
                 if return_type_parsed in supported_basic_file_types:
                     if isinstance(call_result[0], list):
                         if __ipython_use:

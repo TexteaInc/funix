@@ -63,6 +63,31 @@ def kumo_callback():
             pass
 
 
+def call_function_get_frame(func, *args, **kwargs):
+    """
+    From: https://stackoverflow.com/a/52358426
+    Calls the function *func* with the specified arguments and keyword
+    arguments and snatches its local frame before it actually executes.
+    """
+
+    frame = None
+    trace = sys.gettrace()
+
+    def snatch_locals(_frame, name, arg):
+        nonlocal frame
+        if frame is None and name == "call":
+            frame = _frame
+            sys.settrace(trace)
+        return trace
+
+    sys.settrace(snatch_locals)
+    try:
+        result = func(*args, **kwargs)
+    finally:
+        sys.settrace(trace)
+    return frame, result
+
+
 def funix_call(
     app_name: str,
     limiters: list[Limiter] | None,
@@ -136,13 +161,14 @@ def funix_call(
                             function_call_result[index_or_key],
                         )
 
-        def pre_anal_result(function_call_result: Any):
+        def pre_anal_result(frame: Any, function_call_result: Any):
             """
             Document is on the way
             """
             try:
                 original_result_to_pre_fill_metadata(id(function), function_call_result)
                 return anal_function_result(
+                    frame,
                     app_name,
                     function_call_result,
                     return_type_parsed,
@@ -161,8 +187,10 @@ def funix_call(
             """
             # TODO: Best result handling, refactor it if possible
             try:
-                function_call_result = function(**wrapped_function_kwargs)
-                return pre_anal_result(function_call_result)
+                function_call_result = call_function_get_frame(
+                    function, **wrapped_function_kwargs
+                )
+                return pre_anal_result(function_call_result[0], function_call_result[1])
             except WrapperException as e:
                 return {
                     "error_type": "wrapper",
