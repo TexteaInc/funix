@@ -112,9 +112,12 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
     setStore((store) => ({
       ...store,
       theme: detail.theme,
-      showFunctionTitle: detail.theme
-        ? !detail.theme.funix_disable_input_title
-        : false,
+      showFunctionTitle:
+        detail.theme !== null
+          ? "funix_disable_input_title" in detail.theme
+            ? !detail.theme.funix_disable_input_title
+            : false
+          : false,
     }));
   }, [detail]);
 

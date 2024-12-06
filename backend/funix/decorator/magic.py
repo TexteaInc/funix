@@ -10,13 +10,14 @@ to the frontend for direct use or as middleware to return the pre-processed data
 However, their logic is complex, with a lot of if-else, no comments and no unit tests, so it is not very good to infer
 the types of parameters, the types of return values and the rough logic.
 """
+import ast
 import io
 import json
 from importlib import import_module
-from inspect import Parameter, Signature
+from inspect import Parameter, Signature, getsource, signature
 from re import Match, search
 from types import ModuleType
-from typing import Any
+from typing import Any, Callable
 
 from funix.config import (
     builtin_widgets,
@@ -28,6 +29,7 @@ from funix.config import (
 )
 from funix.decorator.annnotation_analyzer import analyze
 from funix.decorator.file import get_static_uri, handle_ipython_audio_image_video
+from funix.decorator.lists import get_function_detail_by_uuid, get_function_uuid_with_id
 
 __matplotlib_use = False
 """
@@ -429,7 +431,73 @@ def get_figure_image(figure) -> str:
         return get_static_uri(buf.getvalue())
 
 
+class LambdaVisitor(ast.NodeVisitor):
+    def __init__(self, app_name: str, _globals: dict = None):
+        self.lambda_call_function = None
+        self.args = {}
+        self.app_name = app_name
+        self.globals = _globals
+
+    def visit_Lambda(self, node):
+        if isinstance(node.body, ast.Call):
+            # I tried, this is the best way to get the call function in my test
+            func_expr = ast.Expression(node.body.func)
+            ast.fix_missing_locations(func_expr)
+            self.lambda_call_function = eval(
+                compile(func_expr, filename="<ast>", mode="eval"),
+                self.globals,
+            )
+            if (
+                get_function_uuid_with_id(self.app_name, id(self.lambda_call_function))
+                == ""
+            ):
+                self.lambda_call_function = None
+            else:
+                args = [
+                    eval(
+                        compile(ast.Expression(arg), filename="<ast>", mode="eval"),
+                        self.globals,
+                    )
+                    for arg in node.body.args
+                ]
+                kwargs = {
+                    keyword.arg: eval(
+                        compile(
+                            ast.Expression(keyword.value), filename="<ast>", mode="eval"
+                        ),
+                        self.globals,
+                    )
+                    for keyword in node.body.keywords
+                }
+                sign = signature(self.lambda_call_function)
+                sign = sign.bind(*args, **kwargs)
+                sign.apply_defaults()
+                self.args = sign.arguments
+
+
+def get_callable_result(app_name: str, function: Callable) -> dict:
+    if function.__name__ == "<lambda>":
+        visitor = LambdaVisitor(app_name, function.__globals__)
+        visitor.visit(ast.parse(getsource(function).strip()))
+        if visitor.lambda_call_function is None:
+            return {"jump": "#", "title": "No jump"}
+        function = visitor.lambda_call_function
+        args = visitor.args
+        jump_uuid = get_function_uuid_with_id(app_name, id(function))
+        if jump_uuid == "":
+            return {"jump": "#", "title": "No jump"}
+        result = get_function_detail_by_uuid(app_name, jump_uuid)
+        return {"jump": result["path"], "title": result["name"], "args": args}
+    else:
+        jump_uuid = get_function_uuid_with_id(app_name, id(function))
+        if jump_uuid == "":
+            return {"jump": "#", "title": "No jump"}
+        result = get_function_detail_by_uuid(app_name, jump_uuid)
+        return {"jump": result["path"], "title": result["name"]}
+
+
 def anal_function_result(
+    app_name: str,
     function_call_result: Any,
     return_type_parsed: Any,
     cast_to_list_flag: bool,
@@ -438,6 +506,7 @@ def anal_function_result(
     Analyze the function result to get the frontend-readable data.
 
     Parameters:
+        app_name (str): The app name.
         function_call_result (Any): The function call result.
         return_type_parsed (Any): The parsed return type.
         cast_to_list_flag (bool): Whether to cast the result to list.
@@ -455,6 +524,9 @@ def anal_function_result(
 
     if return_type_parsed == "Dataframe":
         return [get_dataframe_json(call_result)]
+
+    if return_type_parsed == "Callable":
+        return [get_callable_result(app_name, call_result)]
 
     if return_type_parsed in supported_basic_file_types:
         if __ipython_use:
@@ -534,6 +606,11 @@ def anal_function_result(
                     if single_return_type == "FigureImage":
                         call_result[position] = get_figure_image(call_result[position])
 
+                    if single_return_type == "Callable":
+                        call_result[position] = get_callable_result(
+                            app_name, call_result[position]
+                        )
+
                     if single_return_type == "Dataframe":
                         call_result[position] = get_dataframe_json(
                             call_result[position]
@@ -588,6 +665,8 @@ def anal_function_result(
                     call_result = [get_figure_image(call_result[0])]
                 if return_type_parsed == "Dataframe":
                     call_result = [get_dataframe_json(call_result[0])]
+                if return_type_parsed == "Callable":
+                    call_result = [get_callable_result(app_name, call_result[0])]
                 if return_type_parsed in supported_basic_file_types:
                     if isinstance(call_result[0], list):
                         if __ipython_use:

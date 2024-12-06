@@ -3,6 +3,7 @@ import {
   AccordionDetails,
   AccordionSummary,
   Alert,
+  Button,
   Card,
   CardContent,
   Divider,
@@ -32,6 +33,7 @@ import ThemeReactJson from "../Common/ThemeReactJson";
 import { DataGrid } from "../../Key";
 import OutputDataframe from "./OutputComponents/OutputDataframe";
 import InnerHTML from "dangerously-set-html-content";
+import { useNavigate } from "react-router-dom";
 
 const guessJSON = (response: string | null): object | false => {
   if (response === null) return false;
@@ -218,7 +220,40 @@ const OutputPanel = (props: {
     response: any,
     index: number,
   ) => {
+    const navigate = useNavigate();
     switch (elementType) {
+      case "Callable": {
+        const jumpHref = response.jump;
+        if (jumpHref === undefined || jumpHref === null || jumpHref === "") {
+          return <Button variant="contained">Callable</Button>;
+        }
+        return (
+          <Button
+            variant="contained"
+            onClick={() => {
+              if (
+                jumpHref !== undefined &&
+                jumpHref !== null &&
+                jumpHref !== ""
+              ) {
+                if ("args" in response) {
+                  setStore((store) => {
+                    const newCallableDefault = { ...store.callableDefault };
+                    newCallableDefault[jumpHref] = response.args;
+                    return {
+                      ...store,
+                      callableDefault: newCallableDefault,
+                    };
+                  });
+                }
+                navigate(jumpHref);
+              }
+            }}
+          >
+            {response.title}
+          </Button>
+        );
+      }
       case "Figure":
         return (
           <OutputPlot

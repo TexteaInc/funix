@@ -7,8 +7,8 @@ import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
-from uuid import uuid4
 from urllib.parse import urlparse
+from uuid import uuid4
 
 from flask import Flask, Response, abort, request
 from flask_sock import Sock

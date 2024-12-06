@@ -5,8 +5,8 @@ from threading import Thread
 from flask import Flask
 
 from funix.app import GlobalSwitchOption
-from funix.decorator.lists import enable_list
 from funix.decorator.file import enable_file_service
+from funix.decorator.lists import enable_list
 from funix.util.network import get_unused_port_from, is_port_used
 
 

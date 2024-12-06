@@ -143,6 +143,7 @@ def funix_call(
             try:
                 original_result_to_pre_fill_metadata(id(function), function_call_result)
                 return anal_function_result(
+                    app_name,
                     function_call_result,
                     return_type_parsed,
                     cast_to_list_flag,

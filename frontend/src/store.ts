@@ -22,6 +22,8 @@ export type Store = {
   histories: History[];
   last: Record<string, LastStore>;
   showFunctionTitle: boolean;
+
+  callableDefault: Record<string, Record<any, any>>;
 };
 
 // atomWithStorage("saveHistory", true);
@@ -58,5 +60,6 @@ export const storeAtom = atom<Store>({
   histories: [],
   last: {},
   showFunctionTitle: false,
+  callableDefault: {},
   ...fromLocalStorage(),
 });

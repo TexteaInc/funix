@@ -35,6 +35,60 @@ uuid_with_name: dict[str, dict[str, str]] = {}
 A dict, key is the app name, value is a dict, key is the UUID, value is the function name.
 """
 
+function_id_with_uuid: dict[str, dict[int, str]] = {}
+"""
+A dict, key is the app name, value is a dict, key is the function id, value is the UUID.
+"""
+
+
+def get_function_uuid_with_id(app_name: str, _id: int) -> str:
+    """
+    Get the UUID by the function id.
+
+    Parameters:
+        app_name (str): The app name.
+        _id (int): The function id.
+
+    Returns:
+        str: The UUID.
+    """
+    global function_id_with_uuid
+    return function_id_with_uuid.get(app_name, {}).get(_id, "")
+
+
+def set_function_uuid_with_id(app_name: str, _id: int, uuid: str) -> None:
+    """
+    Set the UUID with the function id.
+
+    Parameters:
+        app_name (str): The app name.
+        _id (int): The function id.
+        uuid (str): The UUID.
+    """
+    global function_id_with_uuid
+    if app_name in function_id_with_uuid:
+        function_id_with_uuid[app_name][_id] = uuid
+    else:
+        function_id_with_uuid[app_name] = {_id: uuid}
+
+
+def get_function_detail_by_uuid(app_name: str, uuid: str) -> dict:
+    """
+    Get the function detail by the function id.
+
+    Parameters:
+        app_name (str): The app name.
+        uuid (srt): The function UUID.
+
+    Returns:
+        dict: The function detail.
+    """
+    global decorated_functions_list
+    for i in decorated_functions_list.get(app_name, []):
+        if i["id"] == uuid:
+            return i
+    return {}
+
 
 def set_uuid_with_name(app_name: str, _id: str, name: str) -> None:
     """

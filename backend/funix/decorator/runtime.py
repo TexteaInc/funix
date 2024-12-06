@@ -18,8 +18,8 @@ from ast import NodeVisitor, unparse
 from typing import Any
 
 import funix
-from funix.config.switch import GlobalSwitchOption
 from funix.app import get_new_app_and_sock_for_jupyter
+from funix.config.switch import GlobalSwitchOption
 from funix.hint import WrapperException
 from funix.session import get_global_variable, set_global_variable
 

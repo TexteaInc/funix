@@ -47,6 +47,7 @@ const InputPanel = (props: {
       appSecret,
       last,
       showFunctionTitle,
+      callableDefault
     },
     setStore,
   ] = useAtom(storeAtom);
@@ -74,6 +75,18 @@ const InputPanel = (props: {
     lock.current = true;
     if (props.preview.keepLast && props.preview.id in last) {
       setForm(last[props.preview.id].input);
+    }
+
+    if (callableDefault !== null && props.preview.path in callableDefault) {
+      setForm(callableDefault[props.preview.path]);
+      setStore((store) => {
+        const newCallableDefault = { ...store.callableDefault };
+        delete newCallableDefault[props.preview.path];
+        return {
+          ...store,
+          callableDefault: newCallableDefault,
+        };
+      });
     }
   }, []);
 

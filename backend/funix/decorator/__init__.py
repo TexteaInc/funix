@@ -8,7 +8,7 @@ from importlib import import_module
 from inspect import getsource, isgeneratorfunction, signature
 from secrets import token_hex
 from types import ModuleType
-from typing import Callable, Optional, Union, ParamSpec, TypeVar
+from typing import Callable, Optional, ParamSpec, TypeVar, Union
 from uuid import uuid4
 
 from docstring_parser import parse
@@ -30,6 +30,7 @@ from funix.decorator.lists import (
     get_default_function_name,
     push_counter,
     set_default_function,
+    set_function_uuid_with_id,
     set_uuid_with_name,
 )
 from funix.decorator.magic import parse_function_annotation
@@ -50,6 +51,7 @@ from funix.decorator.secret import (
 from funix.decorator.theme import get_parsed_theme_fot_funix
 from funix.decorator.widget import parse_argument_config, widget_parse
 from funix.hint import (
+    AcceptableWidgetsList,
     ArgumentConfigType,
     ConditionalVisibleType,
     DestinationType,
@@ -64,7 +66,6 @@ from funix.hint import (
     TreatAsType,
     WhitelistType,
     WidgetsType,
-    AcceptableWidgetsList,
 )
 from funix.jupyter import jupyter
 from funix.util.module import funix_menu_to_safe_function_name
@@ -333,6 +334,7 @@ def funix(
 
             if default:
                 set_default_function(app_.name, function_id)
+            set_function_uuid_with_id(app_.name, id(function), function_id)
 
             safe_module_now = now_module if now_module else menu
 

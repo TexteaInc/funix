@@ -28,6 +28,7 @@ export type ReturnType =
   | "Dataframe"
   | "List"
   | "Dict"
+  | "Callable"
   | FunixType
   | null;
 
