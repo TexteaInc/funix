@@ -47,7 +47,7 @@ const InputPanel = (props: {
       appSecret,
       last,
       showFunctionTitle,
-      callableDefault
+      callableDefault,
     },
     setStore,
   ] = useAtom(storeAtom);

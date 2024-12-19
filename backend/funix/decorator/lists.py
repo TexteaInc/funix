@@ -1,3 +1,5 @@
+from typing import Callable
+
 from flask import Flask
 
 from funix.config.switch import GlobalSwitchOption
@@ -39,6 +41,89 @@ function_id_with_uuid: dict[str, dict[int, str]] = {}
 """
 A dict, key is the app name, value is a dict, key is the function id, value is the UUID.
 """
+
+class_method_map: dict[str, dict[str, tuple[Callable | None, Callable | None]]] = {}
+"""
+{app_name: {method_qualname: (org_method, funix_method)}}
+"""
+
+
+def set_class_method_org(
+    app_name: str, method_qualname: str, org_method: Callable
+) -> None:
+    """
+    Set the original method of the class method.
+
+    Parameters:
+        app_name (str): The app name.
+        method_qualname (str): The method qualname.
+        org_method (Callable): The original method.
+    """
+    global class_method_map
+    if app_name in class_method_map:
+        if method_qualname in class_method_map[app_name]:
+            class_method_map[app_name][method_qualname] = (
+                org_method,
+                class_method_map[app_name][method_qualname][1],
+            )
+        else:
+            class_method_map[app_name][method_qualname] = (org_method, None)
+    else:
+        class_method_map[app_name] = {method_qualname: (org_method, None)}
+
+
+def set_class_method_funix(
+    app_name: str, method_qualname: str, funix_method: Callable
+) -> None:
+    """
+    Set the funix method of the class method.
+
+    Parameters:
+        app_name (str): The app name.
+        method_qualname (str): The method qualname.
+        funix_method (Callable): The funix method.
+    """
+    global class_method_map
+    if app_name in class_method_map:
+        if method_qualname in class_method_map[app_name]:
+            class_method_map[app_name][method_qualname] = (
+                class_method_map[app_name][method_qualname][0],
+                funix_method,
+            )
+        else:
+            class_method_map[app_name][method_qualname] = (None, funix_method)
+    else:
+        class_method_map[app_name] = {method_qualname: (None, funix_method)}
+
+
+def get_class_method_org(app_name: str, method_qualname: str) -> Callable | None:
+    """
+    Get the original method of the class method.
+
+    Parameters:
+        app_name (str): The app name.
+        method_qualname (str): The method qualname.
+
+    Returns:
+        Callable | None: The original method.
+    """
+    global class_method_map
+    return class_method_map.get(app_name, {}).get(method_qualname, (None, None))[0]
+
+
+def get_class_method_funix(app_name: str, method_qualname: str) -> Callable | None:
+    """
+    Get the funix method of the class method.
+
+    Parameters:
+        app_name (str): The app name.
+        method_qualname (str): The method qualname.
+
+    Returns:
+        Callable | None: The funix method.
+    """
+    global class_method_map
+    return class_method_map.get(app_name, {}).get(method_qualname, (None, None))[1]
 
 
 def get_function_uuid_with_id(app_name: str, _id: int) -> str:

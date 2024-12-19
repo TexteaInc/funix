@@ -32,6 +32,7 @@ from funix.decorator.lists import (
     set_default_function,
     set_function_uuid_with_id,
     set_uuid_with_name,
+    set_class_method_funix,
 )
 from funix.decorator.magic import parse_function_annotation
 from funix.decorator.param import (
@@ -236,6 +237,7 @@ def funix(
     jupyter_class: bool = False,
     width: Optional[list[str]] = None,
     is_class_method: bool = False,
+    class_method_qualname: Optional[str] = None,
     order: Optional[int] = None,
     just_run: bool = False,
 ):
@@ -285,6 +287,7 @@ def funix(
         jupyter_class(bool): whether this is a class method in jupyter
         width(list[str]): width of the input/output panel
         is_class_method(bool): whether this is a class method
+        class_method_qualname(str): the qualname of the class method
         order(int): the order of the function
         just_run(bool): just run the function, no input panel for the function
 
@@ -350,6 +353,9 @@ def funix(
 
             if safe_module_now:
                 safe_module_now = funix_menu_to_safe_function_name(safe_module_now)
+
+            if is_class_method and class_method_qualname:
+                set_class_method_funix(app_.name, class_method_qualname, function)
 
             create_parse_type_metadata(function_id)
 

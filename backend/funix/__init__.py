@@ -16,6 +16,7 @@ import funix.decorator.limit as limit
 import funix.decorator.lists as lists
 import funix.decorator.secret as secret
 import funix.decorator.theme as theme
+import funix.decorator.widget as widget
 import funix.hint as hint
 from funix.app import app, enable_funix_host_checker
 from funix.config.switch import GlobalSwitchOption
@@ -53,7 +54,9 @@ import_theme = theme.import_theme
 new_funix_type_with_config_func = hint.new_funix_type_with_config_func
 new_funix_type = hint.new_funix_type
 set_app_secret = secret.set_app_secret
+generate_redirect_link = widget.generate_redirect_link
 # ---- Util ----
+
 # ---- Exports ----
 
 __use_git = False

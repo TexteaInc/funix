@@ -18,8 +18,9 @@ from ast import NodeVisitor, unparse
 from typing import Any
 
 import funix
-from funix.app import get_new_app_and_sock_for_jupyter
+from funix.app import get_new_app_and_sock_for_jupyter, app, sock
 from funix.config.switch import GlobalSwitchOption
+from funix.decorator.lists import set_class_method_org, set_class_method_funix
 from funix.hint import WrapperException
 from funix.session import get_global_variable, set_global_variable
 
@@ -87,8 +88,8 @@ class RuntimeClassVisitor(NodeVisitor):
         if GlobalSwitchOption.in_notebook:
             self.class_app, self.class_sock = get_new_app_and_sock_for_jupyter()
         else:
-            self.class_app = None
-            self.class_sock = None
+            self.class_app = app
+            self.class_sock = sock
 
         self.open_function = False
 
@@ -199,6 +200,13 @@ class RuntimeClassVisitor(NodeVisitor):
                     if GlobalSwitchOption.AUTO_CONVERT_UNDERSCORE_TO_SPACE_IN_NAME
                     else self._cls_name
                 ),
+            )
+        )
+
+        funix_decorator.keywords.append(
+            keyword(
+                arg="class_method_qualname",
+                value=Constant(value=self._cls.__dict__[node.name].__qualname__),
             )
         )
 
@@ -325,6 +333,11 @@ class RuntimeClassVisitor(NodeVisitor):
                 code,
                 globals(),
                 locals(),
+            )
+            set_class_method_org(
+                app_name=self.class_app.name,
+                method_qualname=self._cls.__dict__[node.name].__qualname__,
+                org_method=self._cls.__dict__[node.name],
             )
             self.number_tracker += 1
         except Exception as e:

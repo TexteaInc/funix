@@ -205,15 +205,31 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
   useEffect(() => {
     const pathParam = pathname.substring(1);
     if (pathParam !== radioGroupValue) {
-      const functionPath = decodeURIComponent(pathParam);
+      const functionPath = decodeURIComponent(pathParam).split("?")[0];
       const selectedFunctionPreview = state.filter(
         (preview) => preview.path === functionPath,
       );
       if (selectedFunctionPreview.length !== 0) {
-        setStore((store) => ({
-          ...store,
-          selectedFunction: selectedFunctionPreview[0],
-        }));
+        const searchParams = new URLSearchParams(search);
+        const args = searchParams.get("args");
+
+        setStore((store) => {
+          if (args !== null) {
+            const newCallableDefault = { ...store.callableDefault };
+            newCallableDefault[selectedFunctionPreview[0].path] = JSON.parse(
+              atob(args.replace(/_/g, "/").replace(/-/g, "+")),
+            );
+            return {
+              ...store,
+              callableDefault: newCallableDefault,
+              selectedFunction: selectedFunctionPreview[0],
+            };
+          }
+          return {
+            ...store,
+            selectedFunction: selectedFunctionPreview[0],
+          };
+        });
         setRadioGroupValue(functionPath);
       }
     }
@@ -223,15 +239,17 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
     if (search === "" || typeof radioGroupValue !== "string") return;
     const searchParams = new URLSearchParams(search);
     const secret = searchParams.get("secret");
-    const newFunctionSecret = {
-      ...functionSecret,
-      [radioGroupValue]: secret,
-    };
-    setStore((store) => ({
-      ...store,
-      functionSecret: newFunctionSecret,
-    }));
-    navigate(`/${radioGroupValue}`);
+    if (secret !== null) {
+      const newFunctionSecret = {
+        ...functionSecret,
+        [radioGroupValue]: secret,
+      };
+      setStore((store) => ({
+        ...store,
+        functionSecret: newFunctionSecret,
+      }));
+      navigate(`/${radioGroupValue}`);
+    }
   }, [search, radioGroupValue]);
 
   if (!isTree) {

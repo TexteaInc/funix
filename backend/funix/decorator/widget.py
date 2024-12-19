@@ -1,10 +1,18 @@
+import base64
+import json
 import pathlib
 import re
-from inspect import Parameter
+from inspect import Parameter, signature
 from types import MappingProxyType
-from typing import Any, Union
+from typing import Any, Union, Callable
 
-from funix.hint import ArgumentConfigType
+from funix.app import app
+from funix.decorator.lists import (
+    get_class_method_funix,
+    get_function_uuid_with_id,
+    get_function_detail_by_uuid,
+)
+from funix.hint import ArgumentConfigType, HTML
 from funix.widget import generate_frontend_widget_config
 
 
@@ -294,3 +302,41 @@ def parse_argument_config(
                 raise Exception(
                     f"{function_name}: {single_decorator_arg_name} has both an example and a whitelist"
                 )
+
+
+def generate_redirect_link(
+    function: Callable,
+    *args,
+    **kwargs,
+) -> HTML:
+    """
+    Generate a redirect link.
+
+    Parameters:
+        function(Callable): The function.
+        *args: The args.
+        **kwargs: The kwargs.
+
+    Returns:
+        str | Markdown | HTML: The result.
+    """
+    function_qualname = function.__qualname__
+    _function = function
+    if "." in function_qualname:
+        class_function = get_class_method_funix(
+            app_name=app.name, method_qualname=function_qualname
+        )
+        if class_function:
+            _function = class_function
+        else:
+            raise ValueError(f"Function {function_qualname} not found.")
+    jump_uuid = get_function_uuid_with_id(app_name=app.name, _id=id(_function))
+    if jump_uuid == "":
+        raise ValueError(f"Function {function_qualname} not found.")
+    result = get_function_detail_by_uuid(app_name=app.name, uuid=jump_uuid)
+    arguments = signature(_function).bind(*args, **kwargs)
+    arguments.apply_defaults()
+    dict_args = arguments.arguments
+    json_plain = json.dumps(dict_args)
+    web_safe_args = base64.urlsafe_b64encode(json_plain.encode()).decode()
+    return f"<a href='/{result['path']}?args={web_safe_args}'>{result['name']}</a>"
