@@ -29,10 +29,10 @@ from funix.decorator.lists import (
     enable_list,
     get_default_function_name,
     push_counter,
+    set_class_method_funix,
     set_default_function,
     set_function_uuid_with_id,
     set_uuid_with_name,
-    set_class_method_funix,
 )
 from funix.decorator.magic import parse_function_annotation
 from funix.decorator.param import (
@@ -57,6 +57,7 @@ from funix.hint import (
     ConditionalVisibleType,
     DestinationType,
     DirectionType,
+    DynamicDefaultsType,
     ExamplesType,
     InputLayout,
     LabelsType,
@@ -224,6 +225,7 @@ def funix(
     conditional_visible: ConditionalVisibleType = None,
     argument_config: ArgumentConfigType = None,
     pre_fill: PreFillType = None,
+    dynamic_defaults: DynamicDefaultsType = None,
     menu: Optional[str] = None,
     default: bool = False,
     rate_limit: RateLimiter = None,
@@ -271,6 +273,7 @@ def funix(
         conditional_visible(ConditionalVisibleType): conditional visibility for widgets
         argument_config(ArgumentConfigType): config for widgets
         pre_fill(PreFillType): pre-fill values for parameters
+        dynamic_defaults(DynamicDefaultsType): dynamic defaults for parameters
         menu(str):
             full module path of the function, for `path` only.
             You don't need to set it unless you are funixing a directory and package.
@@ -671,10 +674,12 @@ def funix(
                 return get_param_for_funix(
                     app_.name,
                     pre_fill,
+                    dynamic_defaults,
                     decorated_function,
                     session_description,
                     param_widget_whitelist_callable,
                     param_widget_example_callable,
+                    class_method_qualname if is_class_method else function.__qualname__,
                 )
 
             decorated_function_param_getter_name = f"{function_name}_param_getter"

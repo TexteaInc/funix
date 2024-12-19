@@ -18,9 +18,13 @@ from ast import NodeVisitor, unparse
 from typing import Any
 
 import funix
-from funix.app import get_new_app_and_sock_for_jupyter, app, sock
+from funix.app import app, get_new_app_and_sock_for_jupyter, sock
 from funix.config.switch import GlobalSwitchOption
-from funix.decorator.lists import set_class_method_org, set_class_method_funix
+from funix.decorator.lists import (
+    set_class,
+    set_class_method_funix,
+    set_class_method_org,
+)
 from funix.hint import WrapperException
 from funix.session import get_global_variable, set_global_variable
 
@@ -125,6 +129,7 @@ class RuntimeClassVisitor(NodeVisitor):
         """
         if node.name != self._cls_name:
             return
+        set_class(self.class_app.name, self._cls.__qualname__, self._cls)
         for cls_function in node.body:
             if isinstance(cls_function, FunctionDef):
                 self.open_function = True

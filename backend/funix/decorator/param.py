@@ -2,12 +2,13 @@ from copy import deepcopy
 from inspect import Parameter
 from json import dumps
 from types import MappingProxyType
-from typing import Any
+from typing import Any, Callable
 
 from flask import Response
 
 from funix.config.switch import GlobalSwitchOption
 from funix.decorator.annnotation_analyzer import analyze
+from funix.decorator.lists import get_class, get_class_method_funix
 from funix.decorator.magic import (
     function_param_to_widget,
     get_type_dict,
@@ -306,13 +307,22 @@ def create_parse_type_metadata(function_id: str):
     parse_type_metadata[function_id] = {}
 
 
+def get_real_callable(app: str, function: Callable, qualname: str) -> Callable:
+    if function.__name__ == "<lambda>":
+        org = function(get_class(app, ".".join(qualname.split(".")[:-1])))
+        return get_class_method_funix(app, org.__qualname__)
+    return function
+
+
 def get_param_for_funix(
     app_name: str,
     pre_fill: dict | None,
+    dynamic_defaults: dict | None,
     decorated_function: dict,
     session_description: str,
     param_widget_whitelist_callable: dict,
     param_widget_example_callable: dict,
+    qualname: str,
 ):
     new_decorated_function = deepcopy(decorated_function)
     if pre_fill is not None:
@@ -332,12 +342,25 @@ def get_param_for_funix(
                 new_decorated_function["schema"]["properties"][argument_key][
                     "default"
                 ] = last_result
+    if dynamic_defaults is not None:
+        for argument_key, dynamic_default_callable in dynamic_defaults.items():
+            real_callable = get_real_callable(
+                app_name, dynamic_default_callable, qualname
+            )
+            result = real_callable()
+            new_decorated_function["params"][argument_key]["default"] = result
+            new_decorated_function["schema"]["properties"][argument_key][
+                "default"
+            ] = result
     if param_widget_whitelist_callable:
         for (
             whitelist_,
             whitelist_value_callable,
         ) in param_widget_whitelist_callable.items():
-            whitelist_value = whitelist_value_callable()
+            real_callable = get_real_callable(
+                app_name, whitelist_value_callable, qualname
+            )
+            whitelist_value = real_callable()
             new_decorated_function["params"][whitelist_]["whitelist"] = whitelist_value
             new_decorated_function["schema"]["properties"][whitelist_][
                 "whitelist"
@@ -345,7 +368,9 @@ def get_param_for_funix(
 
     if param_widget_example_callable:
         for example_, example_value_callable in param_widget_example_callable.items():
-            example_value = example_value_callable()
+            example_value = get_real_callable(
+                app_name, example_value_callable, qualname
+            )()
             new_decorated_function["params"][example_]["example"] = example_value
             new_decorated_function["schema"]["properties"][example_][
                 "example"

@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Type
 
 from flask import Flask
 
@@ -46,6 +46,42 @@ class_method_map: dict[str, dict[str, tuple[Callable | None, Callable | None]]] 
 """
 {app_name: {method_qualname: (org_method, funix_method)}}
 """
+
+class_map: dict[str, dict[str, Type]] = {}
+"""
+{app_name: {class_name: class}}
+"""
+
+
+def set_class(app_name: str, class_name: str, class_: Type) -> None:
+    """
+    Set the class.
+
+    Parameters:
+        app_name (str): The app name.
+        class_name (str): The class name.
+        class_ (Type): The class.
+    """
+    global class_map
+    if app_name in class_map:
+        class_map[app_name][class_name] = class_
+    else:
+        class_map[app_name] = {class_name: class_}
+
+
+def get_class(app_name: str, class_name: str) -> Type | None:
+    """
+    Get the class.
+
+    Parameters:
+        app_name (str): The app name.
+        class_name (str): The class name.
+
+    Returns:
+        Type | None: The class.
+    """
+    global class_map
+    return class_map.get(app_name, {}).get(class_name, None)
 
 
 def set_class_method_org(

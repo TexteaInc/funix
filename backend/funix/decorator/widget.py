@@ -4,15 +4,15 @@ import pathlib
 import re
 from inspect import Parameter, signature
 from types import MappingProxyType
-from typing import Any, Union, Callable
+from typing import Any, Callable, Union
 
 from funix.app import app
 from funix.decorator.lists import (
     get_class_method_funix,
-    get_function_uuid_with_id,
     get_function_detail_by_uuid,
+    get_function_uuid_with_id,
 )
-from funix.hint import ArgumentConfigType, HTML
+from funix.hint import HTML, ArgumentConfigType
 from funix.widget import generate_frontend_widget_config
 
 

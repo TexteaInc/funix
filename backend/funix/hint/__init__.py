@@ -117,6 +117,14 @@ Examples:
                                               `["a", "b"]`, for `b` the whitelist is `["c", "d"]`.
 """
 
+DynamicDefaultsType = Optional[dict[Parameters, Callable[..., Any]]]
+"""
+The type of the `dynamic_defaults`.
+
+Examples:
+    {"a": b} -> The parameter `a` has a dynamic default value, and the default value is the result of the function `b`.
+"""
+
 ExamplesValues = list[list[str]] | list[str] | Callable[..., Any]
 """
 The value of the `examples`.
