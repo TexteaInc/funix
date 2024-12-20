@@ -590,9 +590,16 @@ def funix(
                                             "widget"
                                         ] = widget_
                                     if label_.strip():
-                                        decorated_params[param_.arg_name][
-                                            "title"
-                                        ] = f"{param_.arg_name} ({label_})"
+                                        if (
+                                            GlobalSwitchOption.DOCSTRING_TO_ARGUMENT_HELP
+                                        ):
+                                            decorated_params[param_.arg_name][
+                                                "title"
+                                            ] = f"{param_.arg_name} ({label_})"
+                                        else:
+                                            decorated_params[param_.arg_name][
+                                                "title"
+                                            ] = f"{label_}"
                                 else:
                                     if "widget" not in decorated_param_ and widget_:
                                         decorated_params[param_.arg_name][
@@ -602,12 +609,17 @@ def funix(
                                         if "title" not in decorated_param_:
                                             decorated_params[param_.arg_name][
                                                 "title"
-                                            ] = f"{param_.arg_name} (label_)"
+                                            ] = (
+                                                f"{param_.arg_name} ({label_})"
+                                                if GlobalSwitchOption.DOCSTRING_TO_ARGUMENT_HELP
+                                                else f"{label_}"
+                                            )
                                         else:
                                             title_ = decorated_param_["title"]
                                             decorated_params[param_.arg_name][
                                                 "title"
                                             ] = f"{title_} ({label_})"
+
                             except:
                                 pass
 
