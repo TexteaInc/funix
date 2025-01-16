@@ -397,7 +397,7 @@ def funix(
             if GlobalSwitchOption.AUTO_CONVERT_UNDERSCORE_TO_SPACE_IN_NAME:
                 function_name_ = function_name_.replace("_", " ")
 
-            function_title = title if title is not None else function_name_
+            function_title = function_name_
 
             function_docstring_parsed = None
             function_docstring = getattr(function, "__doc__")
@@ -419,6 +419,21 @@ def funix(
                             function_description = un_indent(function_description_)
                     elif function_docstring:
                         function_description = un_indent(function_docstring)
+
+                if GlobalSwitchOption.DOCSTRING_FIRST_LINE_TO_TITLE:
+                    if function_title == function_name_:
+                        if function_docstring:
+                            function_title = un_indent(
+                                function_description.splitlines(True)[0]
+                                .lstrip("#")
+                                .strip()
+                            )
+                            function_description = "\n".join(
+                                function_description.splitlines(True)[1:]
+                            )
+
+            if title:
+                function_title = title
 
             parsed_theme = get_parsed_theme_fot_funix(theme)
 
@@ -781,61 +796,61 @@ def funix(
 def funix_class(disable: bool = False, menu: Optional[str] = None):
     if disable:
         return lambda cls: cls
-    return __funix_class
 
-
-def __funix_class(cls):
-    if not GlobalSwitchOption.in_notebook:
-        if app.name in handled_object:
-            handled_object[app.name].append(id(cls))
-        else:
-            handled_object[app.name] = [id(cls)]
-    if inspect.isclass(cls):
-        if not hasattr(cls, "__init__"):
-            raise Exception("Class must have __init__ method!")
-
-        f = RuntimeClassVisitor(cls.__name__, funix, cls)
-
-        with open(inspect.getsourcefile(cls.__init__), "r") as file_:
-            class_source_code = file_.read()
-
-        f.visit(ast.parse(class_source_code))
-        if GlobalSwitchOption.in_notebook:
-            if f.class_app.name in handled_object:
-                handled_object[f.class_app.name].append(id(cls))
+    def __funix_class(cls):
+        if not GlobalSwitchOption.in_notebook:
+            if app.name in handled_object:
+                handled_object[app.name].append(id(cls))
             else:
-                handled_object[f.class_app.name] = [id(cls)]
-            jupyter(f.class_app)
-        return cls
-    else:
-        if GlobalSwitchOption.in_notebook:
-            class_app, class_sock = get_new_app_and_sock_for_jupyter()
+                handled_object[app.name] = [id(cls)]
+        if inspect.isclass(cls):
+            if not hasattr(cls, "__init__"):
+                raise Exception("Class must have __init__ method!")
+
+            f = RuntimeClassVisitor(cls.__name__, funix, cls, menu)
+
+            with open(inspect.getsourcefile(cls.__init__), "r") as file_:
+                class_source_code = file_.read()
+
+            f.visit(ast.parse(class_source_code))
+            if GlobalSwitchOption.in_notebook:
+                if f.class_app.name in handled_object:
+                    handled_object[f.class_app.name].append(id(cls))
+                else:
+                    handled_object[f.class_app.name] = [id(cls)]
+                jupyter(f.class_app)
+            return cls
         else:
-            class_app = None
-            class_sock = None
-        for class_function in dir(cls):
-            if not class_function.startswith("_"):
-                function = getattr(cls, class_function)
-                if callable(function):
-                    org_id = id(getattr(type(cls), class_function))
-                    if org_id not in class_method_ids_to_params:
-                        if GlobalSwitchOption.in_notebook:
-                            funix(app_and_sock=(class_app, class_sock))(function)
+            if GlobalSwitchOption.in_notebook:
+                class_app, class_sock = get_new_app_and_sock_for_jupyter()
+            else:
+                class_app = None
+                class_sock = None
+            for class_function in dir(cls):
+                if not class_function.startswith("_"):
+                    function = getattr(cls, class_function)
+                    if callable(function):
+                        org_id = id(getattr(type(cls), class_function))
+                        if org_id not in class_method_ids_to_params:
+                            if GlobalSwitchOption.in_notebook:
+                                funix(app_and_sock=(class_app, class_sock))(function)
+                            else:
+                                funix()(function)
                         else:
-                            funix()(function)
-                    else:
-                        params = class_method_ids_to_params[org_id]
-                        args = params["args"]
-                        kwargs = params["kwargs"]
-                        if GlobalSwitchOption.in_notebook:
-                            funix(
-                                *args,
-                                **kwargs,
-                                app_and_sock=(class_app, class_sock),
-                                jupyter_class=True,
-                            )(function)
-                        else:
-                            funix(*args, **kwargs)(function)
-        if GlobalSwitchOption.in_notebook:
-            jupyter(class_app)
-        return cls
+                            params = class_method_ids_to_params[org_id]
+                            args = params["args"]
+                            kwargs = params["kwargs"]
+                            if GlobalSwitchOption.in_notebook:
+                                funix(
+                                    *args,
+                                    **kwargs,
+                                    app_and_sock=(class_app, class_sock),
+                                    jupyter_class=True,
+                                )(function)
+                            else:
+                                funix(*args, **kwargs)(function)
+            if GlobalSwitchOption.in_notebook:
+                jupyter(class_app)
+            return cls
+
+    return __funix_class

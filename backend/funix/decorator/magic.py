@@ -29,7 +29,11 @@ from funix.config import (
 )
 from funix.decorator.annnotation_analyzer import analyze
 from funix.decorator.file import get_static_uri, handle_ipython_audio_image_video
-from funix.decorator.lists import get_function_detail_by_uuid, get_function_uuid_with_id
+from funix.decorator.lists import (
+    get_function_detail_by_uuid,
+    get_function_uuid_with_id,
+    get_class_method_funix,
+)
 
 __matplotlib_use = False
 """
@@ -438,6 +442,10 @@ class LambdaVisitor(ast.NodeVisitor):
         self.app_name = app_name
         self.globals = _globals
         self.locals = _locals
+        self.in_class = False
+        if "_funix_self" in self.locals:
+            self.locals["self"] = self.locals["_funix_self"]
+            self.in_class = True
 
     def visit_Lambda(self, node):
         if isinstance(node.body, ast.Call):
@@ -449,6 +457,15 @@ class LambdaVisitor(ast.NodeVisitor):
                 self.globals,
                 self.locals,
             )
+
+            if self.in_class:
+                self.lambda_call_function = get_class_method_funix(
+                    self.app_name,
+                    self.locals["self"]
+                    .__class__.__dict__[self.lambda_call_function.__name__]
+                    .__qualname__,
+                )
+
             if (
                 get_function_uuid_with_id(self.app_name, id(self.lambda_call_function))
                 == ""

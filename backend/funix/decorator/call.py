@@ -325,7 +325,9 @@ def funix_call(
                     else:
                         result = []
                         for temp_function_result in function(**arg):
-                            function_result = pre_anal_result(temp_function_result)
+                            function_result = pre_anal_result(
+                                None, temp_function_result
+                            )
                             if isinstance(function_result, list):
                                 result.extend(function_result)
                             else:
@@ -345,6 +347,10 @@ def funix_call(
         elif len(upload_base64_files) > 0:
             new_args = function_kwargs
             for upload_base64_file_key in upload_base64_files.keys():
+                if upload_base64_file_key not in function_kwargs:
+                    continue
+                if not function_kwargs[upload_base64_file_key]:
+                    continue
                 if upload_base64_files[upload_base64_file_key] == "single":
                     with urlopen(function_kwargs[upload_base64_file_key]) as rsp:
                         new_args[upload_base64_file_key] = rsp.read()
@@ -357,7 +363,7 @@ def funix_call(
                     output_to_web_function(**new_args)
                 else:
                     for temp_function_result in function(**new_args):
-                        function_result = pre_anal_result(temp_function_result)
+                        function_result = pre_anal_result(None, temp_function_result)
                         ws.send(dumps(function_result))
                     ws.close()
             else:
@@ -368,7 +374,7 @@ def funix_call(
                     output_to_web_function(**function_kwargs)
                 else:
                     for temp_function_result in function(**function_kwargs):
-                        function_result = pre_anal_result(temp_function_result)
+                        function_result = pre_anal_result(None, temp_function_result)
                         ws.send(dumps(function_result))
                     ws.close()
             else:

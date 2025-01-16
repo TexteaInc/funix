@@ -76,7 +76,7 @@ class RuntimeClassVisitor(NodeVisitor):
         open_function (bool): Whether to start function import.
     """
 
-    def __init__(self, cls_name: str, funix_: Any, cls: Any):
+    def __init__(self, cls_name: str, funix_: Any, cls: Any, menu: str):
         """
         Initialize the runtime class visitor.
 
@@ -84,11 +84,13 @@ class RuntimeClassVisitor(NodeVisitor):
             cls_name (str): The class name.
             funix_ (Any): The funix module.
             cls (Any): The class (no instance).
+            menu (str): The menu.
         """
         self.funix = funix_
         self._cls_name = cls_name
         self._cls = cls
         self._imports = []
+        self.menu = menu
         if GlobalSwitchOption.in_notebook:
             self.class_app, self.class_sock = get_new_app_and_sock_for_jupyter()
         else:
@@ -201,19 +203,22 @@ class RuntimeClassVisitor(NodeVisitor):
             keyword(
                 arg="menu",
                 value=Constant(
-                    value=self._cls_name.replace("_", " ")
+                    value=self.menu
+                    if self.menu
+                    else self._cls_name.replace("_", " ")
                     if GlobalSwitchOption.AUTO_CONVERT_UNDERSCORE_TO_SPACE_IN_NAME
                     else self._cls_name
                 ),
             )
         )
 
-        funix_decorator.keywords.append(
-            keyword(
-                arg="class_method_qualname",
-                value=Constant(value=self._cls.__dict__[node.name].__qualname__),
+        if not node.name.startswith("_") or node.name == "__init__":
+            funix_decorator.keywords.append(
+                keyword(
+                    arg="class_method_qualname",
+                    value=Constant(value=self._cls.__dict__[node.name].__qualname__),
+                )
             )
-        )
 
         funix_decorator.keywords.append(
             keyword(
@@ -304,7 +309,7 @@ class RuntimeClassVisitor(NodeVisitor):
             else:
                 function.body = [
                     Assign(
-                        targets=[Name(id="api", ctx=Store())],
+                        targets=[Name(id="_funix_self", ctx=Store())],
                         value=Call(
                             func=Name(id="get_init_function", ctx=Load()),
                             args=[Constant(value=self._cls_name)],
@@ -315,7 +320,7 @@ class RuntimeClassVisitor(NodeVisitor):
                     Return(
                         value=Call(
                             func=Attribute(
-                                value=Name(id="api", ctx=Load()),
+                                value=Name(id="_funix_self", ctx=Load()),
                                 attr=node.name,
                                 ctx=Load(),
                             ),

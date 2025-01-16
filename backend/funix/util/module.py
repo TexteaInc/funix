@@ -67,17 +67,18 @@ def funix_menu_to_safe_function_name(name: str) -> str:
     Returns:
         str: The safe function name.
     """
-    safe_words = digits + ascii_letters + "_"
-    return "".join(
-        map(
-            lambda x: x
-            if x in safe_words
-            else "_"
-            if x == "."
-            else f"__Unicode_{ord(x)}__",
-            name,
-        )
-    )
+    # safe_words = digits + ascii_letters + "_"
+    # return "".join(
+    #     map(
+    #         lambda x: x
+    #         if x in safe_words
+    #         else "_"
+    #         if x == "."
+    #         else f"__Unicode_{ord(x)}__",
+    #         name,
+    #     )
+    # )
+    return name
 
 
 def handle_module(

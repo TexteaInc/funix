@@ -26,6 +26,9 @@ class SwitchOption:
     DOCSTRING_TO_ARGUMENT_HELP: bool = True
     """Auto parse docstring to function argument help"""
 
+    DOCSTRING_FIRST_LINE_TO_TITLE: bool = False
+    """Auto parse docstring first line to function title"""
+
     USE_FIXED_SESSION_KEY: Union[bool, str] = False
     """Use fixed session key"""
 

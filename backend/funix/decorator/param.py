@@ -8,7 +8,7 @@ from flask import Response
 
 from funix.config.switch import GlobalSwitchOption
 from funix.decorator.annnotation_analyzer import analyze
-from funix.decorator.lists import get_class, get_class_method_funix
+from funix.decorator.lists import get_class
 from funix.decorator.magic import (
     function_param_to_widget,
     get_type_dict,
@@ -309,9 +309,15 @@ def create_parse_type_metadata(function_id: str):
 
 def get_real_callable(app: str, function: Callable, qualname: str) -> Callable:
     if function.__name__ == "<lambda>":
-        org = function(get_class(app, ".".join(qualname.split(".")[:-1])))
-        return get_class_method_funix(app, org.__qualname__)
-    return function
+        class_ = get_class(app, ".".join(qualname.split(".")[:-1]))
+        org = function(get_global_variable("__FUNIX_" + class_.__name__))
+        if callable(org):
+            return org
+        else:
+            return lambda: org
+    if callable(function):
+        return function
+    return lambda: function
 
 
 def get_param_for_funix(
@@ -344,14 +350,43 @@ def get_param_for_funix(
                 ] = last_result
     if dynamic_defaults is not None:
         for argument_key, dynamic_default_callable in dynamic_defaults.items():
-            real_callable = get_real_callable(
-                app_name, dynamic_default_callable, qualname
-            )
-            result = real_callable()
-            new_decorated_function["params"][argument_key]["default"] = result
-            new_decorated_function["schema"]["properties"][argument_key][
-                "default"
-            ] = result
+            if isinstance(argument_key, tuple):
+                if isinstance(dynamic_default_callable, tuple):
+                    if len(dynamic_default_callable) != len(argument_key):
+                        raise ValueError(
+                            f"Length of {argument_key} and {dynamic_default_callable} should be the same"
+                        )
+                    for i, argument_key_ in enumerate(argument_key):
+                        real_callable = get_real_callable(
+                            app_name, dynamic_default_callable[i], qualname
+                        )
+                        result = real_callable()
+                        new_decorated_function["params"][argument_key_][
+                            "default"
+                        ] = result
+                        new_decorated_function["schema"]["properties"][argument_key_][
+                            "default"
+                        ] = result
+                else:
+                    result = get_real_callable(
+                        app_name, dynamic_default_callable, qualname
+                    )()
+                    for argument_key_ in argument_key:
+                        new_decorated_function["params"][argument_key_][
+                            "default"
+                        ] = result
+                        new_decorated_function["schema"]["properties"][argument_key_][
+                            "default"
+                        ] = result
+            else:
+                real_callable = get_real_callable(
+                    app_name, dynamic_default_callable, qualname
+                )
+                result = real_callable()
+                new_decorated_function["params"][argument_key]["default"] = result
+                new_decorated_function["schema"]["properties"][argument_key][
+                    "default"
+                ] = result
     if param_widget_whitelist_callable:
         for (
             whitelist_,
