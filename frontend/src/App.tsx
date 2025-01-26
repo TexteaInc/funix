@@ -343,6 +343,19 @@ const App = () => {
     }
   }, [backendURL]);
 
+  useEffect(() => {
+    document.body.addEventListener("click", (event) => {
+      const target = event.target as HTMLElement;
+      if (target !== null && target.tagName === "A") {
+        const href = target.getAttribute("href");
+        if (href && href.startsWith("/")) {
+          event.preventDefault();
+          navigate(href);
+        }
+      }
+    });
+  }, []);
+
   const checkURL = (url: string | undefined): boolean => {
     if (!url) return false;
     try {
