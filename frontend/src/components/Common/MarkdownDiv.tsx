@@ -134,14 +134,6 @@ const MarkdownCode: Components["code"] = ({
           language={langauge || "plaintext"}
           style={monokai}
           showLineNumbers
-          wrapLines
-          wrapLongLines
-          lineProps={{
-            style: {
-              wordBreak: "break-all",
-              whiteSpace: "pre-wrap",
-            },
-          }}
         >
           {child.props.value}
         </SyntaxHighlighter>
@@ -152,14 +144,6 @@ const MarkdownCode: Components["code"] = ({
       language={langauge || "plaintext"}
       style={monokai}
       showLineNumbers
-      wrapLines
-      wrapLongLines
-      lineProps={{
-        style: {
-          wordBreak: "break-all",
-          whiteSpace: "pre-wrap",
-        },
-      }}
     >
       {children as string}
     </SyntaxHighlighter>
