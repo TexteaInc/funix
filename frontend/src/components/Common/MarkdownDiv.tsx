@@ -274,6 +274,7 @@ export default function MarkdownDiv(props: MarkdownDivProps) {
                 navigate(`${props.href}`);
               }}
               color="inherit"
+              title={props.title}
             >
               {props.children}
             </Link>
@@ -283,6 +284,7 @@ export default function MarkdownDiv(props: MarkdownDivProps) {
               target="_blank"
               rel="noopener noreferrer"
               color="inherit"
+              title={props.title}
             >
               {props.children}
             </Link>
