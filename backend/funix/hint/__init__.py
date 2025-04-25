@@ -32,6 +32,14 @@ Types:
     tuple: The name of the parameters, for example: `("a", "b", "c")`.
 """
 
+SingleParameter = str
+"""
+Single parameter.
+
+Types:
+    str: The name of the parameter.
+"""
+
 AcceptableWidgets = Literal[
     "inputbox",
     "slider",
@@ -97,24 +105,21 @@ Examples:
     {("a", "b"): "cell"} -> The parameter `a` and `b` are cells.
 """
 
-WhitelistValues = list[list[str]] | list[str] | Callable[..., Any]
+WhitelistValues = list[str] | Callable[..., Any]
 """
 The value of the `whitelist`.
 
 Types:
-    list[list]: The whitelist, for example: [["a", "b"], ["c", "d"]].
     list: The whitelist, for example: ["a", "b"].
     function: return a list of values.
 """
 
-WhitelistType = Optional[dict[Parameters, WhitelistValues]]
+WhitelistType = Optional[dict[SingleParameter, WhitelistValues]]
 """
 The type of the `whitelist`.
 
 Examples:
     {"a": ["a", "b"]} -> The parameter `a` has a whitelist, and the whitelist is `["a", "b"]`.
-    {("a", "b"): [["a", "b"], ["c", "d"]]} -> The parameter `a` and `b` have a whitelist, and for `a` the whitelist is
-                                              `["a", "b"]`, for `b` the whitelist is `["c", "d"]`.
 """
 
 DynamicDefaultsType = Optional[dict[Parameters, Callable[..., Any]]]
@@ -125,24 +130,21 @@ Examples:
     {"a": b} -> The parameter `a` has a dynamic default value, and the default value is the result of the function `b`.
 """
 
-ExamplesValues = list[list[str]] | list[str] | Callable[..., Any]
+ExamplesValues = list[str] | Callable[..., Any]
 """
 The value of the `examples`.
 
 Types:
-    list[list]: The examples, for example: [["a", "b"], ["c", "d"]].
     list: The examples, for example: ["a", "b"].
     function: return a list of values.
 """
 
-ExamplesType = Optional[dict[Parameters, ExamplesValues]]
+ExamplesType = Optional[dict[SingleParameter, ExamplesValues]]
 """
 The type of the `examples`.
 
 Examples:
     {"a": ["a", "b"]} -> The parameter `a` has examples, and the examples are `"a"` and `"b"`.
-    {("a", "b"): [["a", "b"], ["c", "d"]]} -> The parameter `a` and `b` have examples, and for `a` the examples are
-                                              `"a"`, `"b"`, for `b` the examples are `"c"`, `"d"`.
 """
 
 LabelsType = Optional[dict[Parameters, str]]
