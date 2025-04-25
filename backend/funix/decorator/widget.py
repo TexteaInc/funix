@@ -212,7 +212,14 @@ def process_examples_and_whitelist(
     decorated_params: dict,
     function_name: str,
 ):
-    put_props_in_params(arg_key, arg_type, value, decorated_params)
+    if isinstance(value, list):
+        # is a 2d or more dimension list
+        if isinstance(value[_key_idx], list):
+            put_props_in_params(arg_key, arg_type, value[_key_idx], decorated_params)
+        else:
+            put_props_in_params(arg_key, arg_type, value, decorated_params)
+    else:
+        put_props_in_params(arg_key, arg_type, value, decorated_params)
     check_example_whitelist(arg_key, decorated_params, function_name)
 
 
