@@ -1,6 +1,7 @@
 """
 Funix decorator. The central logic of Funix.
 """
+
 import ast
 import inspect
 from functools import wraps
@@ -566,18 +567,34 @@ def funix(
             if pre_fill:
                 parse_pre_fill(pre_fill)
 
-            widget_parse(
-                function_params,
-                decorated_params,
-                function_name,
-                widgets,
-                argument_labels,
-                treat_as,
-                examples,
-                whitelist,
-                param_widget_whitelist_callable,
-                param_widget_example_callable,
-            )
+            advanced_examples = None
+            if examples and isinstance(examples, list):
+                advanced_examples = examples
+                widget_parse(
+                    function_params,
+                    decorated_params,
+                    function_name,
+                    widgets,
+                    argument_labels,
+                    treat_as,
+                    None,
+                    whitelist,
+                    param_widget_whitelist_callable,
+                    param_widget_example_callable,
+                )
+            else:
+                widget_parse(
+                    function_params,
+                    decorated_params,
+                    function_name,
+                    widgets,
+                    argument_labels,
+                    treat_as,
+                    examples,
+                    whitelist,
+                    param_widget_whitelist_callable,
+                    param_widget_example_callable,
+                )
 
             if function_docstring_parsed is not None:
                 if function_docstring_parsed.params:
@@ -679,6 +696,7 @@ def funix(
                     "input_layout": return_input_layout,
                     "output_layout": return_output_layout,
                     "output_indexes": return_output_indexes,
+                    "advanced_examples": advanced_examples,
                 },
                 "destination": destination,
                 "source": source_code,
