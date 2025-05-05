@@ -37,8 +37,11 @@ type MultilineProps = {
   minRows?: number;
 };
 
+const unique = (arr: any[]) => [...new Set(arr)];
+
 const TextExtendedWidget = ({
   id,
+  name,
   placeholder,
   required,
   readonly,
@@ -54,8 +57,54 @@ const TextExtendedWidget = ({
   uiSchema,
   rawErrors = [],
   registry,
+  formContext,
 }: WidgetProps) => {
   const rawSchema: any = schema;
+  const advancedExamples: Record<string, any>[] | null =
+    formContext.advancedExamples;
+
+  const [availableExamples, setAvailableExamples] = React.useState<string[]>(
+    advancedExamples === null
+      ? []
+      : unique(
+          advancedExamples
+            .filter((example) => {
+              return name in example;
+            })
+            .map((example) => example[name]),
+        ),
+  );
+
+  useEffect(() => {
+    if (advancedExamples !== null) {
+      const fromKeys = Object.keys(formContext.form);
+      setAvailableExamples(
+        unique(
+          advancedExamples
+            .filter((example) => {
+              for (const key of fromKeys) {
+                if (!(key in example)) {
+                  return false;
+                }
+                if (
+                  example[key] !== formContext.form[key] &&
+                  key !== name &&
+                  formContext.form[key] !== ""
+                ) {
+                  return false;
+                }
+              }
+              return true;
+            })
+            .filter((example) => {
+              return name in example;
+            })
+            .map((example) => example[name]),
+        ),
+      );
+    }
+  }, [formContext]);
+
   if (
     schema.widget?.indexOf("slider") !== -1 &&
     schema.widget !== undefined &&
@@ -310,12 +359,15 @@ const TextExtendedWidget = ({
     Free,
     Example,
     Whitelist,
+    AdvancedExamples = 3,
   }
-  const contentPolicy: ContentPolicy = rawSchema["whitelist"]
-    ? ContentPolicy.Whitelist
-    : rawSchema["example"]
-      ? ContentPolicy.Example
-      : ContentPolicy.Free;
+  const contentPolicy: ContentPolicy = formContext.advancedExamples
+    ? ContentPolicy.AdvancedExamples
+    : rawSchema["whitelist"]
+      ? ContentPolicy.Whitelist
+      : rawSchema["example"]
+        ? ContentPolicy.Example
+        : ContentPolicy.Free;
   const autocompleteOptions =
     contentPolicy == ContentPolicy.Whitelist
       ? rawSchema["whitelist"]
@@ -354,7 +406,10 @@ const TextExtendedWidget = ({
     multilineConfig.multiline = false;
   }
 
-  if (autocompleteOptions.length === 0) {
+  if (
+    autocompleteOptions.length === 0 &&
+    contentPolicy != ContentPolicy.AdvancedExamples
+  ) {
     return (
       <TextField
         id={id}
@@ -496,7 +551,11 @@ const TextExtendedWidget = ({
         );
       }}
       freeSolo={freeSolo}
-      options={autocompleteOptions}
+      options={
+        contentPolicy == ContentPolicy.AdvancedExamples
+          ? availableExamples
+          : autocompleteOptions
+      }
       onChange={(_, value) => _onValueChange(value)}
     />
   );

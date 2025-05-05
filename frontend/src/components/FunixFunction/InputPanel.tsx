@@ -370,6 +370,10 @@ const InputPanel = (props: {
           onChange={handleChange}
           widgets={widgets}
           uiSchema={uiSchema}
+          formContext={{
+            advancedExamples: props.detail.schema.advanced_examples,
+            form: form,
+          }}
         />
         <Grid
           container
