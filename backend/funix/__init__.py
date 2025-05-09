@@ -425,7 +425,9 @@ def run(
             print(f"Name: {name}")
             print(f"Secret: {secret_}")
             if not no_frontend:
-                print(f"Link: http://{local}:{port}/{quote(name)}?secret={secret_}")
+                print(
+                    f"Link: http://{host}:{parsed_port}/{quote(name)}?secret={secret_}"
+                )
             print("-" * 15)
 
     if not no_frontend:
