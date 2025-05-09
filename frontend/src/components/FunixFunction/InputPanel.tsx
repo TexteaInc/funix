@@ -185,7 +185,7 @@ const InputPanel = (props: {
 
   const getNewForm = () => {
     return props.preview.secret
-      ? props.preview.name in functionSecret &&
+      ? props.preview.path in functionSecret &&
         functionSecret[props.preview.path] !== null
         ? {
             ...form,
