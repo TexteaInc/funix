@@ -288,7 +288,13 @@ const TypedElement = React.memo(
           />
         );
       case "Dataframe":
-        return <OutputDataframe dataframe={response} />;
+        return (
+          <OutputDataframe
+            dataframe={response}
+            gridHeight={store.theme?.funix_grid_height || 400}
+            checkboxSelection={store.theme?.funix_grid_checkbox || true}
+          />
+        );
       case "string":
       case "text":
         return <span>{response}</span>;
@@ -346,7 +352,6 @@ const TypedElement = React.memo(
   },
 );
 
-// 提取一个空响应组件
 const EmptyResponseAlert = React.memo(() => (
   <Alert severity="info">
     Run the function to see the output/return here. To run, click the Run button
@@ -354,12 +359,10 @@ const EmptyResponseAlert = React.memo(() => (
   </Alert>
 ));
 
-// 提取成功执行的响应组件
 const SuccessResponseAlert = React.memo(() => (
   <Alert severity="success">The function has been successfully executed.</Alert>
 ));
 
-// 提取输出布局项组件
 const OutputLayoutItem = React.memo(
   ({
     item,
@@ -473,12 +476,10 @@ const OutputLayoutItem = React.memo(
     );
   },
   (prevProps, nextProps) => {
-    // 自定义比较方法，减少不必要的重渲染
     return (
       prevProps.rowElementIndex === nextProps.rowElementIndex &&
       prevProps.backend === nextProps.backend &&
       JSON.stringify(prevProps.item) === JSON.stringify(nextProps.item) &&
-      // 只比较相关的响应部分
       (prevProps.item.type !== "return_index" ||
         (Array.isArray(prevProps.item.index)
           ? prevProps.item.index.every(
@@ -496,7 +497,6 @@ const OutputLayoutItem = React.memo(
   },
 );
 
-// 提取输出行组件
 const OutputRow = React.memo(
   ({
     row,
@@ -537,7 +537,6 @@ const OutputRow = React.memo(
   },
 );
 
-// 提取输出列组件
 const OutputColumns = React.memo(
   ({
     parsedResponse,
@@ -574,7 +573,6 @@ const OutputColumns = React.memo(
   },
 );
 
-// 提取有类型布局的响应视图组件
 const TypedLayoutResponseView = React.memo(
   ({
     response,
@@ -597,20 +595,16 @@ const TypedLayoutResponseView = React.memo(
       return result === false ? null : result;
     }, [response]);
 
-    // 如果解析失败，直接显示原始响应
     if (parsedResponse === null) {
       return <code>{response}</code>;
     }
 
-    // 如果不是数组，使用GuessingDataView
     if (!Array.isArray(parsedResponse)) {
       return <GuessingDataView response={response} />;
     }
 
-    // 输出布局
     const output: outputRow[] = detail.schema.output_layout;
 
-    // 确保listReturnType是数组类型
     const safeListReturnType: ReturnType[] = Array.isArray(listReturnType)
       ? listReturnType
       : [listReturnType];
@@ -650,12 +644,10 @@ const ResponseView = React.memo(
     detail: FunctionDetail;
     backend: URL;
   }) => {
-    // 处理空响应
     if (response == null) {
       return <EmptyResponseAlert />;
     }
 
-    // 处理有类型的响应
     if (
       returnType !== undefined &&
       (Array.isArray(returnType) || typeof returnType === "string")
@@ -668,15 +660,9 @@ const ResponseView = React.memo(
           backend={backend}
         />
       );
-    }
-
-    // 处理返回null的响应
-    else if (returnType === null) {
+    } else if (returnType === null) {
       return <SuccessResponseAlert />;
-    }
-
-    // 处理其他类型的响应
-    else {
+    } else {
       return <GuessingDataView response={response} />;
     }
   },

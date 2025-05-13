@@ -94,6 +94,8 @@ def get_mui_theme(
         "funix_run_button": "Run",
         "funix_disable_footer_icons": False,
         "funix_disable_input_title": True,
+        "funix_grid_height": 450,
+        "funix_grid_checkbox": True,
     }
     temp_colors = {}
     if colors:
@@ -160,9 +162,9 @@ def get_mui_theme(
                     get_full_style_from_sugar(prop_name, theme[widget_name][prop_name])
                 )
             else:
-                mui_theme["components"][widget_mui_name]["defaultProps"][
-                    prop_name
-                ] = theme[widget_name][prop_name]
+                mui_theme["components"][widget_mui_name]["defaultProps"][prop_name] = (
+                    theme[widget_name][prop_name]
+                )
     if overrides:
         mui_theme["components"].update(overrides)
     if funix_options:
