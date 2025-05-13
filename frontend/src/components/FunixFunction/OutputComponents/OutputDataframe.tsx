@@ -1,93 +1,129 @@
 import { GridColDef, GridToolbar } from "@mui/x-data-grid";
-import { DataGrid } from "../../../Key";
+import { DataGrid, useGridApiRef } from "../../../Key";
 import { Box, Stack, Typography } from "@mui/material";
+import { useEffect, useMemo } from "react";
+import React from "react";
 
-export default function OutputDataframe(props: {
-  dataframe: { [key: string]: any }[];
-  gridHeight: number;
-  checkboxSelection: boolean;
-}) {
-  const isEmptyDataframe = props.dataframe.length === 0;
+const defaultAutoSizeOptions = {
+  includeHeaders: true,
+  includeOutliers: true,
+  outliersFactor: 1.5,
+};
 
-  if (isEmptyDataframe) {
+const OutputDataframe = React.memo(
+  (props: {
+    dataframe: { [key: string]: any }[];
+    gridHeight: number;
+    checkboxSelection: boolean;
+  }) => {
+    const isEmptyDataframe = props.dataframe.length === 0;
+    const apiRef = useGridApiRef();
+
+    const { columns, newDataframe } = useMemo(() => {
+      if (isEmptyDataframe) {
+        return { columns: [], newDataframe: [] };
+      }
+
+      const hasId = "id" in props.dataframe[0];
+      const columns: GridColDef[] = [];
+      const newDataframe: { [key: string]: any }[] = [];
+
+      const row = props.dataframe[0];
+
+      if (!hasId) {
+        columns.push({
+          field: "id",
+          editable: false,
+          headerName: "ID",
+        });
+      }
+
+      Object.keys(row).forEach((key) => {
+        columns.push({
+          field: key,
+          headerName: key,
+          editable: false,
+        });
+      });
+
+      props.dataframe.forEach((row, index) => {
+        if (!hasId) {
+          newDataframe[index] = {
+            id: index,
+            ...row,
+          };
+        } else {
+          newDataframe[index] = row;
+        }
+      });
+
+      return { columns, newDataframe, hasId };
+    }, [props.dataframe, isEmptyDataframe]);
+
+    useEffect(() => {
+      if (!apiRef.current) return;
+      apiRef.current?.autosizeColumns({
+        ...defaultAutoSizeOptions,
+        columns: columns.map((column) => column.field),
+      });
+    }, [apiRef, columns, newDataframe]);
+
+    if (isEmptyDataframe) {
+      return (
+        <Stack
+          sx={{
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: props.gridHeight,
+            width: "100%",
+          }}
+        >
+          <Typography>No data available</Typography>
+        </Stack>
+      );
+    }
+
     return (
-      <Stack
+      <Box
         sx={{
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: props.gridHeight,
+          display: "flex",
+          flexDirection: "column",
           width: "100%",
+          height: props.gridHeight,
         }}
       >
-        <Typography>No data available</Typography>
-      </Stack>
-    );
-  }
-
-  const hasId = "id" in props.dataframe[0];
-  const columns: GridColDef[] = [];
-  const newDataframe: { [key: string]: any }[] = [];
-
-  const row = props.dataframe[0];
-
-  if (!hasId) {
-    columns.push({
-      field: "id",
-      editable: false,
-      headerName: "ID",
-    });
-  }
-
-  Object.keys(row).forEach((key) => {
-    columns.push({
-      field: key,
-      headerName: key,
-      editable: false,
-    });
-  });
-
-  props.dataframe.forEach((row, index) => {
-    if (!hasId) {
-      newDataframe[index] = {
-        id: index,
-        ...row,
-      };
-    } else {
-      newDataframe[index] = row;
-    }
-  });
-
-  return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        width: "100%",
-        height: props.gridHeight,
-      }}
-    >
-      <DataGrid
-        autoPageSize
-        rows={newDataframe}
-        columns={columns}
-        slots={{
-          toolbar: GridToolbar,
-        }}
-        disableVirtualization
-        checkboxSelection={props.checkboxSelection}
-        autosizeOptions={{
-          includeHeaders: true,
-          includeOutliers: true,
-          outliersFactor: 1.5,
-        }}
-        initialState={{
-          columns: {
-            columnVisibilityModel: {
-              id: false,
+        <DataGrid
+          autoPageSize
+          apiRef={apiRef as any}
+          rows={newDataframe}
+          columns={columns}
+          slots={{
+            toolbar: GridToolbar,
+          }}
+          autosizeOnMount
+          onStateChange={() => {
+            apiRef.current?.autosizeColumns({
+              ...defaultAutoSizeOptions,
+              columns: columns.map((column) => column.field),
+            });
+          }}
+          disableVirtualization
+          checkboxSelection={props.checkboxSelection}
+          autosizeOptions={{
+            ...defaultAutoSizeOptions,
+            columns: columns.map((column) => column.field),
+          }}
+          initialState={{
+            columns: {
+              columnVisibilityModel: {
+                id: false,
+              },
             },
-          },
-        }}
-      />
-    </Box>
-  );
-}
+          }}
+        />
+      </Box>
+    );
+  },
+);
+
+export default OutputDataframe;
