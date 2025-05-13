@@ -1,6 +1,7 @@
 """
 This file is used to define the type hint of the Funix backend.
 """
+
 import os
 from enum import Enum, auto
 from typing import (
@@ -534,7 +535,7 @@ class NewFunixWithComponentType(TypedDict):
 
 
 def new_funix_type(
-    widget: Union[NewFunixWidgetType, NewFunixWithComponentType, dict]
+    widget: Union[NewFunixWidgetType, NewFunixWithComponentType, dict],
 ) -> callable:
     """
     Decorator for creating new funix types.

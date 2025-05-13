@@ -373,7 +373,7 @@ const TextExtendedWidget = ({
         disabled={disabled || readonly}
         type={
           inputType === "number" || inputType === "integer"
-            ? "number"
+            ? "Number"
             : schema.widget === "password"
               ? showPassword
                 ? "text"
@@ -473,7 +473,7 @@ const TextExtendedWidget = ({
             disabled={disabled || readonly}
             type={
               inputType === "number" || inputType === "integer"
-                ? "number"
+                ? "Number"
                 : schema.widget === "password"
                   ? showPassword
                     ? "text"

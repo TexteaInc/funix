@@ -134,14 +134,6 @@ const MarkdownCode: Components["code"] = ({
           language={langauge || "plaintext"}
           style={monokai}
           showLineNumbers
-          wrapLines
-          wrapLongLines
-          lineProps={{
-            style: {
-              wordBreak: "break-all",
-              whiteSpace: "pre-wrap",
-            },
-          }}
         >
           {child.props.value}
         </SyntaxHighlighter>
@@ -152,14 +144,6 @@ const MarkdownCode: Components["code"] = ({
       language={langauge || "plaintext"}
       style={monokai}
       showLineNumbers
-      wrapLines
-      wrapLongLines
-      lineProps={{
-        style: {
-          wordBreak: "break-all",
-          whiteSpace: "pre-wrap",
-        },
-      }}
     >
       {children as string}
     </SyntaxHighlighter>
@@ -290,6 +274,7 @@ export default function MarkdownDiv(props: MarkdownDivProps) {
                 navigate(`${props.href}`);
               }}
               color="inherit"
+              title={props.title}
             >
               {props.children}
             </Link>
@@ -299,6 +284,7 @@ export default function MarkdownDiv(props: MarkdownDivProps) {
               target="_blank"
               rel="noopener noreferrer"
               color="inherit"
+              title={props.title}
             >
               {props.children}
             </Link>
