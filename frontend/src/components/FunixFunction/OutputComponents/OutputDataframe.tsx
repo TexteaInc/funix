@@ -56,20 +56,28 @@ export default function OutputDataframe(props: {
   });
 
   return (
-    <Box sx={{ minHeight: 400, width: "100%" }}>
+    <Box sx={{ display: "flex", flexDirection: "column", width: "100%" }}>
       <DataGrid
-        pagination
-        autoPageSize
         rows={newDataframe}
         columns={columns}
         slots={{
           toolbar: GridToolbar,
         }}
         checkboxSelection
+        autosizeOptions={{
+          includeHeaders: true,
+          includeOutliers: true,
+          outliersFactor: 1.5,
+        }}
         initialState={{
           columns: {
             columnVisibilityModel: {
               id: false,
+            },
+          },
+          pagination: {
+            paginationModel: {
+              pageSize: 5,
             },
           },
         }}

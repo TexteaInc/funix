@@ -91,6 +91,7 @@ def get_mui_theme(
         # funix only
         "funix_header": "{{org}}",
         "funix_footer": "{{org}}",
+        "funix_run_button": "Run",
         "funix_disable_footer_icons": False,
         "funix_disable_input_title": True,
     }

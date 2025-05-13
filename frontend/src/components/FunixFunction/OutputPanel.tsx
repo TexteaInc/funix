@@ -16,7 +16,7 @@ import {
   Typography,
 } from "@mui/material";
 import { GridRowModel, GridToolbar } from "@mui/x-data-grid";
-import React, { ReactElement } from "react";
+import React, { ReactElement, useMemo, useCallback } from "react";
 import { BaseType, FunctionDetail, ReturnType } from "../../shared";
 import OutputError from "./OutputComponents/OutputError";
 import { outputRow } from "json-schema";
@@ -44,19 +44,44 @@ const guessJSON = (response: string | null): object | false => {
   }
 };
 
-const OutputPanel = (props: {
-  detail: FunctionDetail;
-  backend: URL;
-  response: string | null;
-}) => {
-  const [{ showFunctionDetail, viewType }, setStore] = useAtom(storeAtom);
+const ResponseViewRadioGroup = React.memo(
+  ({
+    viewType,
+    onChange,
+  }: {
+    viewType: string;
+    onChange: (value: "json" | "sheet") => void;
+  }) => (
+    <FormControl>
+      <FormLabel id="response-view-radio-group">View in: </FormLabel>
+      <RadioGroup
+        row
+        aria-labelledby="response-view-radio-group"
+        name="response-view-radio-group"
+        value={viewType}
+        onChange={(event) => onChange(event.target.value as "json" | "sheet")}
+      >
+        <FormControlLabel value="json" control={<Radio />} label="JSON" />
+        <FormControlLabel value="sheet" control={<Radio />} label="Sheet" />
+      </RadioGroup>
+    </FormControl>
+  ),
+);
 
-  type ResponseViewProps = {
-    response: string | null;
-    returnType?: { [key: string]: BaseType } | ReturnType[] | ReturnType;
-  };
+const GuessingDataView = React.memo(
+  ({ response }: { response: string | null }) => {
+    const [{ viewType }, setStore] = useAtom(storeAtom);
 
-  const GuessingDataView: React.FC<ResponseViewProps> = ({ response }) => {
+    const handleViewTypeChange = useCallback(
+      (newViewType: "json" | "sheet") => {
+        setStore((store) => ({
+          ...store,
+          viewType: newViewType,
+        }));
+      },
+      [setStore],
+    );
+
     if (response === null) {
       return <></>;
     } else {
@@ -83,35 +108,12 @@ const OutputPanel = (props: {
         if (typeof parsedResponse !== "object" && !is1dArray(parsedResponse)) {
           return <code>{response ?? ""}</code>;
         }
-        const responseViewRadioGroup = (
-          <FormControl>
-            <FormLabel id="response-view-radio-group">View in: </FormLabel>
-            <RadioGroup
-              row
-              aria-labelledby="response-view-radio-group"
-              name="response-view-radio-group"
-              value={viewType}
-              onChange={(event) => {
-                setStore((store) => ({
-                  ...store,
-                  viewType: event.target.value as "json" | "sheet",
-                }));
-              }}
-            >
-              <FormControlLabel value="json" control={<Radio />} label="JSON" />
-              <FormControlLabel
-                value="sheet"
-                control={<Radio />}
-                label="Sheet"
-              />
-            </RadioGroup>
-          </FormControl>
-        );
+
         if (Array.isArray(parsedResponse) && is1dArray(parsedResponse)) {
-          const SelectedResponseView = (props: any) => {
-            if (props.selectedResponseViewType === "json")
+          const SelectedResponseView = useMemo(() => {
+            if (viewType === "json")
               return <ThemeReactJson src={parsedResponse ?? {}} />;
-            else if (props.selectedResponseViewType === "sheet")
+            else if (viewType === "sheet")
               return (
                 <DataGrid
                   pagination
@@ -133,31 +135,39 @@ const OutputPanel = (props: {
                   sx={{ minHeight: 400 }}
                 />
               );
-            else throw new Error("Unsupported selectedResponseViewType");
-          };
+            else return <div>Unsupported view type</div>;
+          }, [parsedResponse, viewType]);
+
           return (
             <div>
-              {responseViewRadioGroup}
-              <SelectedResponseView selectedResponseViewType={viewType} />
+              <ResponseViewRadioGroup
+                viewType={viewType}
+                onChange={handleViewTypeChange}
+              />
+              {SelectedResponseView}
             </div>
           );
         } else if (
           typeof parsedResponse === "object" &&
           parsedResponse !== null
         ) {
-          const keysOfArraysInSheet: string[] = [];
-          for (const [k, v] of Object.entries(parsedResponse)) {
-            if (Array.isArray(v) && is1dArray(v)) {
-              keysOfArraysInSheet.push(k);
+          const keysOfArraysInSheet = useMemo(() => {
+            const keys: string[] = [];
+            for (const [k, v] of Object.entries(parsedResponse)) {
+              if (Array.isArray(v) && is1dArray(v)) {
+                keys.push(k);
+              }
             }
-          }
+            return keys;
+          }, [parsedResponse]);
+
           if (keysOfArraysInSheet.length === 0)
             return <ThemeReactJson src={parsedResponse ?? {}} />;
           else {
-            const SelectedResponseView = (props: any) => {
-              if (props.selectedResponseViewType === "json")
+            const SelectedResponseView = useMemo(() => {
+              if (viewType === "json")
                 return <ThemeReactJson src={parsedResponse ?? {}} />;
-              else if (props.selectedResponseViewType === "sheet") {
+              else if (viewType === "sheet") {
                 const rows: GridRowModel[] = [];
                 let newObject: object = {};
                 for (const [k, v] of Object.entries(parsedResponse)) {
@@ -201,12 +211,16 @@ const OutputPanel = (props: {
                     </div>
                   );
                 } else return grid;
-              } else throw new Error("Unsupported selectedResponseViewType");
-            };
+              } else return <div>Unsupported view type</div>;
+            }, [parsedResponse, viewType, keysOfArraysInSheet]);
+
             return (
               <div>
-                {responseViewRadioGroup}
-                <SelectedResponseView selectedResponseViewType={viewType} />
+                <ResponseViewRadioGroup
+                  viewType={viewType}
+                  onChange={handleViewTypeChange}
+                />
+                {SelectedResponseView}
               </div>
             );
           }
@@ -217,14 +231,22 @@ const OutputPanel = (props: {
         return <code>{response ?? ""}</code>;
       }
     }
-  };
+  },
+);
 
-  const getTypedElement = (
-    elementType: ReturnType,
-    response: any,
-    index: number,
-  ) => {
+const TypedElement = React.memo(
+  ({
+    elementType,
+    response,
+    index,
+  }: {
+    elementType: ReturnType;
+    response: any;
+    index: number;
+  }) => {
     const navigate = useNavigate();
+    const [store, setStore] = useAtom(storeAtom);
+
     switch (elementType) {
       case "Callable": {
         const jumpHref = response.jump;
@@ -293,7 +315,7 @@ const OutputPanel = (props: {
           <OutputMedias
             medias={response}
             type={elementType}
-            backend={props.backend.toString()}
+            backend={store.backend?.toString() || ""}
           />
         );
       case "Code":
@@ -313,178 +335,385 @@ const OutputPanel = (props: {
         }
       case "Files":
         return (
-          <OutputFiles files={response} backend={props.backend.toString()} />
+          <OutputFiles
+            files={response}
+            backend={store.backend?.toString() || ""}
+          />
         );
       default:
         return <GuessingDataView response={JSON.stringify(response)} />;
     }
-  };
+  },
+);
 
-  const ResponseView: React.FC<ResponseViewProps> = ({
-    response,
-    returnType,
+// 提取一个空响应组件
+const EmptyResponseAlert = React.memo(() => (
+  <Alert severity="info">
+    Run the function to see the output/return here. To run, click the Run button
+    at the bottom of the left, input panel.
+  </Alert>
+));
+
+// 提取成功执行的响应组件
+const SuccessResponseAlert = React.memo(() => (
+  <Alert severity="success">The function has been successfully executed.</Alert>
+));
+
+// 提取输出布局项组件
+const OutputLayoutItem = React.memo(
+  ({
+    item,
+    parsedResponse,
+    listReturnType,
+    backend,
+    rowElementIndex,
+  }: {
+    item: any;
+    parsedResponse: any;
+    listReturnType: ReturnType[];
+    backend: string;
+    rowElementIndex: number;
   }) => {
-    if (response == null) {
-      return (
-        <Alert severity="info">
-          Run the function to see the output/return here. To run, click the Run
-          button at the bottom of the left, input panel.
-        </Alert>
-      );
-    } else {
-      if (
-        returnType !== undefined &&
-        (Array.isArray(returnType) || typeof returnType === "string")
-      ) {
-        const listReturnType =
-          typeof returnType === "string" ? [returnType] : returnType;
-        const parsedResponse = guessJSON(response);
-        if (parsedResponse === false) {
-          return <code>{response}</code>;
-        }
-        if (!Array.isArray(parsedResponse))
-          return <GuessingDataView response={response} />;
-        const output: outputRow[] = props.detail.schema.output_layout;
-        const layout: ReactElement[] = [];
-        output.forEach((row) => {
-          const rowElements: ReactElement[] = [];
-          row.forEach((item) => {
-            let itemElement: ReactElement;
-            switch (item.type) {
-              case "markdown":
-                itemElement = (
-                  <MarkdownDiv
-                    markdown={
-                      (Array.isArray(item.content)
-                        ? item.content[0]
-                        : item.content) || ""
-                    }
-                    isRenderInline={false}
-                  />
-                );
-                break;
-              case "html":
-                itemElement = (
-                  <InnerHTML
-                    html={
-                      Array.isArray(item.content)
-                        ? item.content[0]
-                        : item.content || ""
-                    }
-                  />
-                );
-                break;
-              case "divider":
-                itemElement =
-                  item.content !== undefined ? (
-                    <Divider textAlign={item.position || "left"}>
-                      {Array.isArray(item.content)
-                        ? item.content[0]
-                        : item.content}
-                    </Divider>
-                  ) : (
-                    <Divider />
-                  );
-                break;
-              case "images":
-              case "videos":
-              case "audios":
-                itemElement = (
-                  <OutputMedias
-                    medias={item.content || ""}
-                    type={item.type}
-                    backend={props.backend.toString()}
-                  />
-                );
-                break;
-              case "files":
-                itemElement = (
-                  <OutputFiles
-                    files={item.content || ""}
-                    backend={props.backend.toString()}
-                  />
-                );
-                break;
-              case "code":
-                itemElement = (
-                  <OutputCode
-                    code={
-                      (Array.isArray(item.content)
-                        ? item.content[0]
-                        : item.content) || ""
-                    }
-                    language={item.lang}
-                  />
-                );
-                break;
-              case "return_index":
-                if (Array.isArray(item.index)) {
-                  itemElement = <></>;
-                  item.index.forEach((index) => {
-                    itemElement = (
-                      <>
-                        {itemElement}
-                        {getTypedElement(
-                          listReturnType[index],
-                          parsedResponse[index],
-                          index,
-                        )}
-                      </>
-                    );
-                  });
-                } else {
-                  itemElement = getTypedElement(
-                    listReturnType[item.index || 0],
-                    parsedResponse[item.index || 0],
-                    item.index || 0,
-                  );
-                }
-                break;
-              default:
-                itemElement = <code>{item.content ?? ""}</code>;
+    let itemElement: ReactElement;
+
+    switch (item.type) {
+      case "markdown":
+        itemElement = (
+          <MarkdownDiv
+            markdown={
+              (Array.isArray(item.content) ? item.content[0] : item.content) ||
+              ""
             }
-            rowElements.push(
-              <Grid2 xs={item.width || true} mdOffset={item.offset}>
-                {itemElement}
-              </Grid2>,
+            isRenderInline={false}
+          />
+        );
+        break;
+      case "html":
+        itemElement = (
+          <InnerHTML
+            html={
+              Array.isArray(item.content) ? item.content[0] : item.content || ""
+            }
+          />
+        );
+        break;
+      case "divider":
+        itemElement =
+          item.content !== undefined ? (
+            <Divider textAlign={item.position || "left"}>
+              {Array.isArray(item.content) ? item.content[0] : item.content}
+            </Divider>
+          ) : (
+            <Divider />
+          );
+        break;
+      case "images":
+      case "videos":
+      case "audios":
+        itemElement = (
+          <OutputMedias
+            medias={item.content || ""}
+            type={item.type}
+            backend={backend}
+          />
+        );
+        break;
+      case "files":
+        itemElement = (
+          <OutputFiles files={item.content || ""} backend={backend} />
+        );
+        break;
+      case "code":
+        itemElement = (
+          <OutputCode
+            code={
+              (Array.isArray(item.content) ? item.content[0] : item.content) ||
+              ""
+            }
+            language={item.lang}
+          />
+        );
+        break;
+      case "return_index":
+        if (Array.isArray(item.index)) {
+          const elements: ReactElement[] = [];
+          item.index.forEach((index: number) => {
+            elements.push(
+              <TypedElement
+                key={`typed-element-${index}`}
+                elementType={listReturnType[index]}
+                response={parsedResponse[index]}
+                index={index}
+              />,
             );
           });
-          layout.push(
-            <Grid2 container spacing={2} alignItems="center">
-              {rowElements.map((rowElement) => rowElement)}
-            </Grid2>,
+          itemElement = <>{elements}</>;
+        } else {
+          itemElement = (
+            <TypedElement
+              elementType={listReturnType[item.index || 0]}
+              response={parsedResponse[item.index || 0]}
+              index={item.index || 0}
+            />
           );
-        });
-        const columns = parsedResponse
+        }
+        break;
+      default:
+        itemElement = <code>{item.content ?? ""}</code>;
+    }
+
+    return (
+      <Grid2
+        key={`grid-item-${item.type}-${rowElementIndex}`}
+        xs={item.width || true}
+        mdOffset={item.offset}
+      >
+        {itemElement}
+      </Grid2>
+    );
+  },
+  (prevProps, nextProps) => {
+    // 自定义比较方法，减少不必要的重渲染
+    return (
+      prevProps.rowElementIndex === nextProps.rowElementIndex &&
+      prevProps.backend === nextProps.backend &&
+      JSON.stringify(prevProps.item) === JSON.stringify(nextProps.item) &&
+      // 只比较相关的响应部分
+      (prevProps.item.type !== "return_index" ||
+        (Array.isArray(prevProps.item.index)
+          ? prevProps.item.index.every(
+              (idx: number) =>
+                JSON.stringify(prevProps.parsedResponse[idx]) ===
+                JSON.stringify(nextProps.parsedResponse[idx]),
+            )
+          : JSON.stringify(
+              prevProps.parsedResponse[prevProps.item.index || 0],
+            ) ===
+            JSON.stringify(
+              nextProps.parsedResponse[nextProps.item.index || 0],
+            )))
+    );
+  },
+);
+
+// 提取输出行组件
+const OutputRow = React.memo(
+  ({
+    row,
+    rowIndex,
+    parsedResponse,
+    listReturnType,
+    backend,
+  }: {
+    row: any[];
+    rowIndex: number;
+    parsedResponse: any;
+    listReturnType: ReturnType[];
+    backend: string;
+  }) => {
+    const rowElements = useMemo(() => {
+      return row.map((item, itemIndex) => (
+        <OutputLayoutItem
+          key={`item-${rowIndex}-${itemIndex}`}
+          item={item}
+          parsedResponse={parsedResponse}
+          listReturnType={listReturnType}
+          backend={backend}
+          rowElementIndex={itemIndex}
+        />
+      ));
+    }, [row, rowIndex, parsedResponse, listReturnType, backend]);
+
+    return (
+      <Grid2
+        key={`grid-row-${rowIndex}`}
+        container
+        spacing={2}
+        alignItems="center"
+      >
+        {rowElements}
+      </Grid2>
+    );
+  },
+);
+
+// 提取输出列组件
+const OutputColumns = React.memo(
+  ({
+    parsedResponse,
+    listReturnType,
+    outputIndexes,
+  }: {
+    parsedResponse: any[];
+    listReturnType: ReturnType[];
+    outputIndexes: number[] | undefined;
+  }) => {
+    return (
+      <>
+        {parsedResponse
           .filter((_, index) => {
-            if (Array.isArray(props.detail.schema.output_indexes)) {
-              return props.detail.schema.output_indexes.indexOf(index) === -1;
+            if (Array.isArray(outputIndexes)) {
+              return outputIndexes.indexOf(index) === -1;
             } else {
               return true;
             }
           })
           .map((row, index) => {
             const singleReturnType: ReturnType = listReturnType[index];
+            return (
+              <TypedElement
+                key={`column-element-${index}`}
+                elementType={singleReturnType}
+                response={row}
+                index={index}
+              />
+            );
+          })}
+      </>
+    );
+  },
+);
 
-            return getTypedElement(singleReturnType, row, index);
-          });
-        return (
-          <>
-            {layout.map((item) => item)}
-            {columns.map((item) => item)}
-          </>
-        );
-      } else if (returnType === null) {
-        return (
-          <Alert severity="success">
-            The function has been successfully executed.
-          </Alert>
-        );
-      } else {
-        return <GuessingDataView response={response} />;
-      }
+// 提取有类型布局的响应视图组件
+const TypedLayoutResponseView = React.memo(
+  ({
+    response,
+    returnType,
+    detail,
+    backend,
+  }: {
+    response: string;
+    returnType: ReturnType[] | ReturnType;
+    detail: FunctionDetail;
+    backend: URL;
+  }) => {
+    const listReturnType = useMemo(
+      () => (typeof returnType === "string" ? [returnType] : returnType),
+      [returnType],
+    );
+
+    const parsedResponse = useMemo(() => {
+      const result = guessJSON(response);
+      return result === false ? null : result;
+    }, [response]);
+
+    // 如果解析失败，直接显示原始响应
+    if (parsedResponse === null) {
+      return <code>{response}</code>;
     }
-  };
+
+    // 如果不是数组，使用GuessingDataView
+    if (!Array.isArray(parsedResponse)) {
+      return <GuessingDataView response={response} />;
+    }
+
+    // 输出布局
+    const output: outputRow[] = detail.schema.output_layout;
+
+    // 确保listReturnType是数组类型
+    const safeListReturnType: ReturnType[] = Array.isArray(listReturnType)
+      ? listReturnType
+      : [listReturnType];
+
+    return (
+      <>
+        {output.map((row, rowIndex) => (
+          <OutputRow
+            key={`row-${rowIndex}`}
+            row={row}
+            rowIndex={rowIndex}
+            parsedResponse={parsedResponse}
+            listReturnType={safeListReturnType}
+            backend={backend.toString()}
+          />
+        ))}
+
+        <OutputColumns
+          parsedResponse={parsedResponse}
+          listReturnType={safeListReturnType}
+          outputIndexes={detail.schema.output_indexes}
+        />
+      </>
+    );
+  },
+);
+
+const ResponseView = React.memo(
+  ({
+    response,
+    returnType,
+    detail,
+    backend,
+  }: {
+    response: string | null;
+    returnType?: { [key: string]: BaseType } | ReturnType[] | ReturnType;
+    detail: FunctionDetail;
+    backend: URL;
+  }) => {
+    // 处理空响应
+    if (response == null) {
+      return <EmptyResponseAlert />;
+    }
+
+    // 处理有类型的响应
+    if (
+      returnType !== undefined &&
+      (Array.isArray(returnType) || typeof returnType === "string")
+    ) {
+      return (
+        <TypedLayoutResponseView
+          response={response}
+          returnType={returnType}
+          detail={detail}
+          backend={backend}
+        />
+      );
+    }
+
+    // 处理返回null的响应
+    else if (returnType === null) {
+      return <SuccessResponseAlert />;
+    }
+
+    // 处理其他类型的响应
+    else {
+      return <GuessingDataView response={response} />;
+    }
+  },
+);
+
+const OutputPanel = (props: {
+  detail: FunctionDetail;
+  backend: URL;
+  response: string | null;
+}) => {
+  const [{ showFunctionDetail }] = useAtom(storeAtom);
+
+  const functionDetailCard = useMemo(() => {
+    if (!showFunctionDetail) return null;
+    return (
+      <Card>
+        <CardContent>
+          <Typography variant="h5">Function Detail</Typography>
+          <ThemeReactJson src={props.detail} collapsed />
+        </CardContent>
+      </Card>
+    );
+  }, [showFunctionDetail, props.detail]);
+
+  const sourceCodeAccordion = useMemo(() => {
+    if (props.detail.source === "") return null;
+    return (
+      <Accordion>
+        <AccordionSummary expandIcon={<ExpandMore />}>
+          <Typography variant="h5">Source Code</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <OutputCode code={props.detail.source} language="python" />
+        </AccordionDetails>
+      </Accordion>
+    );
+  }, [props.detail.source]);
 
   return (
     <Stack spacing={2} id="output-panel">
@@ -494,28 +723,14 @@ const OutputPanel = (props: {
             <ResponseView
               response={props.response}
               returnType={props.detail.return_type}
+              detail={props.detail}
+              backend={props.backend}
             />
           </Stack>
         </CardContent>
       </Card>
-      {showFunctionDetail && (
-        <Card>
-          <CardContent>
-            <Typography variant="h5">Function Detail</Typography>
-            <ThemeReactJson src={props.detail} collapsed />
-          </CardContent>
-        </Card>
-      )}
-      {props.detail.source !== "" && (
-        <Accordion>
-          <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant="h5">Source Code</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <OutputCode code={props.detail.source} language="python" />
-          </AccordionDetails>
-        </Accordion>
-      )}
+      {functionDetailCard}
+      {sourceCodeAccordion}
     </Stack>
   );
 };
