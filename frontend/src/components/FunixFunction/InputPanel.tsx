@@ -48,6 +48,7 @@ const InputPanel = (props: {
       last,
       showFunctionTitle,
       callableDefault,
+      theme,
     },
     setStore,
   ] = useAtom(storeAtom);
@@ -125,7 +126,6 @@ const InputPanel = (props: {
   }, [backConsensus]);
 
   const handleChange = ({ formData }: Record<string, any>) => {
-    // console.log("Data changed: ", formData);
     setForm(formData);
 
     if (props.preview.reactive) {
@@ -160,7 +160,7 @@ const InputPanel = (props: {
 
     if (props.preview.autorun && autoRun) {
       _.debounce(() => {
-        handleSubmitWithoutHistory().then();
+        handleSubmitWithoutHistory(formData).then();
       }, 100)();
     }
   };
@@ -210,8 +210,10 @@ const InputPanel = (props: {
     );
   };
 
-  const handleSubmitWithoutHistory = async () => {
-    const newForm = getNewForm();
+  const handleSubmitWithoutHistory = async (
+    form: Record<string, any> | undefined = undefined,
+  ) => {
+    const newForm = form ? form : getNewForm();
     setRequestDone(() => false);
     checkResponse().then();
     if (props.preview.websocket) {
@@ -408,7 +410,7 @@ const InputPanel = (props: {
                 waiting && <CircularProgress size={20} color="inherit" />
               }
             >
-              Run
+              {theme?.funix_run_button || "Run"}
             </Button>
           </Grid>
         </Grid>

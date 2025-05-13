@@ -29,6 +29,7 @@ const WrappedDataGrid = (
 ) => {
   return LICENSE_KEY.premium ? (
     <DataGridPremium
+      disableVirtualization
       autosizeOnMount
       pagination
       pageSizeOptions={[5, 10, 20, 50, 100]}
@@ -36,6 +37,7 @@ const WrappedDataGrid = (
     />
   ) : LICENSE_KEY.pro ? (
     <DataGridPro
+      disableVirtualization
       autosizeOnMount
       pagination
       pageSizeOptions={[5, 10, 20, 50, 100]}
@@ -43,7 +45,9 @@ const WrappedDataGrid = (
     />
   ) : (
     <DataGrid
+      disableVirtualization
       autosizeOnMount
+      pagination
       pageSizeOptions={[5, 10, 20, 50, 100]}
       {...props}
     />
