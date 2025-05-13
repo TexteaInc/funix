@@ -4,6 +4,8 @@ import { Box, Stack, Typography } from "@mui/material";
 
 export default function OutputDataframe(props: {
   dataframe: { [key: string]: any }[];
+  gridHeight: number;
+  checkboxSelection: boolean;
 }) {
   const isEmptyDataframe = props.dataframe.length === 0;
 
@@ -13,7 +15,7 @@ export default function OutputDataframe(props: {
         sx={{
           justifyContent: "center",
           alignItems: "center",
-          minHeight: 400,
+          minHeight: props.gridHeight,
           width: "100%",
         }}
       >
@@ -56,14 +58,23 @@ export default function OutputDataframe(props: {
   });
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", width: "100%" }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        width: "100%",
+        height: props.gridHeight,
+      }}
+    >
       <DataGrid
+        autoPageSize
         rows={newDataframe}
         columns={columns}
         slots={{
           toolbar: GridToolbar,
         }}
-        checkboxSelection
+        disableVirtualization
+        checkboxSelection={props.checkboxSelection}
         autosizeOptions={{
           includeHeaders: true,
           includeOutliers: true,
@@ -73,11 +84,6 @@ export default function OutputDataframe(props: {
           columns: {
             columnVisibilityModel: {
               id: false,
-            },
-          },
-          pagination: {
-            paginationModel: {
-              pageSize: 5,
             },
           },
         }}
