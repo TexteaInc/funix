@@ -56,7 +56,7 @@ const InputPanel = (props: {
 
   const [tempOutput, setTempOutput] = useState<string | null>(null);
   const tempOutputRef = React.useRef<string | null>(null);
-  const [autoRun, setAutoRun] = useState(false);
+  const [autoRun, setAutoRun] = useState(true);
   const lock = useRef(false);
 
   const isLarge =
@@ -382,7 +382,7 @@ const InputPanel = (props: {
             <FormControlLabel
               control={
                 <Checkbox
-                  defaultChecked={false}
+                  defaultChecked={true}
                   value={autoRun}
                   onChange={(event) => {
                     setAutoRun(() => event.target.checked);
@@ -390,7 +390,7 @@ const InputPanel = (props: {
                   disabled={!props.preview.autorun}
                 />
               }
-              label="Continuously Run"
+              label="Auto Re-run"
             />
           </Grid>
           <Grid item>
