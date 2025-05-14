@@ -397,7 +397,7 @@ const InputPanel = (props: {
                   defaultChecked={props.preview.autorun}
                 />
               }
-              label={theme?.funix_autorun_label || "Continuously Run"}
+              label={theme?.funix_autorun_label || "Auto-run"}
             />
           </Grid>
           <Grid item>

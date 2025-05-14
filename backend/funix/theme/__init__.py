@@ -96,7 +96,7 @@ def get_mui_theme(
         "funix_disable_input_title": True,
         "funix_grid_height": 450,
         "funix_grid_checkbox": True,
-        "funix_autorun_label": "Continuously Run",
+        "funix_autorun_label": "Auto-run",
     }
     temp_colors = {}
     if colors:
