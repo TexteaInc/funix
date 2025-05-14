@@ -26,6 +26,7 @@ import _ from "lodash";
 import { Form } from "@rjsf/mui";
 import validator from "@rjsf/validator-ajv8";
 import { RJSFSchema } from "@rjsf/utils";
+import TemplateString from "../Common/TemplateString";
 
 const InputPanel = (props: {
   detail: FunctionDetail;
@@ -396,7 +397,7 @@ const InputPanel = (props: {
                   defaultChecked={props.preview.autorun}
                 />
               }
-              label="Continuously Run"
+              label={theme?.funix_autorun_label || "Continuously Run"}
             />
           </Grid>
           <Grid item>
