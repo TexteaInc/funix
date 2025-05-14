@@ -291,8 +291,8 @@ const TypedElement = React.memo(
         return (
           <OutputDataframe
             dataframe={response}
-            gridHeight={store.theme?.funix_grid_height || 400}
-            checkboxSelection={store.theme?.funix_grid_checkbox || true}
+            gridHeight={store.theme?.funix_grid_height}
+            checkboxSelection={store.theme?.funix_grid_checkbox}
           />
         );
       case "string":
