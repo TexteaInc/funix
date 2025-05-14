@@ -599,15 +599,17 @@ const App = () => {
         functionListWidth={functionListWidth}
       >
         <Toolbar>
-          <IconButton
-            color="inherit"
-            size="large"
-            onClick={() => setSideBarOpen(true)}
-            sx={{ mr: 2, ...(sideBarOpen && { display: "none" }) }}
-            edge="start"
-          >
-            {theme?.direction === "ltr" ? <ArrowBack /> : <ArrowForward />}
-          </IconButton>
+          {functions !== null && functions?.length > 1 && (
+            <IconButton
+              color="inherit"
+              size="large"
+              onClick={() => setSideBarOpen(true)}
+              sx={{ mr: 2, ...(sideBarOpen && { display: "none" }) }}
+              edge="start"
+            >
+              {theme?.direction === "ltr" ? <ArrowBack /> : <ArrowForward />}
+            </IconButton>
+          )}
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             <TemplateString
               template={theme?.funix_header || "{{org}}"}
