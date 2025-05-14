@@ -168,7 +168,6 @@ const MarkdownImage = (props: {
         sx={{
           width: props.width ?? "auto",
           height: props.height ?? "auto",
-          margin: "auto",
           maxWidth: "100%",
         }}
       />
