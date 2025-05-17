@@ -57,7 +57,6 @@ const InputPanel = (props: {
 
   const [tempOutput, setTempOutput] = useState<string | null>(null);
   const tempOutputRef = React.useRef<string | null>(null);
-  const [autoRun, setAutoRun] = useState(true);
   const [autoRun, setAutoRun] = useState(
     props.preview.autorun === "always" || props.preview.autorun === "toggleable"
       ? true
