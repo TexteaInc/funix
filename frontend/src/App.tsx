@@ -210,6 +210,7 @@ const App = () => {
       functionSecret,
       saveHistory,
       appSecret,
+      functions,
     },
     setStore,
   ] = useAtom(storeAtom);
@@ -231,7 +232,10 @@ const App = () => {
   const [tempSecret, setTempSecret] = useState(selectedFunctionSecret);
   const [open, setOpen] = useState(false);
   const [tokenOpen, setTokenOpen] = useState(false);
-  const [sideBarOpen, setSideBarOpen] = useState(true); // By default
+  const [sideBarOpen, setSideBarOpen] = useState(() => {
+    return functions !== null && functions.length > 1;
+  }); // By default
+  const functionLock = useRef(false);
   const [historySideBarOpen, setHistorySideBarOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [tempAppSecret, setTempAppSecret] = useState(appSecret);
@@ -281,6 +285,13 @@ const App = () => {
         console.warn("No backend server on the same port!");
       });
   }, [window.location.origin]);
+
+  useEffect(() => {
+    if (functions !== null && !functionLock.current) {
+      setSideBarOpen(functions.length > 1);
+      functionLock.current = true;
+    }
+  }, [functions]);
 
   useEffect(() => {
     if (historyLoaded.current) {
@@ -588,15 +599,17 @@ const App = () => {
         functionListWidth={functionListWidth}
       >
         <Toolbar>
-          <IconButton
-            color="inherit"
-            size="large"
-            onClick={() => setSideBarOpen(true)}
-            sx={{ mr: 2, ...(sideBarOpen && { display: "none" }) }}
-            edge="start"
-          >
-            {theme?.direction === "ltr" ? <ArrowBack /> : <ArrowForward />}
-          </IconButton>
+          {functions !== null && functions?.length > 1 && (
+            <IconButton
+              color="inherit"
+              size="large"
+              onClick={() => setSideBarOpen(true)}
+              sx={{ mr: 2, ...(sideBarOpen && { display: "none" }) }}
+              edge="start"
+            >
+              {theme?.direction === "ltr" ? <ArrowBack /> : <ArrowForward />}
+            </IconButton>
+          )}
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             <TemplateString
               template={theme?.funix_header || "{{org}}"}

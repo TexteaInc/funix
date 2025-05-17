@@ -1,6 +1,7 @@
 """
 Save the app instance here
 """
+
 import hashlib
 import json
 import os
@@ -25,8 +26,7 @@ app = Flask(__name__)
 app.secret_key = GlobalSwitchOption.get_session_key()
 app.config.update(
     SESSION_COOKIE_PATH="/",
-    SESSION_COOKIE_SAMESITE="None",
-    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_SAMESITE="Lax",
     SESSION_TYPE="filesystem",
 )
 app.json.sort_keys = False
@@ -39,9 +39,9 @@ def funix_auto_cors(response: Response) -> Response:
     else:
         response.headers["Access-Control-Allow-Credentials"] = "true"
         response.headers["Access-Control-Allow-Origin"] = request.environ["HTTP_ORIGIN"]
-    response.headers[
-        "Access-Control-Allow-Methods"
-    ] = "GET, HEAD, POST, OPTIONS, PUT, PATCH, DELETE"
+    response.headers["Access-Control-Allow-Methods"] = (
+        "GET, HEAD, POST, OPTIONS, PUT, PATCH, DELETE"
+    )
     response.headers["Access-Control-Allow-Headers"] = "Content-Type, *"
 
     return response

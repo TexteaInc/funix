@@ -154,6 +154,8 @@ const MarkdownImage = (props: {
   src?: string;
   alt?: string;
   title?: string;
+  width?: string | number;
+  height?: string | number;
 }) => {
   if (!props.src) return null;
   return (
@@ -164,9 +166,8 @@ const MarkdownImage = (props: {
         alt={props.alt}
         title={props.title || props.alt}
         sx={{
-          width: "auto",
-          height: "auto",
-          margin: "auto",
+          width: props.width ?? "auto",
+          height: props.height ?? "auto",
           maxWidth: "100%",
         }}
       />
@@ -308,7 +309,13 @@ export default function MarkdownDiv(props: MarkdownDivProps) {
         ),
         hr: () => <Divider />,
         img: (props) => (
-          <MarkdownImage src={props.src} alt={props.alt} title={props.title} />
+          <MarkdownImage
+            src={props.src}
+            alt={props.alt}
+            title={props.title}
+            width={props.width}
+            height={props.height}
+          />
         ),
         strong: (props) => (
           <Typography

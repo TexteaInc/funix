@@ -45,5 +45,6 @@ export declare module "json-schema" {
     input_layout: inputRow[];
     output_layout: outputRow[];
     output_indexes: number[];
+    advanced_examples: null | Record<string, any>[];
   }
 }

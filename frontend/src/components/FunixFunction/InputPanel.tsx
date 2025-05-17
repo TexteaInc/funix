@@ -48,6 +48,7 @@ const InputPanel = (props: {
       last,
       showFunctionTitle,
       callableDefault,
+      theme,
     },
     setStore,
   ] = useAtom(storeAtom);
@@ -57,6 +58,11 @@ const InputPanel = (props: {
   const [tempOutput, setTempOutput] = useState<string | null>(null);
   const tempOutputRef = React.useRef<string | null>(null);
   const [autoRun, setAutoRun] = useState(true);
+  const [autoRun, setAutoRun] = useState(
+    props.preview.autorun === "always" || props.preview.autorun === "toggleable"
+      ? true
+      : false,
+  );
   const lock = useRef(false);
 
   const isLarge =
@@ -125,7 +131,6 @@ const InputPanel = (props: {
   }, [backConsensus]);
 
   const handleChange = ({ formData }: Record<string, any>) => {
-    // console.log("Data changed: ", formData);
     setForm(formData);
 
     if (props.preview.reactive) {
@@ -158,9 +163,13 @@ const InputPanel = (props: {
       }, 100)();
     }
 
-    if (props.preview.autorun && autoRun) {
+    if (
+      (props.preview.autorun === "always" ||
+        props.preview.autorun === "toggleable") &&
+      autoRun
+    ) {
       _.debounce(() => {
-        handleSubmitWithoutHistory().then();
+        handleSubmitWithoutHistory(formData).then();
       }, 100)();
     }
   };
@@ -185,7 +194,7 @@ const InputPanel = (props: {
 
   const getNewForm = () => {
     return props.preview.secret
-      ? props.preview.name in functionSecret &&
+      ? props.preview.path in functionSecret &&
         functionSecret[props.preview.path] !== null
         ? {
             ...form,
@@ -210,8 +219,10 @@ const InputPanel = (props: {
     );
   };
 
-  const handleSubmitWithoutHistory = async () => {
-    const newForm = getNewForm();
+  const handleSubmitWithoutHistory = async (
+    form: Record<string, any> | undefined = undefined,
+  ) => {
+    const newForm = form ? form : getNewForm();
     setRequestDone(() => false);
     checkResponse().then();
     if (props.preview.websocket) {
@@ -370,6 +381,10 @@ const InputPanel = (props: {
           onChange={handleChange}
           widgets={widgets}
           uiSchema={uiSchema}
+          formContext={{
+            advancedExamples: props.detail.schema.advanced_examples,
+            form: form,
+          }}
         />
         <Grid
           container
@@ -379,33 +394,36 @@ const InputPanel = (props: {
           alignItems="center"
         >
           <Grid item xs>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  defaultChecked={true}
-                  value={autoRun}
-                  onChange={(event) => {
-                    setAutoRun(() => event.target.checked);
-                  }}
-                  disabled={!props.preview.autorun}
-                />
-              }
-              label="Auto Re-run"
-            />
+            {props.preview.autorun === "toggleable" && (
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    value={autoRun}
+                    onChange={(event) => {
+                      setAutoRun(() => event.target.checked);
+                    }}
+                    defaultChecked={true}
+                  />
+                }
+                label={theme?.funix_autorun_label || "Auto-run"}
+              />
+            )}
           </Grid>
           <Grid item>
-            <Button
-              variant="contained"
-              size="large"
-              onClick={handleSubmit}
-              sx={{ mt: 1 }}
-              disabled={waiting}
-              startIcon={
-                waiting && <CircularProgress size={20} color="inherit" />
-              }
-            >
-              Run
-            </Button>
+            {props.preview.autorun !== "always" && (
+              <Button
+                variant="contained"
+                size="large"
+                onClick={handleSubmit}
+                sx={{ mt: 1 }}
+                disabled={waiting}
+                startIcon={
+                  waiting && <CircularProgress size={20} color="inherit" />
+                }
+              >
+                {theme?.funix_run_button || "Run"}
+              </Button>
+            )}
           </Grid>
         </Grid>
       </CardContent>

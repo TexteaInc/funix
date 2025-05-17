@@ -1,6 +1,7 @@
 """
 Funix decorator. The central logic of Funix.
 """
+
 import ast
 import inspect
 from functools import wraps
@@ -54,6 +55,7 @@ from funix.decorator.widget import parse_argument_config, widget_parse
 from funix.hint import (
     AcceptableWidgetsList,
     ArgumentConfigType,
+    AutoRunType,
     ConditionalVisibleType,
     DestinationType,
     DirectionType,
@@ -231,7 +233,7 @@ def funix(
     rate_limit: RateLimiter = None,
     reactive: ReactiveType = None,
     print_to_web: bool = False,
-    autorun: bool = False,
+    autorun: AutoRunType = False,
     disable: bool = False,
     figure_to_image: bool = False,
     keep_last: bool = False,
@@ -507,6 +509,11 @@ def funix(
                 app_.post(f"/update/{function_id}")(_function_reactive_update)
                 app_.post(f"/update/{endpoint}")(_function_reactive_update)
 
+            real_autorun = autorun
+
+            if isinstance(autorun, bool):
+                real_autorun = "disable" if not autorun else "always"
+
             decorated_functions_list_append(
                 app_.name,
                 {
@@ -517,7 +524,7 @@ def funix(
                     "id": function_id,
                     "websocket": need_websocket,
                     "reactive": has_reactive_params,
-                    "autorun": autorun,
+                    "autorun": real_autorun,
                     "keepLast": keep_last,
                     "width": width if width else ["50%", "50%"],
                     "class": is_class_method,
@@ -566,18 +573,34 @@ def funix(
             if pre_fill:
                 parse_pre_fill(pre_fill)
 
-            widget_parse(
-                function_params,
-                decorated_params,
-                function_name,
-                widgets,
-                argument_labels,
-                treat_as,
-                examples,
-                whitelist,
-                param_widget_whitelist_callable,
-                param_widget_example_callable,
-            )
+            advanced_examples = None
+            if examples and isinstance(examples, list):
+                advanced_examples = examples
+                widget_parse(
+                    function_params,
+                    decorated_params,
+                    function_name,
+                    widgets,
+                    argument_labels,
+                    treat_as,
+                    None,
+                    whitelist,
+                    param_widget_whitelist_callable,
+                    param_widget_example_callable,
+                )
+            else:
+                widget_parse(
+                    function_params,
+                    decorated_params,
+                    function_name,
+                    widgets,
+                    argument_labels,
+                    treat_as,
+                    examples,
+                    whitelist,
+                    param_widget_whitelist_callable,
+                    param_widget_example_callable,
+                )
 
             if function_docstring_parsed is not None:
                 if function_docstring_parsed.params:
@@ -679,6 +702,7 @@ def funix(
                     "input_layout": return_input_layout,
                     "output_layout": return_output_layout,
                     "output_indexes": return_output_indexes,
+                    "advanced_examples": advanced_examples,
                 },
                 "destination": destination,
                 "source": source_code,

@@ -5,6 +5,9 @@ import {
   DataGridPremiumProps,
 } from "@mui/x-data-grid-premium";
 import { LicenseInfo } from "@mui/x-license";
+import { useGridApiRef as useGridApiRefNormal } from "@mui/x-data-grid";
+import { useGridApiRef as useGridApiRefPro } from "@mui/x-data-grid-pro";
+import { useGridApiRef as useGridApiRefPremium } from "@mui/x-data-grid-premium";
 
 type MUI_LICENSE = {
   pro?: string;
@@ -44,10 +47,17 @@ const WrappedDataGrid = (
   ) : (
     <DataGrid
       autosizeOnMount
+      pagination
       pageSizeOptions={[5, 10, 20, 50, 100]}
       {...props}
     />
   );
 };
 
-export { WrappedDataGrid as DataGrid, registerLicense };
+const useGridApiRef = LICENSE_KEY.premium
+  ? useGridApiRefPremium
+  : LICENSE_KEY.pro
+    ? useGridApiRefPro
+    : useGridApiRefNormal;
+
+export { WrappedDataGrid as DataGrid, registerLicense, useGridApiRef };

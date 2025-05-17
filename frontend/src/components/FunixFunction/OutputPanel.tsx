@@ -49,7 +49,8 @@ const OutputPanel = (props: {
   backend: URL;
   response: string | null;
 }) => {
-  const [{ showFunctionDetail, viewType }, setStore] = useAtom(storeAtom);
+  const [{ showFunctionDetail, viewType, theme }, setStore] =
+    useAtom(storeAtom);
 
   type ResponseViewProps = {
     response: string | null;
@@ -266,7 +267,13 @@ const OutputPanel = (props: {
           />
         );
       case "Dataframe":
-        return <OutputDataframe dataframe={response} />;
+        return (
+          <OutputDataframe
+            dataframe={response}
+            gridHeight={theme?.funix_grid_height}
+            checkboxSelection={theme?.funix_grid_checkbox}
+          />
+        );
       case "string":
       case "text":
         return <span>{response}</span>;
