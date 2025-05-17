@@ -55,6 +55,7 @@ from funix.decorator.widget import parse_argument_config, widget_parse
 from funix.hint import (
     AcceptableWidgetsList,
     ArgumentConfigType,
+    AutoRunType,
     ConditionalVisibleType,
     DestinationType,
     DirectionType,
@@ -232,7 +233,7 @@ def funix(
     rate_limit: RateLimiter = None,
     reactive: ReactiveType = None,
     print_to_web: bool = False,
-    autorun: bool = False,
+    autorun: AutoRunType = False,
     disable: bool = False,
     figure_to_image: bool = False,
     keep_last: bool = False,
@@ -508,6 +509,11 @@ def funix(
                 app_.post(f"/update/{function_id}")(_function_reactive_update)
                 app_.post(f"/update/{endpoint}")(_function_reactive_update)
 
+            real_autorun = autorun
+
+            if isinstance(autorun, bool):
+                real_autorun = "disable" if not autorun else "always"
+
             decorated_functions_list_append(
                 app_.name,
                 {
@@ -518,7 +524,7 @@ def funix(
                     "id": function_id,
                     "websocket": need_websocket,
                     "reactive": has_reactive_params,
-                    "autorun": autorun,
+                    "autorun": real_autorun,
                     "keepLast": keep_last,
                     "width": width if width else ["50%", "50%"],
                     "class": is_class_method,

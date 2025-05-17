@@ -26,7 +26,6 @@ import _ from "lodash";
 import { Form } from "@rjsf/mui";
 import validator from "@rjsf/validator-ajv8";
 import { RJSFSchema } from "@rjsf/utils";
-import TemplateString from "../Common/TemplateString";
 
 const InputPanel = (props: {
   detail: FunctionDetail;
@@ -58,7 +57,11 @@ const InputPanel = (props: {
 
   const [tempOutput, setTempOutput] = useState<string | null>(null);
   const tempOutputRef = React.useRef<string | null>(null);
-  const [autoRun, setAutoRun] = useState(props.preview.autorun);
+  const [autoRun, setAutoRun] = useState(
+    props.preview.autorun === "always" || props.preview.autorun === "toggleable"
+      ? true
+      : false,
+  );
   const lock = useRef(false);
 
   const isLarge =
@@ -159,7 +162,11 @@ const InputPanel = (props: {
       }, 100)();
     }
 
-    if (props.preview.autorun && autoRun) {
+    if (
+      (props.preview.autorun === "always" ||
+        props.preview.autorun === "toggleable") &&
+      autoRun
+    ) {
       _.debounce(() => {
         handleSubmitWithoutHistory(formData).then();
       }, 100)();
@@ -386,33 +393,36 @@ const InputPanel = (props: {
           alignItems="center"
         >
           <Grid item xs>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  value={autoRun}
-                  onChange={(event) => {
-                    setAutoRun(() => event.target.checked);
-                  }}
-                  disabled={!props.preview.autorun}
-                  defaultChecked={props.preview.autorun}
-                />
-              }
-              label={theme?.funix_autorun_label || "Auto-run"}
-            />
+            {props.preview.autorun === "toggleable" && (
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    value={autoRun}
+                    onChange={(event) => {
+                      setAutoRun(() => event.target.checked);
+                    }}
+                    defaultChecked={true}
+                  />
+                }
+                label={theme?.funix_autorun_label || "Auto-run"}
+              />
+            )}
           </Grid>
           <Grid item>
-            <Button
-              variant="contained"
-              size="large"
-              onClick={handleSubmit}
-              sx={{ mt: 1 }}
-              disabled={waiting}
-              startIcon={
-                waiting && <CircularProgress size={20} color="inherit" />
-              }
-            >
-              {theme?.funix_run_button || "Run"}
-            </Button>
+            {props.preview.autorun !== "always" && (
+              <Button
+                variant="contained"
+                size="large"
+                onClick={handleSubmit}
+                sx={{ mt: 1 }}
+                disabled={waiting}
+                startIcon={
+                  waiting && <CircularProgress size={20} color="inherit" />
+                }
+              >
+                {theme?.funix_run_button || "Run"}
+              </Button>
+            )}
           </Grid>
         </Grid>
       </CardContent>
