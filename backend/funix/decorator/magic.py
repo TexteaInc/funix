@@ -10,6 +10,7 @@ to the frontend for direct use or as middleware to return the pre-processed data
 However, their logic is complex, with a lot of if-else, no comments and no unit tests, so it is not very good to infer
 the types of parameters, the types of return values and the rough logic.
 """
+
 import ast
 import io
 import json
@@ -383,6 +384,21 @@ def get_dataframe_json(dataframe) -> dict:
     return json.loads(dataframe.to_json(orient="records"))
 
 
+class NanToNull(json.JSONEncoder):
+    @staticmethod
+    def nan_to_null(obj):
+        if isinstance(obj, dict):
+            return {k: NanToNull.nan_to_null(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [NanToNull.nan_to_null(v) for v in obj]
+        elif isinstance(obj, float) and obj != obj:
+            return None
+        return obj
+
+    def encode(self, obj, *args, **kwargs):
+        return super().encode(NanToNull.nan_to_null(obj), *args, **kwargs)
+
+
 def get_figure(figure) -> dict:
     """
     Converts a matplotlib figure to a dictionary for drawing on the frontend
@@ -409,6 +425,8 @@ def get_figure(figure) -> dict:
                 raise Exception("if you use matplotlib, you must install mpld3")
 
         fig = mpld3.fig_to_dict(figure)
+        fig = json.loads(json.dumps(fig, cls=NanToNull))
+
         matplotlib.pyplot.close()
         return fig
     else:
@@ -620,10 +638,10 @@ def anal_function_result(
                                     __ipython_display.Image,
                                 ),
                             ):
-                                call_result[
-                                    position
-                                ] = handle_ipython_audio_image_video(
-                                    call_result[position]
+                                call_result[position] = (
+                                    handle_ipython_audio_image_video(
+                                        call_result[position]
+                                    )
                                 )
                     if single_return_type == "Figure":
                         call_result[position] = get_figure(call_result[position])
@@ -645,16 +663,18 @@ def anal_function_result(
                         if isinstance(call_result[position], list):
                             if __ipython_use:
                                 call_result[position] = [
-                                    handle_ipython_audio_image_video(single)
-                                    if isinstance(
-                                        single,
-                                        (
-                                            __ipython_display.Audio,
-                                            __ipython_display.Video,
-                                            __ipython_display.Image,
-                                        ),
+                                    (
+                                        handle_ipython_audio_image_video(single)
+                                        if isinstance(
+                                            single,
+                                            (
+                                                __ipython_display.Audio,
+                                                __ipython_display.Video,
+                                                __ipython_display.Image,
+                                            ),
+                                        )
+                                        else get_static_uri(single)
                                     )
-                                    else get_static_uri(single)
                                     for single in call_result[position]
                                 ]
                             else:
@@ -699,16 +719,18 @@ def anal_function_result(
                         if __ipython_use:
                             call_result = [
                                 [
-                                    handle_ipython_audio_image_video(single)
-                                    if isinstance(
-                                        single,
-                                        (
-                                            __ipython_display.Audio,
-                                            __ipython_display.Video,
-                                            __ipython_display.Image,
-                                        ),
+                                    (
+                                        handle_ipython_audio_image_video(single)
+                                        if isinstance(
+                                            single,
+                                            (
+                                                __ipython_display.Audio,
+                                                __ipython_display.Video,
+                                                __ipython_display.Image,
+                                            ),
+                                        )
+                                        else get_static_uri(single)
                                     )
-                                    else get_static_uri(single)
                                     for single in call_result[0]
                                 ]
                             ]
@@ -719,16 +741,18 @@ def anal_function_result(
                     else:
                         if __ipython_use:
                             call_result = [
-                                handle_ipython_audio_image_video(call_result[0])
-                                if isinstance(
-                                    call_result[0],
-                                    (
-                                        __ipython_display.Audio,
-                                        __ipython_display.Video,
-                                        __ipython_display.Image,
-                                    ),
+                                (
+                                    handle_ipython_audio_image_video(call_result[0])
+                                    if isinstance(
+                                        call_result[0],
+                                        (
+                                            __ipython_display.Audio,
+                                            __ipython_display.Video,
+                                            __ipython_display.Image,
+                                        ),
+                                    )
+                                    else get_static_uri(call_result[0])
                                 )
-                                else get_static_uri(call_result[0])
                             ]
                         else:
                             call_result = [get_static_uri(call_result[0])]
