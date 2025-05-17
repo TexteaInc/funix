@@ -12,6 +12,7 @@ the types of parameters, the types of return values and the rough logic.
 """
 
 import ast
+import base64
 import io
 import json
 from importlib import import_module
@@ -441,16 +442,18 @@ def get_figure_image(figure) -> str:
         figure (matplotlib.figure.Figure): The figure to convert
 
     Returns:
-        str: The converted image with static URI
+        # str: The converted image with static URI
+        str: The converted image with base64
     """
     import matplotlib.pyplot
 
     matplotlib.pyplot.close()
 
     with io.BytesIO() as buf:
-        figure.savefig(buf, format="png")
+        figure.savefig(buf, format="png", bbox_inches="tight")
         buf.seek(0)
-        return get_static_uri(buf.getvalue())
+        base64_image = base64.b64encode(buf.getvalue()).decode("utf-8")
+        return f"data:image/png;base64,{base64_image}"
 
 
 class LambdaVisitor(ast.NodeVisitor):
@@ -810,6 +813,13 @@ def parse_function_annotation(
                             full_type_name
                         ]
                     parsed_return_annotation_list.append(return_annotation_type_name)
+                if figure_to_image:
+                    for i, return_annotation_type_name in enumerate(
+                        parsed_return_annotation_list
+                    ):
+                        if return_annotation_type_name == "Figure":
+                            parsed_return_annotation_list[i] = "FigureImage"
+
                 return_type_parsed = parsed_return_annotation_list
             else:
                 if hasattr(function_signature.return_annotation, "__annotations__"):
