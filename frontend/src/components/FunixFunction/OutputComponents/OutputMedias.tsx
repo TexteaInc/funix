@@ -44,7 +44,6 @@ export default function OutputMedias(props: {
               height: "auto",
               maxWidth: "100%",
               maxHeight: "100%",
-              minWidth: "65%",
             };
 
         return (
@@ -56,14 +55,7 @@ export default function OutputMedias(props: {
             {isPDF ? (
               <PDFViewer pdf={relativeMedia} />
             ) : (
-              <CardMedia
-                component={component}
-                controls
-                image={relativeMedia}
-                sx={{
-                  minWidth: "500px",
-                }}
-              />
+              <CardMedia component={component} controls image={relativeMedia} />
             )}
           </Card>
         );

@@ -451,7 +451,10 @@ const OutputPanel = (props: {
                 itemElement = <code>{item.content ?? ""}</code>;
             }
             rowElements.push(
-              <Grid2 xs={item.width || true} mdOffset={item.offset}>
+              <Grid2
+                xs={typeof item.width === "number" ? item.width * 12 : true}
+                mdOffset={item.offset}
+              >
                 {itemElement}
               </Grid2>,
             );

@@ -594,7 +594,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldTemplateProps) => {
       if (rowElement) {
         rowElement = (
           <Grid2
-            xs={rowItem.width !== undefined ? rowItem.width : true}
+            xs={rowItem.width !== undefined ? rowItem.width * 12 : true}
             mdOffset={rowItem.offset}
           >
             {rowElement}
