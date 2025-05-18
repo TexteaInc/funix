@@ -393,7 +393,10 @@ def get_figure(figure) -> dict:
     Raises:
         Exception: If matplotlib is not installed
     """
+    import matplotlib.pyplot
     from matplotlib.backends.backend_webagg import _BackendWebAgg
+
+    matplotlib.pyplot.tight_layout()
 
     new_fig_manger = _BackendWebAgg.new_figure_manager_given_figure
     manager = new_fig_manger(id(figure), figure)

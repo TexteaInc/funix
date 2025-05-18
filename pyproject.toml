@@ -28,6 +28,7 @@ dependencies = [
   "matplotlib>=3.4.3",
   "pandas>=2.0.3",
   "docstring_parser>=0.16",
+  "tornado>=6.4.2"
 ]
 
 [project.optional-dependencies]
