@@ -16,7 +16,7 @@ import base64
 import io
 import json
 from importlib import import_module
-from inspect import Parameter, Signature, getsource, signature
+from inspect import Parameter, Signature, getsource, signature, getfile
 from re import Match, search
 from types import ModuleType
 from typing import Any, Callable
@@ -36,6 +36,7 @@ from funix.decorator.lists import (
     get_function_uuid_with_id,
     get_class_method_funix,
 )
+from funix.app import matplotlib_figure_manager
 
 __matplotlib_use = False
 """
@@ -43,10 +44,10 @@ Whether Funix can handle matplotlib-related logic
 """
 
 try:
-    # From now on, Funix no longer mandates matplotlib and mpld3
+    # From now on, Funix no longer mandates matplotlib
     import matplotlib
 
-    matplotlib.use("Agg")  # No display
+    matplotlib.use("WebAgg")
     __matplotlib_use = True
 except:
     pass
@@ -65,12 +66,6 @@ try:
     __ipython_use = True
 except:
     pass
-
-
-mpld3: ModuleType | None = None
-"""
-The mpld3 module.
-"""
 
 
 def get_type_dict(annotation: any) -> dict:
@@ -385,21 +380,6 @@ def get_dataframe_json(dataframe) -> dict:
     return json.loads(dataframe.to_json(orient="records"))
 
 
-class NanToNull(json.JSONEncoder):
-    @staticmethod
-    def nan_to_null(obj):
-        if isinstance(obj, dict):
-            return {k: NanToNull.nan_to_null(v) for k, v in obj.items()}
-        elif isinstance(obj, list):
-            return [NanToNull.nan_to_null(v) for v in obj]
-        elif isinstance(obj, float) and obj != obj:
-            return None
-        return obj
-
-    def encode(self, obj, *args, **kwargs):
-        return super().encode(NanToNull.nan_to_null(obj), *args, **kwargs)
-
-
 def get_figure(figure) -> dict:
     """
     Converts a matplotlib figure to a dictionary for drawing on the frontend
@@ -411,25 +391,17 @@ def get_figure(figure) -> dict:
         dict: The converted figure
 
     Raises:
-        Exception: If matplotlib or mpld3 is not installed
+        Exception: If matplotlib is not installed
     """
-    global mpld3
-    import matplotlib
+    from matplotlib.backends.backend_webagg import _BackendWebAgg
+
+    new_fig_manger = _BackendWebAgg.new_figure_manager_given_figure
+    manager = new_fig_manger(id(figure), figure)
+
+    matplotlib_figure_manager[id(figure)] = manager
 
     if __matplotlib_use:
-        if mpld3 is None:
-            try:
-                import matplotlib.pyplot
-
-                mpld3 = import_module("mpld3")
-            except:
-                raise Exception("if you use matplotlib, you must install mpld3")
-
-        fig = mpld3.fig_to_dict(figure)
-        fig = json.loads(json.dumps(fig, cls=NanToNull))
-
-        matplotlib.pyplot.close()
-        return fig
+        return {"fig": manager.num}
     else:
         raise Exception("Install matplotlib to use this function")
 

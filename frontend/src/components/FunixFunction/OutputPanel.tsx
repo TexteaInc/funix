@@ -262,8 +262,9 @@ const OutputPanel = (props: {
       case "Figure":
         return (
           <OutputPlot
-            plotCode={JSON.stringify(response)}
+            plotCode={response}
             indexId={index.toString()}
+            backend={props.backend}
           />
         );
       case "Dataframe":

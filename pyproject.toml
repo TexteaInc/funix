@@ -26,7 +26,6 @@ dependencies = [
   "flask-sock>=0.7.0",
   "SQLAlchemy>=2.0.23",
   "matplotlib>=3.4.3",
-  "mpld3>=0.5.8",
   "pandas>=2.0.3",
   "docstring_parser>=0.16",
 ]

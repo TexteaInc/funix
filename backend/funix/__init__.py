@@ -18,7 +18,7 @@ import funix.decorator.secret as secret
 import funix.decorator.theme as theme
 import funix.decorator.widget as widget
 import funix.hint as hint
-from funix.app import app, enable_funix_host_checker
+from funix.app import app, sock, enable_funix_host_checker
 from funix.config.switch import GlobalSwitchOption
 from funix.frontend import run_open_frontend, start
 from funix.jupyter import jupyter

@@ -7,6 +7,7 @@ import json
 import os
 import re
 from datetime import datetime, timezone
+from io import BytesIO
 from pathlib import Path
 from urllib.parse import urlparse
 from uuid import uuid4
@@ -22,6 +23,8 @@ from funix.decorator.lists import get_uuid_with_name
 from funix.frontend import start
 from funix.hint import LogLevel
 
+from json import loads
+
 app = Flask(__name__)
 app.secret_key = GlobalSwitchOption.get_session_key()
 app.config.update(
@@ -31,6 +34,113 @@ app.config.update(
 )
 app.json.sort_keys = False
 sock = Sock(app)
+
+matplotlib_figure_manager = {}
+
+
+class MatplotlibWebsocket:
+    supports_binary = True
+
+    def __init__(self, manager=None, ws=None):
+        self.manager = manager
+        self.ws = ws
+        if self.manager is not None:
+            self.manager.add_web_socket(self)
+        self.supports_binary = True
+
+    def on_close(self):
+        self.manager.remove_web_socket(self)
+        self.ws.close()
+
+    def set_manager(self, manager):
+        self.manager = manager
+        self.manager.add_web_socket(self)
+
+    def set_ws(self, ws):
+        self.ws = ws
+
+    def on_message(self, message: dict):
+        if message["type"] == "supports_binary":
+            self.supports_binary = message["value"]
+        else:
+            self.manager.handle_json(message)
+
+    def send_json(self, content: dict):
+        self.ws.send(json.dumps(content))
+
+    def send_binary(self, content: bytes):
+        if self.supports_binary:
+            self.ws.send(content)
+        else:
+            data_uri = "data:image/png;base64," + content.decode("utf-8")
+            self.ws.send(data_uri)
+
+
+matplotlib_figure_managers = {}
+
+
+def add_sock_route(flask_sock: Sock):
+    @flask_sock.route("/ws-plot/<path:figure_id>")
+    def __ws_plot(ws, figure_id: str):
+        """
+        WebSocket route for plot.
+
+        Routes:
+            /ws-plot: The WebSocket route for plot.
+
+        Parameters:
+            ws (Any): The WebSocket.
+
+        Returns:
+            None
+        """
+        if figure_id not in matplotlib_figure_managers:
+            manager_class = MatplotlibWebsocket(
+                matplotlib_figure_manager[int(figure_id)], ws
+            )
+            matplotlib_figure_managers[int(figure_id)] = manager_class
+        else:
+            manager_class = matplotlib_figure_managers[int(figure_id)]
+            manager_class.set_ws(ws)
+        while True:
+            data = ws.receive()
+            if data is not None:
+                dict_data = loads(data)
+                manager_class.on_message(dict_data)
+
+
+def add_app_route(flask_app: Flask):
+    @flask_app.route("/plot-download/<path:figure_id>/<path:format>")
+    def __ws_plot(figure_id: str, format: str):
+        """
+        Download the plot.
+
+        Routes:
+            /plot-download: The route to download the plot.
+
+        Parameters:
+            figure_id (str): The figure id.
+            format (str): The format of the plot.
+
+        Returns:
+            None
+        """
+        buffer = BytesIO()
+        manager = matplotlib_figure_manager[int(figure_id)]
+        manager.canvas.figure.savefig(buffer, format=format)
+        buffer.seek(0)
+        buffer_name = f"plot.{format}"
+        return Response(
+            buffer,
+            mimetype="application/octet-stream",
+            headers={
+                "Content-Disposition": f"attachment; filename={buffer_name}",
+                "Content-Length": str(len(buffer.getvalue())),
+            },
+        )
+
+
+add_sock_route(sock)
 
 
 def funix_auto_cors(response: Response) -> Response:
@@ -63,7 +173,7 @@ def get_new_app_and_sock_for_jupyter() -> tuple[Flask, Sock]:
         SESSION_TYPE="filesystem",
     )
     new_sock = Sock(new_app)
-
+    add_sock_route(new_sock)
     new_app.after_request(funix_auto_cors)
     start(new_app)
 
