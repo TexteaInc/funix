@@ -235,7 +235,7 @@ def funix(
     print_to_web: bool = False,
     autorun: AutoRunType = False,
     disable: bool = False,
-    figure_to_image: bool = False,
+    figure_to_image: bool = True,
     keep_last: bool = False,
     app_and_sock: tuple[Flask, Sock] | None = None,
     jupyter_class: bool = False,

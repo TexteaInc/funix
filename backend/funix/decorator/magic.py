@@ -48,6 +48,8 @@ try:
     import matplotlib
 
     matplotlib.use("WebAgg")
+    matplotlib.rcParams["figure.autolayout"] = True
+    matplotlib.rcParams["savefig.bbox"] = "tight"
     __matplotlib_use = True
 except:
     pass
@@ -396,7 +398,7 @@ def get_figure(figure) -> dict:
     import matplotlib.pyplot
     from matplotlib.backends.backend_webagg import _BackendWebAgg
 
-    matplotlib.pyplot.tight_layout()
+    # matplotlib.pyplot.tight_layout()
 
     new_fig_manger = _BackendWebAgg.new_figure_manager_given_figure
     manager = new_fig_manger(id(figure), figure)

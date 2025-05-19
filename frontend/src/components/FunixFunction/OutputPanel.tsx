@@ -271,8 +271,12 @@ const OutputPanel = (props: {
         return (
           <OutputDataframe
             dataframe={response}
-            gridHeight={theme?.funix_grid_height}
-            checkboxSelection={theme?.funix_grid_checkbox}
+            gridHeight={theme?.funix_grid_height || 400}
+            checkboxSelection={
+              theme !== null && "funix_grid_checkbox" in theme
+                ? theme.funix_grid_checkbox
+                : true
+            }
           />
         );
       case "string":
