@@ -9,7 +9,7 @@ from importlib import import_module
 from inspect import getsource, isgeneratorfunction, signature
 from secrets import token_hex
 from types import ModuleType
-from typing import Callable, Optional, ParamSpec, TypeVar, Union
+from typing import Callable, Optional, ParamSpec, TypeVar, Union, Literal
 from uuid import uuid4
 
 from docstring_parser import parse
@@ -235,7 +235,7 @@ def funix(
     print_to_web: bool = False,
     autorun: AutoRunType = False,
     disable: bool = False,
-    figure_to_image: bool = True,
+    matplot_format: Literal["png", "svg", "agg"] = "svg",
     keep_last: bool = False,
     app_and_sock: tuple[Flask, Sock] | None = None,
     jupyter_class: bool = False,
@@ -285,7 +285,9 @@ def funix(
         print_to_web(bool): handle all stdout to web
         autorun(bool): allow users to use continuity runs on the front end
         disable(bool): disable this function
-        figure_to_image(bool): convert matplotlib figure to image
+        matplot_format(MatplotFormatType): Matplotlib format
+            available formats: "png", "svg", "agg"
+            for "agg", the image will be rendered in the interact widget, but has issues with the bbox
         keep_last(bool): keep the last input and output in the frontend
         app_and_sock(tuple[Flask, Sock]): the Flask app and the Sock instance, if None, use the global app and sock.
                                           In jupyter, funix automatically generates the new app and sock.
@@ -556,7 +558,7 @@ def funix(
             param_widget_example_callable = {}
 
             cast_to_list_flag, return_type_parsed = parse_function_annotation(
-                function_signature, figure_to_image
+                function_signature, matplot_format != "agg"
             )
 
             safe_input_layout = [] if not input_layout else input_layout
@@ -795,6 +797,7 @@ def funix(
                     json_schema_props,
                     print_to_web,
                     secret_key,
+                    matplot_format,
                     ws,
                 )
                 if result is not None:

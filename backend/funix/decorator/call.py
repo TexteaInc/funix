@@ -101,6 +101,7 @@ def funix_call(
     json_schema_props: dict,
     print_to_web: bool,
     secret_key: bool,
+    matplotlib_format: str,
     ws=None,
 ):
     for limiter in global_rate_limiters + limiters:
@@ -173,6 +174,7 @@ def funix_call(
                     function_call_result,
                     return_type_parsed,
                     cast_to_list_flag,
+                    matplotlib_format,
                 )
             except:
                 return {

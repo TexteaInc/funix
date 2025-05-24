@@ -411,12 +411,13 @@ def get_figure(figure) -> dict:
         raise Exception("Install matplotlib to use this function")
 
 
-def get_figure_image(figure) -> str:
+def get_figure_image(figure, format_) -> str:
     """
     Converts a matplotlib figure to a static image for drawing on the frontend
 
     Parameters:
         figure (matplotlib.figure.Figure): The figure to convert
+        format_ (str): The format of the image, e.g., "svg", "png"
 
     Returns:
         # str: The converted image with static URI
@@ -427,10 +428,17 @@ def get_figure_image(figure) -> str:
     matplotlib.pyplot.close()
 
     with io.BytesIO() as buf:
-        figure.savefig(buf, format="png", bbox_inches="tight")
+        figure.savefig(buf, format=format_, bbox_inches="tight")
         buf.seek(0)
         base64_image = base64.b64encode(buf.getvalue()).decode("utf-8")
-        return f"data:image/png;base64,{base64_image}"
+        mime = ""
+        if format_ == "svg":
+            mime = "image/svg+xml"
+        elif format_ == "png":
+            mime = "image/png"
+        elif format_ == "jpeg":
+            mime = "image/jpeg"
+        return f"data:{mime};base64,{base64_image}"
 
 
 class LambdaVisitor(ast.NodeVisitor):
@@ -523,6 +531,7 @@ def anal_function_result(
     function_call_result: Any,
     return_type_parsed: Any,
     cast_to_list_flag: bool,
+    matplotlib_format: str,
 ) -> Any:
     """
     Analyze the function result to get the frontend-readable data.
@@ -533,6 +542,7 @@ def anal_function_result(
         function_call_result (Any): The function call result.
         return_type_parsed (Any): The parsed return type.
         cast_to_list_flag (bool): Whether to cast the result to list.
+        matplotlib_format (str): The matplotlib format, used for image conversion.
 
     Returns:
         Any: The frontend-readable data.
@@ -543,7 +553,7 @@ def anal_function_result(
         return [get_figure(call_result)]
 
     if return_type_parsed == "FigureImage":
-        return [get_figure_image(call_result)]
+        return [get_figure_image(call_result, matplotlib_format)]
 
     if return_type_parsed == "Dataframe":
         return [get_dataframe_json(call_result)]
@@ -627,7 +637,9 @@ def anal_function_result(
                         call_result[position] = get_figure(call_result[position])
 
                     if single_return_type == "FigureImage":
-                        call_result[position] = get_figure_image(call_result[position])
+                        call_result[position] = get_figure_image(
+                            call_result[position], matplotlib_format
+                        )
 
                     if single_return_type == "Callable":
                         call_result[position] = get_callable_result(
@@ -687,7 +699,7 @@ def anal_function_result(
                 if return_type_parsed == "Figure":
                     call_result = [get_figure(call_result[0])]
                 if return_type_parsed == "FigureImage":
-                    call_result = [get_figure_image(call_result[0])]
+                    call_result = [get_figure_image(call_result[0], matplotlib_format)]
                 if return_type_parsed == "Dataframe":
                     call_result = [get_dataframe_json(call_result[0])]
                 if return_type_parsed == "Callable":
