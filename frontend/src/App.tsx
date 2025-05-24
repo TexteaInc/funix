@@ -391,7 +391,7 @@ const App = () => {
             onClick={() => {
               logLevel === 1
                 ? setCookie("DO_NOT_LOG_ME", "YES")
-                : (window.location.href = "https://funix.io");
+                : (window.location.href = "http://funix.io");
               localStorage.setItem("privacy-hash", lastPrivacyHash);
               setCookie("first-join", "false", { expires: 365 * 10 });
               setPrivacy(false);
@@ -787,11 +787,11 @@ const App = () => {
                   records={{
                     org: [
                       "Powered by ",
-                      <Link href="https://funix.io">Funix.io</Link>,
+                      <Link href="http://funix.io">Funix.io</Link>,
                       ", minimally building apps in Python",
                     ],
                     year: new Date().getFullYear().toString(),
-                    funixLink: <Link href="https://funix.io">Funix.io</Link>,
+                    funixLink: <Link href="http://funix.io">Funix.io</Link>,
                   }}
                 />
               </Typography>
