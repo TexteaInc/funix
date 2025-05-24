@@ -34,6 +34,7 @@ import { DataGrid } from "../../Key";
 import OutputDataframe from "./OutputComponents/OutputDataframe";
 import InnerHTML from "dangerously-set-html-content";
 import { useNavigate } from "react-router-dom";
+import OutputPlotMedias from "./OutputComponents/OutputPlotImage";
 
 const guessJSON = (response: string | null): object | false => {
   if (response === null) return false;
@@ -297,10 +298,11 @@ const OutputPanel = (props: {
         return <MarkdownDiv markdown={response} isRenderInline={false} />;
       case "HTML":
         return <InnerHTML html={response} />;
+      case "FigureImage":
+        return <OutputPlotMedias media={response} />;
       case "Images":
       case "Videos":
       case "Audios":
-      case "FigureImage":
         return (
           <OutputMedias
             medias={response}
