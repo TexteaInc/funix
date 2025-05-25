@@ -788,7 +788,7 @@ const App = () => {
                     org: [
                       "Powered by ",
                       <Link href="http://funix.io">Funix.io</Link>,
-                      ", minimally building apps in Python",
+                      ", the laziest way to build apps in Python - lazier than Streamlit or Gradio.",
                     ],
                     year: new Date().getFullYear().toString(),
                     funixLink: <Link href="http://funix.io">Funix.io</Link>,
