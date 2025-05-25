@@ -13,13 +13,14 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import ReactMarkdown, { Components } from "react-markdown";
+import { Components, MarkdownAsync } from "react-markdown";
 import rehypeRaw from "rehype-raw";
-import React from "react";
+import React, { ReactElement, useEffect, useState } from "react";
 import { Variant } from "@mui/material/styles/createTypography";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
+import rehypeMermaid from "rehype-mermaid";
 import SyntaxHighlighter from "react-syntax-highlighter";
 import { monokai } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import { useNavigate } from "react-router-dom";
@@ -193,166 +194,172 @@ export default function MarkdownDiv(props: MarkdownDivProps) {
   if (!props.markdown) return null;
 
   const isRenderInline = props.isRenderInline ?? false;
-  return (
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm, remarkMath]}
-      rehypePlugins={[
-        rehypeRaw,
-        [
-          rehypeKatex,
-          {
-            output: "mathml",
-          },
+  const [content, setContent] = useState<ReactElement | null>(null);
+
+  useEffect(() => {
+    const fetchContent = async () => {
+      const content = await MarkdownAsync({
+        remarkPlugins: [remarkGfm, remarkMath],
+        rehypePlugins: [
+          rehypeRaw,
+          [rehypeKatex, { output: "mathml" }],
+          [rehypeMermaid],
         ],
-      ]}
-      components={{
-        p: "span",
-        ul: (props) =>
-          isRenderInline ? (
-            <ul className="text-style">{props.children}</ul>
-          ) : (
-            <ul>{props.children}</ul>
+        components: {
+          p: "span",
+          ul: (props) =>
+            isRenderInline ? (
+              <ul className="text-style">{props.children}</ul>
+            ) : (
+              <ul>{props.children}</ul>
+            ),
+          li: (props) =>
+            isRenderInline ? (
+              <li className="text-style">{props.children}</li>
+            ) : (
+              <li>{props.children}</li>
+            ),
+          ol: (props) =>
+            isRenderInline ? (
+              <ol className="text-style">{props.children}</ol>
+            ) : (
+              <ol>{props.children}</ol>
+            ),
+          h1: (props) => (
+            <MarkdownHeading
+              level={1}
+              children={props.children}
+              isInline={isRenderInline}
+            />
           ),
-        li: (props) =>
-          isRenderInline ? (
-            <li className="text-style">{props.children}</li>
-          ) : (
-            <li>{props.children}</li>
+          h2: (props) => (
+            <MarkdownHeading
+              level={2}
+              children={props.children}
+              isInline={isRenderInline}
+            />
           ),
-        ol: (props) =>
-          isRenderInline ? (
-            <ol className="text-style">{props.children}</ol>
-          ) : (
-            <ol>{props.children}</ol>
+          h3: (props) => (
+            <MarkdownHeading
+              level={3}
+              children={props.children}
+              isInline={isRenderInline}
+            />
           ),
-        h1: (props) => (
-          <MarkdownHeading
-            level={1}
-            children={props.children}
-            isInline={isRenderInline}
-          />
-        ),
-        h2: (props) => (
-          <MarkdownHeading
-            level={2}
-            children={props.children}
-            isInline={isRenderInline}
-          />
-        ),
-        h3: (props) => (
-          <MarkdownHeading
-            level={3}
-            children={props.children}
-            isInline={isRenderInline}
-          />
-        ),
-        h4: (props) => (
-          <MarkdownHeading
-            level={4}
-            children={props.children}
-            isInline={isRenderInline}
-          />
-        ),
-        h5: (props) => (
-          <MarkdownHeading
-            level={5}
-            children={props.children}
-            isInline={isRenderInline}
-          />
-        ),
-        h6: (props) => (
-          <MarkdownHeading
-            level={6}
-            children={props.children}
-            isInline={isRenderInline}
-          />
-        ),
-        a: (props) =>
-          props.href?.startsWith("/") ? (
-            <Link
-              component="button"
-              onClick={() => {
-                navigate(`${props.href}`);
+          h4: (props) => (
+            <MarkdownHeading
+              level={4}
+              children={props.children}
+              isInline={isRenderInline}
+            />
+          ),
+          h5: (props) => (
+            <MarkdownHeading
+              level={5}
+              children={props.children}
+              isInline={isRenderInline}
+            />
+          ),
+          h6: (props) => (
+            <MarkdownHeading
+              level={6}
+              children={props.children}
+              isInline={isRenderInline}
+            />
+          ),
+          a: (props) =>
+            props.href?.startsWith("/") ? (
+              <Link
+                component="button"
+                onClick={() => {
+                  navigate(`${props.href}`);
+                }}
+                color="inherit"
+                title={props.title}
+              >
+                {props.children}
+              </Link>
+            ) : (
+              <Link
+                href={props.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                color="inherit"
+                title={props.title}
+              >
+                {props.children}
+              </Link>
+            ),
+          blockquote: (props) => (
+            <MarkdownBlockquote
+              children={props.children}
+              isInline={isRenderInline}
+            />
+          ),
+          code: MarkdownCode,
+          em: (props) => (
+            <Typography
+              component="span"
+              sx={{
+                fontStyle: "italic",
               }}
-              color="inherit"
-              title={props.title}
             >
               {props.children}
-            </Link>
-          ) : (
-            <Link
-              href={props.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              color="inherit"
-              title={props.title}
-            >
-              {props.children}
-            </Link>
+            </Typography>
           ),
-        blockquote: (props) => (
-          <MarkdownBlockquote
-            children={props.children}
-            isInline={isRenderInline}
-          />
-        ),
-        code: MarkdownCode,
-        em: (props) => (
-          <Typography
-            component="span"
-            sx={{
-              fontStyle: "italic",
-            }}
-          >
-            {props.children}
-          </Typography>
-        ),
-        hr: () => <Divider />,
-        img: (props) => (
-          <MarkdownImage
-            src={props.src}
-            alt={props.alt}
-            title={props.title}
-            width={props.width}
-            height={props.height}
-          />
-        ),
-        strong: (props) => (
-          <Typography
-            component="span"
-            sx={{
-              fontWeight: "bold",
-            }}
-          >
-            {props.children}
-          </Typography>
-        ),
-        del: (props) => (
-          <Typography
-            component="span"
-            sx={{
-              textDecoration: "line-through",
-            }}
-          >
-            {props.children}
-          </Typography>
-        ),
-        input: (props) => (
-          <MarkdownCheckbox disabled={props.disabled} checked={props.checked} />
-        ),
-        thead: TableHead as any,
-        tbody: TableBody as any,
-        th: TableCell as any,
-        tr: TableRow as any,
-        td: TableCell as any,
-        table: (props) => (
-          <TableContainer component={Paper} elevation={0}>
-            <Table {...(props as any)} size="small" />
-          </TableContainer>
-        ),
-      }}
-    >
-      {props.markdown}
-    </ReactMarkdown>
-  );
+          hr: () => <Divider />,
+          img: (props) => (
+            <MarkdownImage
+              src={props.src}
+              alt={props.alt}
+              title={props.title}
+              width={props.width}
+              height={props.height}
+            />
+          ),
+          strong: (props) => (
+            <Typography
+              component="span"
+              sx={{
+                fontWeight: "bold",
+              }}
+            >
+              {props.children}
+            </Typography>
+          ),
+          del: (props) => (
+            <Typography
+              component="span"
+              sx={{
+                textDecoration: "line-through",
+              }}
+            >
+              {props.children}
+            </Typography>
+          ),
+          input: (props) => (
+            <MarkdownCheckbox
+              disabled={props.disabled}
+              checked={props.checked}
+            />
+          ),
+          thead: TableHead as any,
+          tbody: TableBody as any,
+          th: TableCell as any,
+          tr: TableRow as any,
+          td: TableCell as any,
+          table: (props) => (
+            <TableContainer component={Paper} elevation={0}>
+              <Table {...(props as any)} size="small" />
+            </TableContainer>
+          ),
+        },
+        children: props.markdown,
+      });
+      setContent(content);
+    };
+    fetchContent();
+  }, [props.markdown]);
+
+  return content;
 }
