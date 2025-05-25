@@ -21,6 +21,7 @@ from re import Match, search
 from types import ModuleType
 from typing import Any, Callable
 
+from funix.config.switch import GlobalSwitchOption
 from funix.config import (
     builtin_widgets,
     dataframe_convert_dict,
@@ -240,7 +241,10 @@ def get_type_widget_prop(
             function_annotation_name = getattr(function_annotation, "__name__")
             if function_annotation_name == "Literal":
                 widget = (
-                    "radio" if len(function_annotation.__args__) < 8 else "inputbox"
+                    "radio"
+                    if len(function_annotation.__args__)
+                    < GlobalSwitchOption.AUTO_INPUTBOX_ARGS_NUMBER
+                    else "inputbox"
                 )
             elif function_annotation_name == "List" or (
                 function_annotation_name == "list"
@@ -248,7 +252,16 @@ def get_type_widget_prop(
             ):
                 if args := getattr(function_annotation, "__args__"):
                     if getattr(args[0], "__name__") == "Literal":
-                        widget = "checkbox" if len(args[0].__args__) < 8 else "inputbox"
+                        widget = (
+                            "checkbox"
+                            if len(args[0].__args__)
+                            < GlobalSwitchOption.AUTO_INPUTBOX_ARGS_NUMBER
+                            else "inputbox"
+                        )
+                    elif args[0] is str or args[0] is int or args[0] is float:
+                        widget = "inputbox"
+                        function_arg_widget = ["inputbox", "inputbox"]
+
             elif function_annotation_name in builtin_widgets:
                 widget = builtin_widgets[function_annotation_name]
     if widget and anal_result:

@@ -192,11 +192,31 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldTemplateProps) => {
               widget={elementContent.props}
               data={elementData}
               useCheckbox={elementContent.props.schema.widget === "checkbox"}
-              whitelist={elementProps.schema.whitelist}
+              acceptValues={elementProps.schema.whitelist}
+              acceptNewValues={false}
             />
           ),
         };
       }
+      if (
+        !hasWhitelist &&
+        (elementProps.schema.items.type === "string" ||
+          elementProps.schema.items.type === "number")
+      ) {
+        return {
+          type: "config",
+          element: (
+            <MultipleInput
+              widget={elementContent.props}
+              data={elementData}
+              useCheckbox={elementContent.props.schema.widget === "checkbox"}
+              acceptValues={elementProps.schema.example || []}
+              acceptNewValues={true}
+            />
+          ),
+        };
+      }
+
       if (hasArrayExample || hasArrayWhitelist) {
         // Array Selector, Shared Part
         let arraySelectorCandidates: Array<any>[];

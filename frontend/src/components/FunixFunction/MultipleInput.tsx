@@ -16,7 +16,8 @@ interface MultipleInput {
   widget: WidgetProps;
   data: any;
   useCheckbox: boolean;
-  whitelist: string[];
+  acceptValues: string[];
+  acceptNewValues: boolean;
 }
 
 const MultipleInput = (props: MultipleInput) => {
@@ -47,7 +48,7 @@ const MultipleInput = (props: MultipleInput) => {
           />
         </FormLabel>
         <FormGroup row>
-          {props.whitelist.map((item, index) => (
+          {props.acceptValues.map((item, index) => (
             <FormControlLabel
               key={index}
               control={
@@ -76,7 +77,7 @@ const MultipleInput = (props: MultipleInput) => {
       disableClearable
       size="small"
       value={value}
-      options={props.whitelist}
+      options={props.acceptValues}
       getOptionLabel={(option) => (option as any).toString()}
       disableCloseOnSelect
       onChange={(_event, newValue) => _setValue(newValue)}
@@ -96,6 +97,15 @@ const MultipleInput = (props: MultipleInput) => {
           fullWidth
           required={props.widget.required}
           disabled={props.widget.disabled || props.widget.readonly}
+          onKeyDown={(event) => {
+            if (
+              event.key === "Enter" &&
+              props.acceptNewValues &&
+              "value" in event.target
+            ) {
+              _setValue([...value, event.target.value]);
+            }
+          }}
         />
       )}
       renderTags={(value, getTagProps) => {

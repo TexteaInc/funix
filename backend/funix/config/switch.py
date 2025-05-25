@@ -41,6 +41,9 @@ class SwitchOption:
     NOTEBOOK_AUTO_EXECUTION: bool = False
     """In notebook, auto run the flask app"""
 
+    AUTO_INPUTBOX_ARGS_NUMBER: int = 8
+    """Args above this number are automatically changed to inputbox."""
+
     __session_key = None
 
     @property
