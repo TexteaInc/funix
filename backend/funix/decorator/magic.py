@@ -10,11 +10,13 @@ to the frontend for direct use or as middleware to return the pre-processed data
 However, their logic is complex, with a lot of if-else, no comments and no unit tests, so it is not very good to infer
 the types of parameters, the types of return values and the rough logic.
 """
+
 import ast
+import base64
 import io
 import json
 from importlib import import_module
-from inspect import Parameter, Signature, getsource, signature
+from inspect import Parameter, Signature, getsource, signature, getfile
 from re import Match, search
 from types import ModuleType
 from typing import Any, Callable
@@ -34,6 +36,7 @@ from funix.decorator.lists import (
     get_function_uuid_with_id,
     get_class_method_funix,
 )
+from funix.app import matplotlib_figure_manager
 
 __matplotlib_use = False
 """
@@ -41,10 +44,12 @@ Whether Funix can handle matplotlib-related logic
 """
 
 try:
-    # From now on, Funix no longer mandates matplotlib and mpld3
+    # From now on, Funix no longer mandates matplotlib
     import matplotlib
 
-    matplotlib.use("Agg")  # No display
+    matplotlib.use("WebAgg")
+    matplotlib.rcParams["figure.autolayout"] = True
+    matplotlib.rcParams["savefig.bbox"] = "tight"
     __matplotlib_use = True
 except:
     pass
@@ -63,12 +68,6 @@ try:
     __ipython_use = True
 except:
     pass
-
-
-mpld3: ModuleType | None = None
-"""
-The mpld3 module.
-"""
 
 
 def get_type_dict(annotation: any) -> dict:
@@ -394,45 +393,52 @@ def get_figure(figure) -> dict:
         dict: The converted figure
 
     Raises:
-        Exception: If matplotlib or mpld3 is not installed
+        Exception: If matplotlib is not installed
     """
-    global mpld3
-    import matplotlib
+    import matplotlib.pyplot
+    from matplotlib.backends.backend_webagg import _BackendWebAgg
+
+    # matplotlib.pyplot.tight_layout()
+
+    new_fig_manger = _BackendWebAgg.new_figure_manager_given_figure
+    manager = new_fig_manger(id(figure), figure)
+
+    matplotlib_figure_manager[id(figure)] = manager
 
     if __matplotlib_use:
-        if mpld3 is None:
-            try:
-                import matplotlib.pyplot
-
-                mpld3 = import_module("mpld3")
-            except:
-                raise Exception("if you use matplotlib, you must install mpld3")
-
-        fig = mpld3.fig_to_dict(figure)
-        matplotlib.pyplot.close()
-        return fig
+        return {"fig": manager.num}
     else:
         raise Exception("Install matplotlib to use this function")
 
 
-def get_figure_image(figure) -> str:
+def get_figure_image(figure, format_) -> str:
     """
     Converts a matplotlib figure to a static image for drawing on the frontend
 
     Parameters:
         figure (matplotlib.figure.Figure): The figure to convert
+        format_ (str): The format of the image, e.g., "svg", "png"
 
     Returns:
-        str: The converted image with static URI
+        # str: The converted image with static URI
+        str: The converted image with base64
     """
     import matplotlib.pyplot
 
     matplotlib.pyplot.close()
 
     with io.BytesIO() as buf:
-        figure.savefig(buf, format="png")
+        figure.savefig(buf, format=format_, bbox_inches="tight")
         buf.seek(0)
-        return get_static_uri(buf.getvalue())
+        base64_image = base64.b64encode(buf.getvalue()).decode("utf-8")
+        mime = ""
+        if format_ == "svg":
+            mime = "image/svg+xml"
+        elif format_ == "png":
+            mime = "image/png"
+        elif format_ == "jpeg":
+            mime = "image/jpeg"
+        return f"data:{mime};base64,{base64_image}"
 
 
 class LambdaVisitor(ast.NodeVisitor):
@@ -525,6 +531,7 @@ def anal_function_result(
     function_call_result: Any,
     return_type_parsed: Any,
     cast_to_list_flag: bool,
+    matplotlib_format: str,
 ) -> Any:
     """
     Analyze the function result to get the frontend-readable data.
@@ -535,6 +542,7 @@ def anal_function_result(
         function_call_result (Any): The function call result.
         return_type_parsed (Any): The parsed return type.
         cast_to_list_flag (bool): Whether to cast the result to list.
+        matplotlib_format (str): The matplotlib format, used for image conversion.
 
     Returns:
         Any: The frontend-readable data.
@@ -545,7 +553,7 @@ def anal_function_result(
         return [get_figure(call_result)]
 
     if return_type_parsed == "FigureImage":
-        return [get_figure_image(call_result)]
+        return [get_figure_image(call_result, matplotlib_format)]
 
     if return_type_parsed == "Dataframe":
         return [get_dataframe_json(call_result)]
@@ -620,16 +628,18 @@ def anal_function_result(
                                     __ipython_display.Image,
                                 ),
                             ):
-                                call_result[
-                                    position
-                                ] = handle_ipython_audio_image_video(
-                                    call_result[position]
+                                call_result[position] = (
+                                    handle_ipython_audio_image_video(
+                                        call_result[position]
+                                    )
                                 )
                     if single_return_type == "Figure":
                         call_result[position] = get_figure(call_result[position])
 
                     if single_return_type == "FigureImage":
-                        call_result[position] = get_figure_image(call_result[position])
+                        call_result[position] = get_figure_image(
+                            call_result[position], matplotlib_format
+                        )
 
                     if single_return_type == "Callable":
                         call_result[position] = get_callable_result(
@@ -645,16 +655,18 @@ def anal_function_result(
                         if isinstance(call_result[position], list):
                             if __ipython_use:
                                 call_result[position] = [
-                                    handle_ipython_audio_image_video(single)
-                                    if isinstance(
-                                        single,
-                                        (
-                                            __ipython_display.Audio,
-                                            __ipython_display.Video,
-                                            __ipython_display.Image,
-                                        ),
+                                    (
+                                        handle_ipython_audio_image_video(single)
+                                        if isinstance(
+                                            single,
+                                            (
+                                                __ipython_display.Audio,
+                                                __ipython_display.Video,
+                                                __ipython_display.Image,
+                                            ),
+                                        )
+                                        else get_static_uri(single)
                                     )
-                                    else get_static_uri(single)
                                     for single in call_result[position]
                                 ]
                             else:
@@ -687,7 +699,7 @@ def anal_function_result(
                 if return_type_parsed == "Figure":
                     call_result = [get_figure(call_result[0])]
                 if return_type_parsed == "FigureImage":
-                    call_result = [get_figure_image(call_result[0])]
+                    call_result = [get_figure_image(call_result[0], matplotlib_format)]
                 if return_type_parsed == "Dataframe":
                     call_result = [get_dataframe_json(call_result[0])]
                 if return_type_parsed == "Callable":
@@ -699,16 +711,18 @@ def anal_function_result(
                         if __ipython_use:
                             call_result = [
                                 [
-                                    handle_ipython_audio_image_video(single)
-                                    if isinstance(
-                                        single,
-                                        (
-                                            __ipython_display.Audio,
-                                            __ipython_display.Video,
-                                            __ipython_display.Image,
-                                        ),
+                                    (
+                                        handle_ipython_audio_image_video(single)
+                                        if isinstance(
+                                            single,
+                                            (
+                                                __ipython_display.Audio,
+                                                __ipython_display.Video,
+                                                __ipython_display.Image,
+                                            ),
+                                        )
+                                        else get_static_uri(single)
                                     )
-                                    else get_static_uri(single)
                                     for single in call_result[0]
                                 ]
                             ]
@@ -719,16 +733,18 @@ def anal_function_result(
                     else:
                         if __ipython_use:
                             call_result = [
-                                handle_ipython_audio_image_video(call_result[0])
-                                if isinstance(
-                                    call_result[0],
-                                    (
-                                        __ipython_display.Audio,
-                                        __ipython_display.Video,
-                                        __ipython_display.Image,
-                                    ),
+                                (
+                                    handle_ipython_audio_image_video(call_result[0])
+                                    if isinstance(
+                                        call_result[0],
+                                        (
+                                            __ipython_display.Audio,
+                                            __ipython_display.Video,
+                                            __ipython_display.Image,
+                                        ),
+                                    )
+                                    else get_static_uri(call_result[0])
                                 )
-                                else get_static_uri(call_result[0])
                             ]
                         else:
                             call_result = [get_static_uri(call_result[0])]
@@ -786,6 +802,13 @@ def parse_function_annotation(
                             full_type_name
                         ]
                     parsed_return_annotation_list.append(return_annotation_type_name)
+                if figure_to_image:
+                    for i, return_annotation_type_name in enumerate(
+                        parsed_return_annotation_list
+                    ):
+                        if return_annotation_type_name == "Figure":
+                            parsed_return_annotation_list[i] = "FigureImage"
+
                 return_type_parsed = parsed_return_annotation_list
             else:
                 if hasattr(function_signature.return_annotation, "__annotations__"):

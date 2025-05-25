@@ -263,6 +263,8 @@ ReactiveType = Optional[
 Document is on the way
 """
 
+AutoRunType = bool | Literal["always", "disable", "toggleable"]
+
 ComponentMuiComponents = [
     "@mui/material/TextField",
     "@mui/material/Switch",

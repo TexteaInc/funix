@@ -34,6 +34,7 @@ import { DataGrid } from "../../Key";
 import OutputDataframe from "./OutputComponents/OutputDataframe";
 import InnerHTML from "dangerously-set-html-content";
 import { useNavigate } from "react-router-dom";
+import OutputPlotMedias from "./OutputComponents/OutputPlotImage";
 
 const guessJSON = (response: string | null): object | false => {
   if (response === null) return false;
@@ -262,16 +263,21 @@ const OutputPanel = (props: {
       case "Figure":
         return (
           <OutputPlot
-            plotCode={JSON.stringify(response)}
+            plotCode={response}
             indexId={index.toString()}
+            backend={props.backend}
           />
         );
       case "Dataframe":
         return (
           <OutputDataframe
             dataframe={response}
-            gridHeight={theme?.funix_grid_height}
-            checkboxSelection={theme?.funix_grid_checkbox}
+            gridHeight={theme?.funix_grid_height || 400}
+            checkboxSelection={
+              theme !== null && "funix_grid_checkbox" in theme
+                ? theme.funix_grid_checkbox
+                : true
+            }
           />
         );
       case "string":
@@ -292,10 +298,11 @@ const OutputPanel = (props: {
         return <MarkdownDiv markdown={response} isRenderInline={false} />;
       case "HTML":
         return <InnerHTML html={response} />;
+      case "FigureImage":
+        return <OutputPlotMedias media={response} />;
       case "Images":
       case "Videos":
       case "Audios":
-      case "FigureImage":
         return (
           <OutputMedias
             medias={response}
@@ -451,7 +458,10 @@ const OutputPanel = (props: {
                 itemElement = <code>{item.content ?? ""}</code>;
             }
             rowElements.push(
-              <Grid2 xs={item.width || true} mdOffset={item.offset}>
+              <Grid2
+                xs={typeof item.width === "number" ? item.width * 12 : true}
+                mdOffset={item.offset}
+              >
                 {itemElement}
               </Grid2>,
             );

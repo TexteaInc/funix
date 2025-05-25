@@ -81,7 +81,7 @@ export type FunctionPreview = {
   /**
    * autorun
    */
-  autorun: boolean;
+  autorun: "always" | "disable" | "toggleable";
   /**
    * keep last history
    */

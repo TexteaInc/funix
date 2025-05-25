@@ -9,7 +9,7 @@ from importlib import import_module
 from inspect import getsource, isgeneratorfunction, signature
 from secrets import token_hex
 from types import ModuleType
-from typing import Callable, Optional, ParamSpec, TypeVar, Union
+from typing import Callable, Optional, ParamSpec, TypeVar, Union, Literal
 from uuid import uuid4
 
 from docstring_parser import parse
@@ -55,6 +55,7 @@ from funix.decorator.widget import parse_argument_config, widget_parse
 from funix.hint import (
     AcceptableWidgetsList,
     ArgumentConfigType,
+    AutoRunType,
     ConditionalVisibleType,
     DestinationType,
     DirectionType,
@@ -232,9 +233,9 @@ def funix(
     rate_limit: RateLimiter = None,
     reactive: ReactiveType = None,
     print_to_web: bool = False,
-    autorun: bool = False,
+    autorun: AutoRunType = False,
     disable: bool = False,
-    figure_to_image: bool = False,
+    matplotlib_format: Literal["png", "svg", "agg"] = "svg",
     keep_last: bool = False,
     app_and_sock: tuple[Flask, Sock] | None = None,
     jupyter_class: bool = False,
@@ -249,7 +250,7 @@ def funix(
     The heart of Funix, all the beginning of the magic happens here
     (or at least most of it lol)
 
-    See document for more details, the docstring here is just a brief summary
+    See the document for more details, the docstring here is just a brief summary
 
     Parameters:
         path(str): path to the function, if None, the function name will be used (if title available, use title)
@@ -284,7 +285,9 @@ def funix(
         print_to_web(bool): handle all stdout to web
         autorun(bool): allow users to use continuity runs on the front end
         disable(bool): disable this function
-        figure_to_image(bool): convert matplotlib figure to image
+        matplotlib_format(MatplotFormatType): Matplotlib format
+            available formats: "png", "svg", "agg"
+            for "agg", the image will be rendered in the interact widget, but has issues with the bbox
         keep_last(bool): keep the last input and output in the frontend
         app_and_sock(tuple[Flask, Sock]): the Flask app and the Sock instance, if None, use the global app and sock.
                                           In jupyter, funix automatically generates the new app and sock.
@@ -508,6 +511,11 @@ def funix(
                 app_.post(f"/update/{function_id}")(_function_reactive_update)
                 app_.post(f"/update/{endpoint}")(_function_reactive_update)
 
+            real_autorun = autorun
+
+            if isinstance(autorun, bool):
+                real_autorun = "disable" if not autorun else "always"
+
             decorated_functions_list_append(
                 app_.name,
                 {
@@ -518,7 +526,7 @@ def funix(
                     "id": function_id,
                     "websocket": need_websocket,
                     "reactive": has_reactive_params,
-                    "autorun": autorun,
+                    "autorun": real_autorun,
                     "keepLast": keep_last,
                     "width": width if width else ["50%", "50%"],
                     "class": is_class_method,
@@ -550,7 +558,7 @@ def funix(
             param_widget_example_callable = {}
 
             cast_to_list_flag, return_type_parsed = parse_function_annotation(
-                function_signature, figure_to_image
+                function_signature, matplotlib_format != "agg"
             )
 
             safe_input_layout = [] if not input_layout else input_layout
@@ -789,6 +797,7 @@ def funix(
                     json_schema_props,
                     print_to_web,
                     secret_key,
+                    matplotlib_format,
                     ws,
                 )
                 if result is not None:

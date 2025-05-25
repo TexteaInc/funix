@@ -14,12 +14,24 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
     />
+    <script src="%PUBLIC_URL%/static/js/mpl.js"></script>
     <!--%SCRIPTS%-->
+    <script>
+      mpl.toolbar_items = [["Home", "Reset original view", "home", "home"], ["Back", "Back to previous view", "back", "back"], ["Forward", "Forward to next view", "forward", "forward"], ["Pan", "Left button pans, Right button zooms\nx/y fixes axis, CTRL fixes aspect", "move", "pan"], ["Zoom", "Zoom to rectangle\nx/y fixes axis", "zoom_to_rect", "zoom"]];
+    </script>
     <style>
       .text-style {
         margin: 0;
         padding: 0;
         list-style-position: inside;
+      }
+      
+      .mpl-toolbar select {
+        display: none;
+      }
+      
+      .ui-widget-header {
+        display: none;
       }
     </style>
     <title>Funix</title>

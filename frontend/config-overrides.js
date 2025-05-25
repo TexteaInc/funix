@@ -4,14 +4,14 @@ const webpack = require("webpack");
 
 const scripts = process.env.REACT_APP_IN_FUNIX
   ? `
-  <script src="static/js/d3.v5.js"></script>
-  <script src="static/js/mpld3.v0.5.8.js"></script>
   <script src="static/js/jquery-3.7.1.min.js"></script>
+  <link rel="stylesheet" href="static/css/fbm.css" />
+  <link rel="stylesheet" href="static/css/mpl.css" />
   `
   : `
-  <script src="https://d3js.org/d3.v5.js"></script>
-  <script src="https://mpld3.github.io/js/mpld3.v0.5.8.js"></script>
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/matplotlib/matplotlib@v3.10.x/lib/matplotlib/backends/web_backend/css/fbm.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/matplotlib/matplotlib@v3.10.x/lib/matplotlib/backends/web_backend/css/mpl.css" />
   `;
 
 module.exports = function override(config) {
@@ -19,9 +19,9 @@ module.exports = function override(config) {
     config.plugins.push(
       new webpack.DefinePlugin({
         "process.env.REACT_APP_MUI_PRO_LICENSE_KEY": JSON.stringify(
-          process.env.MUI_PRO_LICENSE_KEY
+          process.env.MUI_PRO_LICENSE_KEY,
         ),
-      })
+      }),
     );
   }
 
@@ -42,26 +42,24 @@ module.exports = function override(config) {
     config.plugins.push(
       new SaveRemoteFilePlugin([
         {
-          url: "https://d3js.org/d3.v5.js",
-          filepath: "static/js/d3.v5.js",
-          hash: false,
-        },
-        {
-          url: "https://mpld3.github.io/js/mpld3.v0.5.8.js",
-          filepath: "static/js/mpld3.v0.5.8.js",
-          hash: false,
-        },
-        {
           url: "https://code.jquery.com/jquery-3.7.1.min.js",
           filepath: "static/js/jquery-3.7.1.min.js",
           hash: false,
-        }
-      ])
+        },
+        {
+          url: "https://cdn.jsdelivr.net/gh/matplotlib/matplotlib@v3.10.x/lib/matplotlib/backends/web_backend/css/fbm.css",
+          filepath: "static/css/fbm.css",
+          hash: false,
+        },
+        {
+          url: "https://cdn.jsdelivr.net/gh/matplotlib/matplotlib@v3.10.x/lib/matplotlib/backends/web_backend/css/mpl.css",
+          filepath: "static/css/mpl.css",
+          hash: false,
+        },
+      ]),
     );
   }
 
-  config.plugins.push(
-    new ProgressBarPlugin(),
-  );
+  config.plugins.push(new ProgressBarPlugin());
   return config;
 };

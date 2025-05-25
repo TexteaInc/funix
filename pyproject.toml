@@ -1,6 +1,6 @@
 [project]
 name = "funix"
-version = "0.6.1"
+version = "0.6.2"
 authors = [
   {name = "Textea Inc.", email = "forrestbao@gmail.com"}
 ]
@@ -26,9 +26,9 @@ dependencies = [
   "flask-sock>=0.7.0",
   "SQLAlchemy>=2.0.23",
   "matplotlib>=3.4.3",
-  "mpld3>=0.5.8",
   "pandas>=2.0.3",
   "docstring_parser>=0.16",
+  "tornado>=6.4.2"
 ]
 
 [project.optional-dependencies]
