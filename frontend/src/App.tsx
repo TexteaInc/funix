@@ -60,7 +60,10 @@ import useFunixHistory from "./shared/useFunixHistory";
 import { getCookie, setCookie } from "typescript-cookie";
 import MarkdownDiv from "./components/Common/MarkdownDiv";
 import { useSnackbar } from "notistack";
-import TemplateString from "./components/Common/TemplateString";
+import {
+  stringTemplate,
+  TemplateString,
+} from "./components/Common/TemplateString";
 
 const drawerWidth = 240;
 
@@ -304,6 +307,19 @@ const App = () => {
       }));
     });
   }, [historyLoaded]);
+
+  useEffect(() => {
+    if (theme !== undefined && theme !== null) {
+      console.log(theme.funix_title, selectedFunction);
+      document.title = stringTemplate(theme.funix_title, {
+        org: selectedFunction?.name || "Funix",
+        functionName: selectedFunction?.name || "No name",
+        functionPath: selectedFunction?.path || "No path",
+        functionId: selectedFunction?.id || "No id",
+        functionHasSecret: selectedFunction?.secret ? "Yes" : "No",
+      });
+    }
+  }, [theme, selectedFunction]);
 
   window.addEventListener("funix-history-update", () => {
     getHistories().then((histories) => {

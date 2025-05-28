@@ -28,7 +28,7 @@ def delete_file(fid: str) -> None:
         fid (str): The file id.
 
     Note:
-        Need lock, but it's not a big problem for now I think so?
+        Need lock, but it's not a big problem, for now I think so?
     """
     global __files_dict
     if fid in __files_dict:

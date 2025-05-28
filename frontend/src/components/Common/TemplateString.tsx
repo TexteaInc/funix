@@ -20,4 +20,17 @@ const TemplateString = ({
   return result;
 };
 
-export default TemplateString;
+const stringTemplate = (
+  template: string,
+  records: Record<string, string>,
+): string => {
+  const keys = Object.keys(records);
+  return template.replace(/{{([^}]+)}}/g, (match, key) => {
+    if (keys.includes(key)) {
+      return records[key];
+    }
+    return match;
+  });
+};
+
+export { TemplateString, stringTemplate };
