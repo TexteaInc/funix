@@ -84,6 +84,13 @@ const InputPanel = (props: {
 
     if (callableDefault !== null && props.preview.path in callableDefault) {
       setForm(callableDefault[props.preview.path]);
+      if (
+        (props.preview.autorun === "always" ||
+          props.preview.autorun === "toggleable") &&
+        autoRun
+      ) {
+        handleSubmitWithoutHistory(callableDefault[props.preview.path]).then();
+      }
       setStore((store) => {
         const newCallableDefault = { ...store.callableDefault };
         delete newCallableDefault[props.preview.path];

@@ -25,7 +25,14 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
   // );
   const [detail, setDetail] = useState<FunctionDetail | null>(null);
   const [
-    { functionSecret, backHistory, backConsensus, appSecret, last },
+    {
+      functionSecret,
+      backHistory,
+      backConsensus,
+      appSecret,
+      last,
+      callableDefault,
+    },
     setStore,
   ] = useAtom(storeAtom);
   const [width, setWidth] = useState(preview.width);
@@ -144,11 +151,24 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
       .then(() => {
         if (preview.justRun) {
           // simple run
-          callFunctionRaw(new URL(`/call/${preview.id}`, backend), {}).then(
-            (rsp) => {
-              setResponse(rsp.toString());
-            },
-          );
+          let defaultConfig = {};
+          if (callableDefault !== null && preview.path in callableDefault) {
+            setStore((store) => {
+              defaultConfig = callableDefault[preview.path];
+              const newCallableDefault = { ...store.callableDefault };
+              delete newCallableDefault[preview.path];
+              return {
+                ...store,
+                callableDefault: newCallableDefault,
+              };
+            });
+          }
+          callFunctionRaw(
+            new URL(`/call/${preview.id}`, backend),
+            defaultConfig,
+          ).then((rsp) => {
+            setResponse(rsp.toString());
+          });
         }
       });
   }, [preview, backend, last]);
