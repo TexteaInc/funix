@@ -233,7 +233,7 @@ def funix(
     rate_limit: RateLimiter = None,
     reactive: ReactiveType = None,
     print_to_web: bool = False,
-    autorun: AutoRunType = False,
+    auto_run: AutoRunType = False,
     disable: bool = False,
     matplotlib_format: Literal["png", "svg", "agg"] = "svg",
     keep_last: bool = False,
@@ -283,7 +283,7 @@ def funix(
         rate_limit(Limiter | list[Limiter]): rate limiters, an object or a list
         reactive(ReactiveType): reactive config
         print_to_web(bool): handle all stdout to web
-        autorun(bool): allow users to use continuity runs on the front end
+        auto_run(bool): allow users to use continuity runs on the front end
         disable(bool): disable this function
         matplotlib_format(MatplotFormatType): Matplotlib format
             available formats: "png", "svg", "agg"
@@ -511,10 +511,10 @@ def funix(
                 app_.post(f"/update/{function_id}")(_function_reactive_update)
                 app_.post(f"/update/{endpoint}")(_function_reactive_update)
 
-            real_autorun = autorun
+            real_autorun = auto_run
 
-            if isinstance(autorun, bool):
-                real_autorun = "disable" if not autorun else "always"
+            if isinstance(auto_run, bool):
+                real_autorun = "disable" if not auto_run else "always"
 
             decorated_functions_list_append(
                 app_.name,
