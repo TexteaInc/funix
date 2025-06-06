@@ -310,7 +310,6 @@ const App = () => {
 
   useEffect(() => {
     if (theme !== undefined && theme !== null) {
-      console.log(theme.funix_title, selectedFunction);
       document.title = stringTemplate(theme.funix_title || "{{org}}", {
         org: selectedFunction?.name || "Funix",
         functionName: selectedFunction?.name || "No name",

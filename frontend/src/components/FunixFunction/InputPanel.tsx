@@ -64,6 +64,36 @@ const InputPanel = (props: {
   );
   const lock = useRef(false);
 
+  const reactiveUpdate = (formData: Record<string, any> | null) => {
+    _.debounce(() => {
+      fetch(new URL(`/update/${props.preview.id}`, props.backend), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData === null ? form : formData),
+        credentials: "include",
+      })
+        .then((body) => {
+          return body.json();
+        })
+        .then((data: UpdateResult) => {
+          const result = data.result;
+
+          if (result !== null) {
+            for (const [key, value] of Object.entries(result)) {
+              setForm((form) => {
+                return {
+                  ...form,
+                  [key]: value,
+                };
+              });
+            }
+          }
+        });
+    }, 100)();
+  };
+
   const isLarge =
     Object.values(props.detail.schema.properties).findIndex((value) => {
       const newValue = value as unknown as any;
@@ -90,6 +120,9 @@ const InputPanel = (props: {
         autoRun
       ) {
         handleSubmitWithoutHistory(callableDefault[props.preview.path]).then();
+      }
+      if (props.preview.reactive) {
+        reactiveUpdate(callableDefault[props.preview.path]);
       }
       setStore((store) => {
         const newCallableDefault = { ...store.callableDefault };
@@ -140,33 +173,7 @@ const InputPanel = (props: {
     setForm(formData);
 
     if (props.preview.reactive) {
-      _.debounce(() => {
-        fetch(new URL(`/update/${props.preview.id}`, props.backend), {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-          credentials: "include",
-        })
-          .then((body) => {
-            return body.json();
-          })
-          .then((data: UpdateResult) => {
-            const result = data.result;
-
-            if (result !== null) {
-              for (const [key, value] of Object.entries(result)) {
-                setForm((form) => {
-                  return {
-                    ...form,
-                    [key]: value,
-                  };
-                });
-              }
-            }
-          });
-      }, 100)();
+      reactiveUpdate(formData);
     }
 
     if (
