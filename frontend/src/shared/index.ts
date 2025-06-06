@@ -79,6 +79,10 @@ export type FunctionPreview = {
    */
   reactive: boolean;
   /**
+   * Reactive Dependencies
+   */
+  reactiveOn: string[] | null;
+  /**
    * autorun
    */
   autorun: "always" | "disable" | "toggleable";

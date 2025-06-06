@@ -232,6 +232,7 @@ def funix(
     default: bool = False,
     rate_limit: RateLimiter = None,
     reactive: ReactiveType = None,
+    reactive_on: Optional[list[str]] = None,
     print_to_web: bool = False,
     auto_run: AutoRunType = False,
     disable: bool = False,
@@ -282,6 +283,7 @@ def funix(
         default(bool): whether this function is the default function
         rate_limit(Limiter | list[Limiter]): rate limiters, an object or a list
         reactive(ReactiveType): reactive config
+        reactive_on(list[str]): if set, the function will be reactive on these parameters
         print_to_web(bool): handle all stdout to web
         auto_run(bool): allow users to use continuity runs on the front end
         disable(bool): disable this function
@@ -502,9 +504,11 @@ def funix(
                     return function_reactive_update(
                         reactive_config,
                         app_.name,
-                        class_method_qualname
-                        if is_class_method
-                        else function.__qualname__,
+                        (
+                            class_method_qualname
+                            if is_class_method
+                            else function.__qualname__
+                        ),
                     )
 
                 _function_reactive_update.__name__ = function_name + "_reactive_update"
@@ -532,6 +536,7 @@ def funix(
                     "id": function_id,
                     "websocket": need_websocket,
                     "reactive": has_reactive_params,
+                    "reactiveOn": reactive_on,
                     "autorun": real_autorun,
                     "keepLast": keep_last,
                     "width": width if width else ["50%", "50%"],
