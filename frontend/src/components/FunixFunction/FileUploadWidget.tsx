@@ -96,7 +96,16 @@ const CameraPreviewVideo = () => {
 
 const FileUploadWidget = (props: FileUploadWidgetInterface) => {
   const [{ backHistory }] = useAtom(storeAtom);
-  const [files, setFiles] = React.useState<File[]>([]);
+  const [files, setFiles] = React.useState<File[]>(() => {
+    if (props.data !== null && typeof props.data !== "undefined") {
+      if (props.multiple) {
+        return (props.data as string[]).map((data) => base64stringToFile(data));
+      } else {
+        return [base64stringToFile(props.data)];
+      }
+    }
+    return [];
+  });
   const [open, setOpen] = React.useState(false);
   const [cameraOpen, setCameraOpen] = React.useState(false);
   const [preview, setPreview] = React.useState<File | null>(null);
@@ -218,6 +227,18 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
   //     setFiles(newFiles);
   //   }
   // });
+
+  useEffect(() => {
+    if (props.data !== null && typeof props.data !== "undefined") {
+      if (props.multiple) {
+        setFiles(
+          (props.data as string[]).map((data) => base64stringToFile(data)),
+        );
+      } else {
+        setFiles([base64stringToFile(props.data)]);
+      }
+    }
+  }, [props.data]);
 
   const removeFile = (index: number) => {
     const newFiles = [...files];

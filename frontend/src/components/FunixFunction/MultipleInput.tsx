@@ -21,7 +21,7 @@ interface MultipleInput {
 }
 
 const MultipleInput = (props: MultipleInput) => {
-  const [value, setValue] = React.useState<unknown[]>([]);
+  const [value, setValue] = React.useState<unknown[]>(props.data || []);
 
   React.useEffect(() => {
     if (props.data === value) return;
