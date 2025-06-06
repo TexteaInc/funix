@@ -290,17 +290,17 @@ def parse_argument_config(
             for prop_key in ["widget", "label", "whitelist", "example"]:
                 if prop_key in decorator_arg_dict:
                     if prop_key == "label":
-                        decorated_params[single_decorator_arg_name][
-                            "title"
-                        ] = decorator_arg_dict[prop_key]
+                        decorated_params[single_decorator_arg_name]["title"] = (
+                            decorator_arg_dict[prop_key]
+                        )
                     elif prop_key == "widget":
-                        decorated_params[single_decorator_arg_name][
-                            prop_key
-                        ] = parse_widget(decorator_arg_dict[prop_key])
+                        decorated_params[single_decorator_arg_name][prop_key] = (
+                            parse_widget(decorator_arg_dict[prop_key])
+                        )
                     else:
-                        decorated_params[single_decorator_arg_name][
-                            prop_key
-                        ] = decorator_arg_dict[prop_key]
+                        decorated_params[single_decorator_arg_name][prop_key] = (
+                            decorator_arg_dict[prop_key]
+                        )
 
             if (
                 "whitelist" in decorated_params[single_decorator_arg_name]
@@ -311,13 +311,13 @@ def parse_argument_config(
                 )
 
 
-def generate_redirect_link(
+def generate_redirect_link_core(
     function: Callable,
     *args,
     **kwargs,
-) -> HTML:
+) -> (str, dict):
     """
-    Generate a redirect link.
+    Generate a redirect URL.
 
     Parameters:
         function(Callable): The function.
@@ -325,7 +325,8 @@ def generate_redirect_link(
         **kwargs: The kwargs.
 
     Returns:
-        str | Markdown | HTML: The result.
+        str: The redirect URL.
+        dict: The function detail.
     """
     function_qualname = function.__qualname__
     _function = function
@@ -346,4 +347,24 @@ def generate_redirect_link(
     dict_args = arguments.arguments
     json_plain = json.dumps(dict_args)
     web_safe_args = base64.urlsafe_b64encode(json_plain.encode()).decode()
-    return f"<a href='/{result['path']}?args={web_safe_args}'>{result['name']}</a>"
+    return f"/{result['path']}?args={web_safe_args}", result
+
+
+def generate_redirect_link(
+    function: Callable,
+    *args,
+    **kwargs,
+) -> HTML:
+    """
+    Generate a redirect link.
+
+    Parameters:
+        function(Callable): The function.
+        *args: The args.
+        **kwargs: The kwargs.
+
+    Returns:
+        str | Markdown | HTML: The result.
+    """
+    url, result = generate_redirect_link_core(function, *args, **kwargs)
+    return f"<a href='{url}'>{result['name']}</a>"

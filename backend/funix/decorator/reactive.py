@@ -8,6 +8,7 @@ from typing import Callable
 from flask import request
 
 from funix.hint import ReactiveType
+from funix.decorator.param import get_real_callable
 
 ReturnType = dict[str, tuple[Callable, dict[str, str]]]
 
@@ -48,22 +49,23 @@ def get_reactive_config(
             else:
                 reactive_config[reactive_param] = (callable_, {})
                 for key in dict(callable_params.items()).keys():
-                    if key not in function_params:
-                        raise ValueError(
-                            f"The key {key} is not in function, please write full config"
-                        )
-                    reactive_config[reactive_param][1][key] = key
+                    if key in function_params:
+                        reactive_config[reactive_param][1][key] = key
     return reactive_config
 
 
-def function_reactive_update(reactive_config: ReturnType) -> dict:
+def function_reactive_update(
+    reactive_config: ReturnType, app_name: str, qualname: str
+) -> dict:
     reactive_param_value = {}
 
     form_data = request.get_json()
 
     for key_, item_ in reactive_config.items():
         argument_key: str = key_
-        callable_function: Callable = item_[0]
+        callable_function: Callable = get_real_callable(
+            app_name, item_[0], qualname
+        )
         callable_config: dict[str, str] = item_[1]
 
         try:

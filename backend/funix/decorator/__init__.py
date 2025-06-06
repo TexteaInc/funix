@@ -499,7 +499,13 @@ def funix(
                 )
 
                 def _function_reactive_update():
-                    return function_reactive_update(reactive_config)
+                    return function_reactive_update(
+                        reactive_config,
+                        app_.name,
+                        class_method_qualname
+                        if is_class_method
+                        else function.__qualname__,
+                    )
 
                 _function_reactive_update.__name__ = function_name + "_reactive_update"
 
