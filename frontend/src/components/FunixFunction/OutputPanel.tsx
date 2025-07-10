@@ -16,7 +16,7 @@ import {
   Typography,
 } from "@mui/material";
 import { GridRowModel, GridToolbar } from "@mui/x-data-grid";
-import React, { ReactElement } from "react";
+import React, { ReactElement, useCallback } from "react";
 import { BaseType, FunctionDetail, ReturnType } from "../../shared";
 import OutputError from "./OutputComponents/OutputError";
 import { outputRow } from "json-schema";
@@ -27,7 +27,12 @@ import OutputCode from "./OutputComponents/OutputCode";
 import OutputPlot from "./OutputComponents/OutputPlot";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import { useAtom } from "jotai";
-import { storeAtom } from "../../store";
+import {
+  showFunctionDetailAtom,
+  viewTypeAtom,
+  themeAtom,
+  callableDefaultAtom,
+} from "../../store";
 import { ExpandMore } from "@mui/icons-material";
 import ThemeReactJson from "../Common/ThemeReactJson";
 import { DataGrid } from "../../Key";
@@ -35,6 +40,7 @@ import OutputDataframe from "./OutputComponents/OutputDataframe";
 import InnerHTML from "dangerously-set-html-content";
 import { useNavigate } from "react-router-dom";
 import OutputPlotMedias from "./OutputComponents/OutputPlotImage";
+import _ from "lodash";
 
 const guessJSON = (response: string | null): object | false => {
   if (response === null) return false;
@@ -50,13 +56,128 @@ const OutputPanel = (props: {
   backend: URL;
   response: string | null;
 }) => {
-  const [{ showFunctionDetail, viewType, theme }, setStore] =
-    useAtom(storeAtom);
+  const [showFunctionDetail] = useAtom(showFunctionDetailAtom);
+  const [viewType, setViewType] = useAtom(viewTypeAtom);
+  const [theme] = useAtom(themeAtom);
+  const [callableDefault, setCallableDefault] = useAtom(callableDefaultAtom);
+  const navigate = useNavigate();
 
   type ResponseViewProps = {
     response: string | null;
     returnType?: { [key: string]: BaseType } | ReturnType[] | ReturnType;
   };
+
+  const handleCallableClick = useCallback(
+    (jumpHref: string, response: any) => {
+      if ("args" in response) {
+        const newCallableDefault = { ...callableDefault };
+        newCallableDefault[jumpHref] = response.args;
+        setCallableDefault(newCallableDefault);
+      }
+      navigate(jumpHref);
+    },
+    [callableDefault, setCallableDefault, navigate],
+  );
+
+  const getTypedElement = useCallback(
+    (elementType: ReturnType, response: any, index: number) => {
+      switch (elementType) {
+        case "Callable": {
+          const jumpHref = response.jump;
+          if (jumpHref === undefined || jumpHref === null || jumpHref === "") {
+            return <Button variant="contained">Callable</Button>;
+          }
+          return (
+            <Button
+              variant="contained"
+              onClick={() => handleCallableClick(jumpHref, response)}
+            >
+              {response.title}
+            </Button>
+          );
+        }
+        case "Figure":
+          return (
+            <OutputPlot
+              plotCode={response}
+              indexId={index.toString()}
+              backend={props.backend}
+            />
+          );
+        case "Dataframe":
+          return (
+            <OutputDataframe
+              dataframe={response}
+              gridHeight={theme?.funix_grid_height || 400}
+              checkboxSelection={
+                theme !== null && "funix_grid_checkbox" in theme
+                  ? theme.funix_grid_checkbox
+                  : true
+              }
+            />
+          );
+        case "string":
+        case "text":
+          return <span>{response}</span>;
+        case "number":
+        case "integer":
+        case "boolean":
+          return <code>{response}</code>;
+        case "array":
+        case "list":
+        case "object":
+        case "dict":
+        case "Dict":
+        case "List":
+          return <GuessingDataView response={JSON.stringify(response)} />;
+        case "Markdown":
+          return <MarkdownDiv markdown={response} isRenderInline={false} />;
+        case "HTML":
+          return <InnerHTML html={response} />;
+        case "FigureImage":
+          return <OutputPlotMedias media={response} />;
+        case "Images":
+        case "Videos":
+        case "Audios":
+          return (
+            <OutputMedias
+              medias={response}
+              type={elementType}
+              backend={props.backend.toString()}
+            />
+          );
+        case "Code":
+          if (typeof response === "string") {
+            return <OutputCode code={response} />;
+          } else {
+            const outputCodeProp = response as {
+              code: string;
+              lang?: string;
+            };
+            return (
+              <OutputCode
+                code={outputCodeProp.code}
+                language={outputCodeProp.lang}
+              />
+            );
+          }
+        case "Files":
+          return (
+            <OutputFiles files={response} backend={props.backend.toString()} />
+          );
+        default:
+          return <GuessingDataView response={JSON.stringify(response)} />;
+      }
+    },
+    [handleCallableClick, props.backend, theme],
+  );
+
+  const handleViewTypeChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setViewType(event.target.value as "json" | "sheet");
+    },
+    [setViewType],
+  );
 
   const GuessingDataView: React.FC<ResponseViewProps> = ({ response }) => {
     if (response === null) {
@@ -93,12 +214,7 @@ const OutputPanel = (props: {
               aria-labelledby="response-view-radio-group"
               name="response-view-radio-group"
               value={viewType}
-              onChange={(event) => {
-                setStore((store) => ({
-                  ...store,
-                  viewType: event.target.value as "json" | "sheet",
-                }));
-              }}
+              onChange={handleViewTypeChange}
             >
               <FormControlLabel value="json" control={<Radio />} label="JSON" />
               <FormControlLabel
@@ -218,119 +334,6 @@ const OutputPanel = (props: {
       } catch (e) {
         return <code>{response ?? ""}</code>;
       }
-    }
-  };
-
-  const getTypedElement = (
-    elementType: ReturnType,
-    response: any,
-    index: number,
-  ) => {
-    const navigate = useNavigate();
-    switch (elementType) {
-      case "Callable": {
-        const jumpHref = response.jump;
-        if (jumpHref === undefined || jumpHref === null || jumpHref === "") {
-          return <Button variant="contained">Callable</Button>;
-        }
-        return (
-          <Button
-            variant="contained"
-            onClick={() => {
-              if (
-                jumpHref !== undefined &&
-                jumpHref !== null &&
-                jumpHref !== ""
-              ) {
-                if ("args" in response) {
-                  setStore((store) => {
-                    const newCallableDefault = { ...store.callableDefault };
-                    newCallableDefault[jumpHref] = response.args;
-                    return {
-                      ...store,
-                      callableDefault: newCallableDefault,
-                    };
-                  });
-                }
-                navigate(jumpHref);
-              }
-            }}
-          >
-            {response.title}
-          </Button>
-        );
-      }
-      case "Figure":
-        return (
-          <OutputPlot
-            plotCode={response}
-            indexId={index.toString()}
-            backend={props.backend}
-          />
-        );
-      case "Dataframe":
-        return (
-          <OutputDataframe
-            dataframe={response}
-            gridHeight={theme?.funix_grid_height || 400}
-            checkboxSelection={
-              theme !== null && "funix_grid_checkbox" in theme
-                ? theme.funix_grid_checkbox
-                : true
-            }
-          />
-        );
-      case "string":
-      case "text":
-        return <span>{response}</span>;
-      case "number":
-      case "integer":
-      case "boolean":
-        return <code>{response}</code>;
-      case "array":
-      case "list":
-      case "object":
-      case "dict":
-      case "Dict":
-      case "List":
-        return <GuessingDataView response={JSON.stringify(response)} />;
-      case "Markdown":
-        return <MarkdownDiv markdown={response} isRenderInline={false} />;
-      case "HTML":
-        return <InnerHTML html={response} />;
-      case "FigureImage":
-        return <OutputPlotMedias media={response} />;
-      case "Images":
-      case "Videos":
-      case "Audios":
-        return (
-          <OutputMedias
-            medias={response}
-            type={elementType}
-            backend={props.backend.toString()}
-          />
-        );
-      case "Code":
-        if (typeof response === "string") {
-          return <OutputCode code={response} />;
-        } else {
-          const outputCodeProp = response as {
-            code: string;
-            lang?: string;
-          };
-          return (
-            <OutputCode
-              code={outputCodeProp.code}
-              language={outputCodeProp.lang}
-            />
-          );
-        }
-      case "Files":
-        return (
-          <OutputFiles files={response} backend={props.backend.toString()} />
-        );
-      default:
-        return <GuessingDataView response={JSON.stringify(response)} />;
     }
   };
 
@@ -539,8 +542,8 @@ const OutputPanel = (props: {
 
 export default React.memo(OutputPanel, (prevProps, nextProps) => {
   return (
-    prevProps.response === nextProps.response &&
-    prevProps.detail === nextProps.detail &&
-    prevProps.backend === nextProps.backend
+    _.isEqual(prevProps.response, nextProps.response) &&
+    _.isEqual(prevProps.detail, nextProps.detail) &&
+    _.isEqual(prevProps.backend, nextProps.backend)
   );
 });

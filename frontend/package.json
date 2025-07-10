@@ -25,7 +25,7 @@
     "@types/react-dom": "^18.3.0",
     "@types/uuid": "^10.0.0",
     "dangerously-set-html-content": "^1.1.0",
-    "jotai": "^2.9.1",
+    "jotai": "^2.12.5",
     "localforage": "^1.10.0",
     "lodash": "^4.17.21",
     "material-ui-popup-state": "^5.1.2",

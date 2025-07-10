@@ -58,12 +58,12 @@ import MarkdownDiv from "../Common/MarkdownDiv";
 import { sliderWidgetParser } from "../Common/WidgetSyntaxParser";
 import FileUploadWidget from "./FileUploadWidget";
 import { useAtom } from "jotai";
-import { storeAtom } from "../../store";
 import { DataGrid } from "../../Key";
 import InnerHTML from "dangerously-set-html-content";
 import FunixCustom from "./FunixCustom";
 import MultipleInput from "./MultipleInput";
 import { ObjectFieldTemplateProps } from "@rjsf/utils";
+import { backHistoryAtom } from "../../store";
 
 let rowIdCounter = 0;
 
@@ -945,7 +945,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldTemplateProps) => {
   };
 
   const getNewDataGridElementIfAvailable = () => {
-    const [{ backHistory }] = useAtom(storeAtom);
+    const [backHistory] = useAtom(backHistoryAtom);
 
     useEffect(() => {
       if (backHistory !== null && backHistory["input"] !== null) {
@@ -1101,4 +1101,4 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldTemplateProps) => {
   );
 };
 
-export default ObjectFieldExtendedTemplate;
+export default React.memo(ObjectFieldExtendedTemplate);

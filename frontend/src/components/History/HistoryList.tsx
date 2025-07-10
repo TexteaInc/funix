@@ -1,6 +1,5 @@
 import useFunixHistory, { History } from "../../shared/useFunixHistory";
 import { useAtom } from "jotai";
-import { storeAtom } from "../../store";
 import {
   Button,
   Dialog,
@@ -26,12 +25,19 @@ import {
   Sick,
 } from "@mui/icons-material";
 import { getHistoryInfo, getHistoryStatusIcon } from "./HistoryUtils";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { exportHistory } from "../../shared";
+import {
+  backHistoryAtom,
+  historiesAtom,
+  selectedFunctionAtom,
+} from "../../store";
 
-const HistoryList = (props: { isOpen: boolean }) => {
+const HistoryList = React.memo((props: { isOpen: boolean }) => {
   const { setHistoryNameAndPath, removeHistory } = useFunixHistory();
-  const [{ selectedFunction, histories }, setStore] = useAtom(storeAtom);
+  const [selectedFunction] = useAtom(selectedFunctionAtom);
+  const [histories] = useAtom(historiesAtom);
+  const [, setBackHistory] = useAtom(backHistoryAtom);
   const [selectedHistoryTimestamp, setSelectedHistoryTimestamp] = useState(-1);
   const [selectedHistory, setSelectedHistory] = useState<null | History>(null);
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
@@ -42,6 +48,88 @@ const HistoryList = (props: { isOpen: boolean }) => {
   useEffect(() => {
     setSelectedHistoryTimestamp(-1);
   }, [selectedFunction]);
+
+  const filteredHistories = useMemo(() => {
+    if (selectedFunction === null) return [];
+    return histories.filter(
+      (history) =>
+        history.functionName === selectedFunction.name &&
+        history.functionPath === selectedFunction.path,
+    );
+  }, [histories, selectedFunction]);
+
+  const handleRenameDialogClose = useCallback(() => {
+    setRenameDialogOpen(false);
+    setSelectedHistory(null);
+    setTempRename("");
+  }, []);
+
+  const handleMenuClose = useCallback(() => {
+    setAnchorEl(null);
+  }, []);
+
+  const handleRename = useCallback(() => {
+    if (selectedHistory !== null) {
+      setTempRename(selectedHistory.name || "");
+    }
+    setRenameDialogOpen(true);
+    setAnchorEl(null);
+  }, [selectedHistory]);
+
+  const handleDelete = useCallback(() => {
+    if (selectedHistory !== null) {
+      removeHistory(selectedHistory.timestamp);
+    }
+    setSelectedHistory(null);
+    setAnchorEl(null);
+  }, [selectedHistory, removeHistory]);
+
+  const handleExport = useCallback(() => {
+    if (selectedHistory !== null) {
+      exportHistory(selectedHistory);
+    }
+    setSelectedHistory(null);
+    setAnchorEl(null);
+  }, [selectedHistory]);
+
+  const handleRenameConfirm = useCallback(() => {
+    if (selectedHistory !== null) {
+      setHistoryNameAndPath(
+        selectedHistory.timestamp,
+        tempRename,
+        selectedHistory.functionPath,
+      );
+    }
+    handleRenameDialogClose();
+  }, [
+    selectedHistory,
+    tempRename,
+    setHistoryNameAndPath,
+    handleRenameDialogClose,
+  ]);
+
+  const handleTempRenameChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setTempRename(event.target.value);
+    },
+    [],
+  );
+
+  const handleHistoryClick = useCallback(
+    (history: History) => {
+      setSelectedHistoryTimestamp(history.timestamp);
+      setBackHistory(history);
+    },
+    [setBackHistory],
+  );
+
+  const handleMoreClick = useCallback(
+    (event: React.MouseEvent<HTMLElement>, history: History) => {
+      setSelectedHistory(history);
+      setAnchorEl(event.currentTarget);
+    },
+    [],
+  );
 
   if (!props.isOpen) {
     return <></>;
@@ -66,18 +154,6 @@ const HistoryList = (props: { isOpen: boolean }) => {
     );
   }
 
-  const filteredHistories = histories.filter(
-    (history) =>
-      history.functionName === selectedFunction.name &&
-      history.functionPath === selectedFunction.path,
-  );
-
-  const handleRenameDialogClose = () => {
-    setRenameDialogOpen(false);
-    setSelectedHistory(null);
-    setTempRename("");
-  };
-
   return (
     <>
       <Dialog open={renameDialogOpen} onClose={handleRenameDialogClose}>
@@ -85,7 +161,7 @@ const HistoryList = (props: { isOpen: boolean }) => {
         <DialogContent>
           <TextField
             value={tempRename}
-            onChange={(event) => setTempRename(event.target.value)}
+            onChange={handleTempRenameChange}
             fullWidth
             label="Name"
             variant="standard"
@@ -93,61 +169,24 @@ const HistoryList = (props: { isOpen: boolean }) => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleRenameDialogClose}>Cancel</Button>
-          <Button
-            onClick={() => {
-              if (selectedHistory !== null) {
-                setHistoryNameAndPath(
-                  selectedHistory.timestamp,
-                  tempRename,
-                  selectedHistory.functionPath,
-                );
-              }
-              handleRenameDialogClose();
-            }}
-          >
-            Rename
-          </Button>
+          <Button onClick={handleRenameConfirm}>Rename</Button>
         </DialogActions>
       </Dialog>
-      <Menu open={open} anchorEl={anchorEl} onClose={() => setAnchorEl(null)}>
-        <MenuItem
-          onClick={() => {
-            if (selectedHistory !== null) {
-              setTempRename(selectedHistory.name || "");
-            }
-            setRenameDialogOpen(true);
-            setAnchorEl(null);
-          }}
-        >
+      <Menu open={open} anchorEl={anchorEl} onClose={handleMenuClose}>
+        <MenuItem onClick={handleRename}>
           <ListItemIcon>
             <Edit fontSize="small" />
           </ListItemIcon>
           <ListItemText>Rename</ListItemText>
         </MenuItem>
-        <MenuItem
-          onClick={() => {
-            if (selectedHistory !== null) {
-              removeHistory(selectedHistory.timestamp);
-            }
-            setSelectedHistory(null);
-            setAnchorEl(null);
-          }}
-        >
+        <MenuItem onClick={handleDelete}>
           <ListItemIcon>
             <Delete fontSize="small" />
           </ListItemIcon>
           <ListItemText>Delete</ListItemText>
         </MenuItem>
         <Divider />
-        <MenuItem
-          onClick={() => {
-            if (selectedHistory !== null) {
-              exportHistory(selectedHistory);
-            }
-            setSelectedHistory(null);
-            setAnchorEl(null);
-          }}
-        >
+        <MenuItem onClick={handleExport}>
           <ListItemIcon>
             <FileDownload fontSize="small" />
           </ListItemIcon>
@@ -169,7 +208,7 @@ const HistoryList = (props: { isOpen: boolean }) => {
             const { status } = getHistoryInfo(history);
             return (
               <ListItem
-                key={index}
+                key={`${history.timestamp}-${index}`}
                 sx={{
                   flexDirection: "column",
                   justifyContent: "flex-start",
@@ -179,23 +218,14 @@ const HistoryList = (props: { isOpen: boolean }) => {
                 }}
                 secondaryAction={
                   <IconButton
-                    onClick={(event) => {
-                      setSelectedHistory(history);
-                      setAnchorEl(event.currentTarget);
-                    }}
+                    onClick={(event) => handleMoreClick(event, history)}
                   >
                     <MoreVert />
                   </IconButton>
                 }
               >
                 <ListItemButton
-                  onClick={() => {
-                    setSelectedHistoryTimestamp(history.timestamp);
-                    setStore((store) => ({
-                      ...store,
-                      backHistory: history,
-                    }));
-                  }}
+                  onClick={() => handleHistoryClick(history)}
                   selected={selectedHistoryTimestamp === history.timestamp}
                   sx={{
                     width: "100%",
@@ -220,6 +250,8 @@ const HistoryList = (props: { isOpen: boolean }) => {
       </List>
     </>
   );
-};
+});
+
+HistoryList.displayName = "HistoryList";
 
 export default HistoryList;

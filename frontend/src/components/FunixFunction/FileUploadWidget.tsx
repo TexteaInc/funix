@@ -29,10 +29,10 @@ import {
 } from "@mui/icons-material";
 import OutputMedias from "./OutputComponents/OutputMedias";
 import { useAtom } from "jotai";
-import { storeAtom } from "../../store";
 import { enqueueSnackbar } from "notistack";
 import FunixRecorder from "../../shared/media";
 import { WidgetProps } from "@rjsf/utils";
+import { backHistoryAtom } from "../../store";
 
 interface FileUploadWidgetInterface {
   widget: WidgetProps;
@@ -95,7 +95,7 @@ const CameraPreviewVideo = () => {
 };
 
 const FileUploadWidget = (props: FileUploadWidgetInterface) => {
-  const [{ backHistory }] = useAtom(storeAtom);
+  const [backHistory] = useAtom(backHistoryAtom);
   const [files, setFiles] = React.useState<File[]>(() => {
     if (props.data !== null && typeof props.data !== "undefined") {
       if (props.multiple) {

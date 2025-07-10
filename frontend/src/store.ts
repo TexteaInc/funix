@@ -7,25 +7,6 @@ export type LastStore = {
   output: PostCallResponse | string;
 };
 
-export type Store = {
-  selectedFunction: null | FunctionPreview;
-  functions: null | string[];
-  theme: null | Record<string, any>;
-  showFunctionDetail: boolean;
-  viewType: "json" | "sheet";
-  functionSecret: Record<string, string | null>;
-  backend: null | URL;
-  backHistory: null | History;
-  backConsensus: boolean[];
-  saveHistory: boolean;
-  appSecret: null | string;
-  histories: History[];
-  last: Record<string, LastStore>;
-  showFunctionTitle: boolean;
-
-  callableDefault: Record<string, Record<any, any>>;
-};
-
 // atomWithStorage("saveHistory", true);
 
 const fromLocalStorage = () => {
@@ -47,19 +28,20 @@ const fromLocalStorage = () => {
   };
 };
 
-export const storeAtom = atom<Store>({
-  selectedFunction: null,
-  functions: null,
-  theme: null,
-  viewType: "json",
-  functionSecret: {},
-  backend: null,
-  backHistory: null,
-  backConsensus: [false, false, false],
-  appSecret: null,
-  histories: [],
-  last: {},
-  showFunctionTitle: false,
-  callableDefault: {},
-  ...fromLocalStorage(),
-});
+export const selectedFunctionAtom = atom<null | FunctionPreview>(null);
+export const functionsAtom = atom<null | string[]>(null);
+export const themeAtom = atom<null | Record<string, any>>(null);
+export const showFunctionDetailAtom = atom<boolean>(
+  fromLocalStorage().showFunctionDetail,
+);
+export const viewTypeAtom = atom<"json" | "sheet">("json");
+export const functionSecretAtom = atom<Record<string, string | null>>({});
+export const backendAtom = atom<null | URL>(null);
+export const backHistoryAtom = atom<null | History>(null);
+export const backConsensusAtom = atom<boolean[]>([false, false, false]);
+export const saveHistoryAtom = atom<boolean>(fromLocalStorage().saveHistory);
+export const appSecretAtom = atom<null | string>(null);
+export const historiesAtom = atom<History[]>([]);
+export const lastAtom = atom<Record<string, LastStore>>({});
+export const showFunctionTitleAtom = atom<boolean>(false);
+export const callableDefaultAtom = atom<Record<string, Record<any, any>>>({});

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   callFunctionRaw,
   FunctionDetail,
@@ -7,11 +7,21 @@ import {
 } from "../../shared";
 import { Alert, AlertTitle, Box, Grid, Stack } from "@mui/material";
 import { useAtom } from "jotai";
-import { storeAtom } from "../../store";
 import InputPanel from "./InputPanel";
 import OutputPanel from "./OutputPanel";
 import { Token } from "@mui/icons-material";
 import InlineBox from "../Common/InlineBox";
+import _ from "lodash";
+import {
+  appSecretAtom,
+  backConsensusAtom,
+  backHistoryAtom,
+  callableDefaultAtom,
+  functionSecretAtom,
+  lastAtom,
+  showFunctionTitleAtom,
+  themeAtom,
+} from "../../store";
 // import useSWR from "swr";
 
 export type FunctionDetailProps = {
@@ -24,24 +34,34 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
   //   new URL(`/param/${preview.id}`, backend).toString()
   // );
   const [detail, setDetail] = useState<FunctionDetail | null>(null);
-  const [
-    {
-      functionSecret,
-      backHistory,
-      backConsensus,
-      appSecret,
-      last,
-      callableDefault,
-    },
-    setStore,
-  ] = useAtom(storeAtom);
+
+  const [functionSecret, setFunctionSecret] = useAtom(functionSecretAtom);
+  const [backHistory, setBackHistory] = useAtom(backHistoryAtom);
+  const [backConsensus, setBackConsensus] = useAtom(backConsensusAtom);
+  const [appSecret] = useAtom(appSecretAtom);
+  const [last] = useAtom(lastAtom);
+  const [callableDefault, setCallableDefault] = useAtom(callableDefaultAtom);
+  const [, setShowFunctionTitle] = useAtom(showFunctionTitleAtom);
+  const [, setTheme] = useAtom(themeAtom);
+
   const [width, setWidth] = useState(preview.width);
   const [onResizing, setOnResizing] = useState(false);
-  const [response, setResponse] = useState<string | null>(null);
+  const [response, setResponseState] = useState<string | null>(null);
   const [verified, setVerified] = useState(!preview.secret);
   const queryLock = useRef(false);
   const [warning, setWarning] = useState(false);
-  const [outdated, setOutdated] = useState(false);
+  const [outdated, setOutdatedState] = useState(false);
+
+  const setResponse = useCallback(
+    (value: React.SetStateAction<string | null>) => {
+      setResponseState(value);
+    },
+    [],
+  );
+
+  const setOutdated = useCallback((value: React.SetStateAction<boolean>) => {
+    setOutdatedState(value);
+  }, []);
 
   useEffect(() => {
     if (preview.secret) {
@@ -72,60 +92,45 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
 
   useEffect(() => {
     if (backHistory === null) return;
-    setOutdated(true);
+    setOutdatedState(true);
     if (backHistory.input !== null) {
       if ("__funix_secret" in backHistory.input) {
-        setStore((store) => {
-          const newFunctionSecret = store.functionSecret;
-          newFunctionSecret[backHistory.functionPath] = backHistory.input
-            ? backHistory.input["__funix_secret"]
-            : null;
-          return {
-            ...store,
-            functionSecret: newFunctionSecret,
-          };
-        });
+        const newFunctionSecret = { ...functionSecret };
+        newFunctionSecret[backHistory.functionPath] = backHistory.input
+          ? backHistory.input["__funix_secret"]
+          : null;
+        setFunctionSecret(newFunctionSecret);
       }
     }
     if (backHistory.output !== null) {
       if (typeof backHistory.output === "string") {
-        setResponse(backHistory.output);
+        setResponseState(backHistory.output);
       } else {
-        setResponse(JSON.stringify(backHistory.output));
+        setResponseState(JSON.stringify(backHistory.output));
       }
-      setStore((store) => {
-        const newBackConsensus = [...store.backConsensus];
-        newBackConsensus[1] = true;
-        return {
-          ...store,
-          backConsensus: newBackConsensus,
-        };
-      });
+      const newBackConsensus = [...backConsensus];
+      newBackConsensus[1] = true;
+      setBackConsensus(newBackConsensus);
     }
   }, [backHistory]);
 
   useEffect(() => {
     if (backConsensus.every((v) => v)) {
-      setStore((store) => ({
-        ...store,
-        backConsensus: [false, false, false],
-        backHistory: null,
-      }));
+      setBackConsensus([false, false, false]);
+      setBackHistory(null);
     }
   }, [backConsensus]);
 
   useEffect(() => {
     if (detail == null) return;
-    setStore((store) => ({
-      ...store,
-      theme: detail.theme,
-      showFunctionTitle:
-        detail.theme !== null
-          ? "funix_disable_input_title" in detail.theme
-            ? !detail.theme.funix_disable_input_title
-            : false
-          : false,
-    }));
+    setShowFunctionTitle(
+      detail.theme !== null
+        ? "funix_disable_input_title" in detail.theme
+          ? !detail.theme.funix_disable_input_title
+          : false
+        : false,
+    );
+    setTheme(detail.theme);
   }, [detail]);
 
   useEffect(() => {
@@ -145,7 +150,7 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
       })
       .then(() => {
         if (preview.keepLast && preview.id in last) {
-          setResponse(JSON.stringify(last[preview.id].output));
+          setResponseState(JSON.stringify(last[preview.id].output));
         }
       })
       .then(() => {
@@ -153,21 +158,16 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
           // simple run
           let defaultConfig = {};
           if (callableDefault !== null && preview.path in callableDefault) {
-            setStore((store) => {
-              defaultConfig = callableDefault[preview.path];
-              const newCallableDefault = { ...store.callableDefault };
-              delete newCallableDefault[preview.path];
-              return {
-                ...store,
-                callableDefault: newCallableDefault,
-              };
-            });
+            defaultConfig = callableDefault[preview.path];
+            const newCallableDefault = { ...callableDefault };
+            delete newCallableDefault[preview.path];
+            setCallableDefault(newCallableDefault);
           }
           callFunctionRaw(
             new URL(`/call/${preview.id}`, backend),
             defaultConfig,
           ).then((rsp) => {
-            setResponse(rsp.toString());
+            setResponseState(rsp.toString());
           });
         }
       });
@@ -347,4 +347,9 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
   );
 };
 
-export default FunixFunction;
+export default React.memo(FunixFunction, (prevProps, nextProps) => {
+  return (
+    _.isEqual(prevProps.backend, nextProps.backend) &&
+    _.isEqual(prevProps.preview, nextProps.preview)
+  );
+});

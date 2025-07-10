@@ -7,7 +7,6 @@ import {
   ListItemText,
   ListSubheader,
 } from "@mui/material";
-import { storeAtom } from "../store";
 import { useAtom } from "jotai";
 import { FunctionPreview, getList, objArraySort } from "../shared";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -18,6 +17,14 @@ import {
   Folder,
   Functions,
 } from "@mui/icons-material";
+import {
+  backConsensusAtom,
+  backHistoryAtom,
+  callableDefaultAtom,
+  functionsAtom,
+  functionSecretAtom,
+  selectedFunctionAtom,
+} from "../store";
 
 export type FunctionListProps = {
   backend: URL;
@@ -90,8 +97,13 @@ const FunixList = (props: {
 
 const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
   type TreeState = Record<string, boolean>;
-  const [{ functionSecret, backHistory, backConsensus }, setStore] =
-    useAtom(storeAtom);
+  const [, setSelectedFunction] = useAtom(selectedFunctionAtom);
+  const [, setFunctions] = useAtom(functionsAtom);
+  const [backHistory, setBackHistory] = useAtom(backHistoryAtom);
+  const [backConsensus, setBackConsensus] = useAtom(backConsensusAtom);
+  const [callableDefault, setCallableDefault] = useAtom(callableDefaultAtom);
+  const [functionSecret, setFunctionSecret] = useAtom(functionSecretAtom);
+
   const [state, setState] = useState<FunctionPreview[]>([]);
   const [radioGroupValue, setRadioGroupValue] = useState<string | null>(null);
   const [url, setURL] = useState("");
@@ -102,29 +114,20 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
 
   const handleFetchFunctionDetail = useCallback(
     (functionPreview: FunctionPreview) => {
-      setStore((store) => ({
-        ...store,
-        selectedFunction: functionPreview,
-      }));
+      setSelectedFunction(functionPreview);
     },
     [],
   );
 
   useEffect(() => {
     if (backend.origin === url) return;
-    setStore((store) => ({
-      ...store,
-      selectedFunction: null,
-    }));
+    setSelectedFunction(null);
     async function queryData() {
       const { list, default_function } = await getList(
         new URL("/list", backend),
       );
       setState(list);
-      setStore((store) => ({
-        ...store,
-        functions: list.map((f) => f.name),
-      }));
+      setFunctions(list.map((f) => f.name));
       if (list.some((f) => typeof f.module === "string")) {
         setTree(!list.every((f) => f.module === list[0].module));
       } else {
@@ -154,25 +157,18 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
   }, [backend, url]);
 
   useEffect(() => {
-    if (backHistory === null) return;
+    if (backHistory === null || backHistory === undefined) return;
     changeRadioGroupValueByPath(backHistory.functionPath);
-    setStore((store) => {
-      const newBackConsensus = [...store.backConsensus];
-      newBackConsensus[0] = true;
-      return {
-        ...store,
-        backConsensus: newBackConsensus,
-      };
-    });
+    const newBackConsensus = [...backConsensus];
+    newBackConsensus[0] = true;
+    setBackConsensus(newBackConsensus);
   }, [backHistory]);
 
   useEffect(() => {
+    if (backConsensus === null || backConsensus === undefined) return;
     if (backConsensus.every((v) => v)) {
-      setStore((store) => ({
-        ...store,
-        backConsensus: [false, false, false],
-        backHistory: null,
-      }));
+      setBackConsensus([false, false, false]);
+      setBackHistory(null);
     }
   }, [backConsensus]);
 
@@ -212,24 +208,16 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
       if (selectedFunctionPreview.length !== 0) {
         const searchParams = new URLSearchParams(search);
         const args = searchParams.get("args");
-
-        setStore((store) => {
-          if (args !== null) {
-            const newCallableDefault = { ...store.callableDefault };
-            newCallableDefault[selectedFunctionPreview[0].path] = JSON.parse(
-              atob(args.replace(/_/g, "/").replace(/-/g, "+")),
-            );
-            return {
-              ...store,
-              callableDefault: newCallableDefault,
-              selectedFunction: selectedFunctionPreview[0],
-            };
-          }
-          return {
-            ...store,
-            selectedFunction: selectedFunctionPreview[0],
-          };
-        });
+        if (args !== null) {
+          const newCallableDefault = { ...callableDefault };
+          newCallableDefault[selectedFunctionPreview[0].path] = JSON.parse(
+            atob(args.replace(/_/g, "/").replace(/-/g, "+")),
+          );
+          setCallableDefault(newCallableDefault);
+          setSelectedFunction(selectedFunctionPreview[0]);
+        } else {
+          setSelectedFunction(selectedFunctionPreview[0]);
+        }
         setRadioGroupValue(functionPath);
       }
     }
@@ -244,10 +232,7 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
         ...functionSecret,
         [radioGroupValue]: secret,
       };
-      setStore((store) => ({
-        ...store,
-        functionSecret: newFunctionSecret,
-      }));
+      setFunctionSecret(newFunctionSecret);
       navigate(`/${radioGroupValue}`);
     }
   }, [search, radioGroupValue]);
