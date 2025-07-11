@@ -341,12 +341,15 @@ const InputPanel = (props: {
     ({ formData }: Record<string, any>) => {
       const oldForm = { ...form };
       setForm(formData);
-
       if (props.preview.reactive) {
         if (props.preview.reactiveOn !== null) {
           for (const key of props.preview.reactiveOn) {
             if (key in oldForm) {
               if (!_.isEqual(oldForm[key], formData[key])) {
+                reactiveUpdate(formData);
+              }
+            } else {
+              if (key in formData) {
                 reactiveUpdate(formData);
               }
             }
