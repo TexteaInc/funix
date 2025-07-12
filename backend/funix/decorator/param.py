@@ -310,11 +310,14 @@ def create_parse_type_metadata(function_id: str):
 def get_real_callable(app: str, function: Callable, qualname: str) -> Callable:
     if function.__name__ == "<lambda>":
         class_ = get_class(app, ".".join(qualname.split(".")[:-1]))
-        org = function(get_global_variable("__FUNIX_" + class_.__name__))
-        if callable(org):
-            return org
+        if class_ is not None:
+            org = function(get_global_variable("__FUNIX_" + class_.__name__))
+            if callable(org):
+                return org
+            else:
+                return lambda: org
         else:
-            return lambda: org
+            return function
     if callable(function):
         return function
     return lambda: function
