@@ -51,6 +51,193 @@ const guessJSON = (response: string | null): object | false => {
   }
 };
 
+const GuessingDataView: React.FC<{
+  response: string | null;
+  viewType: string;
+  handleViewTypeChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+}> = ({ response, viewType, handleViewTypeChange }) => {
+  const SelectedResponseViewFor1DArray = useCallback(
+    ({
+      selectedResponseViewType,
+      parsedResponse,
+    }: {
+      selectedResponseViewType: string;
+      parsedResponse: any;
+    }) => {
+      if (selectedResponseViewType === "json")
+        return <ThemeReactJson src={parsedResponse ?? {}} />;
+      else if (selectedResponseViewType === "sheet")
+        return (
+          <DataGrid
+            pagination
+            autoPageSize
+            columns={[
+              { field: "id", headerName: "ID" },
+              {
+                field: "value",
+                headerName: "Root",
+              },
+            ]}
+            rows={parsedResponse.map((rowValue: any, index: number) => ({
+              id: index,
+              value: rowValue,
+            }))}
+            slots={{
+              toolbar: GridToolbar,
+            }}
+            sx={{ minHeight: 400 }}
+          />
+        );
+      else throw new Error("Unsupported selectedResponseViewType");
+    },
+    [],
+  );
+
+  const SelectedResponseViewForObject = useCallback(
+    ({
+      selectedResponseViewType,
+      parsedResponse,
+      keysOfArraysInSheet,
+    }: {
+      selectedResponseViewType: string;
+      parsedResponse: any;
+      keysOfArraysInSheet: string[];
+    }) => {
+      if (selectedResponseViewType === "json")
+        return <ThemeReactJson src={parsedResponse ?? {}} />;
+      else if (selectedResponseViewType === "sheet") {
+        const rows: GridRowModel[] = [];
+        let newObject: object = {};
+        for (const [k, v] of Object.entries(parsedResponse)) {
+          if (keysOfArraysInSheet.includes(k)) {
+            (v as any).map((rowValue: any, index: number) => {
+              if (index < rows.length) {
+                rows[index] = {
+                  ...rows[index],
+                  [k]: rowValue,
+                };
+              } else {
+                rows.push({
+                  id: index,
+                  [k]: rowValue,
+                });
+              }
+            });
+          } else {
+            newObject = { ...newObject, [k]: v };
+          }
+        }
+        const grid = (
+          <DataGrid
+            pagination
+            autoPageSize
+            columns={keysOfArraysInSheet.map((key) => ({
+              field: key,
+            }))}
+            rows={rows}
+            sx={{ minHeight: 400 }}
+            slots={{
+              toolbar: GridToolbar,
+            }}
+          />
+        );
+        if (Object.keys(newObject).length != 0) {
+          return (
+            <div>
+              {grid}
+              <ThemeReactJson src={newObject} />
+            </div>
+          );
+        } else return grid;
+      } else throw new Error("Unsupported selectedResponseViewType");
+    },
+    [],
+  );
+
+  if (response === null) {
+    return <></>;
+  } else {
+    try {
+      const parsedResponse: object = JSON.parse(response);
+      if (!Array.isArray(parsedResponse)) {
+        if ("error_body" in parsedResponse) {
+          return <OutputError error={parsedResponse as any} />;
+        }
+      }
+      const is1dArray = (target: any) => {
+        if (!Array.isArray(target)) return false;
+        else {
+          for (const row of target)
+            if (
+              Array.isArray(row) ||
+              typeof row === "object" ||
+              typeof row === "function"
+            )
+              return false;
+          return true;
+        }
+      };
+      if (typeof parsedResponse !== "object" && !is1dArray(parsedResponse)) {
+        return <code>{response ?? ""}</code>;
+      }
+      const responseViewRadioGroup = (
+        <FormControl>
+          <FormLabel id="response-view-radio-group">View in: </FormLabel>
+          <RadioGroup
+            row
+            aria-labelledby="response-view-radio-group"
+            name="response-view-radio-group"
+            value={viewType}
+            onChange={handleViewTypeChange}
+          >
+            <FormControlLabel value="json" control={<Radio />} label="JSON" />
+            <FormControlLabel value="sheet" control={<Radio />} label="Sheet" />
+          </RadioGroup>
+        </FormControl>
+      );
+      if (Array.isArray(parsedResponse) && is1dArray(parsedResponse)) {
+        return (
+          <div>
+            {responseViewRadioGroup}
+            <SelectedResponseViewFor1DArray
+              selectedResponseViewType={viewType}
+              parsedResponse={parsedResponse}
+            />
+          </div>
+        );
+      } else if (
+        typeof parsedResponse === "object" &&
+        parsedResponse !== null
+      ) {
+        const keysOfArraysInSheet: string[] = [];
+        for (const [k, v] of Object.entries(parsedResponse)) {
+          if (Array.isArray(v) && is1dArray(v)) {
+            keysOfArraysInSheet.push(k);
+          }
+        }
+        if (keysOfArraysInSheet.length === 0)
+          return <ThemeReactJson src={parsedResponse ?? {}} />;
+        else {
+          return (
+            <div>
+              {responseViewRadioGroup}
+              <SelectedResponseViewForObject
+                selectedResponseViewType={viewType}
+                parsedResponse={parsedResponse}
+                keysOfArraysInSheet={keysOfArraysInSheet}
+              />
+            </div>
+          );
+        }
+      } else {
+        return <ThemeReactJson src={parsedResponse ?? {}} />;
+      }
+    } catch (e) {
+      return <code>{response ?? ""}</code>;
+    }
+  }
+};
+
 const OutputPanel = (props: {
   detail: FunctionDetail;
   backend: URL;
@@ -129,7 +316,13 @@ const OutputPanel = (props: {
         case "dict":
         case "Dict":
         case "List":
-          return <GuessingDataView response={JSON.stringify(response)} />;
+          return (
+            <GuessingDataView
+              response={JSON.stringify(response)}
+              viewType={viewType}
+              handleViewTypeChange={handleViewTypeChange}
+            />
+          );
         case "Markdown":
           return <MarkdownDiv markdown={response} isRenderInline={false} />;
         case "HTML":
@@ -166,10 +359,18 @@ const OutputPanel = (props: {
             <OutputFiles files={response} backend={props.backend.toString()} />
           );
         default:
-          return <GuessingDataView response={JSON.stringify(response)} />;
+          return (
+            <GuessingDataView
+              response={JSON.stringify(response)}
+              viewType={viewType}
+              handleViewTypeChange={(event) => {
+                setViewType(event.target.value as "json" | "sheet");
+              }}
+            />
+          );
       }
     },
-    [handleCallableClick, props.backend, theme],
+    [handleCallableClick, props.backend, theme, viewType, setViewType],
   );
 
   const handleViewTypeChange = useCallback(
@@ -178,164 +379,6 @@ const OutputPanel = (props: {
     },
     [setViewType],
   );
-
-  const GuessingDataView: React.FC<ResponseViewProps> = ({ response }) => {
-    if (response === null) {
-      return <></>;
-    } else {
-      try {
-        const parsedResponse: object = JSON.parse(response);
-        if (!Array.isArray(parsedResponse)) {
-          if ("error_body" in parsedResponse) {
-            return <OutputError error={parsedResponse as any} />;
-          }
-        }
-        const is1dArray = (target: any) => {
-          if (!Array.isArray(target)) return false;
-          else {
-            for (const row of target)
-              if (
-                Array.isArray(row) ||
-                typeof row === "object" ||
-                typeof row === "function"
-              )
-                return false;
-            return true;
-          }
-        };
-        if (typeof parsedResponse !== "object" && !is1dArray(parsedResponse)) {
-          return <code>{response ?? ""}</code>;
-        }
-        const responseViewRadioGroup = (
-          <FormControl>
-            <FormLabel id="response-view-radio-group">View in: </FormLabel>
-            <RadioGroup
-              row
-              aria-labelledby="response-view-radio-group"
-              name="response-view-radio-group"
-              value={viewType}
-              onChange={handleViewTypeChange}
-            >
-              <FormControlLabel value="json" control={<Radio />} label="JSON" />
-              <FormControlLabel
-                value="sheet"
-                control={<Radio />}
-                label="Sheet"
-              />
-            </RadioGroup>
-          </FormControl>
-        );
-        if (Array.isArray(parsedResponse) && is1dArray(parsedResponse)) {
-          const SelectedResponseView = (props: any) => {
-            if (props.selectedResponseViewType === "json")
-              return <ThemeReactJson src={parsedResponse ?? {}} />;
-            else if (props.selectedResponseViewType === "sheet")
-              return (
-                <DataGrid
-                  pagination
-                  autoPageSize
-                  columns={[
-                    { field: "id", headerName: "ID" },
-                    {
-                      field: "value",
-                      headerName: "Root",
-                    },
-                  ]}
-                  rows={parsedResponse.map((rowValue, index) => ({
-                    id: index,
-                    value: rowValue,
-                  }))}
-                  slots={{
-                    toolbar: GridToolbar,
-                  }}
-                  sx={{ minHeight: 400 }}
-                />
-              );
-            else throw new Error("Unsupported selectedResponseViewType");
-          };
-          return (
-            <div>
-              {responseViewRadioGroup}
-              <SelectedResponseView selectedResponseViewType={viewType} />
-            </div>
-          );
-        } else if (
-          typeof parsedResponse === "object" &&
-          parsedResponse !== null
-        ) {
-          const keysOfArraysInSheet: string[] = [];
-          for (const [k, v] of Object.entries(parsedResponse)) {
-            if (Array.isArray(v) && is1dArray(v)) {
-              keysOfArraysInSheet.push(k);
-            }
-          }
-          if (keysOfArraysInSheet.length === 0)
-            return <ThemeReactJson src={parsedResponse ?? {}} />;
-          else {
-            const SelectedResponseView = (props: any) => {
-              if (props.selectedResponseViewType === "json")
-                return <ThemeReactJson src={parsedResponse ?? {}} />;
-              else if (props.selectedResponseViewType === "sheet") {
-                const rows: GridRowModel[] = [];
-                let newObject: object = {};
-                for (const [k, v] of Object.entries(parsedResponse)) {
-                  if (keysOfArraysInSheet.includes(k)) {
-                    v.map((rowValue: any, index: number) => {
-                      if (index < rows.length) {
-                        rows[index] = {
-                          ...rows[index],
-                          [k]: rowValue,
-                        };
-                      } else {
-                        rows.push({
-                          id: index,
-                          [k]: rowValue,
-                        });
-                      }
-                    });
-                  } else {
-                    newObject = { ...newObject, [k]: v };
-                  }
-                }
-                const grid = (
-                  <DataGrid
-                    pagination
-                    autoPageSize
-                    columns={keysOfArraysInSheet.map((key) => ({
-                      field: key,
-                    }))}
-                    rows={rows}
-                    sx={{ minHeight: 400 }}
-                    slots={{
-                      toolbar: GridToolbar,
-                    }}
-                  />
-                );
-                if (Object.keys(newObject).length != 0) {
-                  return (
-                    <div>
-                      {grid}
-                      <ThemeReactJson src={newObject} />
-                    </div>
-                  );
-                } else return grid;
-              } else throw new Error("Unsupported selectedResponseViewType");
-            };
-            return (
-              <div>
-                {responseViewRadioGroup}
-                <SelectedResponseView selectedResponseViewType={viewType} />
-              </div>
-            );
-          }
-        } else {
-          return <ThemeReactJson src={parsedResponse ?? {}} />;
-        }
-      } catch (e) {
-        return <code>{response ?? ""}</code>;
-      }
-    }
-  };
 
   const ResponseView: React.FC<ResponseViewProps> = ({
     response,
@@ -360,7 +403,15 @@ const OutputPanel = (props: {
           return <code>{response}</code>;
         }
         if (!Array.isArray(parsedResponse))
-          return <GuessingDataView response={response} />;
+          return (
+            <GuessingDataView
+              response={response}
+              viewType={viewType}
+              handleViewTypeChange={(event) => {
+                setViewType(event.target.value as "json" | "sheet");
+              }}
+            />
+          );
         const output: outputRow[] = props.detail.schema.output_layout;
         const layout: ReactElement[] = [];
         output.forEach((row) => {
@@ -501,7 +552,15 @@ const OutputPanel = (props: {
           </Alert>
         );
       } else {
-        return <GuessingDataView response={response} />;
+        return (
+          <GuessingDataView
+            response={response}
+            viewType={viewType}
+            handleViewTypeChange={(event) => {
+              setViewType(event.target.value as "json" | "sheet");
+            }}
+          />
+        );
       }
     }
   };
