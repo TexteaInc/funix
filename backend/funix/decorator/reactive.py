@@ -66,6 +66,7 @@ def function_reactive_update(
     reactive_config: ReturnType, app_name: str, qualname: str
 ) -> dict:
     reactive_param_value = {}
+    cached_callable = {}
 
     form_data = request.get_json()
 
@@ -75,7 +76,11 @@ def function_reactive_update(
         """
         A wrapper function to call the callable with the provided kwargs.
         """
-        data = callable_function_(**kwargs)
+        if id(callable_function_) in cached_callable:
+            data = cached_callable[id(callable_function_)]
+        else:
+            data = callable_function_(**kwargs)
+            cached_callable[id(callable_function_)] = data
         if is_tuple:
             if isinstance(data, tuple):
                 return data[index]
