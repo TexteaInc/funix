@@ -238,6 +238,13 @@ class RuntimeClassVisitor(NodeVisitor):
             )
         )
 
+        funix_decorator.keywords.append(
+            keyword(
+                arg="class_line",
+                value=Constant(value=node.lineno if hasattr(node, "lineno") else 0),
+            )
+        )
+
         if not is_static_method:
             # Yes .args
             args.args.pop(0)

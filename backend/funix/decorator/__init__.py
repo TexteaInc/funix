@@ -6,7 +6,7 @@ import ast
 import inspect
 from functools import wraps
 from importlib import import_module
-from inspect import getsource, isgeneratorfunction, signature
+from inspect import getsource, isgeneratorfunction, signature, getsourcelines
 from secrets import token_hex
 from types import ModuleType
 from typing import Callable, Optional, ParamSpec, TypeVar, Union, Literal
@@ -245,6 +245,7 @@ def funix(
     class_method_qualname: Optional[str] = None,
     order: Optional[int] = None,
     just_run: bool = False,
+    class_line: Optional[int] = None,
 ):
     """
     Decorator for functions to convert them to web apps
@@ -299,6 +300,7 @@ def funix(
         class_method_qualname(str): the qualname of the class method
         order(int): the order of the function
         just_run(bool): just run the function, no input panel for the function
+        class_line(int): the line number of the class
 
     Returns:
         function: the decorated function
@@ -343,6 +345,7 @@ def funix(
             return function
         if __wrapper_enabled:
             function_id = str(uuid4())
+            line = class_line if class_line else getsourcelines(function)[1]
 
             if default:
                 set_default_function(app_.name, function_id)
@@ -543,6 +546,7 @@ def funix(
                     "class": is_class_method,
                     "order": order,
                     "justRun": just_run,
+                    "line": line,
                 },
             )
 
@@ -868,12 +872,16 @@ def funix_class(disable: bool = False, menu: Optional[str] = None):
                 if not class_function.startswith("_"):
                     function = getattr(cls, class_function)
                     if callable(function):
+                        line = getsourcelines(function)[1]
                         org_id = id(getattr(type(cls), class_function))
                         if org_id not in class_method_ids_to_params:
                             if GlobalSwitchOption.in_notebook:
-                                funix(app_and_sock=(class_app, class_sock))(function)
+                                funix(
+                                    app_and_sock=(class_app, class_sock),
+                                    class_line=line,
+                                )(function)
                             else:
-                                funix()(function)
+                                funix(class_line=line)(function)
                         else:
                             params = class_method_ids_to_params[org_id]
                             args = params["args"]
@@ -882,11 +890,12 @@ def funix_class(disable: bool = False, menu: Optional[str] = None):
                                 funix(
                                     *args,
                                     **kwargs,
+                                    class_line=line,
                                     app_and_sock=(class_app, class_sock),
                                     jupyter_class=True,
                                 )(function)
                             else:
-                                funix(*args, **kwargs)(function)
+                                funix(class_line=line, *args, **kwargs)(function)
             if GlobalSwitchOption.in_notebook:
                 jupyter(class_app)
             return cls
