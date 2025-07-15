@@ -45,6 +45,7 @@ const MultipleInput = (props: MultipleInput) => {
               props.widget.schema.title ||
               props.widget.name
             }
+            isRenderInline={true}
           />
         </FormLabel>
         <FormGroup row>
@@ -92,6 +93,7 @@ const MultipleInput = (props: MultipleInput) => {
                 props.widget.schema.title ||
                 props.widget.name
               }
+              isRenderInline={true}
             />
           }
           fullWidth

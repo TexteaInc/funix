@@ -206,7 +206,12 @@ export default function MarkdownDiv(props: MarkdownDivProps) {
           [rehypeMermaid],
         ],
         components: {
-          p: "span",
+          p: (props) =>
+            isRenderInline ? (
+              <span>{props.children}</span>
+            ) : (
+              <p>{props.children}</p>
+            ),
           ul: (props) =>
             isRenderInline ? (
               <ul className="text-style">{props.children}</ul>
