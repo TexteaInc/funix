@@ -27,6 +27,7 @@ from funix.util.file import (
     create_safe_tempdir,
     get_path_difference,
     get_python_files_in_dir,
+    mime_encoded,
 )
 from funix.util.module import handle_module, import_module_from_file
 from funix.util.network import (
@@ -55,6 +56,7 @@ new_funix_type_with_config_func = hint.new_funix_type_with_config_func
 new_funix_type = hint.new_funix_type
 set_app_secret = secret.set_app_secret
 generate_redirect_link = widget.generate_redirect_link
+mime_encode = mime_encoded
 # ---- Util ----
 
 # ---- Exports ----

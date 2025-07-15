@@ -77,6 +77,42 @@ const base64stringToFile = (base64: string) => {
   });
 };
 
+const compareBase64Arrays = (arr1: string[], arr2: string[]) => {
+  if (arr1.length !== arr2.length) return false;
+  return arr1.every((item, index) => item === arr2[index]);
+};
+
+const isContentSame = async (
+  propsData: any,
+  currentFiles: File[],
+  isMultiple: boolean,
+) => {
+  if (!propsData || currentFiles.length === 0) return false;
+
+  try {
+    if (isMultiple) {
+      if (
+        !Array.isArray(propsData) ||
+        propsData.length !== currentFiles.length
+      ) {
+        return false;
+      }
+      const currentBase64 = await Promise.all(
+        currentFiles.map((file) => fileToBase64(file) as Promise<string>),
+      );
+      return compareBase64Arrays(propsData, currentBase64);
+    } else {
+      if (Array.isArray(propsData) || currentFiles.length !== 1) {
+        return false;
+      }
+      const currentBase64 = (await fileToBase64(currentFiles[0])) as string;
+      return propsData === currentBase64;
+    }
+  } catch (error) {
+    return false;
+  }
+};
+
 const CameraPreviewVideo = () => {
   useLayoutEffect(() => {
     const video = document.getElementById("videoPreview") as HTMLVideoElement;
@@ -314,13 +350,17 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
 
   useEffect(() => {
     if (props.data !== null && typeof props.data !== "undefined") {
-      if (props.multiple) {
-        setFiles(
-          (props.data as string[]).map((data) => base64stringToFile(data)),
-        );
-      } else {
-        setFiles([base64stringToFile(props.data)]);
-      }
+      isContentSame(props.data, files, props.multiple).then((isSame) => {
+        if (!isSame) {
+          if (props.multiple) {
+            setFiles(
+              (props.data as string[]).map((data) => base64stringToFile(data)),
+            );
+          } else {
+            setFiles([base64stringToFile(props.data)]);
+          }
+        }
+      });
     }
   }, [props.data]);
 
@@ -503,7 +543,7 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
             <Typography variant="caption">
               {files.length} {fileString} selected
             </Typography>
-            <Stack direction="row" spacing={2}>
+            <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap" }}>
               <Button
                 color="primary"
                 startIcon={<CameraAlt />}

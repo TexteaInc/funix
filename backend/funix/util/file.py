@@ -2,6 +2,7 @@
 File utils for funix.
 """
 
+import base64
 from atexit import register
 from os import listdir
 from os.path import abspath, exists, isdir, join, normpath, sep, splitext
@@ -100,3 +101,24 @@ def get_python_files_in_dir(
                 yield join(base_dir, file)
             else:
                 yield splitext(file)[0]
+
+
+def mime_encoded(
+    data: bytes | str, mime_type: str, encoding: str = "utf-8", errors: str = "strict"
+) -> str:
+    """
+    Encode or decode data to/from a specified MIME type.
+
+    Parameters:
+        data (bytes | str): The data to encode or decode.
+        mime_type (str): The MIME type to use for encoding or decoding.
+        encoding (str): The character encoding to use. Defaults to 'utf-8'.
+        errors (str): The error handling scheme to use. Defaults to 'strict'.
+    """
+    if isinstance(data, bytes):
+        base64_text = base64.b64encode(data).decode(encoding, errors)
+        return f"data:{mime_type};base64,{base64_text}"
+    elif isinstance(data, str):
+        return f"data:{mime_type};base64,{data}"
+    else:
+        raise TypeError("Data must be bytes or string.")

@@ -119,7 +119,8 @@ def function_reactive_update(
                     reactive_param_value[argument] = wrapped_callable(
                         callable_function, argument, index, is_tuple, **new_form_data
                     )
-            except:
+            except Exception as e:
+                print(f"Error in reactive function `{callable_function.__name__}`: {e}")
                 pass
         index = index + 1
 
