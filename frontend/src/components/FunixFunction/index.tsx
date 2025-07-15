@@ -5,11 +5,11 @@ import {
   FunctionPreview,
   verifyToken,
 } from "../../shared";
-import { Alert, AlertTitle, Box, Grid, Stack } from "@mui/material";
+import { Alert, AlertTitle, Box, Button, Grid, Stack } from "@mui/material";
 import { useAtom } from "jotai";
 import InputPanel from "./InputPanel";
 import OutputPanel from "./OutputPanel";
-import { Token } from "@mui/icons-material";
+import { Token, Close } from "@mui/icons-material";
 import InlineBox from "../Common/InlineBox";
 import _ from "lodash";
 import {
@@ -36,13 +36,20 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
   const [detail, setDetail] = useState<FunctionDetail | null>(null);
 
   const [functionSecret, setFunctionSecret] = useAtom(functionSecretAtom);
-  const [backHistory, setBackHistory] = useAtom(backHistoryAtom);
+  const [backHistory] = useAtom(backHistoryAtom);
   const [backConsensus, setBackConsensus] = useAtom(backConsensusAtom);
   const [appSecret] = useAtom(appSecretAtom);
   const [last] = useAtom(lastAtom);
   const [callableDefault, setCallableDefault] = useAtom(callableDefaultAtom);
   const [, setShowFunctionTitle] = useAtom(showFunctionTitleAtom);
   const [, setTheme] = useAtom(themeAtom);
+
+  const [, setBackHistory] = useAtom(backHistoryAtom);
+
+  const clearHistoryState = useCallback(() => {
+    setBackHistory(null);
+    setOutdatedState(false);
+  }, [setBackHistory]);
 
   const [width, setWidth] = useState(preview.width);
   const [onResizing, setOnResizing] = useState(false);
@@ -51,6 +58,8 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
   const queryLock = useRef(false);
   const [warning, setWarning] = useState(false);
   const [outdated, setOutdatedState] = useState(false);
+
+  const lastProcessedHistoryRef = useRef<number>(-1);
 
   const setResponse = useCallback(
     (value: React.SetStateAction<string | null>) => {
@@ -91,8 +100,15 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
   }, [detail]);
 
   useEffect(() => {
-    if (backHistory === null) return;
+    if (backHistory === null) {
+      lastProcessedHistoryRef.current = -1;
+      return;
+    }
+    if (lastProcessedHistoryRef.current === backHistory.timestamp) return;
+    lastProcessedHistoryRef.current = backHistory.timestamp;
+
     setOutdatedState(true);
+
     if (backHistory.input !== null) {
       if ("__funix_secret" in backHistory.input) {
         const newFunctionSecret = { ...functionSecret };
@@ -102,24 +118,21 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
         setFunctionSecret(newFunctionSecret);
       }
     }
+
     if (backHistory.output !== null) {
       if (typeof backHistory.output === "string") {
         setResponseState(backHistory.output);
       } else {
         setResponseState(JSON.stringify(backHistory.output));
       }
-      const newBackConsensus = [...backConsensus];
-      newBackConsensus[1] = true;
-      setBackConsensus(newBackConsensus);
+
+      if (!backConsensus[1]) {
+        const newBackConsensus = [...backConsensus];
+        newBackConsensus[1] = true;
+        setBackConsensus(newBackConsensus);
+      }
     }
   }, [backHistory]);
-
-  useEffect(() => {
-    if (backConsensus.every((v) => v)) {
-      setBackConsensus([false, false, false]);
-      setBackHistory(null);
-    }
-  }, [backConsensus]);
 
   useEffect(() => {
     if (detail == null) return;
@@ -216,9 +229,24 @@ const FunixFunction: React.FC<FunctionDetailProps> = ({ preview, backend }) => {
         <></>
       )}
       {outdated && (
-        <Alert severity="info">
+        <Alert
+          severity="info"
+          action={
+            <Button
+              color="inherit"
+              size="small"
+              onClick={clearHistoryState}
+              startIcon={<Close />}
+            >
+              Exit History
+            </Button>
+          }
+        >
           <AlertTitle>Outdated</AlertTitle>
-          <InlineBox>You are viewing data from the history.</InlineBox>
+          <InlineBox>
+            You are viewing data from the history. Click "Exit History" to
+            return to normal mode.
+          </InlineBox>
         </Alert>
       )}
       {preview.justRun ? (

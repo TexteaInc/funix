@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import {
   Collapse,
   List,
@@ -112,11 +112,13 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
   const navigate = useNavigate();
   const [treeState, setTreeState] = useState<TreeState>({});
 
+  const lastProcessedHistoryRef = useRef<number>(-1);
+
   const handleFetchFunctionDetail = useCallback(
     (functionPreview: FunctionPreview) => {
       setSelectedFunction(functionPreview);
     },
-    [],
+    [setSelectedFunction],
   );
 
   useEffect(() => {
@@ -156,23 +158,8 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
     setURL(backend.origin);
   }, [backend, url]);
 
-  useEffect(() => {
-    if (backHistory === null || backHistory === undefined) return;
-    changeRadioGroupValueByPath(backHistory.functionPath);
-    const newBackConsensus = [...backConsensus];
-    newBackConsensus[0] = true;
-    setBackConsensus(newBackConsensus);
-  }, [backHistory]);
-
-  useEffect(() => {
-    if (backConsensus === null || backConsensus === undefined) return;
-    if (backConsensus.every((v) => v)) {
-      setBackConsensus([false, false, false]);
-      setBackHistory(null);
-    }
-  }, [backConsensus]);
-
-  const changeRadioGroupValueById = (functionId: string) => {
+  const changeRadioGroupValueById = useCallback((functionId: string) => {
+    setBackHistory(null);
     const selectedFunctionPreview = state.filter(
       (preview) => preview.id === functionId,
     );
@@ -183,11 +170,11 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
       handleFetchFunctionDetail(selectedFunctionPreview[0]);
       setRadioGroupValue(selectedFunctionPreview[0].path);
     }
-  };
+  }, [state, navigate, handleFetchFunctionDetail]);
 
-  const changeRadioGroupValueByPath = (functionPath: string) => {
+  const changeRadioGroupValueByPath = useCallback((functionPath: string) => {
     const selectedFunctionPreview = state.filter(
-      (preview) => preview.path === functionPath,
+        (preview) => preview.path === functionPath,
     );
     if (selectedFunctionPreview.length !== 1) {
       setRadioGroupValue(null);
@@ -196,7 +183,29 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
       handleFetchFunctionDetail(selectedFunctionPreview[0]);
       setRadioGroupValue(functionPath);
     }
-  };
+  }, [state, navigate, handleFetchFunctionDetail]);
+
+  useEffect(() => {
+    if (backHistory === null || backHistory === undefined) {
+      lastProcessedHistoryRef.current = -1;
+      return;
+    }
+    if (lastProcessedHistoryRef.current === backHistory.timestamp) return;
+    lastProcessedHistoryRef.current = backHistory.timestamp;
+    changeRadioGroupValueByPath(backHistory.functionPath);
+    if (!backConsensus[0]) {
+      const newBackConsensus = [...backConsensus];
+      newBackConsensus[0] = true;
+      setBackConsensus(newBackConsensus);
+    }
+  }, [backHistory]);
+
+  useEffect(() => {
+    if (backConsensus.every((v) => v)) {
+      setBackConsensus([false, false, false]);
+      setBackHistory(null);
+    }
+  }, [backConsensus]);
 
   useEffect(() => {
     const pathParam = pathname.substring(1);

@@ -452,13 +452,7 @@ const InputPanel = (props: {
       newBackConsensus[2] = true;
       setBackConsensus(newBackConsensus);
     }
-  }, [backHistory, backConsensus, setBackConsensus]);
-
-  useEffect(() => {
-    if (backConsensus.every((v) => v)) {
-      setBackConsensus([false, false, false]);
-    }
-  }, [backConsensus, setBackConsensus]);
+  }, [backHistory]);
 
   return (
     <Card onKeyDown={handleKeyDown}>
