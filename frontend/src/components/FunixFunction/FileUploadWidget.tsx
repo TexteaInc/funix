@@ -22,6 +22,7 @@ import {
 import {
   CameraAlt,
   Close,
+  ContentPaste,
   Delete,
   FileUpload,
   KeyboardVoice,
@@ -116,6 +117,89 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
   const [update, setUpdate] = React.useState(new Date().getTime());
   const supportMediaDevices = navigator.mediaDevices !== undefined;
   const funixRecorder = new FunixRecorder();
+
+  const handleClipboardPaste = useCallback(async () => {
+    try {
+      const items = await navigator.clipboard.read();
+      const supportedFiles: File[] = [];
+
+      for (const item of items) {
+        for (const type of item.types) {
+          let isSupported = false;
+
+          switch (props.supportType) {
+            case "image":
+              isSupported = type.startsWith("image/");
+              break;
+            case "audio":
+              isSupported = type.startsWith("audio/");
+              break;
+            case "video":
+              isSupported = type.startsWith("video/");
+              break;
+            case "file":
+              isSupported = true;
+              break;
+          }
+
+          if (isSupported) {
+            const blob = await item.getType(type);
+            const extension = type.split("/")[1] || "bin";
+            const file = new File([blob], `pasted-${Date.now()}.${extension}`, {
+              type,
+            });
+            supportedFiles.push(file);
+          }
+        }
+      }
+
+      if (supportedFiles.length === 0) {
+        enqueueSnackbar("No supported files found in clipboard", {
+          variant: "info",
+        });
+        return;
+      }
+
+      if (props.multiple) {
+        if (files.length + supportedFiles.length > 5) {
+          enqueueSnackbar(
+            "Files are limited to 5, use WebAPI to call this function",
+            { variant: "warning" },
+          );
+        } else {
+          setFiles([...files, ...supportedFiles]);
+        }
+      } else {
+        setFiles([supportedFiles[0]]);
+      }
+    } catch (error) {
+      console.error("Error reading clipboard:", error);
+      enqueueSnackbar("Failed to access clipboard", {
+        variant: "error",
+      });
+    }
+  }, [props.supportType, props.multiple, files]);
+
+  // useEffect(() => {
+  //   const handleKeyDown = (event: KeyboardEvent) => {
+  //     if ((event.ctrlKey || event.metaKey) && event.key === "v") {
+  //       const target = event.target as HTMLElement;
+  //       if (
+  //         target.tagName !== "INPUT" &&
+  //         target.tagName !== "TEXTAREA" &&
+  //         !target.isContentEditable
+  //       ) {
+  //         event.preventDefault();
+  //         handleClipboardPaste();
+  //       }
+  //     }
+  //   };
+
+  //   document.addEventListener("keydown", handleKeyDown);
+  //   return () => {
+  //     document.removeEventListener("keydown", handleKeyDown);
+  //   };
+  // }, [handleClipboardPaste]);
 
   let dropzoneConfig: DropzoneOptions = !props.multiple
     ? { multiple: false, maxFiles: 1, maxSize: 1024 * 1024 * 15 }
@@ -459,6 +543,17 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
                 }}
               >
                 {audioRecoding ? "Stop" : "Microphone"}
+              </Button>
+              <Button
+                startIcon={<ContentPaste />}
+                color="primary"
+                size="small"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handleClipboardPaste();
+                }}
+              >
+                Paste
               </Button>
             </Stack>
             <br />
