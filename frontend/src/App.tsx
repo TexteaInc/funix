@@ -72,6 +72,7 @@ import {
   themeAtom,
 } from "./store";
 import HistoryLoader from "./components/History/HistoryLoader";
+import mergeTheme from "./shared/theme";
 
 const drawerWidth = 240;
 
@@ -341,7 +342,7 @@ const App = () => {
   };
 
   return (
-    <ThemeProvider theme={createTheme(theme || undefined)}>
+    <ThemeProvider theme={createTheme(mergeTheme(theme || undefined))}>
       <HistoryLoader>
         <CssBaseline />
         <HistoryDialog open={historyOpen} setOpen={setHistoryOpen} />

@@ -158,32 +158,38 @@ const FunixFunctionList: React.FC<FunctionListProps> = ({ backend }) => {
     setURL(backend.origin);
   }, [backend, url]);
 
-  const changeRadioGroupValueById = useCallback((functionId: string) => {
-    setBackHistory(null);
-    const selectedFunctionPreview = state.filter(
-      (preview) => preview.id === functionId,
-    );
-    if (selectedFunctionPreview.length !== 1) {
-      setRadioGroupValue(null);
-    } else {
-      navigate(`/${selectedFunctionPreview[0].path}`);
-      handleFetchFunctionDetail(selectedFunctionPreview[0]);
-      setRadioGroupValue(selectedFunctionPreview[0].path);
-    }
-  }, [state, navigate, handleFetchFunctionDetail]);
+  const changeRadioGroupValueById = useCallback(
+    (functionId: string) => {
+      setBackHistory(null);
+      const selectedFunctionPreview = state.filter(
+        (preview) => preview.id === functionId,
+      );
+      if (selectedFunctionPreview.length !== 1) {
+        setRadioGroupValue(null);
+      } else {
+        navigate(`/${selectedFunctionPreview[0].path}`);
+        handleFetchFunctionDetail(selectedFunctionPreview[0]);
+        setRadioGroupValue(selectedFunctionPreview[0].path);
+      }
+    },
+    [state, navigate, handleFetchFunctionDetail],
+  );
 
-  const changeRadioGroupValueByPath = useCallback((functionPath: string) => {
-    const selectedFunctionPreview = state.filter(
+  const changeRadioGroupValueByPath = useCallback(
+    (functionPath: string) => {
+      const selectedFunctionPreview = state.filter(
         (preview) => preview.path === functionPath,
-    );
-    if (selectedFunctionPreview.length !== 1) {
-      setRadioGroupValue(null);
-    } else {
-      navigate(`/${selectedFunctionPreview[0].path}`);
-      handleFetchFunctionDetail(selectedFunctionPreview[0]);
-      setRadioGroupValue(functionPath);
-    }
-  }, [state, navigate, handleFetchFunctionDetail]);
+      );
+      if (selectedFunctionPreview.length !== 1) {
+        setRadioGroupValue(null);
+      } else {
+        navigate(`/${selectedFunctionPreview[0].path}`);
+        handleFetchFunctionDetail(selectedFunctionPreview[0]);
+        setRadioGroupValue(functionPath);
+      }
+    },
+    [state, navigate, handleFetchFunctionDetail],
+  );
 
   useEffect(() => {
     if (backHistory === null || backHistory === undefined) {
