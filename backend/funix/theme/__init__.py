@@ -98,6 +98,9 @@ def get_mui_theme(
         "funix_grid_checkbox": True,
         "funix_autorun_label": "Auto-run",
         "funix_title": "{{org}}",
+        "funix_icon": False,
+        "funix_icon_width": "auto",
+        "funix_icon_height": "auto",
     }
     temp_colors = {}
     if colors:

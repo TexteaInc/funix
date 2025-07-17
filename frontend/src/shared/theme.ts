@@ -125,16 +125,45 @@ const defaultDarkTheme = {
   },
 };
 
+const mergeIcon = (theme: Record<string, any>): Theme => {
+  const url = theme.funix_icon as string | false;
+  if (!url) {
+    return theme as unknown as Theme;
+  }
+  return _.merge(theme, {
+    components: {
+      MuiAppBar: {
+        styleOverrides: {
+          root: {
+            "& .MuiToolbar-root:before": {
+              content: '""',
+              "background-image": `url(${url})`,
+              display: "block",
+              "background-size": "contain",
+              "background-repeat": "no-repeat",
+              "background-position": "left",
+              "margin-right": "10px",
+              height: theme.funix_icon_height || "100%",
+              width: theme.funix_icon_width || "100%",
+            },
+          },
+        },
+      },
+    },
+  }) as unknown as Theme;
+};
+
 const mergeTheme = (theme: Record<string, any> | undefined): Theme => {
   if (!theme) {
     return defaultLightTheme as unknown as Theme;
   }
+  const mode = theme?.palette?.type === "dark" ? "dark" : "light";
+  let modifiedTheme = theme;
+  modifiedTheme = mergeIcon(modifiedTheme);
 
-  if (theme?.palette?.type === "dark") {
-    return _.merge(defaultDarkTheme, theme) as unknown as Theme;
-  }
-
-  return _.merge(defaultLightTheme, theme) as unknown as Theme;
+  return mode === "dark"
+    ? (_.merge(defaultDarkTheme, modifiedTheme) as unknown as Theme)
+    : (_.merge(defaultLightTheme, modifiedTheme) as unknown as Theme);
 };
 
 export default mergeTheme;
