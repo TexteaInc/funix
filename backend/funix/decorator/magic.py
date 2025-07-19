@@ -246,6 +246,8 @@ def get_type_widget_prop(
                     < GlobalSwitchOption.AUTO_INPUTBOX_ARGS_NUMBER
                     else "inputbox"
                 )
+            elif function_annotation_name == "datetime":
+                widget = "datetime"
             elif function_annotation_name == "List" or (
                 function_annotation_name == "list"
                 and hasattr(function_annotation, "__args__")

@@ -64,6 +64,7 @@ import FunixCustom from "./FunixCustom";
 import MultipleInput from "./MultipleInput";
 import { ObjectFieldTemplateProps } from "@rjsf/utils";
 import { backHistoryAtom } from "../../store";
+import DateTimePickerWidget from "./DateTimePickerWidget";
 
 let rowIdCounter = 0;
 
@@ -169,6 +170,16 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldTemplateProps) => {
               widget={elementContent.props}
               multiple={false}
               supportType={elementContent.props.schema.widget}
+              data={elementData}
+            />
+          ),
+        };
+      } else if (elementContent.props.schema.widget == "datetime") {
+        return {
+          type: "config",
+          element: (
+            <DateTimePickerWidget
+              widget={elementContent.props}
               data={elementData}
             />
           ),

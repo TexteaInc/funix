@@ -1,8 +1,9 @@
 from copy import deepcopy
 from inspect import Parameter
-from json import dumps
+from json import dumps, JSONEncoder
 from types import MappingProxyType
 from typing import Any, Callable
+from datetime import datetime
 
 from flask import Response
 
@@ -25,6 +26,13 @@ parse_type_metadata: dict[str, dict[str, Any]] = {}
 """
 A dict, key is function ID, value is a map of parameter name to type.
 """
+
+
+class FunixJsonEncoder(JSONEncoder):
+    def default(self, o):
+        if isinstance(o, datetime):
+            return o.isoformat()
+        return super().default(o)
 
 
 def parse_param(
@@ -275,9 +283,11 @@ def parse_param(
                 param_type,
                 0,
                 widget[1:],
-                {}
-                if "widget" in decorated_params[function_arg_name]
-                else theme_widgets,
+                (
+                    {}
+                    if "widget" in decorated_params[function_arg_name]
+                    else theme_widgets
+                ),
                 function_param.annotation,
             )
             json_schema_props[function_arg_name]["type"] = "array"
@@ -417,7 +427,9 @@ def get_param_for_funix(
         des = get_global_variable(session_description)
         new_decorated_function["description"] = des
         new_decorated_function["schema"]["description"] = des
-    return Response(dumps(new_decorated_function), mimetype="application/json")
+    return Response(
+        dumps(new_decorated_function, cls=FunixJsonEncoder), mimetype="application/json"
+    )
 
 
 def get_dataframe_parse_metadata():

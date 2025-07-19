@@ -42,6 +42,8 @@ basic_widgets = [
     "button",
     "checkbox",
     "radio",
+    "datetime",
+    "textarea",
 ]
 """
 Basic widgets for MUI components.
