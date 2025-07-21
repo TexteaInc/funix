@@ -1,6 +1,8 @@
 from typing import Any
 from datetime import datetime
 
+from pydantic import BaseModel
+
 
 def response_item_to_class(response_item: Any, clazz: type) -> Any:
     """
@@ -16,6 +18,8 @@ def response_item_to_class(response_item: Any, clazz: type) -> Any:
     try:
         if clazz is datetime:
             return datetime.fromisoformat(response_item)
+        if issubclass(clazz, BaseModel):
+            return clazz.model_validate(response_item)
         return clazz(response_item)
     except Exception as e:
         print(e)

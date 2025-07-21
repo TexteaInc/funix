@@ -322,6 +322,8 @@ def get_type_widget_prop(
             return {"type": "object", "widget": widget}
         elif function_arg_type_name == "typing.List":
             return {"type": "array", "widget": widget}
+        elif function_arg_type_name == "datetime":
+            return {"type": "string", "widget": "datetime"}
         else:
             # raise Exception("Unsupported Container Type")
             return {"type": "object", "widget": widget}

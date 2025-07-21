@@ -315,7 +315,7 @@ def generate_redirect_link_core(
     function: Callable,
     *args,
     **kwargs,
-) -> (str, dict):
+) -> tuple[str, dict]:
     """
     Generate a redirect URL.
 

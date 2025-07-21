@@ -17,6 +17,7 @@ import funix.decorator.lists as lists
 import funix.decorator.secret as secret
 import funix.decorator.theme as theme
 import funix.decorator.widget as widget
+import funix.decorator.layout as layout
 import funix.hint as hint
 from funix.app import app, sock, enable_funix_host_checker
 from funix.config.switch import GlobalSwitchOption
@@ -41,6 +42,7 @@ from funix.util.network import (
 funix = decorator.funix
 funix_class = decorator.funix_class
 funix_method = decorator.funix_method
+pydantic_layout = layout.pydantic_layout
 # ---- Decorators ----
 
 Limiter = limit.Limiter

@@ -93,12 +93,9 @@ const InputPanel = (props: {
             const result = data.result;
 
             if (result !== null) {
-              for (const [key, value] of Object.entries(result)) {
-                setForm((prevForm) => ({
-                  ...prevForm,
-                  [key]: value,
-                }));
-              }
+              setForm((prevForm) => {
+                return _.merge(prevForm, result);
+              });
             }
           });
       }, 100);

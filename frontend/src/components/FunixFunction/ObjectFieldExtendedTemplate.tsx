@@ -65,6 +65,7 @@ import MultipleInput from "./MultipleInput";
 import { ObjectFieldTemplateProps } from "@rjsf/utils";
 import { backHistoryAtom } from "../../store";
 import DateTimePickerWidget from "./DateTimePickerWidget";
+import PyDanticPanel from "./PyDanticPanel";
 
 let rowIdCounter = 0;
 
@@ -119,6 +120,15 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldTemplateProps) => {
       SheetSelector,
     }
     const filesType = ["image", "video", "audio", "file"];
+    if (
+      elementContent.props.schema.widget === "__array_complex_pydantic" ||
+      elementContent.props.schema.widget === "__object_complex_pydantic"
+    ) {
+      return {
+        type: "config",
+        element: <PyDanticPanel rootContent={elementContent} />,
+      };
+    }
     if (!isArray) {
       if ("funixComponent" in elementContent.props.schema) {
         const component = elementContent.props.schema.funixComponent;

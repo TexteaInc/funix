@@ -34,6 +34,9 @@ const DateTimePickerWidget = (props: DateTimePickerWidgetProps) => {
 
   return (
     <DateTimePicker
+      sx={{
+        width: "100%",
+      }}
       value={value}
       onChange={handleChange}
       format="YYYY-MM-DD HH:mm:ss"
