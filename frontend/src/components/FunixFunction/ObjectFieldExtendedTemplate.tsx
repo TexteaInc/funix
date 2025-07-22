@@ -86,6 +86,8 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldTemplateProps) => {
   const arraySimpleSelectors: ReactElement[] = [];
   let arraySheetSelectors: Record<string, any> = {};
   let lengthLongestWhitelistColumnInSheet = 0;
+
+  const [focusPath, setFocusPath] = useState<string[]>([]);
   type propElementToJSXElementReturn = {
     type: "config" | "sheet";
     element: ReactElement;
@@ -126,7 +128,13 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldTemplateProps) => {
     ) {
       return {
         type: "config",
-        element: <PyDanticPanel rootContent={elementContent} />,
+        element: (
+          <PyDanticPanel
+            rootContent={elementContent}
+            focusPath={focusPath}
+            onFocusChange={setFocusPath}
+          />
+        ),
       };
     }
     if (!isArray) {

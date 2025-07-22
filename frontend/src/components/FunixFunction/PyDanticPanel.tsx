@@ -35,6 +35,9 @@ interface PyDanticPanelProps {
   onArrayDelete?: (index: number) => void;
   onArrayAdd?: () => void;
   showArrayControls?: boolean;
+  focusPath?: string[];
+  onFocusChange?: (path: string[]) => void;
+  currentPath?: string[];
 }
 
 const PyDanticPanel = (props: PyDanticPanelProps) => {
@@ -42,6 +45,82 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
   const rootContentProps = rootContent.props;
   const rootContentSchema = rootContentProps.schema;
   const elementName = props.elementName || rootContentProps.name || "Object";
+
+  const currentPath = props.currentPath || [elementName];
+
+  const handleFieldFocus = (fieldName: string) => {
+    const newPath = [...currentPath, fieldName];
+    if (props.onFocusChange) {
+      props.onFocusChange(newPath);
+    }
+  };
+
+  const handleFieldBlur = () => {
+    if (props.onFocusChange) {
+      props.onFocusChange([]);
+    }
+  };
+
+  const getHighlightInfo = (): { depth: number; totalDepth: number } => {
+    if (!props.focusPath || props.focusPath.length === 0) {
+      return { depth: 0, totalDepth: 0 };
+    }
+
+    const isExactPrefixMatch =
+      currentPath.length < props.focusPath.length &&
+      currentPath.every(
+        (segment, index) => props.focusPath![index] === segment,
+      );
+
+    if (!isExactPrefixMatch) {
+      return { depth: 0, totalDepth: 0 };
+    }
+
+    const depth = props.focusPath.length - currentPath.length;
+    const totalDepth = props.focusPath.length - 1;
+
+    return { depth, totalDepth };
+  };
+
+  const interpolateColor = (ratio: number): string => {
+    ratio = Math.max(0, Math.min(1, ratio));
+
+    const startR = 0,
+      startG = 0,
+      startB = 255;
+    const endR = 128,
+      endG = 128,
+      endB = 255;
+
+    const r = Math.round(startR + (endR - startR) * ratio);
+    const g = Math.round(startG + (endG - startG) * ratio);
+    const b = Math.round(startB + (endB - startB) * ratio);
+
+    return `rgb(${r}, ${g}, ${b})`;
+  };
+
+  const getHighlightStyle = () => {
+    const { depth, totalDepth } = getHighlightInfo();
+
+    if (depth < 0 || totalDepth === 0) {
+      return {};
+    }
+
+    const ratio = totalDepth > 0 ? (depth / totalDepth) * 0.8 : 0;
+    const borderColor = interpolateColor(ratio);
+
+    const opacity = Math.max(0.2, 1 - ratio);
+    const borderColorWithOpacity = borderColor
+      .replace("rgb(", "rgba(")
+      .replace(")", `, ${opacity})`);
+
+    return {
+      borderColor: borderColorWithOpacity,
+      borderWidth: "1px",
+      borderStyle: "solid",
+      boxShadow: `0 0 0 1px ${borderColorWithOpacity}`,
+    };
+  };
 
   const createDefaultValue = (schema: any): any => {
     if (schema.type === "array") {
@@ -223,7 +302,10 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
             ...rootContent,
             props: nestedProps,
           }}
-          elementName={fieldSchema.title || fieldName}
+          elementName={fieldName}
+          focusPath={props.focusPath}
+          onFocusChange={props.onFocusChange}
+          currentPath={[...currentPath, fieldName]}
         />
       );
     }
@@ -267,6 +349,8 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
       value: fieldValue,
       label: fieldSchema.title || fieldName,
       required: !fieldSchema.optional,
+      onFocus: () => handleFieldFocus(fieldName),
+      onBlur: handleFieldBlur,
     };
 
     if (fieldSchema.type === "array") {
@@ -357,8 +441,60 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
 
     const arrayLength = (pydanticForm as any[]).length;
 
+    const getArrayItemHighlightStyle = () => {
+      const itemPath = [...currentPath, index.toString()];
+
+      if (!props.focusPath || props.focusPath.length === 0) {
+        return {};
+      }
+
+      const isExactPrefixMatch =
+        itemPath.length < props.focusPath.length &&
+        itemPath.every((segment, idx) => props.focusPath![idx] === segment);
+
+      if (!isExactPrefixMatch) {
+        return {};
+      }
+
+      const depth = props.focusPath.length - itemPath.length;
+      const totalDepth = props.focusPath.length - 1;
+
+      if (depth < 0 || totalDepth === 0) {
+        return {};
+      }
+
+      const ratio = totalDepth > 0 ? (depth / totalDepth) * 0.8 : 0;
+      const startR = 0,
+        startG = 0,
+        startB = 255;
+      const endR = 128,
+        endG = 128,
+        endB = 255;
+
+      const r = Math.round(startR + (endR - startR) * ratio);
+      const g = Math.round(startG + (endG - startG) * ratio);
+      const b = Math.round(startB + (endB - startB) * ratio);
+
+      const borderColor = `rgb(${r}, ${g}, ${b})`;
+      const opacity = Math.max(0.2, 1 - ratio);
+      const borderColorWithOpacity = borderColor
+        .replace("rgb(", "rgba(")
+        .replace(")", `, ${opacity})`);
+
+      return {
+        borderColor: borderColorWithOpacity,
+        borderWidth: "1px",
+        borderStyle: "solid",
+        boxShadow: `0 0 0 1px ${borderColorWithOpacity}`,
+      };
+    };
+
     return (
-      <Card key={index} variant="outlined" sx={{ mb: 2 }}>
+      <Card
+        key={index}
+        variant="outlined"
+        sx={{ mb: 2, ...getArrayItemHighlightStyle() }}
+      >
         <CardHeader
           title={
             <Typography variant="subtitle2">
@@ -400,6 +536,9 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
             }}
             elementName={`${elementName}[${index}]`}
             showArrayControls={true}
+            focusPath={props.focusPath}
+            onFocusChange={props.onFocusChange}
+            currentPath={[...currentPath, index.toString()]}
           />
         </CardContent>
       </Card>
@@ -519,7 +658,7 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
 
   if (rootContentSchema.widget === "__array_complex_pydantic") {
     return (
-      <Card variant="outlined">
+      <Card variant="outlined" sx={getHighlightStyle()}>
         <CardHeader
           title={<Typography variant="h6">{elementName}</Typography>}
           action={
@@ -532,15 +671,18 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
               Add Item
             </Button>
           }
+          sx={{
+            paddingBottom: 0,
+          }}
         />
-        <CardContent>
+        <CardContent sx={{ paddingTop: 0 }}>
           {rootContentSchema.title && (
             <MarkdownDiv
               markdown={rootContentSchema.title}
               isRenderInline={false}
             />
           )}
-          <Stack spacing={2}>
+          <Stack spacing={1}>
             {Array.isArray(pydanticForm) &&
               (pydanticForm as any[]).map((item, index) =>
                 renderArrayItem(item, index),
@@ -578,7 +720,7 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
   }
 
   return (
-    <Card variant="outlined">
+    <Card variant="outlined" sx={getHighlightStyle()}>
       <CardHeader
         title={<Typography variant="h6">{elementName}</Typography>}
         action={
@@ -613,6 +755,9 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
             </Box>
           )
         }
+        sx={{
+          paddingBottom: 0,
+        }}
       />
       <CardContent>{cardContent}</CardContent>
     </Card>
