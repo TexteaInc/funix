@@ -217,9 +217,10 @@ def get_basic_pydantic_items(
     for field_name, field in anno.__pydantic_fields__.items():
         anno_ = field.annotation
         is_array = False
-        if anno_.__name__ in ["list", "List"]:
-            is_array = True
-            anno_ = anno_.__args__[0]
+        if hasattr(anno_, "__name__"):
+            if anno_.__name__ in ["list", "List"]:
+                is_array = True
+                anno_ = anno_.__args__[0]
 
         items[field_name] = create_basic_widget_item(anno_)
 
@@ -555,9 +556,10 @@ def parse_param(
         # `SingleModel` -> `__object_complex_pydantic`
         anno = function_param.annotation
         is_array = False
-        if anno.__name__ in ["list", "List"]:
-            is_array = True
-            anno = anno.__args__[0]
+        if hasattr(anno, "__name__"):
+            if anno.__name__ in ["list", "List"]:
+                is_array = True
+                anno = anno.__args__[0]
         if hasattr(anno, "__pydantic_fields__"):
             anal, dec_param = wrap_pydantic_items(
                 get_basic_pydantic_items(
