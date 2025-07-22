@@ -220,20 +220,6 @@ def get_basic_pydantic_items(
         if anno_.__name__ in ["list", "List"]:
             is_array = True
             anno_ = anno_.__args__[0]
-        if hasattr(anno_, "__pydantic_fields__"):
-            items[field_name] = {}
-            items[field_name]["type"] = "array" if is_array else "object"
-            items[field_name]["items"] = {
-                "type": "object",
-                "properties": get_basic_pydantic_items(anno_, function_param, decorated_params, parsed_theme, field_name),
-                "widget": "__object_complex_pydantic",
-            }
-            items[field_name]["widget"] = "__array_complex_pydantic" if is_array else "__object_complex_pydantic"
-            if id(anno_) in pydantic_layout_dict:
-                layout_tuple = pydantic_layout_dict[id(anno_)]
-                items[field_name]["pydantic_layout"] = layout_tuple[0]
-                items[field_name]["items"]["pydantic_layout"] = layout_tuple[0]
-            continue
 
         items[field_name] = create_basic_widget_item(anno_)
 
@@ -245,13 +231,13 @@ def get_basic_pydantic_items(
 
         if not field.title is None:
             items[field_name]["title"] = field.title
-        
+
         if not field.description is None:
             if "title" not in items[field_name]:
                 items[field_name]["title"] = field.description
             else:
                 items[field_name]["title"] += f" ({field.description})"
-        
+
         if not field.is_required():
             items[field_name]["optional"] = True
 
@@ -269,6 +255,23 @@ def get_basic_pydantic_items(
             parsed_theme,
             funix_arg_name
         )
+
+        if hasattr(anno_, "__pydantic_fields__"):
+            items[field_name]["type"] = "array" if is_array else "object"
+            items[field_name]["items"] = {
+                "type": "object",
+                "properties": get_basic_pydantic_items(
+                    anno_, function_param, decorated_params, parsed_theme, field_name
+                ),
+                "widget": "__object_complex_pydantic",
+            }
+            items[field_name]["widget"] = (
+                "__array_complex_pydantic" if is_array else "__object_complex_pydantic"
+            )
+            if id(anno_) in pydantic_layout_dict:
+                layout_tuple = pydantic_layout_dict[id(anno_)]
+                items[field_name]["pydantic_layout"] = layout_tuple[0]
+                items[field_name]["items"]["pydantic_layout"] = layout_tuple[0]
     return items
 
 
@@ -555,7 +558,7 @@ def parse_param(
         if anno.__name__ in ["list", "List"]:
             is_array = True
             anno = anno.__args__[0]
-        if hasattr(function_param.annotation, "__pydantic_fields__"):
+        if hasattr(anno, "__pydantic_fields__"):
             anal, dec_param = wrap_pydantic_items(
                 get_basic_pydantic_items(
                     anno, function_param, decorated_params[function_arg_name], parsed_theme

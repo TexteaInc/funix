@@ -399,6 +399,7 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
               props: itemProps,
             }}
             elementName={`${elementName}[${index}]`}
+            showArrayControls={true}
           />
         </CardContent>
       </Card>
@@ -533,9 +534,9 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
           }
         />
         <CardContent>
-          {rootContentSchema.description && (
+          {rootContentSchema.title && (
             <MarkdownDiv
-              markdown={rootContentSchema.description}
+              markdown={rootContentSchema.title}
               isRenderInline={false}
             />
           )}
@@ -562,9 +563,9 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
 
   const cardContent = (
     <Stack spacing={1}>
-      {rootContentSchema.description && (
+      {rootContentSchema.title && (
         <MarkdownDiv
-          markdown={rootContentSchema.description}
+          markdown={rootContentSchema.title}
           isRenderInline={false}
         />
       )}
