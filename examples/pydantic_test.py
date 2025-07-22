@@ -1,10 +1,12 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
-from typing import List, Union
-from enum import Enum
+from funix import funix, pydantic_layout
 
 
+@pydantic_layout(layout=[
+    [{"argument": "url", "width": 0.5}, {"argument": "display", "width": 0.5}],
+])
 class URLModel(BaseModel):
     url: str = Field(
         ...,
@@ -21,21 +23,17 @@ class SingleModel(BaseModel):
     bio: str = Field(
         default="No bio provided", description="A short biography of the user."
     )
-    links: list[URLModel] | None = Field(description="A list of URL objects.")
+    links: list[URLModel] = Field(description="A list of URL objects.")
+
 
 
 class PushReason(BaseModel):
-    user: str = Field(
-        ...,
-        description="The user who initiated the push.",
-    )
+    user: str
     reason: str = Field()
+    other_model: SingleModel
 
 
-def push_to_database(
-    database_id: int,
-    datas: List[SingleModel],
-    reason: Union[PushReason, None],
-    update_time: datetime,
+def where_is_the_datetime(
+    t: PushReason = PushReason(user="shionsan", reason="Please", other_model=SingleModel(name="shionsan", age=1, weight=2.0, signup_date=datetime.now(), bio="No bio provided", links=[URLModel(url="https://www.google.com", display=True)]))
 ) -> str:
-    return f"Data pushed to database {database_id} with {len(datas)} records. Reason: {reason.reason if reason else 'No reason provided'}. Update time: {update_time}."
+    return f"User: {t.user}, Reason: {t.reason}, Time: {datetime.now()}"
