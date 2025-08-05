@@ -101,6 +101,7 @@ def get_mui_theme(
         "funix_icon": False,
         "funix_icon_width": "auto",
         "funix_icon_height": "auto",
+        "funix_nest": False,
     }
     temp_colors = {}
     if colors:

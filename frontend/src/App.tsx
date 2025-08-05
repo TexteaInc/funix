@@ -31,6 +31,7 @@ import {
 } from "@mui/material";
 import FunixFunctionList from "./components/FunixFunctionList";
 import FunixFunctionSelected from "./components/FunixFunctionSelected";
+import FunixTabBar from "./components/FunixTabBar";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowBack,
@@ -46,7 +47,7 @@ import {
   Sick,
   Token,
 } from "@mui/icons-material";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useAtom } from "jotai";
 import { getList } from "./shared";
 import { SiDiscord } from "@icons-pack/react-simple-icons";
@@ -245,7 +246,6 @@ const App = () => {
   const [sideBarOpen, setSideBarOpen] = useState(() => {
     return functions !== null && functions.length > 1;
   }); // By default
-  const functionLock = useRef(false);
   const [historySideBarOpen, setHistorySideBarOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [tempAppSecret, setTempAppSecret] = useState(appSecret);
@@ -292,12 +292,13 @@ const App = () => {
       });
   }, [window.location.origin]);
 
+  const isTabBarMode = theme?.funix_nest === true;
+
   useEffect(() => {
-    if (functions !== null && !functionLock.current) {
-      setSideBarOpen(functions.length > 1);
-      functionLock.current = true;
+    if (functions !== null) {
+      setSideBarOpen(!isTabBarMode && functions.length > 1);
     }
-  }, [functions]);
+  }, [functions, isTabBarMode]);
 
   useEffect(() => {
     if (theme !== undefined && theme !== null) {
@@ -522,167 +523,207 @@ const App = () => {
               </Button>
             </DialogActions>
           </Dialog>
-          <AppBar
-            position="fixed"
-            leftOpen={sideBarOpen}
-            rightOpen={historySideBarOpen}
-            functionListWidth={functionListWidth}
-          >
-            <Toolbar>
-              {functions !== null && functions?.length > 1 && (
-                <IconButton
-                  color="inherit"
-                  size="large"
-                  onClick={() => setSideBarOpen(true)}
-                  sx={{ mr: 2, ...(sideBarOpen && { display: "none" }) }}
-                  edge="start"
-                >
-                  {theme?.direction === "ltr" ? (
-                    <ArrowBack />
-                  ) : (
-                    <ArrowForward />
+          {!isTabBarMode ? (
+            <AppBar
+              position="fixed"
+              leftOpen={sideBarOpen}
+              rightOpen={historySideBarOpen}
+              functionListWidth={functionListWidth}
+            >
+              <Toolbar>
+                {functions !== null &&
+                  functions?.length > 1 &&
+                  !isTabBarMode && (
+                    <IconButton
+                      color="inherit"
+                      size="large"
+                      onClick={() => setSideBarOpen(true)}
+                      sx={{ mr: 2, ...(sideBarOpen && { display: "none" }) }}
+                      edge="start"
+                    >
+                      {theme?.direction === "ltr" ? (
+                        <ArrowBack />
+                      ) : (
+                        <ArrowForward />
+                      )}
+                    </IconButton>
                   )}
+                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                  <TemplateString
+                    template={theme?.funix_header || "{{org}}"}
+                    records={{
+                      org: selectedFunction?.name || "Funix",
+                      functionName: selectedFunction?.name || "No name",
+                      functionPath: selectedFunction?.path || "No path",
+                      functionId: selectedFunction?.id || "No id",
+                      functionHasSecret: selectedFunction?.secret
+                        ? "Yes"
+                        : "No",
+                      functionHasWebsocket: selectedFunction?.websocket
+                        ? "Yes"
+                        : "No",
+                      functionModule: selectedFunction?.module || "No module",
+                    }}
+                  />
+                </Typography>
+                {selectedFunction && selectedFunction.secret && (
+                  <IconButton
+                    size="large"
+                    color="inherit"
+                    edge="end"
+                    onClick={() => {
+                      setTempSecret(selectedFunctionSecret);
+                      setTokenOpen(true);
+                    }}
+                  >
+                    <Token />
+                  </IconButton>
+                )}
+                <IconButton
+                  size="large"
+                  color="inherit"
+                  edge="end"
+                  onClick={() => setHistoryOpen(true)}
+                >
+                  <History />
                 </IconButton>
-              )}
-              <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                <TemplateString
-                  template={theme?.funix_header || "{{org}}"}
-                  records={{
-                    org: selectedFunction?.name || "Funix",
-                    functionName: selectedFunction?.name || "No name",
-                    functionPath: selectedFunction?.path || "No path",
-                    functionId: selectedFunction?.id || "No id",
-                    functionHasSecret: selectedFunction?.secret ? "Yes" : "No",
-                    functionHasWebsocket: selectedFunction?.websocket
-                      ? "Yes"
-                      : "No",
-                    functionModule: selectedFunction?.module || "No module",
-                  }}
-                />
-              </Typography>
-              {selectedFunction && selectedFunction.secret && (
+                <IconButton
+                  size="large"
+                  color="inherit"
+                  edge="end"
+                  onClick={() =>
+                    setHistorySideBarOpen((prevState) => !prevState)
+                  }
+                >
+                  <EventNote />
+                </IconButton>
                 <IconButton
                   size="large"
                   color="inherit"
                   edge="end"
                   onClick={() => {
-                    setTempSecret(selectedFunctionSecret);
-                    setTokenOpen(true);
+                    setShareOpen(true);
+                    setShareUrl(window.location.href);
                   }}
                 >
-                  <Token />
+                  <Share />
                 </IconButton>
+                <IconButton
+                  size="large"
+                  onClick={() => setOpen(true)}
+                  color="inherit"
+                  edge="end"
+                >
+                  <Settings />
+                </IconButton>
+              </Toolbar>
+            </AppBar>
+          ) : (
+            <Box
+              sx={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                zIndex: (theme) => theme.zIndex.appBar,
+              }}
+            >
+              {backendURL && (
+                <FunixTabBar
+                  backend={backendURL}
+                  onHistoryOpen={() => setHistoryOpen(true)}
+                  onHistorySideBarToggle={() =>
+                    setHistorySideBarOpen((prevState) => !prevState)
+                  }
+                  sideBarOpen={sideBarOpen}
+                  onSideBarToggle={() => setSideBarOpen(true)}
+                  functions={functions}
+                />
               )}
-              <IconButton
-                size="large"
-                color="inherit"
-                edge="end"
-                onClick={() => setHistoryOpen(true)}
-              >
-                <History />
-              </IconButton>
-              <IconButton
-                size="large"
-                color="inherit"
-                edge="end"
-                onClick={() => setHistorySideBarOpen((prevState) => !prevState)}
-              >
-                <EventNote />
-              </IconButton>
-              <IconButton
-                size="large"
-                color="inherit"
-                edge="end"
-                onClick={() => {
-                  setShareOpen(true);
-                  setShareUrl(window.location.href);
-                }}
-              >
-                <Share />
-              </IconButton>
-              <IconButton
-                size="large"
-                onClick={() => setOpen(true)}
-                color="inherit"
-                edge="end"
-              >
-                <Settings />
-              </IconButton>
-            </Toolbar>
-          </AppBar>
-          <Drawer
-            sx={{
-              width: functionListWidth,
-              flexShrink: 0,
-              "& .MuiDrawer-paper": {
+            </Box>
+          )}
+          {!isTabBarMode && (
+            <Drawer
+              sx={{
                 width: functionListWidth,
-                boxSizing: "border-box",
-              },
-            }}
-            variant="persistent"
-            anchor="left"
-            open={sideBarOpen}
-            ModalProps={{
-              keepMounted: true,
-            }}
-          >
-            <DrawerHeader>
-              <ListItem>
-                <ListItemIcon>
-                  <Functions />
-                </ListItemIcon>
-                <ListItemText primary="Choose" />
-              </ListItem>
-              <IconButton onClick={() => setSideBarOpen(false)}>
-                {theme?.direction === "ltr" ? <ArrowForward /> : <ArrowBack />}
-              </IconButton>
-            </DrawerHeader>
-            <Divider />
-            {backendURL ? (
-              <FunixFunctionList backend={backendURL} />
-            ) : (
-              <List>
+                flexShrink: 0,
+                "& .MuiDrawer-paper": {
+                  width: functionListWidth,
+                  boxSizing: "border-box",
+                },
+              }}
+              variant="persistent"
+              anchor="left"
+              open={sideBarOpen}
+              ModalProps={{
+                keepMounted: true,
+              }}
+            >
+              <DrawerHeader>
                 <ListItem>
                   <ListItemIcon>
-                    <Sick />
+                    <Functions />
                   </ListItemIcon>
-                  <ListItemText primary="No backend server" />
+                  <ListItemText primary="Choose" />
                 </ListItem>
-              </List>
-            )}
-            <Box
-              component="div"
-              sx={{
-                width: ".75rem",
-                height: "100%",
-                margin: "0 auto",
-                backgroundColor: (theme) =>
-                  `${theme.palette.mode === "dark" && onResizing && "grey.900"}`,
-                "&:hover": {
+                <IconButton onClick={() => setSideBarOpen(false)}>
+                  {theme?.direction === "ltr" ? (
+                    <ArrowForward />
+                  ) : (
+                    <ArrowBack />
+                  )}
+                </IconButton>
+              </DrawerHeader>
+              <Divider />
+              {backendURL ? (
+                <FunixFunctionList backend={backendURL} />
+              ) : (
+                <List>
+                  <ListItem>
+                    <ListItemIcon>
+                      <Sick />
+                    </ListItemIcon>
+                    <ListItemText primary="No backend server" />
+                  </ListItem>
+                </List>
+              )}
+              <Box
+                component="div"
+                sx={{
+                  width: ".75rem",
+                  height: "100%",
+                  margin: "0 auto",
                   backgroundColor: (theme) =>
-                    `${theme.palette.mode === "dark" ? "grey.900" : "grey.100"}`,
-                  cursor: "ew-resize",
-                },
-                position: "absolute",
-                top: 0,
-                right: 0,
-                bottom: 0,
-                zIndex: 100,
-              }}
-              onMouseDown={handlePointerDownLeftSidebar}
-              onContextMenu={(event) => {
-                event.preventDefault();
-                setFunctionListWidth(drawerWidth);
-              }}
-            />
-          </Drawer>
+                    `${theme.palette.mode === "dark" && onResizing && "grey.900"}`,
+                  "&:hover": {
+                    backgroundColor: (theme) =>
+                      `${theme.palette.mode === "dark" ? "grey.900" : "grey.100"}`,
+                    cursor: "ew-resize",
+                  },
+                  position: "absolute",
+                  top: 0,
+                  right: 0,
+                  bottom: 0,
+                  zIndex: 100,
+                }}
+                onMouseDown={handlePointerDownLeftSidebar}
+                onContextMenu={(event) => {
+                  event.preventDefault();
+                  setFunctionListWidth(drawerWidth);
+                }}
+              />
+            </Drawer>
+          )}
           <Main
-            leftOpen={sideBarOpen}
+            leftOpen={!isTabBarMode && sideBarOpen}
             rightOpen={historySideBarOpen}
             functionListWidth={functionListWidth}
           >
             <Container
-              sx={{ paddingTop: 10, paddingBottom: 8 }}
+              sx={{
+                paddingTop: 10,
+                paddingBottom: 8,
+              }}
               maxWidth={false}
             >
               {backendURL ? (
@@ -707,7 +748,7 @@ const App = () => {
               )}
             </Container>
             <TransitionFooter
-              leftOpen={sideBarOpen}
+              leftOpen={!isTabBarMode && sideBarOpen}
               rightOpen={historySideBarOpen}
               functionListWidth={functionListWidth}
             >
