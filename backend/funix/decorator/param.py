@@ -16,7 +16,7 @@ from funix.decorator.magic import (
     get_type_widget_prop,
 )
 from funix.session import get_global_variable
-from funix.decorator.layout import pydantic_layout_dict
+from funix.decorator.layout import pydantic_layout_dict, pydantic_name_dict
 
 dataframe_parse_metadata: dict[str, dict[str, list[str]]] = {}
 """
@@ -48,11 +48,13 @@ class FunixJsonEncoder(JSONEncoder):
         return super().default(o)
 
 
-def apply_decorated_params(item_props: dict, decorated_params: dict, param_name: str, function_name: str = None) -> None:
+def apply_decorated_params(
+    item_props: dict, decorated_params: dict, param_name: str, function_name: str = None
+) -> None:
     for prop_key in ["whitelist", "example", "keys", "default", "title"]:
         if prop_key in decorated_params:
             item_props[prop_key] = decorated_params[prop_key]
-    
+
     if "whitelist" in item_props and "example" in item_props:
         error_msg = f"Field {param_name} has both an example and a whitelist"
         if function_name:
@@ -60,23 +62,21 @@ def apply_decorated_params(item_props: dict, decorated_params: dict, param_name:
         raise Exception(error_msg)
 
 
-def create_basic_widget_item(annotation: Any, widget: str = "", theme_widgets: dict = None) -> dict:
+def create_basic_widget_item(
+    annotation: Any, widget: str = "", theme_widgets: dict = None
+) -> dict:
     if theme_widgets is None:
         theme_widgets = {}
-        
+
     type_dict = get_type_dict(annotation)
-    return get_type_widget_prop(
-        type_dict["type"], 0, widget, theme_widgets, annotation
-    )
+    return get_type_widget_prop(type_dict["type"], 0, widget, theme_widgets, annotation)
 
 
 def resolve_param_type(function_param: Parameter, function_arg_type_dict: dict) -> str:
     param_type = (
-        "object"
-        if function_arg_type_dict is None
-        else function_arg_type_dict["type"]
+        "object" if function_arg_type_dict is None else function_arg_type_dict["type"]
     )
-    
+
     if hasattr(function_param.annotation, "__funix__"):
         if hasattr(function_param.annotation, "__funix_bool__"):
             new_function_arg_type_dict = get_type_dict(bool)
@@ -91,7 +91,7 @@ def resolve_param_type(function_param: Parameter, function_arg_type_dict: dict) 
                 )
         if new_function_arg_type_dict is not None:
             param_type = new_function_arg_type_dict["type"]
-    
+
     return param_type
 
 
@@ -101,10 +101,10 @@ def create_param_widget_props(
     widget: str,
     theme_widgets: dict,
     decorated_params: dict,
-    function_arg_name: str
+    function_arg_name: str,
 ) -> dict:
     param_type = resolve_param_type(function_param, function_arg_type_dict)
-    
+
     return get_type_widget_prop(
         param_type,
         0,
@@ -118,7 +118,7 @@ def apply_custom_component_logic(
     schema_props: dict,
     custom_component: str | None,
     custom_component_props: dict | None,
-    annotation: Any
+    annotation: Any,
 ) -> None:
     if custom_component is not None:
         schema_props["funixComponent"] = custom_component
@@ -140,17 +140,19 @@ def process_pydantic_field_customization(
     function_param: Parameter,
     decorated_params: dict,
     parsed_theme: Any,
-    funix_arg_name: str
+    funix_arg_name: str,
 ) -> dict:
     arg_type_dict = get_type_dict(field_annotation)
 
     if funix_arg_name not in decorated_params:
-        theme_widgets, widget, custom_component, custom_component_props = param_to_widget(
-            parsed_theme,
-            function_param,
-            {funix_arg_name: {}},
-            funix_arg_name,
-            arg_type_dict,
+        theme_widgets, widget, custom_component, custom_component_props = (
+            param_to_widget(
+                parsed_theme,
+                function_param,
+                {funix_arg_name: {}},
+                funix_arg_name,
+                arg_type_dict,
+            )
         )
     else:
         theme_widgets, widget, custom_component, custom_component_props = (
@@ -179,28 +181,19 @@ def process_pydantic_field_customization(
             widget,
             theme_widgets,
             decorated_params[funix_arg_name],
-            funix_arg_name
+            funix_arg_name,
         )
     merged_item = {**base_item, **widget_props}
-    
+
     apply_custom_component_logic(
-        merged_item,
-        custom_component,
-        custom_component_props,
-        field_annotation
+        merged_item, custom_component, custom_component_props, field_annotation
     )
-    
+
     if funix_arg_name not in decorated_params:
-        apply_decorated_params(
-            merged_item,
-            {},
-            funix_arg_name
-        )
+        apply_decorated_params(merged_item, {}, funix_arg_name)
     else:
         apply_decorated_params(
-            merged_item,
-            decorated_params[funix_arg_name],
-            funix_arg_name
+            merged_item, decorated_params[funix_arg_name], funix_arg_name
         )
     return merged_item
 
@@ -213,6 +206,7 @@ def get_basic_pydantic_items(
     sub_field_name: str | None = None,
 ) -> dict:
     from pydantic_core import PydanticUndefinedType
+
     items = {}
     for field_name, field in anno.__pydantic_fields__.items():
         anno_ = field.annotation
@@ -254,7 +248,7 @@ def get_basic_pydantic_items(
             function_param,
             decorated_params,
             parsed_theme,
-            funix_arg_name
+            funix_arg_name,
         )
 
         if hasattr(anno_, "__pydantic_fields__"):
@@ -273,6 +267,11 @@ def get_basic_pydantic_items(
                 layout_tuple = pydantic_layout_dict[id(anno_)]
                 items[field_name]["pydantic_layout"] = layout_tuple[0]
                 items[field_name]["items"]["pydantic_layout"] = layout_tuple[0]
+            if id(anno_) in pydantic_name_dict:
+                items[field_name]["pydantic_title"] = pydantic_name_dict[id(anno_)]
+                items[field_name]["items"]["pydantic_title"] = pydantic_name_dict[
+                    id(anno_)
+                ]
     return items
 
 
@@ -499,8 +498,14 @@ def parse_param(
         if function_arg_name not in json_schema_props:
             json_schema_props[function_arg_name] = {}
 
-        theme_widgets, widget, custom_component, custom_component_props = param_to_widget(
-            parsed_theme, function_param, decorated_params, function_arg_name, function_arg_type_dict
+        theme_widgets, widget, custom_component, custom_component_props = (
+            param_to_widget(
+                parsed_theme,
+                function_param,
+                decorated_params,
+                function_arg_name,
+                function_arg_type_dict,
+            )
         )
 
         json_schema_props[function_arg_name] = create_param_widget_props(
@@ -509,14 +514,14 @@ def parse_param(
             widget,
             theme_widgets,
             decorated_params[function_arg_name],
-            function_arg_name
+            function_arg_name,
         )
 
         apply_decorated_params(
             json_schema_props[function_arg_name],
             decorated_params[function_arg_name],
             function_arg_name,
-            function_name
+            function_name,
         )
 
         json_schema_props[function_arg_name]["customLayout"] = decorated_params[
@@ -548,7 +553,7 @@ def parse_param(
             json_schema_props[function_arg_name],
             custom_component,
             custom_component_props,
-            function_param.annotation
+            function_param.annotation,
         )
         # Pydantic check, this so complex, so there will be a lot of bugs
         # should be like:
@@ -563,29 +568,59 @@ def parse_param(
         if hasattr(anno, "__pydantic_fields__"):
             anal, dec_param = wrap_pydantic_items(
                 get_basic_pydantic_items(
-                    anno, function_param, decorated_params[function_arg_name], parsed_theme
+                    anno,
+                    function_param,
+                    decorated_params[function_arg_name],
+                    parsed_theme,
                 ),
                 function_param,
             )
-            json_schema_props[function_arg_name]["type"] = "array" if is_array else "object"
+            json_schema_props[function_arg_name]["type"] = (
+                "array" if is_array else "object"
+            )
             json_schema_props[function_arg_name]["items"] = {
                 "type": "object",
                 "properties": anal["items"],
             }
             json_schema_props[function_arg_name]["treat_as"] = "config"
-            json_schema_props[function_arg_name]["widget"] = "__array_complex_pydantic" if is_array else "__object_complex_pydantic"
-            json_schema_props[function_arg_name]["__message"] = "This is an experimental attempt."
+            json_schema_props[function_arg_name]["widget"] = (
+                "__array_complex_pydantic" if is_array else "__object_complex_pydantic"
+            )
+            json_schema_props[function_arg_name][
+                "__message"
+            ] = "This is an experimental attempt."
             if id(anno) in pydantic_layout_dict:
                 layout_tuple = pydantic_layout_dict[id(anno)]
-                json_schema_props[function_arg_name]["pydantic_layout"] = layout_tuple[0]
-                json_schema_props[function_arg_name]["items"]["pydantic_layout"] = layout_tuple[0]
-            decorated_params[function_arg_name]["widget"] = "__array_complex_pydantic" if is_array else "__object_complex_pydantic"
+                json_schema_props[function_arg_name]["pydantic_layout"] = layout_tuple[
+                    0
+                ]
+                json_schema_props[function_arg_name]["items"]["pydantic_layout"] = (
+                    layout_tuple[0]
+                )
+            if id(anno) in pydantic_name_dict:
+                json_schema_props[function_arg_name]["pydantic_title"] = (
+                    pydantic_name_dict[id(anno)]
+                )
+                json_schema_props[function_arg_name]["items"]["pydantic_title"] = (
+                    pydantic_name_dict[id(anno)]
+                )
+            decorated_params[function_arg_name]["widget"] = (
+                "__array_complex_pydantic" if is_array else "__object_complex_pydantic"
+            )
             decorated_params[function_arg_name]["treat_as"] = "config"
-            decorated_params[function_arg_name]["type"] = "<mock>please check `pydantic_items` field.</mock>"
+            decorated_params[function_arg_name][
+                "type"
+            ] = "<mock>please check `pydantic_items` field.</mock>"
             decorated_params[function_arg_name]["pydantic_items"] = anal["items"]
             if id(anno) in pydantic_layout_dict:
                 layout_tuple = pydantic_layout_dict[id(anno)]
-                decorated_params[function_arg_name]["pydantic_layout"] = layout_tuple[0]  # layout_list
+                decorated_params[function_arg_name]["pydantic_layout"] = layout_tuple[
+                    0
+                ]  # layout_list
+            if id(anno) in pydantic_name_dict:
+                decorated_params[function_arg_name]["pydantic_title"] = (
+                    pydantic_name_dict[id(anno)]
+                )
 
     return return_type_parsed
 
@@ -640,14 +675,22 @@ def get_param_for_funix(
                     first_element, *rest = argument_key_list
                     window_params = new_decorated_function["params"][first_element]
                     for rest_element in rest:
-                        window_params = window_params["items"]["properties"][rest_element]
+                        window_params = window_params["items"]["properties"][
+                            rest_element
+                        ]
                     window_params["default"] = last_result
-                    window_schema = new_decorated_function["schema"]["properties"][first_element]
+                    window_schema = new_decorated_function["schema"]["properties"][
+                        first_element
+                    ]
                     for rest_element in rest:
-                        window_schema = window_schema["items"]["properties"][rest_element]
+                        window_schema = window_schema["items"]["properties"][
+                            rest_element
+                        ]
                     window_schema["default"] = last_result
                 else:
-                    new_decorated_function["params"][argument_key]["default"] = last_result
+                    new_decorated_function["params"][argument_key][
+                        "default"
+                    ] = last_result
                     new_decorated_function["schema"]["properties"][argument_key][
                         "default"
                     ] = last_result
@@ -667,21 +710,29 @@ def get_param_for_funix(
                         if "." in argument_key_:
                             argument_key_list = argument_key_.split(".")
                             first_element, *rest = argument_key_list
-                            window_params = new_decorated_function["params"][first_element]
+                            window_params = new_decorated_function["params"][
+                                first_element
+                            ]
                             for rest_element in rest:
-                                window_params = window_params["items"]["properties"][rest_element]
+                                window_params = window_params["items"]["properties"][
+                                    rest_element
+                                ]
                             window_params["default"] = result
-                            window_schema = new_decorated_function["schema"]["properties"][first_element]
+                            window_schema = new_decorated_function["schema"][
+                                "properties"
+                            ][first_element]
                             for rest_element in rest:
-                                window_schema = window_schema["items"]["properties"][rest_element]
+                                window_schema = window_schema["items"]["properties"][
+                                    rest_element
+                                ]
                             window_schema["default"] = result
                         else:
                             new_decorated_function["params"][argument_key_][
                                 "default"
                             ] = result
-                            new_decorated_function["schema"]["properties"][argument_key_][
-                                "default"
-                            ] = result
+                            new_decorated_function["schema"]["properties"][
+                                argument_key_
+                            ]["default"] = result
                 else:
                     result = get_real_callable(
                         app_name, dynamic_default_callable, qualname
@@ -690,21 +741,29 @@ def get_param_for_funix(
                         if "." in argument_key_:
                             argument_key_list = argument_key_.split(".")
                             first_element, *rest = argument_key_list
-                            window_params = new_decorated_function["params"][first_element]
+                            window_params = new_decorated_function["params"][
+                                first_element
+                            ]
                             for rest_element in rest:
-                                window_params = window_params["items"]["properties"][rest_element]
+                                window_params = window_params["items"]["properties"][
+                                    rest_element
+                                ]
                             window_params["default"] = result
-                            window_schema = new_decorated_function["schema"]["properties"][first_element]
+                            window_schema = new_decorated_function["schema"][
+                                "properties"
+                            ][first_element]
                             for rest_element in rest:
-                                window_schema = window_schema["items"]["properties"][rest_element]
+                                window_schema = window_schema["items"]["properties"][
+                                    rest_element
+                                ]
                             window_schema["default"] = result
                         else:
                             new_decorated_function["params"][argument_key_][
                                 "default"
                             ] = result
-                            new_decorated_function["schema"]["properties"][argument_key_][
-                                "default"
-                            ] = result
+                            new_decorated_function["schema"]["properties"][
+                                argument_key_
+                            ]["default"] = result
             else:
                 real_callable = get_real_callable(
                     app_name, dynamic_default_callable, qualname
@@ -730,12 +789,16 @@ def get_param_for_funix(
                 for rest_element in rest:
                     window_params = window_params["items"]["properties"][rest_element]
                 window_params["whitelist"] = whitelist_value
-                window_schema = new_decorated_function["schema"]["properties"][first_element]
+                window_schema = new_decorated_function["schema"]["properties"][
+                    first_element
+                ]
                 for rest_element in rest:
                     window_schema = window_schema["items"]["properties"][rest_element]
                 window_schema["whitelist"] = whitelist_value
             else:
-                new_decorated_function["params"][whitelist_]["whitelist"] = whitelist_value
+                new_decorated_function["params"][whitelist_][
+                    "whitelist"
+                ] = whitelist_value
                 new_decorated_function["schema"]["properties"][whitelist_][
                     "whitelist"
                 ] = whitelist_value
@@ -752,7 +815,9 @@ def get_param_for_funix(
                 for rest_element in rest:
                     window_params = window_params["items"]["properties"][rest_element]
                 window_params["example"] = example_value
-                window_schema = new_decorated_function["schema"]["properties"][first_element]
+                window_schema = new_decorated_function["schema"]["properties"][
+                    first_element
+                ]
                 for rest_element in rest:
                     window_schema = window_schema["items"]["properties"][rest_element]
                 window_schema["example"] = example_value

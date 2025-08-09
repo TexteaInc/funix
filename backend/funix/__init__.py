@@ -42,7 +42,7 @@ from funix.util.network import (
 funix = decorator.funix
 funix_class = decorator.funix_class
 funix_method = decorator.funix_method
-pydantic_layout = layout.pydantic_layout
+pydantic_ui = layout.pydantic_ui
 # ---- Decorators ----
 
 Limiter = limit.Limiter

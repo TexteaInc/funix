@@ -40,6 +40,10 @@ interface PyDanticPanelProps {
   currentPath?: string[];
 }
 
+const title = (msg: string) => {
+  return msg[0].toUpperCase() + msg.slice(1);
+};
+
 const PyDanticPanel = (props: PyDanticPanelProps) => {
   const rootContent = props.rootContent;
   const rootContentProps = rootContent.props;
@@ -438,6 +442,7 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
       onChange: (newValue: any) => handleArrayItemChange(index, newValue),
       name: `${rootContentProps.name}[${index}]`,
     };
+    const titleString = rootContentSchema.pydantic_title || "item";
 
     const arrayLength = (pydanticForm as any[]).length;
 
@@ -498,7 +503,7 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
         <CardHeader
           title={
             <Typography variant="subtitle2">
-              {itemSchema.title || `Item ${index + 1}`}
+              {itemSchema.title || `${title(titleString)} ${index + 1}`}
             </Typography>
           }
           action={
@@ -657,6 +662,7 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
   };
 
   if (rootContentSchema.widget === "__array_complex_pydantic") {
+    const titleString = rootContentSchema.pydantic_title || "item";
     return (
       <Card variant="outlined" sx={getHighlightStyle()}>
         <CardHeader
@@ -668,7 +674,7 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
               size="small"
               variant="outlined"
             >
-              Add Item
+              Add {title(titleString)}
             </Button>
           }
           sx={{
@@ -694,7 +700,8 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
                 color="text.secondary"
                 textAlign="center"
               >
-                No data, click the "Add Item" button to add a new item
+                No data, click the "Add {title(titleString)}" button to add a
+                new {titleString}
               </Typography>
             )}
           </Stack>
