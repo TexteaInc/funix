@@ -93,12 +93,14 @@ def handle_output_layout(output_layout: list) -> tuple[list, list]:
     return return_output_layout, return_output_indexes
 
 
-def pydantic_ui(layout: InputLayout, title: str | None = None) -> Callable[[Any], Any]:
+def pydantic_ui(layout: InputLayout | None = None, title: str | None = None) -> Callable[[Any], Any]:
     def decorator(cls):
         global pydantic_layout_dict
         global pydantic_name_dict
-        pydantic_name_dict[id(cls)] = title
-        pydantic_layout_dict[id(cls)] = handle_input_layout(layout)
+        if layout:
+            pydantic_layout_dict[id(cls)] = handle_input_layout(layout)
+        if title:
+            pydantic_name_dict[id(cls)] = title
         return cls
 
     return decorator
