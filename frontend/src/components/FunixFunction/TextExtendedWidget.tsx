@@ -190,7 +190,7 @@ const TextExtendedWidget = ({
               />
             </Grid>
           ) : null}
-          <Grid item xs>
+          <Grid item xs={true}>
             <Slider
               value={
                 typeof sliderValue === "number"
@@ -211,7 +211,7 @@ const TextExtendedWidget = ({
               }}
             />
           </Grid>
-          <Grid item xs={2.5}>
+          <Grid item>
             <Input
               value={value}
               size="small"

@@ -16,7 +16,11 @@ from funix.decorator.magic import (
     get_type_widget_prop,
 )
 from funix.session import get_global_variable
-from funix.decorator.layout import pydantic_layout_dict, pydantic_name_dict
+from funix.decorator.layout import (
+    pydantic_layout_dict,
+    pydantic_name_dict,
+    pydantic_widget_dict,
+)
 
 dataframe_parse_metadata: dict[str, dict[str, list[str]]] = {}
 """
@@ -204,6 +208,7 @@ def get_basic_pydantic_items(
     decorated_params: dict,
     parsed_theme: Any,
     sub_field_name: str | None = None,
+    widgets: dict | None = None,
 ) -> dict:
     from pydantic_core import PydanticUndefinedType
 
@@ -251,12 +256,23 @@ def get_basic_pydantic_items(
             funix_arg_name,
         )
 
+        if widgets is not None and field_name in widgets:
+            items[field_name]["widget"] = widgets[field_name]
+
         if hasattr(anno_, "__pydantic_fields__"):
+            pydantic_widgets = None
+            if id(anno_) in pydantic_widget_dict:
+                pydantic_widgets = pydantic_widget_dict[id(anno_)]
             items[field_name]["type"] = "array" if is_array else "object"
             items[field_name]["items"] = {
                 "type": "object",
                 "properties": get_basic_pydantic_items(
-                    anno_, function_param, decorated_params, parsed_theme, field_name
+                    anno_,
+                    function_param,
+                    decorated_params,
+                    parsed_theme,
+                    field_name,
+                    pydantic_widgets,
                 ),
                 "widget": "__object_complex_pydantic",
             }
@@ -566,12 +582,16 @@ def parse_param(
                 is_array = True
                 anno = anno.__args__[0]
         if hasattr(anno, "__pydantic_fields__"):
+            pydantic_widget = None
+            if id(anno) in pydantic_widget_dict:
+                pydantic_widget = pydantic_widget_dict[id(anno)]
             anal, dec_param = wrap_pydantic_items(
                 get_basic_pydantic_items(
                     anno,
                     function_param,
                     decorated_params[function_arg_name],
                     parsed_theme,
+                    widgets=pydantic_widget,
                 ),
                 function_param,
             )

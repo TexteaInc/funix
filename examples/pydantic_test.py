@@ -18,8 +18,15 @@ class URLModel(BaseModel):
     display: bool = False
 
 
+@pydantic_ui(
+    widgets={
+        "age": "slider[0, 100]",
+        "password": "password",
+    }
+)
 class SingleModel(BaseModel):
     name: str
+    password: str
     age: int
     weight: float
     signup_date: Optional[datetime]
@@ -42,6 +49,7 @@ def where_is_the_datetime(
         other_model=SingleModel(
             name="shionsan",
             age=1,
+            password="123456",
             weight=2.0,
             signup_date=datetime.now(),
             bio="No bio provided",

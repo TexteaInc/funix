@@ -388,6 +388,14 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
             acceptNewValues={false}
           />
         );
+      } else if (
+        fieldSchema.items &&
+        (fieldSchema.items.type === "number" ||
+          fieldSchema.items.type === "integer") &&
+        fieldSchema.items.widget &&
+        fieldSchema.items.widget.indexOf("slider") !== -1
+      ) {
+        return <TextExtendedWidget {...fieldProps} />;
       } else {
         return (
           <MultipleInput
@@ -425,8 +433,16 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
             data={fieldValue !== undefined ? fieldValue : fieldSchema.default}
           />
         );
-      } else if (fieldSchema.type === "boolean") {
+      } else if (
+        fieldSchema.type === "boolean" ||
+        fieldSchema.widget === "switch"
+      ) {
         return <SwitchWidget {...fieldProps} />;
+      } else if (
+        fieldSchema.type === "number" ||
+        fieldSchema.type === "integer"
+      ) {
+        return <TextExtendedWidget {...fieldProps} />;
       } else {
         return <TextExtendedWidget {...fieldProps} />;
       }
