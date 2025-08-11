@@ -15,12 +15,11 @@ def response_item_to_class(response_item: Any, clazz: type) -> Any:
     Returns:
         Any: An instance of the class with the response item data.
     """
+    if clazz is datetime:
+        return datetime.fromisoformat(response_item)
+    if issubclass(clazz, BaseModel):
+        return clazz.model_validate(response_item)
     try:
-        if clazz is datetime:
-            return datetime.fromisoformat(response_item)
-        if issubclass(clazz, BaseModel):
-            return clazz.model_validate(response_item)
         return clazz(response_item)
     except Exception as e:
-        print(e)
         return response_item

@@ -1,3 +1,4 @@
+import types
 from copy import deepcopy
 from inspect import Parameter
 from json import dumps, JSONEncoder
@@ -216,7 +217,14 @@ def get_basic_pydantic_items(
     for field_name, field in anno.__pydantic_fields__.items():
         anno_ = field.annotation
         is_array = False
+        is_optional = False
+        if type(anno_) is types.UnionType:
+            is_optional = True
+            anno_ = anno_.__args__[0]
         if hasattr(anno_, "__name__"):
+            if anno_.__name__ == "Optional":
+                is_optional = True
+                anno_ = anno_.__args__[0]
             if anno_.__name__ in ["list", "List"]:
                 is_array = True
                 anno_ = anno_.__args__[0]
@@ -239,6 +247,9 @@ def get_basic_pydantic_items(
                 items[field_name]["title"] += f" ({field.description})"
 
         if not field.is_required():
+            items[field_name]["optional"] = True
+
+        if is_optional:
             items[field_name]["optional"] = True
 
         funix_arg_name = f"{function_param.name}"
@@ -288,6 +299,10 @@ def get_basic_pydantic_items(
                 items[field_name]["items"]["pydantic_title"] = pydantic_name_dict[
                     id(anno_)
                 ]
+        else:
+            if is_array:
+                items[field_name]["items"] = deepcopy(items[field_name])
+                items[field_name]["type"] = "array"
     return items
 
 
@@ -577,7 +592,14 @@ def parse_param(
         # `SingleModel` -> `__object_complex_pydantic`
         anno = function_param.annotation
         is_array = False
+        is_optional = False
+        if type(anno) is types.UnionType:
+            is_optional = True
+            anno = anno.__args__[0]
         if hasattr(anno, "__name__"):
+            if anno.__name__ == "Optional":
+                is_optional = True
+                anno = anno.__args__[0]
             if anno.__name__ in ["list", "List"]:
                 is_array = True
                 anno = anno.__args__[0]
@@ -641,6 +663,10 @@ def parse_param(
                 decorated_params[function_arg_name]["pydantic_title"] = (
                     pydantic_name_dict[id(anno)]
                 )
+
+            if is_optional:
+                json_schema_props[function_arg_name]["optional"] = True
+                decorated_params[function_arg_name]["optional"] = True
 
     return return_type_parsed
 
