@@ -678,11 +678,15 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
   };
 
   if (rootContentSchema.widget === "__array_complex_pydantic") {
-    const titleString = rootContentSchema.pydantic_title || "item";
+    const titleString = rootContentSchema.pydantic_title;
     return (
       <Card variant="outlined" sx={getHighlightStyle()}>
         <CardHeader
-          title={<Typography variant="h6">{elementName}</Typography>}
+          title={
+            <Typography variant="h6">
+              {titleString ? title(titleString) : elementName}
+            </Typography>
+          }
           action={
             <Button
               startIcon={<AddIcon />}
@@ -690,7 +694,7 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
               size="small"
               variant="outlined"
             >
-              Add {title(titleString)}
+              Add
             </Button>
           }
           sx={{
@@ -698,12 +702,6 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
           }}
         />
         <CardContent sx={{ paddingTop: 0 }}>
-          {rootContentSchema.title && (
-            <MarkdownDiv
-              markdown={rootContentSchema.title}
-              isRenderInline={false}
-            />
-          )}
           <Stack spacing={1}>
             {Array.isArray(pydanticForm) &&
               (pydanticForm as any[]).map((item, index) =>
@@ -716,8 +714,7 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
                 color="text.secondary"
                 textAlign="center"
               >
-                No data, click the "Add {title(titleString)}" button to add a
-                new {titleString}
+                No data, click the "Add" button to add a new item
               </Typography>
             )}
           </Stack>
@@ -726,26 +723,22 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
     );
   }
 
-  const cardContent = (
-    <Stack spacing={1}>
-      {rootContentSchema.title && (
-        <MarkdownDiv
-          markdown={rootContentSchema.title}
-          isRenderInline={false}
-        />
-      )}
-      {renderContent()}
-    </Stack>
-  );
+  const cardContent = <Stack spacing={1}>{renderContent()}</Stack>;
 
   if (props.showArrayControls) {
     return cardContent;
   }
 
+  const titleString = rootContentSchema.pydantic_title;
+
   return (
     <Card variant="outlined" sx={getHighlightStyle()}>
       <CardHeader
-        title={<Typography variant="h6">{elementName}</Typography>}
+        title={
+          <Typography variant="h6">
+            {titleString ? title(titleString) : elementName}
+          </Typography>
+        }
         action={
           props.onArrayDelete &&
           props.arrayIndex !== undefined && (
