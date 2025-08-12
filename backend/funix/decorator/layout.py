@@ -4,6 +4,7 @@ Layout decorator
 
 from typing import Callable, Any
 
+from funix.decorator.widget import parse_widget
 from funix.hint import InputLayout
 
 pydantic_layout_dict = {}
@@ -108,7 +109,10 @@ def pydantic_ui(
         if title:
             pydantic_name_dict[id(cls)] = title
         if widgets:
-            pydantic_widget_dict[id(cls)] = widgets
+            new_widgets = {}
+            for key, value in widgets.items():
+                new_widgets[key] = parse_widget(value)
+            pydantic_widget_dict[id(cls)] = new_widgets
         return cls
 
     return decorator

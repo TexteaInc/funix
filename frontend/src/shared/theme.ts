@@ -27,22 +27,25 @@ const mergeIcon = (theme: Record<string, any>): Theme => {
   if (!url) {
     return theme as unknown as Theme;
   }
+
+  const iconConfig = {
+    content: '""',
+    "background-image": `url(${url})`,
+    display: "block",
+    "background-size": "contain",
+    "background-repeat": "no-repeat",
+    "background-position": "left",
+    "margin-right": "10px",
+    height: theme.funix_icon_height || "100%",
+    width: theme.funix_icon_width || "100%",
+  };
+
   return _.merge(theme, {
     components: {
       MuiAppBar: {
         styleOverrides: {
           root: {
-            "& .MuiToolbar-root:before": {
-              content: '""',
-              "background-image": `url(${url})`,
-              display: "block",
-              "background-size": "contain",
-              "background-repeat": "no-repeat",
-              "background-position": "left",
-              "margin-right": "10px",
-              height: theme.funix_icon_height || "100%",
-              width: theme.funix_icon_width || "100%",
-            },
+            "& .MuiToolbar-root:before": iconConfig,
           },
         },
       },

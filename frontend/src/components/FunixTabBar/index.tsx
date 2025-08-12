@@ -1,10 +1,9 @@
 import React, { useCallback, useEffect, useState, useRef } from "react";
-import { Box, IconButton, Typography } from "@mui/material";
+import { Box, IconButton, Typography, useTheme } from "@mui/material";
 import {
   MoreHoriz,
   Functions,
   Folder,
-  ArrowBack,
   ChevronRight,
   KeyboardArrowDown,
 } from "@mui/icons-material";
@@ -118,9 +117,6 @@ const FunixTabBar: React.FC<FunixTabBarProps> = ({
   backend,
   onHistoryOpen,
   onHistorySideBarToggle,
-  sideBarOpen = false,
-  onSideBarToggle,
-  functions,
 }) => {
   const [, setSelectedFunction] = useAtom(selectedFunctionAtom);
   const [, setFunctions] = useAtom(functionsAtom);
@@ -136,8 +132,35 @@ const FunixTabBar: React.FC<FunixTabBarProps> = ({
 
   const { pathname, search } = useLocation();
   const navigate = useNavigate();
+  const theme = useTheme();
 
   const lastProcessedHistoryRef = useRef<number>(-1);
+
+  const renderThemeIcon = () => {
+    const themeAny = theme as any;
+    const iconUrl = themeAny.funix_icon;
+
+    if (!iconUrl) {
+      return null;
+    }
+
+    const iconHeight = themeAny.funix_icon_height || "32px";
+    const iconWidth = themeAny.funix_icon_width || "32px";
+
+    return (
+      <img
+        src={iconUrl}
+        alt="Funix Theme Icon"
+        style={{
+          height: iconHeight,
+          width: iconWidth,
+          marginRight: 16,
+          objectFit: "contain",
+          flexShrink: 0,
+        }}
+      />
+    );
+  };
 
   const handleFetchFunctionDetail = useCallback(
     (functionPreview: FunctionPreview) => {
@@ -281,6 +304,7 @@ const FunixTabBar: React.FC<FunixTabBarProps> = ({
 
   return (
     <Box
+      id="funix-tab-bar"
       sx={{
         backgroundColor: "background.paper",
         boxShadow:
@@ -298,21 +322,7 @@ const FunixTabBar: React.FC<FunixTabBarProps> = ({
           px: 2,
         }}
       >
-        {functions && functions.length > 1 && (
-          <IconButton
-            color="inherit"
-            size="large"
-            onClick={onSideBarToggle}
-            sx={{
-              mr: 2,
-              ...(sideBarOpen && { display: "none" }),
-              color: "text.primary",
-            }}
-            edge="start"
-          >
-            <ArrowBack />
-          </IconButton>
-        )}
+        {renderThemeIcon()}
         <Box
           sx={{
             display: "flex",
