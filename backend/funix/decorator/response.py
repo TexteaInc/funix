@@ -1,3 +1,4 @@
+from inspect import isclass
 from typing import Any
 from datetime import datetime
 
@@ -17,7 +18,7 @@ def response_item_to_class(response_item: Any, clazz: type) -> Any:
     """
     if clazz is datetime:
         return datetime.fromisoformat(response_item)
-    if issubclass(clazz, BaseModel):
+    if isclass(clazz) and issubclass(clazz, BaseModel):
         return clazz.model_validate(response_item)
     try:
         return clazz(response_item)
