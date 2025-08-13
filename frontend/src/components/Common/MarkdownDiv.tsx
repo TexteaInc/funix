@@ -157,6 +157,7 @@ const MarkdownImage = (props: {
   title?: string;
   width?: string | number;
   height?: string | number;
+  style?: React.CSSProperties;
 }) => {
   if (!props.src) return null;
   return (
@@ -170,6 +171,7 @@ const MarkdownImage = (props: {
           width: props.width ?? "auto",
           height: props.height ?? "auto",
           maxWidth: "100%",
+          ...props.style,
         }}
       />
     </Card>
@@ -320,6 +322,7 @@ export default function MarkdownDiv(props: MarkdownDivProps) {
               title={props.title}
               width={props.width}
               height={props.height}
+              style={props.style}
             />
           ),
           strong: (props) => (
