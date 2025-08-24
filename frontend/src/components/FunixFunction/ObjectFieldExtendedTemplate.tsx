@@ -66,6 +66,7 @@ import { ObjectFieldTemplateProps } from "@rjsf/utils";
 import { backHistoryAtom } from "../../store";
 import DateTimePickerWidget from "./DateTimePickerWidget";
 import PyDanticPanel from "./PyDanticPanel";
+import ChemEditor from "./ChemEditor";
 
 let rowIdCounter = 0;
 
@@ -201,6 +202,11 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldTemplateProps) => {
               data={elementData}
             />
           ),
+        };
+      } else if (elementContent.props.schema.widget === "chem") {
+        return {
+          type: "config",
+          element: <ChemEditor widget={elementContent.props} />,
         };
       } else {
         return {
