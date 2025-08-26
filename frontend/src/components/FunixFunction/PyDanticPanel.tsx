@@ -434,7 +434,7 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
             data={fieldValue !== undefined ? fieldValue : fieldSchema.default}
           />
         );
-      } else if (fieldSchema.widget === "chem") {
+      } else if (fieldSchema.widget === "ketcher") {
         return <ChemEditor widget={fieldProps} />;
       } else if (
         fieldSchema.type === "boolean" ||

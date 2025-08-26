@@ -383,6 +383,13 @@ Support Code like:
 or just a string like "print('hello world')"
 """
 
+_ChemStr = NewType("ChemStr", type(Optional[str]))
+ChemStr: TypeAlias = _ChemStr  # type: ignore
+"""
+ChemStr type.
+For output.
+"""
+
 # ---- Built-in Input Widgets ----
 IntInputBox: TypeAlias = builtin.IntInputBox
 IntSlider = builtin.IntSlider
@@ -640,3 +647,19 @@ class LimitSource(Enum):
 
     # Based on IP
     IP = auto()
+
+
+# --- Chem ---
+
+@new_funix_type(widget={"name": "ketcher"})
+class Ketcher(dict):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.smiles = self.get("smiles")
+        self.inchi = self.get("inchi", None)
+        self.inchi_aux_info = self.get("inchiAuxInfo", None)
+        self.inchi_key = self.get("inchiKey", None)
+        self.smarts = self.get("smarts")
+        self.ket = self.get("ket")
+        self.svg = self.get("svg")
+
