@@ -18,6 +18,16 @@ type ChemEditorValue = {
   inchiKey: string | null;
   smarts: string;
   ket: string;
+  svg: string;
+};
+
+const svgToText = (svg: Blob) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error("Failed to read SVG file"));
+    reader.readAsText(svg);
+  });
 };
 
 const ChemEditor: React.FC<ChemEditorProps> = React.memo((props) => {
@@ -59,6 +69,11 @@ const ChemEditor: React.FC<ChemEditorProps> = React.memo((props) => {
           }
           ketcher.editor.subscribe("change", async () => {
             const ket = await ketcher.getKet();
+            const svg = await ketcher
+              .generateImage(ket, {
+                outputFormat: "svg",
+              })
+              .then((svg) => svgToText(svg));
             if (ketcher.containsReaction()) {
               const smiles = await ketcher.getSmiles();
               const smarts = await ketcher.getSmarts();
@@ -69,6 +84,7 @@ const ChemEditor: React.FC<ChemEditorProps> = React.memo((props) => {
                 inchiAuxInfo: null,
                 inchiKey: null,
                 smarts,
+                svg: svg as string,
               });
             } else {
               const smiles = await ketcher.getSmiles();
@@ -83,6 +99,7 @@ const ChemEditor: React.FC<ChemEditorProps> = React.memo((props) => {
                 inchiAuxInfo,
                 inchiKey,
                 smarts,
+                svg: svg as string,
               });
             }
           });
