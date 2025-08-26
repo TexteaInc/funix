@@ -203,7 +203,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldTemplateProps) => {
             />
           ),
         };
-      } else if (elementContent.props.schema.widget === "chem") {
+      } else if (elementContent.props.schema.widget === "ketcher") {
         return {
           type: "config",
           element: <ChemEditor widget={elementContent.props} />,

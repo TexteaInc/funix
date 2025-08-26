@@ -29,6 +29,7 @@ export type ReturnType =
   | "List"
   | "Dict"
   | "Callable"
+  | "ChemStr"
   | FunixType
   | null;
 
