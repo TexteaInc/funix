@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
+import { Card, CardMedia } from "@mui/material";
+import React, { useEffect, useState } from "react";
 
 declare global {
   interface Window {
@@ -7,11 +8,11 @@ declare global {
 }
 
 const OutputChem = (props: { data: string }) => {
-  const svgRef = useRef<HTMLDivElement>(null);
+  const [src, setSrc] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!svgRef.current || !props.data) return;
+    if (!props.data) return;
 
     const loadAndRender = async () => {
       setLoading(true);
@@ -19,8 +20,9 @@ const OutputChem = (props: { data: string }) => {
         const options = new window.indigo.MapStringString();
         options.set("render-output-format", "svg");
         const rawRender = window.indigo.render(props.data, options);
-        const svg = atob(rawRender);
-        svgRef.current!.innerHTML = svg;
+        const img = new Image();
+        img.src = `data:image/svg+xml;base64,${rawRender}`;
+        setSrc(img.src);
       } catch (e) {
         console.error(e);
       }
@@ -31,28 +33,24 @@ const OutputChem = (props: { data: string }) => {
   }, [props.data]);
 
   return (
-    <div style={{ width: "100%", minHeight: "2rem", position: "relative" }}>
-      {loading && (
-        <div
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            color: "#666",
-          }}
-        >
-          Loading chemistry renderer...
-        </div>
+    <>
+      {loading ? (
+        <div>Indigo Drawing...</div>
+      ) : (
+        <Card variant="elevation" elevation={0}>
+          <CardMedia
+            component="img"
+            image={src ?? ""}
+            alt="Chemistry"
+            sx={{
+              maxWidth: "100%",
+              width: "auto",
+              height: "auto",
+            }}
+          />
+        </Card>
       )}
-      <div
-        ref={svgRef}
-        style={{
-          width: "100%",
-          height: "100%",
-        }}
-      />
-    </div>
+    </>
   );
 };
 
