@@ -4,7 +4,7 @@ import { StandaloneStructServiceProvider } from "ketcher-standalone";
 import "miew/dist/miew.min.css";
 import "ketcher-react/dist/index.css";
 import { Ketcher } from "ketcher-core";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { Box } from "@mui/material";
 
 interface ChemEditorProps {
@@ -33,16 +33,13 @@ const ChemEditor: React.FC<ChemEditorProps> = React.memo((props) => {
     [props.widget],
   );
 
-  const structServiceProvider = useMemo(
-    () => new StandaloneStructServiceProvider(),
-    [],
-  );
+  const structServiceProvider = new StandaloneStructServiceProvider();
 
   return (
     <Box
       sx={{
         width: "100%",
-        height: "600px",
+        height: "700px",
         resize: "vertical",
       }}
     >
@@ -51,6 +48,7 @@ const ChemEditor: React.FC<ChemEditorProps> = React.memo((props) => {
         structServiceProvider={structServiceProvider}
         errorHandler={() => {}}
         onInit={(ketcher: Ketcher) => {
+          window.ketcher = ketcher;
           if (props.widget.value || props.widget.formData) {
             const value = props.widget.value ?? props.widget.formData;
             if (value) {
