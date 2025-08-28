@@ -41,7 +41,7 @@ import InnerHTML from "dangerously-set-html-content";
 import { useNavigate } from "react-router-dom";
 import OutputPlotMedias from "./OutputComponents/OutputPlotImage";
 import _ from "lodash";
-import OutputKetcher from "./OutputComponents/OutputKetcher";
+import OutputKetcher from "./OutputComponents/OutputChem";
 
 const guessJSON = (response: string | null): object | false => {
   if (response === null) return false;

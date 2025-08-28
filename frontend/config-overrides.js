@@ -1,6 +1,8 @@
 const ProgressBarPlugin = require("progress-bar-webpack-plugin");
 const SaveRemoteFilePlugin = require("save-remote-file-webpack-plugin");
 const webpack = require("webpack");
+const CopyWebpackPlugin = require("copy-webpack-plugin");
+const path = require("path");
 
 const scripts = process.env.REACT_APP_IN_FUNIX
   ? `
@@ -59,6 +61,21 @@ module.exports = function override(config) {
       ]),
     );
   }
+
+  config.plugins.push(
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: path.resolve(__dirname, "node_modules/indigo-ketcher/indigo-ketcher-[0-9\.]+.wasm"),
+          to: "static/indigo/[name][ext]",
+        },
+        {
+          from: path.resolve(__dirname, "node_modules/indigo-ketcher/indigo-ketcher-separate-wasm.js"),
+          to: "static/indigo/[name][ext]",
+        },
+      ],
+    }),
+  );
 
   config.plugins.push(new ProgressBarPlugin());
   return config;
