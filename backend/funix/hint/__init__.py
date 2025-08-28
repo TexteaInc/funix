@@ -661,5 +661,4 @@ class Ketcher(dict):
         self.inchi_key = self.get("inchiKey", None)
         self.smarts = self.get("smarts")
         self.ket = self.get("ket")
-        self.svg = self.get("svg")
 
