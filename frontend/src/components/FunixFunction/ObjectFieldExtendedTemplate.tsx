@@ -236,7 +236,8 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldTemplateProps) => {
       if (
         !hasWhitelist &&
         (elementProps.schema.items.type === "string" ||
-          elementProps.schema.items.type === "number")
+          elementProps.schema.items.type === "number" ||
+          elementProps.schema.items.type === "integer")
       ) {
         return {
           type: "config",
@@ -247,6 +248,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldTemplateProps) => {
               useCheckbox={elementContent.props.schema.widget === "checkbox"}
               acceptValues={elementProps.schema.example || []}
               acceptNewValues={true}
+              type={elementProps.schema.items.type}
             />
           ),
         };
