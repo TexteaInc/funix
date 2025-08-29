@@ -51,6 +51,10 @@ const ChemEditor: React.FC<ChemEditorProps> = React.memo((props) => {
         structServiceProvider={structServiceProvider}
         errorHandler={() => {}}
         onInit={(ketcher: Ketcher) => {
+          if (window.ketcher) {
+            ketcher.editor.clear();
+            ketcher.editor.clearHistory();
+          }
           window.ketcher = ketcher;
           if (props.widget.value || props.widget.formData) {
             const value = props.widget.value ?? props.widget.formData;

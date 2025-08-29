@@ -572,8 +572,10 @@ def funix(
             param_widget_whitelist_callable = {}
             param_widget_example_callable = {}
 
-            cast_to_list_flag, return_type_parsed = parse_function_annotation(
-                function_signature, matplotlib_format != "agg"
+            tuple_in_list, cast_to_list_flag, return_type_parsed = (
+                parse_function_annotation(
+                    function_signature, matplotlib_format != "agg"
+                )
             )
 
             safe_input_layout = [] if not input_layout else input_layout
@@ -708,6 +710,7 @@ def funix(
                 "params": decorated_params,
                 "theme": parsed_theme[4],
                 "return_type": return_type_parsed,
+                "tuple_in_list": tuple_in_list,
                 "description": function_description,
                 "direction": function_direction,
                 "schema": {
