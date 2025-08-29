@@ -771,25 +771,35 @@ def anal_function_result(
 
 def parse_function_annotation(
     function_signature: Signature, figure_to_image: bool
-) -> tuple[bool, Any]:
+) -> tuple[bool, bool, Any]:
     cast_to_list_flag = False
+    tuple_in_list = False
     if function_signature.return_annotation is not Signature.empty:
         # TODO: Magic code, I've forgotten what it does, but it works, refactor it if you can
         # return type dict enforcement for yodas only
+        return_annotation = function_signature.return_annotation
         try:
+            print(return_annotation)
+            if hasattr(return_annotation, "__name__"):
+                if return_annotation.__name__ in ["list", "List"]:
+                    arg0 = return_annotation.__args__[0]
+                    if hasattr(arg0, "__name__") and arg0.__name__ in [
+                        "tuple",
+                        "Tuple",
+                    ]:
+                        tuple_in_list = True
+                        cast_to_list_flag = True
+                        return_annotation = arg0
             if (
-                cast_to_list_flag := function_signature.return_annotation.__class__.__name__
-                == "tuple"
-                or function_signature.return_annotation.__name__ == "tuple"
-                or function_signature.return_annotation.__name__ == "Tuple"
+                cast_to_list_flag := return_annotation.__class__.__name__ == "tuple"
+                or return_annotation.__name__ == "tuple"
+                or return_annotation.__name__ == "Tuple"
             ):
                 parsed_return_annotation_list = []
-                if function_signature.return_annotation.__class__.__name__ == "tuple":
-                    return_annotation = list(function_signature.return_annotation)
+                if return_annotation.__class__.__name__ == "tuple":
+                    return_annotation = list(return_annotation)
                 else:
-                    return_annotation = list(
-                        function_signature.return_annotation.__args__
-                    )
+                    return_annotation = list(return_annotation.__args__)
                 for return_annotation_type in return_annotation:
                     return_annotation_type_name = getattr(
                         return_annotation_type, "__name__"
@@ -828,28 +838,26 @@ def parse_function_annotation(
 
                 return_type_parsed = parsed_return_annotation_list
             else:
-                if hasattr(function_signature.return_annotation, "__annotations__"):
-                    return_type_raw = getattr(
-                        function_signature.return_annotation, "__annotations__"
-                    )
+                if hasattr(return_annotation, "__annotations__"):
+                    return_type_raw = getattr(return_annotation, "__annotations__")
                     if getattr(type(return_type_raw), "__name__") == "dict":
-                        if function_signature.return_annotation.__name__ == "Figure":
+                        if return_annotation.__name__ == "Figure":
                             return_type_parsed = (
                                 "Figure" if not figure_to_image else "FigureImage"
                             )
                         else:
                             if hasattr(
-                                function_signature.return_annotation,
+                                return_annotation,
                                 "__module__",
                             ):
                                 full_name = (
                                     getattr(
-                                        function_signature.return_annotation,
+                                        return_annotation,
                                         "__module__",
                                     )
                                     + "."
                                     + getattr(
-                                        function_signature.return_annotation,
+                                        return_annotation,
                                         "__name__",
                                     )
                                 )
@@ -876,26 +884,22 @@ def parse_function_annotation(
                     else:
                         return_type_parsed = str(return_type_raw)
                 else:
-                    return_type_parsed = getattr(
-                        function_signature.return_annotation, "__name__"
-                    )
+                    return_type_parsed = getattr(return_annotation, "__name__")
                     if return_type_parsed in supported_basic_types:
                         return_type_parsed = supported_basic_types_dict[
                             return_type_parsed
                         ]
                     elif return_type_parsed == "List":
                         list_type_name = getattr(
-                            getattr(function_signature.return_annotation, "__args__")[
-                                0
-                            ],
+                            getattr(return_annotation, "__args__")[0],
                             "__name__",
                         )
                         if list_type_name in supported_basic_file_types:
                             return_type_parsed = list_type_name
         except:
-            return_type_parsed = get_type_dict(function_signature.return_annotation)
+            return_type_parsed = get_type_dict(return_annotation)
             if return_type_parsed is not None:
                 return_type_parsed = return_type_parsed["type"]
     else:
         return_type_parsed = None
-    return cast_to_list_flag, return_type_parsed
+    return tuple_in_list, cast_to_list_flag, return_type_parsed

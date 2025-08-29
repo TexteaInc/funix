@@ -253,6 +253,7 @@ const OutputPanel = (props: {
   type ResponseViewProps = {
     response: string | null;
     returnType?: { [key: string]: BaseType } | ReturnType[] | ReturnType;
+    multiple: boolean;
   };
 
   const handleCallableClick = useCallback(
@@ -386,6 +387,7 @@ const OutputPanel = (props: {
   const ResponseView: React.FC<ResponseViewProps> = ({
     response,
     returnType,
+    multiple,
   }) => {
     if (response == null) {
       return (
@@ -415,6 +417,22 @@ const OutputPanel = (props: {
               }}
             />
           );
+        if (multiple) {
+          return (
+            <>
+              {parsedResponse[0].map((row: any) => {
+                console.log(row);
+                return (
+                  <ResponseView
+                    response={JSON.stringify(row)}
+                    returnType={returnType}
+                    multiple={false}
+                  />
+                );
+              })}
+            </>
+          );
+        }
         const output: outputRow[] = props.detail.schema.output_layout;
         const layout: ReactElement[] = [];
         output.forEach((row) => {
@@ -576,6 +594,7 @@ const OutputPanel = (props: {
             <ResponseView
               response={props.response}
               returnType={props.detail.return_type}
+              multiple={props.detail.tuple_in_list}
             />
           </Stack>
         </CardContent>

@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import MarkdownDiv from "../Common/MarkdownDiv";
 import { WidgetProps } from "@rjsf/utils";
+import { castValue } from "../Common/ValueOperation";
 
 interface MultipleInput {
   widget: WidgetProps;
@@ -18,6 +19,7 @@ interface MultipleInput {
   useCheckbox: boolean;
   acceptValues: string[];
   acceptNewValues: boolean;
+  type?: string;
 }
 
 const MultipleInput = (props: MultipleInput) => {
@@ -31,8 +33,11 @@ const MultipleInput = (props: MultipleInput) => {
   }, [props.data]);
 
   const _setValue = (newValue: unknown[]) => {
-    setValue(newValue);
-    props.widget.onChange(newValue);
+    const castedValue = newValue.map((v) => {
+      return castValue(v, props.type || "string");
+    });
+    setValue(castedValue);
+    props.widget.onChange(castedValue);
   };
 
   if (props.useCheckbox) {
@@ -79,13 +84,18 @@ const MultipleInput = (props: MultipleInput) => {
       size="small"
       value={value}
       options={props.acceptValues}
-      getOptionLabel={(option) => (option as any).toString()}
+      getOptionLabel={(option: any) => option.toString()}
       disableCloseOnSelect
       onChange={(_event, newValue) => _setValue(newValue)}
       renderInput={(params) => (
         <TextField
           {...params}
           placeholder={props.widget.placeholder}
+          type={
+            props.type === "integer" || props.type === "number"
+              ? "Number"
+              : "text"
+          }
           label={
             <MarkdownDiv
               markdown={

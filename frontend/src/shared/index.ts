@@ -178,6 +178,10 @@ export type FunctionDetail = {
    * Function direction
    */
   direction: "row" | "column" | "row-reverse" | "column-reverse";
+  /**
+   * tuple_in_list
+   */
+  tuple_in_list: boolean;
 };
 
 export async function getParam(
