@@ -15,6 +15,10 @@
       href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
     />
     <script src="%PUBLIC_URL%/static/js/mpl.js"></script>
+    <script type="module">
+      import indigo from "./static/indigo/indigo-ketcher-separate-wasm.js";
+      window.indigo = await indigo();
+    </script>
     <!--%SCRIPTS%-->
     <script>
       mpl.toolbar_items = [["Home", "Reset original view", "home", "home"], ["Back", "Back to previous view", "back", "back"], ["Forward", "Forward to next view", "forward", "forward"], ["Pan", "Left button pans, Right button zooms\nx/y fixes axis, CTRL fixes aspect", "move", "pan"], ["Zoom", "Zoom to rectangle\nx/y fixes axis", "zoom_to_rect", "zoom"]];

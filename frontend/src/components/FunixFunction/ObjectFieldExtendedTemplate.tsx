@@ -58,12 +58,15 @@ import MarkdownDiv from "../Common/MarkdownDiv";
 import { sliderWidgetParser } from "../Common/WidgetSyntaxParser";
 import FileUploadWidget from "./FileUploadWidget";
 import { useAtom } from "jotai";
-import { storeAtom } from "../../store";
 import { DataGrid } from "../../Key";
 import InnerHTML from "dangerously-set-html-content";
 import FunixCustom from "./FunixCustom";
 import MultipleInput from "./MultipleInput";
 import { ObjectFieldTemplateProps } from "@rjsf/utils";
+import { backHistoryAtom } from "../../store";
+import DateTimePickerWidget from "./DateTimePickerWidget";
+import PyDanticPanel from "./PyDanticPanel";
+import ChemEditor from "./ChemEditor";
 
 let rowIdCounter = 0;
 
@@ -84,6 +87,8 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldTemplateProps) => {
   const arraySimpleSelectors: ReactElement[] = [];
   let arraySheetSelectors: Record<string, any> = {};
   let lengthLongestWhitelistColumnInSheet = 0;
+
+  const [focusPath, setFocusPath] = useState<string[]>([]);
   type propElementToJSXElementReturn = {
     type: "config" | "sheet";
     element: ReactElement;
@@ -118,6 +123,21 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldTemplateProps) => {
       SheetSelector,
     }
     const filesType = ["image", "video", "audio", "file"];
+    if (
+      elementContent.props.schema.widget === "__array_complex_pydantic" ||
+      elementContent.props.schema.widget === "__object_complex_pydantic"
+    ) {
+      return {
+        type: "config",
+        element: (
+          <PyDanticPanel
+            rootContent={elementContent}
+            focusPath={focusPath}
+            onFocusChange={setFocusPath}
+          />
+        ),
+      };
+    }
     if (!isArray) {
       if ("funixComponent" in elementContent.props.schema) {
         const component = elementContent.props.schema.funixComponent;
@@ -173,6 +193,21 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldTemplateProps) => {
             />
           ),
         };
+      } else if (elementContent.props.schema.widget == "datetime") {
+        return {
+          type: "config",
+          element: (
+            <DateTimePickerWidget
+              widget={elementContent.props}
+              data={elementData}
+            />
+          ),
+        };
+      } else if (elementContent.props.schema.widget === "ketcher") {
+        return {
+          type: "config",
+          element: <ChemEditor widget={elementContent.props} />,
+        };
       } else {
         return {
           type: "config",
@@ -192,11 +227,33 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldTemplateProps) => {
               widget={elementContent.props}
               data={elementData}
               useCheckbox={elementContent.props.schema.widget === "checkbox"}
-              whitelist={elementProps.schema.whitelist}
+              acceptValues={elementProps.schema.whitelist}
+              acceptNewValues={false}
             />
           ),
         };
       }
+      if (
+        !hasWhitelist &&
+        (elementProps.schema.items.type === "string" ||
+          elementProps.schema.items.type === "number" ||
+          elementProps.schema.items.type === "integer")
+      ) {
+        return {
+          type: "config",
+          element: (
+            <MultipleInput
+              widget={elementContent.props}
+              data={elementData}
+              useCheckbox={elementContent.props.schema.widget === "checkbox"}
+              acceptValues={elementProps.schema.example || []}
+              acceptNewValues={true}
+              type={elementProps.schema.items.type}
+            />
+          ),
+        };
+      }
+
       if (hasArrayExample || hasArrayWhitelist) {
         // Array Selector, Shared Part
         let arraySelectorCandidates: Array<any>[];
@@ -925,7 +982,7 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldTemplateProps) => {
   };
 
   const getNewDataGridElementIfAvailable = () => {
-    const [{ backHistory }] = useAtom(storeAtom);
+    const [backHistory] = useAtom(backHistoryAtom);
 
     useEffect(() => {
       if (backHistory !== null && backHistory["input"] !== null) {
@@ -1081,4 +1138,4 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldTemplateProps) => {
   );
 };
 
-export default ObjectFieldExtendedTemplate;
+export default React.memo(ObjectFieldExtendedTemplate);

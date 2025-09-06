@@ -11,16 +11,19 @@ import {
 } from "@mui/material";
 import MarkdownDiv from "../Common/MarkdownDiv";
 import { WidgetProps } from "@rjsf/utils";
+import { castValue } from "../Common/ValueOperation";
 
 interface MultipleInput {
   widget: WidgetProps;
   data: any;
   useCheckbox: boolean;
-  whitelist: string[];
+  acceptValues: string[];
+  acceptNewValues: boolean;
+  type?: string;
 }
 
 const MultipleInput = (props: MultipleInput) => {
-  const [value, setValue] = React.useState<unknown[]>([]);
+  const [value, setValue] = React.useState<unknown[]>(props.data || []);
 
   React.useEffect(() => {
     if (props.data === value) return;
@@ -30,8 +33,11 @@ const MultipleInput = (props: MultipleInput) => {
   }, [props.data]);
 
   const _setValue = (newValue: unknown[]) => {
-    setValue(newValue);
-    props.widget.onChange(newValue);
+    const castedValue = newValue.map((v) => {
+      return castValue(v, props.type || "string");
+    });
+    setValue(castedValue);
+    props.widget.onChange(castedValue);
   };
 
   if (props.useCheckbox) {
@@ -44,10 +50,11 @@ const MultipleInput = (props: MultipleInput) => {
               props.widget.schema.title ||
               props.widget.name
             }
+            isRenderInline={true}
           />
         </FormLabel>
         <FormGroup row>
-          {props.whitelist.map((item, index) => (
+          {props.acceptValues.map((item, index) => (
             <FormControlLabel
               key={index}
               control={
@@ -76,14 +83,19 @@ const MultipleInput = (props: MultipleInput) => {
       disableClearable
       size="small"
       value={value}
-      options={props.whitelist}
-      getOptionLabel={(option) => (option as any).toString()}
+      options={props.acceptValues}
+      getOptionLabel={(option: any) => option.toString()}
       disableCloseOnSelect
       onChange={(_event, newValue) => _setValue(newValue)}
       renderInput={(params) => (
         <TextField
           {...params}
           placeholder={props.widget.placeholder}
+          type={
+            props.type === "integer" || props.type === "number"
+              ? "Number"
+              : "text"
+          }
           label={
             <MarkdownDiv
               markdown={
@@ -91,11 +103,21 @@ const MultipleInput = (props: MultipleInput) => {
                 props.widget.schema.title ||
                 props.widget.name
               }
+              isRenderInline={true}
             />
           }
           fullWidth
           required={props.widget.required}
           disabled={props.widget.disabled || props.widget.readonly}
+          onKeyDown={(event) => {
+            if (
+              event.key === "Enter" &&
+              props.acceptNewValues &&
+              "value" in event.target
+            ) {
+              _setValue([...value, event.target.value]);
+            }
+          }}
         />
       )}
       renderTags={(value, getTagProps) => {

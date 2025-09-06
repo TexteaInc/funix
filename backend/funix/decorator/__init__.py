@@ -6,7 +6,7 @@ import ast
 import inspect
 from functools import wraps
 from importlib import import_module
-from inspect import getsource, isgeneratorfunction, signature
+from inspect import getsource, isgeneratorfunction, signature, getsourcelines
 from secrets import token_hex
 from types import ModuleType
 from typing import Callable, Optional, ParamSpec, TypeVar, Union, Literal
@@ -232,8 +232,9 @@ def funix(
     default: bool = False,
     rate_limit: RateLimiter = None,
     reactive: ReactiveType = None,
+    reactive_on: Optional[list[str]] = None,
     print_to_web: bool = False,
-    autorun: AutoRunType = False,
+    auto_run: AutoRunType = False,
     disable: bool = False,
     matplotlib_format: Literal["png", "svg", "agg"] = "svg",
     keep_last: bool = False,
@@ -244,6 +245,7 @@ def funix(
     class_method_qualname: Optional[str] = None,
     order: Optional[int] = None,
     just_run: bool = False,
+    class_line: Optional[int] = None,
 ):
     """
     Decorator for functions to convert them to web apps
@@ -282,8 +284,9 @@ def funix(
         default(bool): whether this function is the default function
         rate_limit(Limiter | list[Limiter]): rate limiters, an object or a list
         reactive(ReactiveType): reactive config
+        reactive_on(list[str]): if set, the function will be reactive on these parameters
         print_to_web(bool): handle all stdout to web
-        autorun(bool): allow users to use continuity runs on the front end
+        auto_run(bool): allow users to use continuity runs on the front end
         disable(bool): disable this function
         matplotlib_format(MatplotFormatType): Matplotlib format
             available formats: "png", "svg", "agg"
@@ -297,6 +300,7 @@ def funix(
         class_method_qualname(str): the qualname of the class method
         order(int): the order of the function
         just_run(bool): just run the function, no input panel for the function
+        class_line(int): the line number of the class
 
     Returns:
         function: the decorated function
@@ -341,6 +345,7 @@ def funix(
             return function
         if __wrapper_enabled:
             function_id = str(uuid4())
+            line = class_line if class_line else getsourcelines(function)[1]
 
             if default:
                 set_default_function(app_.name, function_id)
@@ -499,7 +504,15 @@ def funix(
                 )
 
                 def _function_reactive_update():
-                    return function_reactive_update(reactive_config)
+                    return function_reactive_update(
+                        reactive_config,
+                        app_.name,
+                        (
+                            class_method_qualname
+                            if is_class_method
+                            else function.__qualname__
+                        ),
+                    )
 
                 _function_reactive_update.__name__ = function_name + "_reactive_update"
 
@@ -511,10 +524,10 @@ def funix(
                 app_.post(f"/update/{function_id}")(_function_reactive_update)
                 app_.post(f"/update/{endpoint}")(_function_reactive_update)
 
-            real_autorun = autorun
+            real_autorun = auto_run
 
-            if isinstance(autorun, bool):
-                real_autorun = "disable" if not autorun else "always"
+            if isinstance(auto_run, bool):
+                real_autorun = "disable" if not auto_run else "always"
 
             decorated_functions_list_append(
                 app_.name,
@@ -526,12 +539,14 @@ def funix(
                     "id": function_id,
                     "websocket": need_websocket,
                     "reactive": has_reactive_params,
+                    "reactiveOn": reactive_on,
                     "autorun": real_autorun,
                     "keepLast": keep_last,
                     "width": width if width else ["50%", "50%"],
                     "class": is_class_method,
                     "order": order,
                     "justRun": just_run,
+                    "line": line,
                 },
             )
 
@@ -557,8 +572,10 @@ def funix(
             param_widget_whitelist_callable = {}
             param_widget_example_callable = {}
 
-            cast_to_list_flag, return_type_parsed = parse_function_annotation(
-                function_signature, matplotlib_format != "agg"
+            tuple_in_list, cast_to_list_flag, return_type_parsed = (
+                parse_function_annotation(
+                    function_signature, matplotlib_format != "agg"
+                )
             )
 
             safe_input_layout = [] if not input_layout else input_layout
@@ -693,6 +710,7 @@ def funix(
                 "params": decorated_params,
                 "theme": parsed_theme[4],
                 "return_type": return_type_parsed,
+                "tuple_in_list": tuple_in_list,
                 "description": function_description,
                 "direction": function_direction,
                 "schema": {
@@ -857,12 +875,16 @@ def funix_class(disable: bool = False, menu: Optional[str] = None):
                 if not class_function.startswith("_"):
                     function = getattr(cls, class_function)
                     if callable(function):
+                        line = getsourcelines(function)[1]
                         org_id = id(getattr(type(cls), class_function))
                         if org_id not in class_method_ids_to_params:
                             if GlobalSwitchOption.in_notebook:
-                                funix(app_and_sock=(class_app, class_sock))(function)
+                                funix(
+                                    app_and_sock=(class_app, class_sock),
+                                    class_line=line,
+                                )(function)
                             else:
-                                funix()(function)
+                                funix(class_line=line)(function)
                         else:
                             params = class_method_ids_to_params[org_id]
                             args = params["args"]
@@ -871,11 +893,12 @@ def funix_class(disable: bool = False, menu: Optional[str] = None):
                                 funix(
                                     *args,
                                     **kwargs,
+                                    class_line=line,
                                     app_and_sock=(class_app, class_sock),
                                     jupyter_class=True,
                                 )(function)
                             else:
-                                funix(*args, **kwargs)(function)
+                                funix(class_line=line, *args, **kwargs)(function)
             if GlobalSwitchOption.in_notebook:
                 jupyter(class_app)
             return cls

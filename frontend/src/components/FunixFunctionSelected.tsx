@@ -1,4 +1,3 @@
-import { storeAtom } from "../store";
 import {
   Alert,
   Card,
@@ -11,6 +10,8 @@ import React, { Suspense, useState } from "react";
 import { useAtom } from "jotai";
 import FunixFunction from "./FunixFunction";
 import { useLocation } from "react-router-dom";
+import _ from "lodash";
+import { selectedFunctionAtom } from "../store";
 
 export type FunctionSelectedProps = {
   backend: URL;
@@ -19,7 +20,7 @@ export type FunctionSelectedProps = {
 const FunixFunctionSelected: React.FC<FunctionSelectedProps> = ({
   backend,
 }) => {
-  const [{ selectedFunction }] = useAtom(storeAtom);
+  const [selectedFunction] = useAtom(selectedFunctionAtom);
   const { pathname } = useLocation();
   const pathParams = useState(
     pathname.split("/").filter((value) => value !== ""),
@@ -55,5 +56,5 @@ const FunixFunctionSelected: React.FC<FunctionSelectedProps> = ({
 };
 
 export default React.memo(FunixFunctionSelected, (prevProps, nextProps) => {
-  return prevProps.backend === nextProps.backend;
+  return _.isEqual(prevProps.backend, nextProps.backend);
 });

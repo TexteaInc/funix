@@ -2,6 +2,15 @@
 Layout decorator
 """
 
+from typing import Callable, Any
+
+from funix.decorator.widget import parse_widget
+from funix.hint import InputLayout
+
+pydantic_layout_dict = {}
+pydantic_name_dict = {}
+pydantic_widget_dict = {}
+
 
 def convert_row_item(row_item: dict, item_type: str) -> dict:
     """
@@ -84,3 +93,26 @@ def handle_output_layout(output_layout: list) -> tuple[list, list]:
             row_layout.append(row_item_done)
         return_output_layout.append(row_layout)
     return return_output_layout, return_output_indexes
+
+
+def pydantic_ui(
+    layout: InputLayout | None = None,
+    title: str | None = None,
+    widgets: dict[str, str] = None,
+) -> Callable[[Any], Any]:
+    def decorator(cls):
+        global pydantic_layout_dict
+        global pydantic_name_dict
+        global pydantic_widget_dict
+        if layout:
+            pydantic_layout_dict[id(cls)] = handle_input_layout(layout)
+        if title:
+            pydantic_name_dict[id(cls)] = title
+        if widgets:
+            new_widgets = {}
+            for key, value in widgets.items():
+                new_widgets[key] = parse_widget(value)
+            pydantic_widget_dict[id(cls)] = new_widgets
+        return cls
+
+    return decorator

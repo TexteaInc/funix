@@ -292,6 +292,7 @@ def make_decorated_functions_happy(app_name: str) -> list[dict]:
                     else:
                         i["module"] = None
             new_decorated_functions_list.append(i)
+    new_decorated_functions_list.sort(key=lambda x: x["line"])
     if not GlobalSwitchOption.DISABLE_FUNCTION_LIST_CACHE:
         cached_list_functions[app_name] = new_decorated_functions_list
     return new_decorated_functions_list

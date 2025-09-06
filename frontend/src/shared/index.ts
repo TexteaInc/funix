@@ -29,6 +29,7 @@ export type ReturnType =
   | "List"
   | "Dict"
   | "Callable"
+  | "ChemStr"
   | FunixType
   | null;
 
@@ -78,6 +79,10 @@ export type FunctionPreview = {
    * Is this function has reactive argument
    */
   reactive: boolean;
+  /**
+   * Reactive Dependencies
+   */
+  reactiveOn: string[] | null;
   /**
    * autorun
    */
@@ -173,6 +178,10 @@ export type FunctionDetail = {
    * Function direction
    */
   direction: "row" | "column" | "row-reverse" | "column-reverse";
+  /**
+   * tuple_in_list
+   */
+  tuple_in_list: boolean;
 };
 
 export async function getParam(

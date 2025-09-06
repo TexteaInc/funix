@@ -22,6 +22,7 @@ import {
 import {
   CameraAlt,
   Close,
+  ContentPaste,
   Delete,
   FileUpload,
   KeyboardVoice,
@@ -29,10 +30,10 @@ import {
 } from "@mui/icons-material";
 import OutputMedias from "./OutputComponents/OutputMedias";
 import { useAtom } from "jotai";
-import { storeAtom } from "../../store";
 import { enqueueSnackbar } from "notistack";
 import FunixRecorder from "../../shared/media";
 import { WidgetProps } from "@rjsf/utils";
+import { backHistoryAtom } from "../../store";
 
 interface FileUploadWidgetInterface {
   widget: WidgetProps;
@@ -76,6 +77,42 @@ const base64stringToFile = (base64: string) => {
   });
 };
 
+const compareBase64Arrays = (arr1: string[], arr2: string[]) => {
+  if (arr1.length !== arr2.length) return false;
+  return arr1.every((item, index) => item === arr2[index]);
+};
+
+const isContentSame = async (
+  propsData: any,
+  currentFiles: File[],
+  isMultiple: boolean,
+) => {
+  if (!propsData || currentFiles.length === 0) return false;
+
+  try {
+    if (isMultiple) {
+      if (
+        !Array.isArray(propsData) ||
+        propsData.length !== currentFiles.length
+      ) {
+        return false;
+      }
+      const currentBase64 = await Promise.all(
+        currentFiles.map((file) => fileToBase64(file) as Promise<string>),
+      );
+      return compareBase64Arrays(propsData, currentBase64);
+    } else {
+      if (Array.isArray(propsData) || currentFiles.length !== 1) {
+        return false;
+      }
+      const currentBase64 = (await fileToBase64(currentFiles[0])) as string;
+      return propsData === currentBase64;
+    }
+  } catch (error) {
+    return false;
+  }
+};
+
 const CameraPreviewVideo = () => {
   useLayoutEffect(() => {
     const video = document.getElementById("videoPreview") as HTMLVideoElement;
@@ -95,8 +132,17 @@ const CameraPreviewVideo = () => {
 };
 
 const FileUploadWidget = (props: FileUploadWidgetInterface) => {
-  const [{ backHistory }] = useAtom(storeAtom);
-  const [files, setFiles] = React.useState<File[]>([]);
+  const [backHistory] = useAtom(backHistoryAtom);
+  const [files, setFiles] = React.useState<File[]>(() => {
+    if (props.data !== null && typeof props.data !== "undefined") {
+      if (props.multiple) {
+        return (props.data as string[]).map((data) => base64stringToFile(data));
+      } else {
+        return [base64stringToFile(props.data)];
+      }
+    }
+    return [];
+  });
   const [open, setOpen] = React.useState(false);
   const [cameraOpen, setCameraOpen] = React.useState(false);
   const [preview, setPreview] = React.useState<File | null>(null);
@@ -107,6 +153,89 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
   const [update, setUpdate] = React.useState(new Date().getTime());
   const supportMediaDevices = navigator.mediaDevices !== undefined;
   const funixRecorder = new FunixRecorder();
+
+  const handleClipboardPaste = useCallback(async () => {
+    try {
+      const items = await navigator.clipboard.read();
+      const supportedFiles: File[] = [];
+
+      for (const item of items) {
+        for (const type of item.types) {
+          let isSupported = false;
+
+          switch (props.supportType) {
+            case "image":
+              isSupported = type.startsWith("image/");
+              break;
+            case "audio":
+              isSupported = type.startsWith("audio/");
+              break;
+            case "video":
+              isSupported = type.startsWith("video/");
+              break;
+            case "file":
+              isSupported = true;
+              break;
+          }
+
+          if (isSupported) {
+            const blob = await item.getType(type);
+            const extension = type.split("/")[1] || "bin";
+            const file = new File([blob], `pasted-${Date.now()}.${extension}`, {
+              type,
+            });
+            supportedFiles.push(file);
+          }
+        }
+      }
+
+      if (supportedFiles.length === 0) {
+        enqueueSnackbar("No supported files found in clipboard", {
+          variant: "info",
+        });
+        return;
+      }
+
+      if (props.multiple) {
+        if (files.length + supportedFiles.length > 5) {
+          enqueueSnackbar(
+            "Files are limited to 5, use WebAPI to call this function",
+            { variant: "warning" },
+          );
+        } else {
+          setFiles([...files, ...supportedFiles]);
+        }
+      } else {
+        setFiles([supportedFiles[0]]);
+      }
+    } catch (error) {
+      console.error("Error reading clipboard:", error);
+      enqueueSnackbar("Failed to access clipboard", {
+        variant: "error",
+      });
+    }
+  }, [props.supportType, props.multiple, files]);
+
+  // useEffect(() => {
+  //   const handleKeyDown = (event: KeyboardEvent) => {
+  //     if ((event.ctrlKey || event.metaKey) && event.key === "v") {
+  //       const target = event.target as HTMLElement;
+  //       if (
+  //         target.tagName !== "INPUT" &&
+  //         target.tagName !== "TEXTAREA" &&
+  //         !target.isContentEditable
+  //       ) {
+  //         event.preventDefault();
+  //         handleClipboardPaste();
+  //       }
+  //     }
+  //   };
+
+  //   document.addEventListener("keydown", handleKeyDown);
+  //   return () => {
+  //     document.removeEventListener("keydown", handleKeyDown);
+  //   };
+  // }, [handleClipboardPaste]);
 
   let dropzoneConfig: DropzoneOptions = !props.multiple
     ? { multiple: false, maxFiles: 1, maxSize: 1024 * 1024 * 15 }
@@ -218,6 +347,22 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
   //     setFiles(newFiles);
   //   }
   // });
+
+  useEffect(() => {
+    if (props.data !== null && typeof props.data !== "undefined") {
+      isContentSame(props.data, files, props.multiple).then((isSame) => {
+        if (!isSame) {
+          if (props.multiple) {
+            setFiles(
+              (props.data as string[]).map((data) => base64stringToFile(data)),
+            );
+          } else {
+            setFiles([base64stringToFile(props.data)]);
+          }
+        }
+      });
+    }
+  }, [props.data]);
 
   const removeFile = (index: number) => {
     const newFiles = [...files];
@@ -398,7 +543,7 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
             <Typography variant="caption">
               {files.length} {fileString} selected
             </Typography>
-            <Stack direction="row" spacing={2}>
+            <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap" }}>
               <Button
                 color="primary"
                 startIcon={<CameraAlt />}
@@ -438,6 +583,17 @@ const FileUploadWidget = (props: FileUploadWidgetInterface) => {
                 }}
               >
                 {audioRecoding ? "Stop" : "Microphone"}
+              </Button>
+              <Button
+                startIcon={<ContentPaste />}
+                color="primary"
+                size="small"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handleClipboardPaste();
+                }}
+              >
+                Paste
               </Button>
             </Stack>
             <br />

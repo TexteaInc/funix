@@ -203,11 +203,15 @@ class RuntimeClassVisitor(NodeVisitor):
             keyword(
                 arg="menu",
                 value=Constant(
-                    value=self.menu
-                    if self.menu
-                    else self._cls_name.replace("_", " ")
-                    if GlobalSwitchOption.AUTO_CONVERT_UNDERSCORE_TO_SPACE_IN_NAME
-                    else self._cls_name
+                    value=(
+                        self.menu
+                        if self.menu
+                        else (
+                            self._cls_name.replace("_", " ")
+                            if GlobalSwitchOption.AUTO_CONVERT_UNDERSCORE_TO_SPACE_IN_NAME
+                            else self._cls_name
+                        )
+                    )
                 ),
             )
         )
@@ -231,6 +235,13 @@ class RuntimeClassVisitor(NodeVisitor):
             keyword(
                 arg="order",
                 value=Constant(value=self.number_tracker),
+            )
+        )
+
+        funix_decorator.keywords.append(
+            keyword(
+                arg="class_line",
+                value=Constant(value=node.lineno if hasattr(node, "lineno") else 0),
             )
         )
 

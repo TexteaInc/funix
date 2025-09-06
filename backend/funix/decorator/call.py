@@ -17,6 +17,7 @@ from funix.decorator.limit import Limiter, global_rate_limiters
 from funix.decorator.magic import anal_function_result
 from funix.decorator.param import get_dataframe_parse_metadata, get_parse_type_metadata
 from funix.decorator.pre_fill import get_pre_fill_metadata
+from funix.decorator.response import response_item_to_class
 from funix.decorator.secret import get_secret_by_id
 from funix.hint import PreFillEmpty, WrapperException
 from funix.session import set_global_variable
@@ -133,13 +134,9 @@ def funix_call(
                 function_id
             ].items():
                 if func_arg in function_kwargs:
-                    try:
-                        function_kwargs[func_arg] = func_arg_type_class(
-                            function_kwargs[func_arg]
-                        )
-                    except:
-                        # Oh, my `typing`
-                        continue
+                    function_kwargs[func_arg] = response_item_to_class(
+                        function_kwargs[func_arg], func_arg_type_class
+                    )
 
         def original_result_to_pre_fill_metadata(
             function_id_int: int,

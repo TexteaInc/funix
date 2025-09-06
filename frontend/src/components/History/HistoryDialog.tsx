@@ -45,7 +45,6 @@ import {
 } from "@mui/lab";
 import { exportHistories, exportHistory, PostCallResponse } from "../../shared";
 import { useAtom } from "jotai";
-import { storeAtom } from "../../store";
 import {
   FunixHistoryStepper,
   getHistoryInfo,
@@ -54,6 +53,7 @@ import {
   HistoryEnum,
 } from "./HistoryUtils";
 import ThemeReactJson from "../Common/ThemeReactJson";
+import { backHistoryAtom, functionsAtom, historiesAtom } from "../../store";
 
 // const rewindHistory = async (
 //   histories: History[],
@@ -103,11 +103,12 @@ const HistoryDialog = (props: {
   open: boolean;
   setOpen: (open: boolean) => void;
 }) => {
-  const [{ histories }] = useAtom(storeAtom);
+  const [histories] = useAtom(historiesAtom);
+  const [functions] = useAtom(functionsAtom);
+  const [, setBackHistory] = useAtom(backHistoryAtom);
 
   const { clearHistory, removeHistory, setHistoryNameAndPath } =
     useFunixHistory();
-  const [{ functions }, setStore] = useAtom(storeAtom);
   const [isAscending, setAscending] = React.useState(true);
   const [clearDialogOpen, setClearDialogOpen] = React.useState(false);
   const [selectedHistory, setSelectedHistory] = React.useState<History | null>(
@@ -125,10 +126,7 @@ const HistoryDialog = (props: {
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
   const backHistory = (history: History) => {
-    setStore((store) => ({
-      ...store,
-      backHistory: history,
-    }));
+    setBackHistory(history);
     props.setOpen(false);
   };
 

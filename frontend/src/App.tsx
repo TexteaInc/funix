@@ -31,6 +31,7 @@ import {
 } from "@mui/material";
 import FunixFunctionList from "./components/FunixFunctionList";
 import FunixFunctionSelected from "./components/FunixFunctionSelected";
+import FunixTabBar from "./components/FunixTabBar";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowBack,
@@ -46,8 +47,7 @@ import {
   Sick,
   Token,
 } from "@mui/icons-material";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { storeAtom } from "./store";
+import React, { useCallback, useEffect, useState } from "react";
 import { useAtom } from "jotai";
 import { getList } from "./shared";
 import { SiDiscord } from "@icons-pack/react-simple-icons";
@@ -56,11 +56,26 @@ import MuiPaper, { PaperProps as MuiPaperProps } from "@mui/material/Paper";
 import HistoryDialog from "./components/History/HistoryDialog";
 import HistoryList from "./components/History/HistoryList";
 import InlineBox from "./components/Common/InlineBox";
-import useFunixHistory from "./shared/useFunixHistory";
-import { getCookie, setCookie } from "typescript-cookie";
-import MarkdownDiv from "./components/Common/MarkdownDiv";
 import { useSnackbar } from "notistack";
-import TemplateString from "./components/Common/TemplateString";
+import {
+  stringTemplate,
+  TemplateString,
+} from "./components/Common/TemplateString";
+import PrivacyDialog from "./components/PrivacyDialog";
+import {
+  appSecretAtom,
+  backendAtom,
+  functionsAtom,
+  functionSecretAtom,
+  saveHistoryAtom,
+  selectedFunctionAtom,
+  showFunctionDetailAtom,
+  themeAtom,
+} from "./store";
+import HistoryLoader from "./components/History/HistoryLoader";
+import mergeTheme from "./shared/theme";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
 const drawerWidth = 240;
 
@@ -202,19 +217,17 @@ const DrawerHeader = styled("div")(({ theme }) => ({
 
 const App = () => {
   const navigate = useNavigate();
-  const [
-    {
-      theme,
-      showFunctionDetail,
-      selectedFunction,
-      functionSecret,
-      saveHistory,
-      appSecret,
-      functions,
-    },
-    setStore,
-  ] = useAtom(storeAtom);
-  const { getHistories } = useFunixHistory();
+  const [selectedFunction] = useAtom(selectedFunctionAtom);
+  const [theme] = useAtom(themeAtom);
+  const [functions] = useAtom(functionsAtom);
+  const [functionSecret] = useAtom(functionSecretAtom);
+  const [appSecret, setAppSecret] = useAtom(appSecretAtom);
+  const [, setBackendStore] = useAtom(backendAtom);
+  const [, setFunctionSecretStore] = useAtom(functionSecretAtom);
+  const [showFunctionDetail, setShowFunctionDetail] = useAtom(
+    showFunctionDetailAtom,
+  );
+  const [saveHistory, setSaveHistory] = useAtom(saveHistoryAtom);
 
   const funixBackend: string | undefined = process.env.REACT_APP_FUNIX_BACKEND;
   const selectedFunctionSecret: string | null = selectedFunction?.secret
@@ -223,30 +236,23 @@ const App = () => {
       : appSecret
     : null;
   const [backend, setBackend] = useState(funixBackend);
-  const [logLevel, setLogLevel] = useState(0);
   const [backendURL, setBackendURL] = useState<URL | undefined>(
     backend ? new URL(backend) : undefined,
   );
   const [tempBackend, setTempBackend] = useState(backend);
-  const [privacy, setPrivacy] = useState(false);
   const [tempSecret, setTempSecret] = useState(selectedFunctionSecret);
   const [open, setOpen] = useState(false);
   const [tokenOpen, setTokenOpen] = useState(false);
   const [sideBarOpen, setSideBarOpen] = useState(() => {
     return functions !== null && functions.length > 1;
   }); // By default
-  const functionLock = useRef(false);
   const [historySideBarOpen, setHistorySideBarOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [tempAppSecret, setTempAppSecret] = useState(appSecret);
   const [functionListWidth, setFunctionListWidth] = useState(drawerWidth);
   const [onResizing, setOnResizing] = useState(false);
-  const historyLoaded = useRef<boolean>(false);
-  const [privacyText, setPrivacyText] = useState("");
-  const [lastPrivacyHash, setLastPrivacyHash] = useState("");
   const [shareOpen, setShareOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState(window.location.href);
-  const privacyDone = useRef(false);
 
   const { enqueueSnackbar } = useSnackbar();
 
@@ -286,76 +292,33 @@ const App = () => {
       });
   }, [window.location.origin]);
 
-  useEffect(() => {
-    if (functions !== null && !functionLock.current) {
-      setSideBarOpen(functions.length > 1);
-      functionLock.current = true;
-    }
-  }, [functions]);
+  const isTabBarMode = theme?.funix_nest === true;
 
   useEffect(() => {
-    if (historyLoaded.current) {
-      return;
+    if (functions !== null) {
+      setSideBarOpen(!isTabBarMode && functions.length > 1);
     }
-    getHistories().then((histories) => {
-      setStore((store) => ({
-        ...store,
-        histories,
-      }));
-    });
-  }, [historyLoaded]);
+  }, [functions, isTabBarMode]);
 
-  window.addEventListener("funix-history-update", () => {
-    getHistories().then((histories) => {
-      setStore((store) => ({
-        ...store,
-        histories,
-      }));
-    });
-  });
+  useEffect(() => {
+    if (theme !== undefined && theme !== null) {
+      document.title = stringTemplate(theme.funix_title || "{{org}}", {
+        org: selectedFunction?.name || "Funix",
+        functionName: selectedFunction?.name || "No name",
+        functionPath: selectedFunction?.path || "No path",
+        functionId: selectedFunction?.id || "No id",
+        functionHasSecret: selectedFunction?.secret ? "Yes" : "No",
+      });
+    }
+  }, [theme, selectedFunction]);
 
   useEffect(() => {
     if (typeof backendURL === "undefined") return;
-    setStore((store) => {
-      return {
-        ...store,
-        backend: backendURL,
-      };
-    });
-
-    if (!privacyDone.current) {
-      fetch(new URL("/privacy", backendURL), {
-        method: "GET",
-      })
-        .then((body) => {
-          return body.json();
-        })
-        .then((json: { text: string; log_level: number; hash: string }) => {
-          if (json.log_level !== 0) {
-            setPrivacyText(json.text);
-            setLogLevel(json.log_level);
-            setLastPrivacyHash(json.hash);
-
-            if (localStorage.getItem("privacy-hash") !== json.hash) {
-              setPrivacy(true);
-            } else {
-              setPrivacy(
-                json.log_level === 0
-                  ? false
-                  : getCookie("first-join") === undefined,
-              );
-            }
-          }
-          privacyDone.current = true;
-        })
-        .catch(() => {
-          console.warn("No privacy text!");
-        });
-    }
+    setBackendStore(backendURL);
   }, [backendURL]);
 
   useEffect(() => {
-    document.body.addEventListener("click", (event) => {
+    const handleClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       if (target !== null && target.tagName === "A") {
         const href = target.getAttribute("href");
@@ -364,7 +327,11 @@ const App = () => {
           navigate(href);
         }
       }
-    });
+    };
+    document.body.addEventListener("click", handleClick);
+    return () => {
+      document.body.removeEventListener("click", handleClick);
+    };
   }, []);
 
   const checkURL = (url: string | undefined): boolean => {
@@ -378,474 +345,493 @@ const App = () => {
   };
 
   return (
-    <ThemeProvider theme={createTheme(theme || undefined)}>
-      <CssBaseline />
-      <HistoryDialog open={historyOpen} setOpen={setHistoryOpen} />
-      <Dialog open={privacy} fullWidth maxWidth="lg">
-        <DialogTitle>Welcome to Funix</DialogTitle>
-        <DialogContent>
-          <MarkdownDiv markdown={privacyText} isRenderInline={false} />
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => {
-              logLevel === 1
-                ? setCookie("DO_NOT_LOG_ME", "YES")
-                : (window.location.href = "http://funix.io");
-              localStorage.setItem("privacy-hash", lastPrivacyHash);
-              setCookie("first-join", "false", { expires: 365 * 10 });
-              setPrivacy(false);
-            }}
-          >
-            Do not track me
-          </Button>
-          <Button
-            onClick={() => {
-              setCookie("first-join", "false", { expires: 365 * 10 });
-              setPrivacy(false);
-              localStorage.setItem("privacy-hash", lastPrivacyHash);
-            }}
-          >
-            Agree
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog
-        open={tokenOpen}
-        onClose={() => setTokenOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Secret Token</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Secret Token"
-            onChange={(e) => setTempSecret(e.target.value)}
-            value={tempSecret}
+    <ThemeProvider theme={createTheme(mergeTheme(theme || undefined))}>
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <HistoryLoader>
+          <CssBaseline />
+          <HistoryDialog open={historyOpen} setOpen={setHistoryOpen} />
+          <PrivacyDialog backend={backendURL} />
+          <Dialog
+            open={tokenOpen}
+            onClose={() => setTokenOpen(false)}
+            maxWidth="sm"
             fullWidth
-            variant="standard"
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => {
-              setTempSecret(selectedFunctionSecret);
-              setTokenOpen(false);
-            }}
           >
-            Cancel
-          </Button>
-          <Button
-            onClick={() => {
-              if (selectedFunction) {
-                setStore((store) => ({
-                  ...store,
-                  functionSecret: {
-                    ...store.functionSecret,
-                    [selectedFunction.path]: tempSecret,
-                  },
-                }));
-              }
-              setTokenOpen(false);
-            }}
-          >
-            Confirm
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog
-        open={shareOpen}
-        onClose={() => setShareOpen(false)}
-        fullWidth
-        maxWidth="md"
-      >
-        <DialogTitle>Share</DialogTitle>
-        <DialogContent>
-          <TextField
-            margin="dense"
-            label="URL"
+            <DialogTitle>Secret Token</DialogTitle>
+            <DialogContent>
+              <TextField
+                autoFocus
+                margin="dense"
+                label="Secret Token"
+                onChange={(e) => setTempSecret(e.target.value)}
+                value={tempSecret}
+                fullWidth
+                variant="standard"
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button
+                onClick={() => {
+                  setTempSecret(selectedFunctionSecret);
+                  setTokenOpen(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  if (selectedFunction) {
+                    setFunctionSecretStore((store) => ({
+                      ...store,
+                      [selectedFunction.path]: tempSecret,
+                    }));
+                  }
+                  setTokenOpen(false);
+                }}
+              >
+                Confirm
+              </Button>
+            </DialogActions>
+          </Dialog>
+          <Dialog
+            open={shareOpen}
+            onClose={() => setShareOpen(false)}
             fullWidth
-            variant="outlined"
-            value={shareUrl}
-            onChange={(e) => setShareUrl(e.target.value)}
-            error={!checkURL(shareUrl)}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
+            maxWidth="md"
+          >
+            <DialogTitle>Share</DialogTitle>
+            <DialogContent>
+              <TextField
+                margin="dense"
+                label="URL"
+                fullWidth
+                variant="outlined"
+                value={shareUrl}
+                onChange={(e) => setShareUrl(e.target.value)}
+                error={!checkURL(shareUrl)}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        edge="end"
+                        onClick={() => {
+                          navigator.clipboard.writeText(shareUrl).then(() => {
+                            enqueueSnackbar("Copied URL", {
+                              variant: "success",
+                            });
+                          });
+                        }}
+                      >
+                        <ContentCopy />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <Button
+                color="primary"
+                startIcon={<Code />}
+                onClick={() => {
+                  navigator.clipboard
+                    .writeText(
+                      `<iframe src="${shareUrl}" width="100%" height="100%" style="border: none"></iframe>`,
+                    )
+                    .then(() => {
+                      enqueueSnackbar("Copied iframe", { variant: "success" });
+                    });
+                }}
+              >
+                Copy Iframe
+              </Button>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setShareOpen(false)}>Close</Button>
+            </DialogActions>
+          </Dialog>
+          <Dialog open={open} onClose={() => setOpen(false)}>
+            <DialogTitle>Settings</DialogTitle>
+            <DialogContent>
+              <TextField
+                margin="dense"
+                label="Backend URL"
+                fullWidth
+                variant="standard"
+                onChange={(e) => setTempBackend(e.target.value)}
+                value={tempBackend}
+                error={!checkURL(tempBackend)}
+              />
+              <TextField
+                margin="dense"
+                label="All pages secret (for this app)"
+                fullWidth
+                variant="standard"
+                onChange={(e) => setTempAppSecret(e.target.value)}
+                value={tempAppSecret}
+              />
+              <FormGroup>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={showFunctionDetail}
+                      onChange={(event) => {
+                        const value = event.target.checked;
+                        localStorage.setItem(
+                          "showFunctionDetail",
+                          value.toString(),
+                        );
+                        setShowFunctionDetail(value);
+                      }}
+                    />
+                  }
+                  label="Show function detail"
+                />
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={saveHistory}
+                      onChange={(event) => {
+                        const value = event.target.checked;
+                        localStorage.setItem("saveHistory", value.toString());
+                        setSaveHistory(value);
+                      }}
+                    />
+                  }
+                  label="Save history"
+                />
+              </FormGroup>
+            </DialogContent>
+            <DialogActions>
+              <Button
+                onClick={() => {
+                  setTempBackend(backend);
+                  setTempAppSecret(appSecret);
+                  setOpen(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  navigate("/");
+                  setBackend(tempBackend);
+                  setAppSecret(tempAppSecret);
+                  setOpen(false);
+                }}
+                disabled={!checkURL(tempBackend)}
+              >
+                Confirm
+              </Button>
+            </DialogActions>
+          </Dialog>
+          {!isTabBarMode ? (
+            <AppBar
+              position="fixed"
+              leftOpen={sideBarOpen}
+              rightOpen={historySideBarOpen}
+              functionListWidth={functionListWidth}
+            >
+              <Toolbar>
+                {functions !== null &&
+                  functions?.length > 1 &&
+                  !isTabBarMode && (
+                    <IconButton
+                      color="inherit"
+                      size="large"
+                      onClick={() => setSideBarOpen(true)}
+                      sx={{ mr: 2, ...(sideBarOpen && { display: "none" }) }}
+                      edge="start"
+                    >
+                      {theme?.direction === "ltr" ? (
+                        <ArrowBack />
+                      ) : (
+                        <ArrowForward />
+                      )}
+                    </IconButton>
+                  )}
+                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                  <TemplateString
+                    template={theme?.funix_header || "{{org}}"}
+                    records={{
+                      org: selectedFunction?.name || "Funix",
+                      functionName: selectedFunction?.name || "No name",
+                      functionPath: selectedFunction?.path || "No path",
+                      functionId: selectedFunction?.id || "No id",
+                      functionHasSecret: selectedFunction?.secret
+                        ? "Yes"
+                        : "No",
+                      functionHasWebsocket: selectedFunction?.websocket
+                        ? "Yes"
+                        : "No",
+                      functionModule: selectedFunction?.module || "No module",
+                    }}
+                  />
+                </Typography>
+                {selectedFunction && selectedFunction.secret && (
                   <IconButton
+                    size="large"
+                    color="inherit"
                     edge="end"
                     onClick={() => {
-                      navigator.clipboard.writeText(shareUrl).then(() => {
-                        enqueueSnackbar("Copied URL", { variant: "success" });
-                      });
+                      setTempSecret(selectedFunctionSecret);
+                      setTokenOpen(true);
                     }}
                   >
-                    <ContentCopy />
+                    <Token />
                   </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
-          <Button
-            color="primary"
-            startIcon={<Code />}
-            onClick={() => {
-              navigator.clipboard
-                .writeText(
-                  `<iframe src="${shareUrl}" width="100%" height="100%" style="border: none"></iframe>`,
-                )
-                .then(() => {
-                  enqueueSnackbar("Copied iframe", { variant: "success" });
-                });
-            }}
-          >
-            Copy Iframe
-          </Button>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShareOpen(false)}>Close</Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>Settings</DialogTitle>
-        <DialogContent>
-          <TextField
-            margin="dense"
-            label="Backend URL"
-            fullWidth
-            variant="standard"
-            onChange={(e) => setTempBackend(e.target.value)}
-            value={tempBackend}
-            error={!checkURL(tempBackend)}
-          />
-          <TextField
-            margin="dense"
-            label="All pages secret (for this app)"
-            fullWidth
-            variant="standard"
-            onChange={(e) => setTempAppSecret(e.target.value)}
-            value={tempAppSecret}
-          />
-          <FormGroup>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={showFunctionDetail}
-                  onChange={(event) => {
-                    const value = event.target.checked;
-                    localStorage.setItem(
-                      "showFunctionDetail",
-                      value.toString(),
-                    );
-                    setStore((store) => ({
-                      ...store,
-                      showFunctionDetail: value,
-                    }));
+                )}
+                <IconButton
+                  size="large"
+                  color="inherit"
+                  edge="end"
+                  onClick={() => setHistoryOpen(true)}
+                >
+                  <History />
+                </IconButton>
+                <IconButton
+                  size="large"
+                  color="inherit"
+                  edge="end"
+                  onClick={() =>
+                    setHistorySideBarOpen((prevState) => !prevState)
+                  }
+                >
+                  <EventNote />
+                </IconButton>
+                <IconButton
+                  size="large"
+                  color="inherit"
+                  edge="end"
+                  onClick={() => {
+                    setShareOpen(true);
+                    setShareUrl(window.location.href);
                   }}
-                />
-              }
-              label="Show function detail"
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={saveHistory}
-                  onChange={(event) => {
-                    const value = event.target.checked;
-                    localStorage.setItem("saveHistory", value.toString());
-                    setStore((store) => ({
-                      ...store,
-                      saveHistory: value,
-                    }));
-                  }}
-                />
-              }
-              label="Save history"
-            />
-          </FormGroup>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => {
-              setTempBackend(backend);
-              setTempAppSecret(appSecret);
-              setOpen(false);
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={() => {
-              navigate("/");
-              setBackend(tempBackend);
-              setStore((store) => ({
-                ...store,
-                appSecret: tempAppSecret,
-              }));
-              setOpen(false);
-            }}
-            disabled={!checkURL(tempBackend)}
-          >
-            Confirm
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <AppBar
-        position="fixed"
-        leftOpen={sideBarOpen}
-        rightOpen={historySideBarOpen}
-        functionListWidth={functionListWidth}
-      >
-        <Toolbar>
-          {functions !== null && functions?.length > 1 && (
-            <IconButton
-              color="inherit"
-              size="large"
-              onClick={() => setSideBarOpen(true)}
-              sx={{ mr: 2, ...(sideBarOpen && { display: "none" }) }}
-              edge="start"
-            >
-              {theme?.direction === "ltr" ? <ArrowBack /> : <ArrowForward />}
-            </IconButton>
-          )}
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            <TemplateString
-              template={theme?.funix_header || "{{org}}"}
-              records={{
-                org: selectedFunction?.name || "Funix",
-                functionName: selectedFunction?.name || "No name",
-                functionPath: selectedFunction?.path || "No path",
-                functionId: selectedFunction?.id || "No id",
-                functionHasSecret: selectedFunction?.secret ? "Yes" : "No",
-                functionHasWebsocket: selectedFunction?.websocket
-                  ? "Yes"
-                  : "No",
-                functionModule: selectedFunction?.module || "No module",
-              }}
-            />
-          </Typography>
-          {selectedFunction && selectedFunction.secret && (
-            <IconButton
-              size="large"
-              color="inherit"
-              edge="end"
-              onClick={() => {
-                setTempSecret(selectedFunctionSecret);
-                setTokenOpen(true);
-              }}
-            >
-              <Token />
-            </IconButton>
-          )}
-          <IconButton
-            size="large"
-            color="inherit"
-            edge="end"
-            onClick={() => setHistoryOpen(true)}
-          >
-            <History />
-          </IconButton>
-          <IconButton
-            size="large"
-            color="inherit"
-            edge="end"
-            onClick={() => setHistorySideBarOpen((prevState) => !prevState)}
-          >
-            <EventNote />
-          </IconButton>
-          <IconButton
-            size="large"
-            color="inherit"
-            edge="end"
-            onClick={() => {
-              setShareOpen(true);
-              setShareUrl(window.location.href);
-            }}
-          >
-            <Share />
-          </IconButton>
-          <IconButton
-            size="large"
-            onClick={() => setOpen(true)}
-            color="inherit"
-            edge="end"
-          >
-            <Settings />
-          </IconButton>
-        </Toolbar>
-      </AppBar>
-      <Drawer
-        sx={{
-          width: functionListWidth,
-          flexShrink: 0,
-          "& .MuiDrawer-paper": {
-            width: functionListWidth,
-            boxSizing: "border-box",
-          },
-        }}
-        variant="persistent"
-        anchor="left"
-        open={sideBarOpen}
-        ModalProps={{
-          keepMounted: true,
-        }}
-      >
-        <DrawerHeader>
-          <ListItem>
-            <ListItemIcon>
-              <Functions />
-            </ListItemIcon>
-            <ListItemText primary="Choose" />
-          </ListItem>
-          <IconButton onClick={() => setSideBarOpen(false)}>
-            {theme?.direction === "ltr" ? <ArrowForward /> : <ArrowBack />}
-          </IconButton>
-        </DrawerHeader>
-        <Divider />
-        {backendURL ? (
-          <FunixFunctionList backend={backendURL} />
-        ) : (
-          <List>
-            <ListItem>
-              <ListItemIcon>
-                <Sick />
-              </ListItemIcon>
-              <ListItemText primary="No backend server" />
-            </ListItem>
-          </List>
-        )}
-        <Box
-          component="div"
-          sx={{
-            width: ".75rem",
-            height: "100%",
-            margin: "0 auto",
-            backgroundColor: (theme) =>
-              `${theme.palette.mode === "dark" && onResizing && "grey.900"}`,
-            "&:hover": {
-              backgroundColor: (theme) =>
-                `${theme.palette.mode === "dark" ? "grey.900" : "grey.100"}`,
-              cursor: "ew-resize",
-            },
-            position: "absolute",
-            top: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 100,
-          }}
-          onMouseDown={handlePointerDownLeftSidebar}
-          onContextMenu={(event) => {
-            event.preventDefault();
-            setFunctionListWidth(drawerWidth);
-          }}
-        />
-      </Drawer>
-      <Main
-        leftOpen={sideBarOpen}
-        rightOpen={historySideBarOpen}
-        functionListWidth={functionListWidth}
-      >
-        <Container sx={{ paddingTop: 10, paddingBottom: 8 }} maxWidth={false}>
-          {backendURL ? (
-            <Stack
-              spacing={2}
-              sx={{ width: "100%", margin: "0 auto" }}
-              id="funix-stack"
-            >
-              <FunixFunctionSelected backend={backendURL} />
-            </Stack>
+                >
+                  <Share />
+                </IconButton>
+                <IconButton
+                  size="large"
+                  onClick={() => setOpen(true)}
+                  color="inherit"
+                  edge="end"
+                >
+                  <Settings />
+                </IconButton>
+              </Toolbar>
+            </AppBar>
           ) : (
-            <Alert severity="error">
-              <AlertTitle>No backend server</AlertTitle>
-              <InlineBox>
-                Please use
-                <code>python -m funix [module]</code>
-                to start frontend server or click
-                <Settings />
-                to set backend server.
-              </InlineBox>
-            </Alert>
-          )}
-        </Container>
-        <TransitionFooter
-          leftOpen={sideBarOpen}
-          rightOpen={historySideBarOpen}
-          functionListWidth={functionListWidth}
-        >
-          <Container maxWidth={false}>
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-              alignItems="center"
-              spacing={2}
+            <Box
+              sx={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                zIndex: (theme) => theme.zIndex.appBar,
+              }}
             >
-              <Typography variant="body2">
-                <TemplateString
-                  template={theme?.funix_footer || "{{org}}"}
-                  records={{
-                    org: [
-                      "Powered by ",
-                      <Link href="http://funix.io">Funix.io</Link>,
-                      ", the laziest way to build apps in Python - lazier than Streamlit or Gradio.",
-                    ],
-                    year: new Date().getFullYear().toString(),
-                    funixLink: <Link href="http://funix.io">Funix.io</Link>,
-                  }}
+              {backendURL && (
+                <FunixTabBar
+                  backend={backendURL}
+                  onHistoryOpen={() => setHistoryOpen(true)}
+                  onHistorySideBarToggle={() =>
+                    setHistorySideBarOpen((prevState) => !prevState)
+                  }
+                  sideBarOpen={sideBarOpen}
+                  onSideBarToggle={() => setSideBarOpen(true)}
+                  functions={functions}
                 />
-              </Typography>
-              <Box>
-                {theme?.funix_disable_footer_icons !== true ? (
-                  <>
-                    <Link href="https://github.com/TexteaInc/funix">
-                      <IconButton>
-                        <GitHub />
-                      </IconButton>
-                    </Link>
-                    <Link href="https://discord.gg/sxHQE3mvuZ">
-                      <IconButton>
-                        <SiDiscord />
-                      </IconButton>
-                    </Link>
-                  </>
-                ) : null}
-                {/* <Link href="https://twitter.com/texteaInc">
+              )}
+            </Box>
+          )}
+          {!isTabBarMode && (
+            <Drawer
+              sx={{
+                width: functionListWidth,
+                flexShrink: 0,
+                "& .MuiDrawer-paper": {
+                  width: functionListWidth,
+                  boxSizing: "border-box",
+                },
+              }}
+              variant="persistent"
+              anchor="left"
+              open={sideBarOpen}
+              ModalProps={{
+                keepMounted: true,
+              }}
+            >
+              <DrawerHeader>
+                <ListItem>
+                  <ListItemIcon>
+                    <Functions />
+                  </ListItemIcon>
+                  <ListItemText primary="Choose" />
+                </ListItem>
+                <IconButton onClick={() => setSideBarOpen(false)}>
+                  {theme?.direction === "ltr" ? (
+                    <ArrowForward />
+                  ) : (
+                    <ArrowBack />
+                  )}
+                </IconButton>
+              </DrawerHeader>
+              <Divider />
+              {backendURL ? (
+                <FunixFunctionList backend={backendURL} />
+              ) : (
+                <List>
+                  <ListItem>
+                    <ListItemIcon>
+                      <Sick />
+                    </ListItemIcon>
+                    <ListItemText primary="No backend server" />
+                  </ListItem>
+                </List>
+              )}
+              <Box
+                component="div"
+                sx={{
+                  width: ".75rem",
+                  height: "100%",
+                  margin: "0 auto",
+                  backgroundColor: (theme) =>
+                    `${theme.palette.mode === "dark" && onResizing && "grey.900"}`,
+                  "&:hover": {
+                    backgroundColor: (theme) =>
+                      `${theme.palette.mode === "dark" ? "grey.900" : "grey.100"}`,
+                    cursor: "ew-resize",
+                  },
+                  position: "absolute",
+                  top: 0,
+                  right: 0,
+                  bottom: 0,
+                  zIndex: 100,
+                }}
+                onMouseDown={handlePointerDownLeftSidebar}
+                onContextMenu={(event) => {
+                  event.preventDefault();
+                  setFunctionListWidth(drawerWidth);
+                }}
+              />
+            </Drawer>
+          )}
+          <Main
+            leftOpen={!isTabBarMode && sideBarOpen}
+            rightOpen={historySideBarOpen}
+            functionListWidth={functionListWidth}
+          >
+            <Container
+              sx={{
+                paddingTop: 10,
+                paddingBottom: 8,
+              }}
+              maxWidth={false}
+            >
+              {backendURL ? (
+                <Stack
+                  spacing={2}
+                  sx={{ width: "100%", margin: "0 auto" }}
+                  id="funix-stack"
+                >
+                  <FunixFunctionSelected backend={backendURL} />
+                </Stack>
+              ) : (
+                <Alert severity="error">
+                  <AlertTitle>No backend server</AlertTitle>
+                  <InlineBox>
+                    Please use
+                    <code>python -m funix [module]</code>
+                    to start frontend server or click
+                    <Settings />
+                    to set backend server.
+                  </InlineBox>
+                </Alert>
+              )}
+            </Container>
+            <TransitionFooter
+              leftOpen={!isTabBarMode && sideBarOpen}
+              rightOpen={historySideBarOpen}
+              functionListWidth={functionListWidth}
+            >
+              <Container maxWidth={false}>
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  spacing={2}
+                >
+                  <Typography variant="body2">
+                    <TemplateString
+                      template={theme?.funix_footer || "{{org}}"}
+                      records={{
+                        org: [
+                          "This app is automatically generated by ",
+                          <Link href="https://funix.io">Funix.io</Link>,
+                          ", the laziest way to build apps in Python - lazier than Streamlit or Gradio.",
+                        ],
+                        year: new Date().getFullYear().toString(),
+                        funixLink: (
+                          <Link href="https://funix.io">Funix.io</Link>
+                        ),
+                      }}
+                    />
+                  </Typography>
+                  <Box>
+                    {theme?.funix_disable_footer_icons !== true ? (
+                      <>
+                        <Link href="https://github.com/TexteaInc/funix">
+                          <IconButton>
+                            <GitHub />
+                          </IconButton>
+                        </Link>
+                        <Link href="https://discord.gg/sxHQE3mvuZ">
+                          <IconButton>
+                            <SiDiscord />
+                          </IconButton>
+                        </Link>
+                      </>
+                    ) : null}
+                    {/* <Link href="https://twitter.com/texteaInc">
                 <IconButton>
                   <Twitter />
                 </IconButton>
               </Link> */}
-              </Box>
-            </Stack>
-          </Container>
-        </TransitionFooter>
-      </Main>
-      <Drawer
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          "& .MuiDrawer-paper": {
-            width: drawerWidth,
-            boxSizing: "border-box",
-          },
-        }}
-        variant="persistent"
-        anchor="right"
-        open={historySideBarOpen}
-        ModalProps={{
-          keepMounted: true,
-        }}
-      >
-        <DrawerHeader>
-          <ListItem>
-            <IconButton onClick={() => setHistorySideBarOpen(false)}>
-              {theme?.direction === "ltr" ? <ArrowBack /> : <ArrowForward />}
-            </IconButton>
-          </ListItem>
-        </DrawerHeader>
-        <Divider />
-        <HistoryList isOpen={historySideBarOpen} />
-      </Drawer>
+                  </Box>
+                </Stack>
+              </Container>
+            </TransitionFooter>
+          </Main>
+          <Drawer
+            sx={{
+              width: drawerWidth,
+              flexShrink: 0,
+              "& .MuiDrawer-paper": {
+                width: drawerWidth,
+                boxSizing: "border-box",
+              },
+            }}
+            variant="persistent"
+            anchor="right"
+            open={historySideBarOpen}
+            ModalProps={{
+              keepMounted: true,
+            }}
+          >
+            <DrawerHeader>
+              <ListItem>
+                <IconButton onClick={() => setHistorySideBarOpen(false)}>
+                  {theme?.direction === "ltr" ? (
+                    <ArrowBack />
+                  ) : (
+                    <ArrowForward />
+                  )}
+                </IconButton>
+              </ListItem>
+            </DrawerHeader>
+            <Divider />
+            <HistoryList isOpen={historySideBarOpen} />
+          </Drawer>
+        </HistoryLoader>
+      </LocalizationProvider>
     </ThemeProvider>
   );
 };

@@ -17,6 +17,7 @@ import funix.decorator.lists as lists
 import funix.decorator.secret as secret
 import funix.decorator.theme as theme
 import funix.decorator.widget as widget
+import funix.decorator.layout as layout
 import funix.hint as hint
 from funix.app import app, sock, enable_funix_host_checker
 from funix.config.switch import GlobalSwitchOption
@@ -27,6 +28,7 @@ from funix.util.file import (
     create_safe_tempdir,
     get_path_difference,
     get_python_files_in_dir,
+    mime_encoded,
 )
 from funix.util.module import handle_module, import_module_from_file
 from funix.util.network import (
@@ -40,6 +42,7 @@ from funix.util.network import (
 funix = decorator.funix
 funix_class = decorator.funix_class
 funix_method = decorator.funix_method
+pydantic_ui = layout.pydantic_ui
 # ---- Decorators ----
 
 Limiter = limit.Limiter
@@ -55,6 +58,7 @@ new_funix_type_with_config_func = hint.new_funix_type_with_config_func
 new_funix_type = hint.new_funix_type
 set_app_secret = secret.set_app_secret
 generate_redirect_link = widget.generate_redirect_link
+mime_encode = mime_encoded
 # ---- Util ----
 
 # ---- Exports ----

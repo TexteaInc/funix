@@ -1,6 +1,6 @@
 [project]
 name = "funix"
-version = "0.6.2"
+version = "0.6.3"
 authors = [
   {name = "Textea Inc.", email = "forrestbao@gmail.com"}
 ]
@@ -28,7 +28,8 @@ dependencies = [
   "matplotlib>=3.4.3",
   "pandas>=2.0.3",
   "docstring_parser>=0.16",
-  "tornado>=6.4.2"
+  "tornado>=6.4.2",
+  "pydantic>=2.10.6"
 ]
 
 [project.optional-dependencies]
@@ -55,15 +56,15 @@ homepage = "https://github.com/TexteaInc/funix"
 [project.scripts]
 funix = "funix.__main__:cli_main"
 
-[tool.pyright]
-include = ["src"]
-exclude = ["**/node_modules", "**/__pycache__"]
-strict = ["src"]
-typeCheckingMode = "strict"
+# [tool.pyright]
+# include = ["src"]
+# exclude = ["**/node_modules", "**/__pycache__"]
+# strict = ["src"]
+# typeCheckingMode = "strict"
 
-useLibraryCodeForTypes = true
-reportMissingImports = true
-reportMissingTypeStubs = false
+# useLibraryCodeForTypes = true
+# reportMissingImports = true
+# reportMissingTypeStubs = false
 
 [tool.setuptools.packages.find]
 where = ["backend"]
