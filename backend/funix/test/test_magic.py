@@ -151,7 +151,7 @@ class TestGetTypeWidgetProp(TestCase):
             {
                 "type": "array",
                 "widget": "sheet",
-                "items": {"type": "integer", "widget": ""},
+                "items": {"type": "integer", "widget": "inputbox"},
             },
         )
 
