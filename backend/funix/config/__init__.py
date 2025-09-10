@@ -27,7 +27,7 @@ supported_upload_widgets = ["image", "video", "audio", "file"]
 A list, contains the upload widget names.
 """
 
-banned_function_name_and_path = ["list", "file", "static", "config", "param", "call"]
+banned_function_name_and_path = ["list", "file", "static", "config", "param", "call", "update"]
 """
 The banned function name and path.
 

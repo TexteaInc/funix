@@ -12,11 +12,12 @@ from pathlib import Path
 from urllib.parse import urlparse
 from uuid import uuid4
 
-from flask import Flask, Response, abort, request
+from flask import Flask, Response, abort, request, send_file
 from flask_sock import Sock
 from sqlalchemy import create_engine, text
 from sqlalchemy.pool import SingletonThreadPool
 
+from funix.config import banned_function_name_and_path
 from funix.config.switch import GlobalSwitchOption
 from funix.decorator.file import get_file_info
 from funix.decorator.lists import get_uuid_with_name
@@ -367,3 +368,19 @@ def enable_funix_host_checker(regex: str):
     def funix_host_check():
         if len(re.findall(regex_string, request.host)) == 0:
             abort(403)
+
+
+def serve_file(route_or_path: str, path: str = None):
+    if route_or_path and path:
+        if route_or_path in banned_function_name_and_path:
+            raise ValueError(f"{route_or_path} is not allowed, banned names: {banned_function_name_and_path}")
+        @app.route(route_or_path)
+        def __serve_file():
+            return send_file(path)
+    else:
+        safe_route = os.path.basename(route_or_path)
+        if safe_route in banned_function_name_and_path:
+            raise ValueError(f"{safe_route} is not allowed, banned names: {banned_function_name_and_path}")
+        @app.route(safe_route)
+        def __serve_file():
+            return send_file(route_or_path)
