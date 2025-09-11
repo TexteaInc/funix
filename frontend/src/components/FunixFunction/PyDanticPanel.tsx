@@ -436,6 +436,8 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
         );
       } else if (fieldSchema.widget === "ketcher") {
         return <ChemEditor widget={fieldProps} />;
+      } else if (fieldSchema.widget === "ketcher_popup") {
+        return <ChemEditor widget={fieldProps} popup />;
       } else if (
         fieldSchema.type === "boolean" ||
         fieldSchema.widget === "switch"

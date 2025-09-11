@@ -651,8 +651,8 @@ class LimitSource(Enum):
 
 # --- Chem ---
 
-@new_funix_type(widget={"name": "ketcher"})
-class Ketcher(dict):
+
+class __Ketcher(dict):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.smiles = self.get("smiles")
@@ -662,3 +662,10 @@ class Ketcher(dict):
         self.smarts = self.get("smarts")
         self.ket = self.get("ket")
 
+@new_funix_type(widget={"name": "ketcher"})
+class Ketcher(__Ketcher):
+    pass
+
+@new_funix_type(widget={"name": "ketcher_popup"})
+class KetcherPopup(__Ketcher):
+    pass

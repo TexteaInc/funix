@@ -1,5 +1,6 @@
 import { Card, CardMedia } from "@mui/material";
 import React, { useEffect, useState } from "react";
+import renderSvg from "../../../shared/indigo-render";
 
 declare global {
   interface Window {
@@ -17,12 +18,8 @@ const OutputChem = (props: { data: string }) => {
     const loadAndRender = async () => {
       setLoading(true);
       try {
-        const options = new window.indigo.MapStringString();
-        options.set("render-output-format", "svg");
-        const rawRender = window.indigo.render(props.data, options);
-        const img = new Image();
-        img.src = `data:image/svg+xml;base64,${rawRender}`;
-        setSrc(img.src);
+        const svg = renderSvg(props.data);
+        setSrc(svg);
       } catch (e) {
         console.error(e);
       }
