@@ -1,100 +1,124 @@
 import { WidgetProps } from "@rjsf/utils";
-import { Editor } from "ketcher-react";
-import { StandaloneStructServiceProvider } from "ketcher-standalone";
-import "miew/dist/miew.min.css";
-import "ketcher-react/dist/index.css";
-import { Ketcher } from "ketcher-core";
-import React, { useCallback, useMemo, useState } from "react";
-import { Box } from "@mui/material";
+import React, { useState } from "react";
+import {
+  Box,
+  Button,
+  Card,
+  CardMedia,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Typography,
+} from "@mui/material";
+import { KetcherEditor } from "./components";
+import { ChemEditorValue } from "./hooks";
+import renderSvg from "../../shared/indigo-render";
 
 interface ChemEditorProps {
   widget: WidgetProps;
+  popup?: boolean;
 }
 
-type ChemEditorValue = {
-  smiles: string;
-  inchi: string | null;
-  inchiAuxInfo: string | null;
-  inchiKey: string | null;
-  smarts: string;
-  ket: string;
+const SimpleRenderBox = (props: { data: string | null }) => {
+  return (
+    <Card
+      variant="outlined"
+      elevation={0}
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        width: "100%",
+        height: "200px",
+      }}
+    >
+      {props.data ? (
+        <CardMedia
+          component="img"
+          image={renderSvg(props.data)}
+          alt="Chemistry"
+          sx={{
+            maxWidth: "100%",
+            width: "auto",
+            height: "200px",
+          }}
+        />
+      ) : (
+        <Typography variant="body1">No data</Typography>
+      )}
+    </Card>
+  );
 };
 
 const ChemEditor: React.FC<ChemEditorProps> = React.memo((props) => {
-  const [_, setValue] = useState<ChemEditorValue | null>(
-    props.widget.value ?? props.widget.formData ?? null,
+  const [popUpKet, setPopUpKet] = useState<ChemEditorValue | null>(null);
+  const [popUpOpen, setPopUpOpen] = useState(false);
+  const [popUpKetTemp, setPopUpKetTemp] = useState<ChemEditorValue | null>(
+    null,
   );
 
-  const syncSetValue = useCallback(
-    (newValue: ChemEditorValue) => {
-      setValue(newValue);
-      props.widget.onChange(newValue);
-    },
-    [props.widget],
-  );
+  const initialValue = props.widget.value ?? props.widget.formData ?? null;
 
-  const structServiceProvider = useMemo(
-    () => new StandaloneStructServiceProvider(),
-    [],
-  );
+  const handleChange = (newValue: ChemEditorValue) => {
+    props.widget.onChange(newValue);
+    setPopUpKet(newValue);
+  };
 
-  return (
-    <Box
-      sx={{
-        width: "100%",
-        height: "700px",
-        resize: "vertical",
-      }}
-    >
-      <Editor
-        staticResourcesUrl={""}
-        structServiceProvider={structServiceProvider}
-        errorHandler={() => {}}
-        onInit={(ketcher: Ketcher) => {
-          if (window.ketcher) {
-            ketcher.editor.clear();
-            ketcher.editor.clearHistory();
-          }
-          window.ketcher = ketcher;
-          if (props.widget.value || props.widget.formData) {
-            const value = props.widget.value ?? props.widget.formData;
-            if (value) {
-              ketcher.setMolecule(value.ket);
-            }
-          }
-          ketcher.editor.subscribe("change", async () => {
-            const ket = await ketcher.getKet();
-            if (ketcher.containsReaction()) {
-              const smiles = await ketcher.getSmiles();
-              const smarts = await ketcher.getSmarts();
-              syncSetValue({
-                ket,
-                smiles,
-                inchi: null,
-                inchiAuxInfo: null,
-                inchiKey: null,
-                smarts,
-              });
-            } else {
-              const smiles = await ketcher.getSmiles();
-              const inchi = await ketcher.getInchi();
-              const inchiAuxInfo = await ketcher.getInchi(true);
-              const inchiKey = await ketcher.getInChIKey();
-              const smarts = await ketcher.getSmarts();
-              syncSetValue({
-                ket,
-                smiles,
-                inchi,
-                inchiAuxInfo,
-                inchiKey,
-                smarts,
-              });
-            }
-          });
+  if (props.popup) {
+    return (
+      <Box
+        sx={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          gap: 1,
         }}
-      />
-    </Box>
-  );
+      >
+        <SimpleRenderBox data={popUpKet?.ket ?? null} />
+        <Button
+          onClick={() => setPopUpOpen(true)}
+          sx={{ width: "100%" }}
+          variant="contained"
+        >
+          Open Editor
+        </Button>
+        <Dialog
+          open={popUpOpen}
+          onClose={() => setPopUpOpen(false)}
+          fullWidth
+          maxWidth="xl"
+        >
+          <DialogTitle>Editor</DialogTitle>
+          <DialogContent>
+            <KetcherEditor
+              initialValue={initialValue}
+              onChange={(value) => setPopUpKetTemp(value)}
+              height="80vh"
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setPopUpOpen(false)}>Cancel</Button>
+            <Button
+              disabled={popUpKetTemp === null}
+              onClick={() => {
+                setPopUpOpen(false);
+                if (popUpKetTemp !== null) {
+                  handleChange(popUpKetTemp);
+                  setPopUpKetTemp(null);
+                }
+              }}
+            >
+              Confirm
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    );
+  }
+
+  return <KetcherEditor initialValue={initialValue} onChange={handleChange} />;
 });
 
 export default ChemEditor;

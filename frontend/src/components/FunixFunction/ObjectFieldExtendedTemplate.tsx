@@ -208,6 +208,11 @@ const ObjectFieldExtendedTemplate = (props: ObjectFieldTemplateProps) => {
           type: "config",
           element: <ChemEditor widget={elementContent.props} />,
         };
+      } else if (elementContent.props.schema.widget === "ketcher_popup") {
+        return {
+          type: "config",
+          element: <ChemEditor widget={elementContent.props} popup />,
+        };
       } else {
         return {
           type: "config",

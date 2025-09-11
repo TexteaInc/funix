@@ -41,7 +41,7 @@ import InnerHTML from "dangerously-set-html-content";
 import { useNavigate } from "react-router-dom";
 import OutputPlotMedias from "./OutputComponents/OutputPlotImage";
 import _ from "lodash";
-import OutputKetcher from "./OutputComponents/OutputChem";
+import OutputChem from "./OutputComponents/OutputChem";
 
 const guessJSON = (response: string | null): object | false => {
   if (response === null) return false;
@@ -361,7 +361,7 @@ const OutputPanel = (props: {
             <OutputFiles files={response} backend={props.backend.toString()} />
           );
         case "ChemStr":
-          return <OutputKetcher data={response} />;
+          return <OutputChem data={response} />;
         default:
           return (
             <GuessingDataView
