@@ -652,7 +652,7 @@ class LimitSource(Enum):
 # --- Chem ---
 
 
-class __Ketcher(dict):
+class __Ketcher_Base(dict):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.smiles = self.get("smiles")
@@ -663,9 +663,22 @@ class __Ketcher(dict):
         self.ket = self.get("ket")
 
 @new_funix_type(widget={"name": "ketcher"})
-class Ketcher(__Ketcher):
+class InternalKetcher(__Ketcher_Base):
     pass
 
 @new_funix_type(widget={"name": "ketcher_popup"})
-class KetcherPopup(__Ketcher):
+class InternalKetcherPopup(__Ketcher_Base):
+    pass
+
+class KetcherMeta(type):
+    def __getitem__(self, pop_up: Literal["popup", Any] = None) -> type:
+        if pop_up == "popup":
+            return InternalKetcherPopup
+        else:
+            return InternalKetcher
+    
+    def __new__(cls, *args, **kwargs) -> type:
+        return InternalKetcher
+
+class Ketcher(metaclass=KetcherMeta):
     pass
