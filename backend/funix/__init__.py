@@ -58,6 +58,7 @@ new_funix_type_with_config_func = hint.new_funix_type_with_config_func
 new_funix_type = hint.new_funix_type
 set_app_secret = secret.set_app_secret
 generate_redirect_link = widget.generate_redirect_link
+generate_redirect_button = widget.generate_redirect_button
 mime_encode = mime_encoded
 # ---- Util ----
 

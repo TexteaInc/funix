@@ -390,6 +390,13 @@ ChemStr type.
 For output.
 """
 
+_RedirectButton = NewType("RedirectButton", type(Optional[dict]))
+RedirectButton: TypeAlias = _RedirectButton  # type: ignore
+"""
+RedirectButton type.
+For output.
+"""
+
 # ---- Built-in Input Widgets ----
 IntInputBox: TypeAlias = builtin.IntInputBox
 IntSlider = builtin.IntSlider
@@ -662,13 +669,16 @@ class KetcherBase(dict):
         self.smarts = self.get("smarts")
         self.ket = self.get("ket")
 
+
 @new_funix_type(widget={"name": "ketcher"})
 class InternalKetcher(KetcherBase):
     pass
 
+
 @new_funix_type(widget={"name": "ketcher_popup"})
 class InternalKetcherPopup(KetcherBase):
     pass
+
 
 class KetcherMeta(type):
     def __getitem__(self, pop_up: Literal["popup", Any] = None) -> type:
@@ -676,9 +686,10 @@ class KetcherMeta(type):
             return InternalKetcherPopup
         else:
             return InternalKetcher
-    
+
     def __new__(cls, *args, **kwargs) -> type:
         return InternalKetcher
+
 
 class Ketcher(metaclass=KetcherMeta):
     pass

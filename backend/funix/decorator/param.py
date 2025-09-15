@@ -4,7 +4,7 @@ from inspect import Parameter
 from json import dumps, JSONEncoder
 from types import MappingProxyType
 from typing import Any, Callable
-from datetime import datetime
+
 
 from flask import Response
 
@@ -22,6 +22,7 @@ from funix.decorator.layout import (
     pydantic_name_dict,
     pydantic_widget_dict,
 )
+from funix.decorator.encoder import FunixJsonEncoder
 
 dataframe_parse_metadata: dict[str, dict[str, list[str]]] = {}
 """
@@ -32,25 +33,6 @@ parse_type_metadata: dict[str, dict[str, Any]] = {}
 """
 A dict, key is function ID, value is a map of parameter name to type.
 """
-
-
-class FunixJsonEncoder(JSONEncoder):
-    def default(self, o):
-        if isinstance(o, datetime):
-            return o.isoformat()
-        if hasattr(o, "__class__"):
-            clz = o.__class__
-            if hasattr(clz, "__base__"):
-                base = clz.__base__
-                # Check pydantic
-                try:
-                    from pydantic import BaseModel
-
-                    if issubclass(base, BaseModel):
-                        return o.model_dump(mode="json")
-                except ImportError:
-                    return super().default(o)
-        return super().default(o)
 
 
 def apply_decorated_params(

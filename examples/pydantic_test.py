@@ -1,8 +1,8 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
-from funix import funix, pydantic_ui
-
+from funix import funix, pydantic_ui, generate_redirect_link, generate_redirect_button
+from funix.hint import RedirectButton
 
 @pydantic_ui(
     title="model",
@@ -58,3 +58,12 @@ def where_is_the_datetime(
     )
 ) -> str:
     return f"User: {t.user}, Reason: {t.reason}, Time: {datetime.now()}"
+
+
+def test_generate_redirect_button() -> RedirectButton:
+    return generate_redirect_button(where_is_the_datetime, use_raw=True, raw_args={
+        "t": {
+            "user": "Okay",
+            "reason": "Oh no",
+        }
+    })
