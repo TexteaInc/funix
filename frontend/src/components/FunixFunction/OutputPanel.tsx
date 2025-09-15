@@ -42,6 +42,7 @@ import { useNavigate } from "react-router-dom";
 import OutputPlotMedias from "./OutputComponents/OutputPlotImage";
 import _ from "lodash";
 import OutputChem from "./OutputComponents/OutputChem";
+import OutputRedirectButton from "./OutputComponents/OutputRedirectButton";
 
 const guessJSON = (response: string | null): object | false => {
   if (response === null) return false;
@@ -362,6 +363,8 @@ const OutputPanel = (props: {
           );
         case "ChemStr":
           return <OutputChem data={response} />;
+        case "RedirectButton":
+          return <OutputRedirectButton response={response} />;
         default:
           return (
             <GuessingDataView

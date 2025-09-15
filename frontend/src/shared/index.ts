@@ -30,6 +30,7 @@ export type ReturnType =
   | "Dict"
   | "Callable"
   | "ChemStr"
+  | "RedirectButton"
   | FunixType
   | null;
 
