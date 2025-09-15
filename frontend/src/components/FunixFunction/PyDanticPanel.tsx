@@ -27,6 +27,7 @@ import DateTimePickerWidget from "./DateTimePickerWidget";
 import SwitchWidget from "./SwitchWidget";
 import TextExtendedWidget from "./TextExtendedWidget";
 import ChemEditor from "./ChemEditor";
+import _ from "lodash";
 
 interface PyDanticPanelProps {
   rootContent: ReactElement;
@@ -49,6 +50,7 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
   const rootContent = props.rootContent;
   const rootContentProps = rootContent.props;
   const rootContentSchema = rootContentProps.schema;
+  console.log(rootContentSchema, props.rootContent.props.formData);
   const elementName = props.elementName || rootContentProps.name || "Object";
 
   const currentPath = props.currentPath || [elementName];
@@ -157,49 +159,108 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
     }
   };
 
+  const smartMergeWithDefaults = (
+    defaultData: any,
+    formData: any,
+    schema: any,
+  ): any => {
+    if (Array.isArray(formData)) {
+      return formData.length > 0 ? formData : defaultData;
+    }
+
+    if (typeof formData === "object" && formData !== null) {
+      if (Object.keys(formData).length === 0) {
+        return defaultData;
+      }
+
+      const result = { ...defaultData };
+      const properties = schema.items?.properties || schema.properties || {};
+
+      Object.keys(properties).forEach((key) => {
+        const fieldSchema = properties[key];
+        const formValue = formData[key];
+        const defaultValue = defaultData[key];
+
+        if (formValue !== undefined && formValue !== null) {
+          if (
+            typeof formValue === "object" &&
+            !Array.isArray(formValue) &&
+            typeof defaultValue === "object" &&
+            !Array.isArray(defaultValue)
+          ) {
+            result[key] = smartMergeWithDefaults(
+              defaultValue,
+              formValue,
+              fieldSchema,
+            );
+          } else {
+            result[key] = formValue;
+          }
+        } else if (defaultValue !== undefined) {
+          result[key] = defaultValue;
+        } else if (fieldSchema.default !== undefined) {
+          result[key] = fieldSchema.default;
+        }
+      });
+
+      return result;
+    }
+
+    return formData !== undefined && formData !== null ? formData : defaultData;
+  };
+
   const [pydanticForm, setPydanticForm] = useState<object | any[]>(() => {
-    if (
-      rootContentProps.formData !== undefined &&
-      rootContentProps.formData !== null
-    ) {
-      return rootContentProps.formData;
-    }
-    if (rootContentSchema.default !== undefined) {
-      return rootContentSchema.default;
-    }
-    return createDefaultValue(rootContentSchema);
+    const formData = rootContentProps.formData;
+    const defaultData =
+      rootContentSchema.default !== undefined
+        ? rootContentSchema.default
+        : createDefaultValue(rootContentSchema);
+
+    return smartMergeWithDefaults(defaultData, formData, rootContentSchema);
   });
 
   useEffect(() => {
-    const shouldInitialize =
-      rootContentProps.formData === undefined ||
-      rootContentProps.formData === null ||
-      (Array.isArray(rootContentProps.formData) &&
-        rootContentProps.formData.length === 0) ||
-      (typeof rootContentProps.formData === "object" &&
-        Object.keys(rootContentProps.formData).length === 0);
+    const formData = rootContentProps.formData;
+    const defaultData =
+      rootContentSchema.default !== undefined
+        ? rootContentSchema.default
+        : createDefaultValue(rootContentSchema);
 
-    if (shouldInitialize) {
-      const defaultValue =
-        rootContentSchema.default !== undefined
-          ? rootContentSchema.default
-          : createDefaultValue(rootContentSchema);
+    const mergedData = smartMergeWithDefaults(
+      defaultData,
+      formData,
+      rootContentSchema,
+    );
+    setPydanticForm(mergedData);
 
-      setPydanticForm(defaultValue);
-
-      if (rootContentProps.onChange) {
-        rootContentProps.onChange(defaultValue);
-      }
+    if (rootContentProps.onChange) {
+      rootContentProps.onChange(mergedData);
     }
   }, []);
 
   useEffect(() => {
-    if (
-      rootContentProps.formData !== undefined &&
-      rootContentProps.formData !== null &&
-      JSON.stringify(rootContentProps.formData) !== JSON.stringify(pydanticForm)
-    ) {
-      setPydanticForm(rootContentProps.formData);
+    const formData = rootContentProps.formData;
+    const defaultData =
+      rootContentSchema.default !== undefined
+        ? rootContentSchema.default
+        : createDefaultValue(rootContentSchema);
+
+    console.log("PyDanticPanel useEffect triggered:", {
+      formData,
+      defaultData,
+      elementName: props.elementName || rootContentProps.name,
+      currentForm: pydanticForm,
+    });
+
+    const mergedData = smartMergeWithDefaults(
+      defaultData,
+      formData,
+      rootContentSchema,
+    );
+
+    if (!_.isEqual(mergedData, pydanticForm)) {
+      console.log("PyDanticPanel updating form:", mergedData);
+      setPydanticForm(mergedData);
     }
   }, [rootContentProps.formData]);
 
