@@ -404,3 +404,33 @@ def generate_redirect_button(
         dict_args = arguments.arguments
         json_plain = json.dumps(dict_args, cls=FunixJsonEncoder)
     return {"path": result["path"], "args": json_plain, "text": button_text, "auto_direct": auto_direct}
+
+def get_function_by_callable(function: Callable) -> Callable | None:
+    function_qualname = function.__qualname__
+    _function = function
+    if "." in function_qualname:
+        class_function = get_class_method_funix(
+            app_name=app.name, method_qualname=function_qualname
+        )
+        if class_function:
+            _function = class_function
+        else:
+            return None
+    return _function
+
+
+def get_uuid_by_callable(function: Callable) -> str | None:
+    _function = get_function_by_callable(function)
+    if _function is None:
+        return None
+    jump_uuid = get_function_uuid_with_id(app_name=app.name, _id=id(_function))
+    if jump_uuid == "":
+        return None
+    return jump_uuid
+
+
+def get_path_by_callable(function: Callable) -> str | None:
+    _function = get_function_by_callable(function)
+    if _function is None:
+        return None
+    return get_function_detail_by_uuid(app_name=app.name, uuid=get_function_uuid_with_id(app_name=app.name, _id=id(_function)))["path"]

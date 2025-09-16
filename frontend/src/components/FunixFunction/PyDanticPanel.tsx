@@ -50,7 +50,6 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
   const rootContent = props.rootContent;
   const rootContentProps = rootContent.props;
   const rootContentSchema = rootContentProps.schema;
-  console.log(rootContentSchema, props.rootContent.props.formData);
   const elementName = props.elementName || rootContentProps.name || "Object";
 
   const currentPath = props.currentPath || [elementName];
@@ -245,13 +244,6 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
         ? rootContentSchema.default
         : createDefaultValue(rootContentSchema);
 
-    console.log("PyDanticPanel useEffect triggered:", {
-      formData,
-      defaultData,
-      elementName: props.elementName || rootContentProps.name,
-      currentForm: pydanticForm,
-    });
-
     const mergedData = smartMergeWithDefaults(
       defaultData,
       formData,
@@ -259,7 +251,6 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
     );
 
     if (!_.isEqual(mergedData, pydanticForm)) {
-      console.log("PyDanticPanel updating form:", mergedData);
       setPydanticForm(mergedData);
     }
   }, [rootContentProps.formData]);

@@ -31,6 +31,7 @@ export type ReturnType =
   | "Callable"
   | "ChemStr"
   | "RedirectButton"
+  | "NextTo"
   | FunixType
   | null;
 

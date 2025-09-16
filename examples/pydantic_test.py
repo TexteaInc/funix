@@ -4,6 +4,7 @@ from datetime import datetime
 from funix import funix, pydantic_ui, generate_redirect_link, generate_redirect_button
 from funix.hint import RedirectButton
 
+
 @pydantic_ui(
     title="model",
     layout=[
@@ -60,10 +61,10 @@ def where_is_the_datetime(
     return f"User: {t.user}, Reason: {t.reason}, Time: {datetime.now()}"
 
 
-def test_generate_redirect_button() -> RedirectButton:
-    return generate_redirect_button(where_is_the_datetime, use_raw=True, raw_args={
-        "t": {
-            "user": "Okay",
-            "reason": "Oh no",
-        }
-    })
+def list_test(a: SingleModel) -> str:
+    return f"User: {a.user}, Reason: {a.reason}, Time: {datetime.now()}"
+
+@funix(next_to=list_test)
+def test_generate_redirect_button_2():
+    return {"a": {"links": [{"url": "https://www.google.com", "display": True}]}}
+    

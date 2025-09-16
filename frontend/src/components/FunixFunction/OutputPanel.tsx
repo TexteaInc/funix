@@ -43,6 +43,7 @@ import OutputPlotMedias from "./OutputComponents/OutputPlotImage";
 import _ from "lodash";
 import OutputChem from "./OutputComponents/OutputChem";
 import OutputRedirectButton from "./OutputComponents/OutputRedirectButton";
+import OutputNextTo from "./OutputComponents/OutputNextTo";
 
 const guessJSON = (response: string | null): object | false => {
   if (response === null) return false;
@@ -400,6 +401,9 @@ const OutputPanel = (props: {
         </Alert>
       );
     } else {
+      if (returnType === "NextTo") {
+        return <OutputNextTo response={response} />;
+      }
       if (
         returnType !== undefined &&
         (Array.isArray(returnType) || typeof returnType === "string")
