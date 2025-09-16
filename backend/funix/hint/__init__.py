@@ -320,6 +320,13 @@ For output.
 Support Markdown like "**bold**" and "*italic*"
 """
 
+_NextTo = NewType("NextTo", type(Optional[dict]))
+NextTo: TypeAlias = _NextTo  # type: ignore
+"""
+NextTo type.
+For output.
+"""
+
 _HTML = NewType("HTML", type(Optional[str]))
 HTML: TypeAlias = _HTML  # type: ignore
 """

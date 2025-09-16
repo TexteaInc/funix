@@ -1,7 +1,7 @@
 import sys
 from copy import deepcopy
 from functools import wraps
-from inspect import isgeneratorfunction
+from inspect import isgeneratorfunction, signature
 from json import dumps, loads
 from traceback import format_exc
 from typing import Any, Callable
@@ -9,6 +9,8 @@ from urllib.request import urlopen
 from uuid import uuid4
 
 from flask import request, session
+from funix.decorator.encoder import FunixJsonEncoder
+from git import exc
 from requests import post
 
 from funix.app.websocket import StdoutToWebsocket
@@ -19,6 +21,7 @@ from funix.decorator.param import get_dataframe_parse_metadata, get_parse_type_m
 from funix.decorator.pre_fill import get_pre_fill_metadata
 from funix.decorator.response import response_item_to_class
 from funix.decorator.secret import get_secret_by_id
+from funix.decorator.widget import get_path_by_callable
 from funix.hint import PreFillEmpty, WrapperException
 from funix.session import set_global_variable
 
@@ -104,6 +107,7 @@ def funix_call(
     secret_key: bool,
     matplotlib_format: str,
     ws=None,
+    next_to: Callable | None = None,
 ):
     for limiter in global_rate_limiters + limiters:
         limit_result = limiter.rate_limit()
@@ -189,6 +193,24 @@ def funix_call(
                 function_call_result = call_function_get_frame(
                     function, **wrapped_function_kwargs
                 )
+                if next_to:
+                    try:
+                        if isinstance(function_call_result[1], tuple):
+                            arguments = signature(next_to).bind(*function_call_result[1])
+                            arguments.apply_defaults()
+                            arguments = arguments.arguments
+                        elif isinstance(function_call_result[1], dict):
+                            arguments = signature(next_to).bind(**function_call_result[1])
+                            arguments.apply_defaults()
+                            arguments = arguments.arguments
+                        else:
+                            print("Warning: You must return a tuple or a dict.")
+                            arguments = function_call_result[1]
+                    except:
+                        print("Warning: Cannot bind arguments, it means the type of the arguments is not correct.")
+                        arguments = function_call_result[1]
+
+                    return dumps({"args": arguments, "path": get_path_by_callable(next_to) }, cls=FunixJsonEncoder)
                 return pre_anal_result(function_call_result[0], function_call_result[1])
             except WrapperException as e:
                 return {

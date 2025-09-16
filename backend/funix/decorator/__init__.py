@@ -51,7 +51,7 @@ from funix.decorator.secret import (
     set_function_secret,
 )
 from funix.decorator.theme import get_parsed_theme_fot_funix
-from funix.decorator.widget import parse_argument_config, widget_parse
+from funix.decorator.widget import get_uuid_by_callable, parse_argument_config, widget_parse
 from funix.hint import (
     AcceptableWidgetsList,
     ArgumentConfigType,
@@ -64,6 +64,7 @@ from funix.hint import (
     InputLayout,
     LabelsType,
     Markdown,
+    NextTo,
     OutputLayout,
     PreFillType,
     ReactiveType,
@@ -246,6 +247,7 @@ def funix(
     order: Optional[int] = None,
     just_run: bool = False,
     class_line: Optional[int] = None,
+    next_to: Optional[Callable] = None,
 ):
     """
     Decorator for functions to convert them to web apps
@@ -301,6 +303,7 @@ def funix(
         order(int): the order of the function
         just_run(bool): just run the function, no input panel for the function
         class_line(int): the line number of the class
+        next_to(Callable): the function to be called next
 
     Returns:
         function: the decorated function
@@ -489,6 +492,20 @@ def funix(
                 need_websocket = True
                 setattr(function_signature, "_return_annotation", Markdown)
 
+            if next_to:
+                next_to_uuid = get_uuid_by_callable(next_to) if next_to else None
+                if next_to_uuid:
+                    raise ValueError(
+                        f"Function {next_to.__qualname__} not found. Please check if the function is decorated with @funix or is before this function in the file."
+                    )
+                print(f"WARNING: the {function_name} function has next to, the output type will be ignored.")
+                setattr(function_signature, "_return_annotation", NextTo)
+            else:
+                next_to_uuid = None
+
+            if need_websocket and next_to:
+                raise ValueError("You cannot use next to with websocket mode.")
+
             has_reactive_params = False
 
             reactive_config: dict[str, tuple[Callable, dict[str, str]]] = {}
@@ -547,6 +564,7 @@ def funix(
                     "order": order,
                     "justRun": just_run,
                     "line": line,
+                    "nextToUuid": next_to_uuid,
                 },
             )
 
@@ -817,6 +835,7 @@ def funix(
                     secret_key,
                     matplotlib_format,
                     ws,
+                    next_to,
                 )
                 if result is not None:
                     return result
