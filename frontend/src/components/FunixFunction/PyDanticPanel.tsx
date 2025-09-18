@@ -172,13 +172,14 @@ const PyDanticPanel = (props: PyDanticPanelProps) => {
         return defaultData;
       }
 
-      const result = { ...defaultData };
+      const safeDefaultData = defaultData || {};
+      const result = { ...safeDefaultData };
       const properties = schema.items?.properties || schema.properties || {};
 
       Object.keys(properties).forEach((key) => {
         const fieldSchema = properties[key];
         const formValue = formData[key];
-        const defaultValue = defaultData[key];
+        const defaultValue = safeDefaultData[key];
 
         if (formValue !== undefined && formValue !== null) {
           if (
