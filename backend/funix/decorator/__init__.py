@@ -493,15 +493,8 @@ def funix(
                 setattr(function_signature, "_return_annotation", Markdown)
 
             if next_to:
-                next_to_uuid = get_uuid_by_callable(next_to) if next_to else None
-                if next_to_uuid:
-                    raise ValueError(
-                        f"Function {next_to.__qualname__} not found. Please check if the function is decorated with @funix or is before this function in the file."
-                    )
                 print(f"WARNING: the {function_name} function has next to, the output type will be ignored.")
                 setattr(function_signature, "_return_annotation", NextTo)
-            else:
-                next_to_uuid = None
 
             if need_websocket and next_to:
                 raise ValueError("You cannot use next to with websocket mode.")
@@ -564,7 +557,6 @@ def funix(
                     "order": order,
                     "justRun": just_run,
                     "line": line,
-                    "nextToUuid": next_to_uuid,
                 },
             )
 
@@ -769,6 +761,7 @@ def funix(
                     param_widget_whitelist_callable,
                     param_widget_example_callable,
                     class_method_qualname if is_class_method else function.__qualname__,
+                    next_to
                 )
 
             decorated_function_param_getter_name = f"{function_name}_param_getter"
