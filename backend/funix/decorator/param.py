@@ -16,6 +16,7 @@ from funix.decorator.magic import (
     get_type_dict,
     get_type_widget_prop,
 )
+from funix.decorator.widget import get_uuid_by_callable
 from funix.session import get_global_variable
 from funix.decorator.layout import (
     pydantic_layout_dict,
@@ -683,6 +684,7 @@ def get_param_for_funix(
     param_widget_whitelist_callable: dict,
     param_widget_example_callable: dict,
     qualname: str,
+    next_to: Callable | None,
 ):
     new_decorated_function = deepcopy(decorated_function)
     if pre_fill is not None:
@@ -858,6 +860,8 @@ def get_param_for_funix(
         des = get_global_variable(session_description)
         new_decorated_function["description"] = des
         new_decorated_function["schema"]["description"] = des
+    if next_to:
+        new_decorated_function["nextToUuid"] = get_uuid_by_callable(next_to)
     return Response(
         dumps(new_decorated_function, cls=FunixJsonEncoder), mimetype="application/json"
     )
