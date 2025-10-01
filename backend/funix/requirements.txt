@@ -10,3 +10,4 @@ matplotlib>=3.4.3
 pandas>=2.0.3
 tornado>=6.4.2
 pydantic>=2.10.6
+GitPython>=3.1.31
