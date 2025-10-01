@@ -200,13 +200,14 @@ export default function MarkdownDiv(props: MarkdownDivProps) {
 
   useEffect(() => {
     const fetchContent = async () => {
-      const content = await MarkdownAsync({
+      const _content = await MarkdownAsync({
         remarkPlugins: [remarkGfm, remarkMath],
         rehypePlugins: [
           rehypeRaw,
           [rehypeKatex, { output: "mathml" }],
           [rehypeMermaid],
         ],
+        urlTransform: (value: string) => value,
         components: {
           p: (props) =>
             isRenderInline ? (
@@ -364,7 +365,7 @@ export default function MarkdownDiv(props: MarkdownDivProps) {
         },
         children: props.markdown,
       });
-      setContent(content);
+      setContent(_content);
     };
     fetchContent();
   }, [props.markdown]);
