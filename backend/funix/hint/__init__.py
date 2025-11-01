@@ -694,9 +694,7 @@ class KetcherMeta(type):
         else:
             return InternalKetcher
 
-    def __new__(cls, *args, **kwargs) -> type:
-        return InternalKetcher
 
-
-class Ketcher(metaclass=KetcherMeta):
+@new_funix_type(widget={"name": "ketcher"})
+class Ketcher(KetcherBase, metaclass=KetcherMeta):
     pass
