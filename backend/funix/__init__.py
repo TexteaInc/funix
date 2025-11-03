@@ -18,6 +18,7 @@ import funix.decorator.secret as secret
 import funix.decorator.theme as theme
 import funix.decorator.widget as widget
 import funix.decorator.layout as layout
+import funix.decorator.ai as ai
 import funix.hint as hint
 from funix.app import app, sock, enable_funix_host_checker
 from funix.config.switch import GlobalSwitchOption
@@ -61,6 +62,10 @@ generate_redirect_link = widget.generate_redirect_link
 generate_redirect_button = widget.generate_redirect_button
 mime_encode = mime_encoded
 # ---- Util ----
+
+# ---- AI ----
+funix_ai = ai.funix_ai
+# ---- AI ----
 
 # ---- Exports ----
 
