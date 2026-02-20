@@ -3,6 +3,7 @@ from copy import deepcopy
 from functools import wraps
 from inspect import isgeneratorfunction, signature
 from json import dumps, loads
+from time import sleep
 from traceback import format_exc
 from typing import Any, Callable
 from urllib.request import urlopen
@@ -109,6 +110,27 @@ def funix_call(
     ws=None,
     next_to: Callable | None = None,
 ):
+    def send_ws_json(payload: Any) -> None:
+        if not ws:
+            return
+        try:
+            ws.send(dumps(payload))
+        except Exception:
+            pass
+
+    def send_ws_done() -> None:
+        send_ws_json({"__funix_event": "done"})
+
+    def close_ws_with_drain(delay_seconds: float = 0.05) -> None:
+        if not ws:
+            return
+        if delay_seconds > 0:
+            sleep(delay_seconds)
+        try:
+            ws.close()
+        except Exception:
+            pass
+
     for limiter in global_rate_limiters + limiters:
         limit_result = limiter.rate_limit()
         if limit_result is not None:
@@ -225,11 +247,12 @@ def funix_call(
 
         @wraps(function)
         def output_to_web_function(**wrapped_function_kwargs):
+            org_stdout, org_stderr = sys.stdout, sys.stderr
             try:
                 fake_stdout = StdoutToWebsocket(ws)
                 fake_stderr = StdoutToWebsocket(ws, is_err=True)
-                org_stdout, sys.stdout = sys.stdout, fake_stdout
-                org_stderr, sys.stderr = sys.stderr, fake_stderr
+                sys.stdout = fake_stdout
+                sys.stderr = fake_stderr
                 if isgeneratorfunction(function):
                     for single_result in function(**wrapped_function_kwargs):
                         if single_result:
@@ -246,18 +269,18 @@ def funix_call(
                                 print(single_result_item)
                         else:
                             print(function_result_)
+            except:
+                send_ws_json(
+                    {
+                        "error_type": "function",
+                        "error_body": format_exc(),
+                    }
+                )
+            finally:
                 sys.stdout = org_stdout
                 sys.stderr = org_stderr
-            except:
-                ws.send(
-                    dumps(
-                        {
-                            "error_type": "function",
-                            "error_body": format_exc(),
-                        }
-                    )
-                )
-            ws.close()
+                send_ws_done()
+                close_ws_with_drain()
 
         cell_names = []
         upload_base64_files = {}
@@ -288,8 +311,8 @@ def funix_call(
                 "error_body": "No arguments passed to function.",
             }
             if need_websocket:
-                ws.send(dumps(empty_function_kwargs_error))
-                ws.close()
+                send_ws_json(empty_function_kwargs_error)
+                close_ws_with_drain()
             else:
                 return empty_function_kwargs_error
         if secret_key:
@@ -303,8 +326,8 @@ def funix_call(
                         "error_body": "Provided secret is incorrect.",
                     }
                     if need_websocket:
-                        ws.send(dumps(incorrect_secret_error))
-                        ws.close()
+                        send_ws_json(incorrect_secret_error)
+                        close_ws_with_drain()
                     else:
                         return incorrect_secret_error
                 else:
@@ -315,8 +338,8 @@ def funix_call(
                     "error_body": "No secret provided.",
                 }
                 if need_websocket:
-                    ws.send(dumps(no_secret_error))
-                    ws.close()
+                    send_ws_json(no_secret_error)
+                    close_ws_with_drain()
                 else:
                     return no_secret_error
 
@@ -332,16 +355,14 @@ def funix_call(
                     arg[static_key] = function_kwargs[static_key]
                 if need_websocket:
                     if print_to_web:
-                        ws.send(
-                            dumps(
-                                {
-                                    "error_type": "wrapper",
-                                    "error_body": "Funix cannot handle cell, print_to_web and stream mode "
-                                    "in the same time",
-                                }
-                            )
+                        send_ws_json(
+                            {
+                                "error_type": "wrapper",
+                                "error_body": "Funix cannot handle cell, print_to_web and stream mode "
+                                "in the same time",
+                            }
                         )
-                        ws.close()
+                        close_ws_with_drain()
                         return
                     else:
                         result = []
@@ -360,8 +381,8 @@ def funix_call(
                     else:
                         result.append(temp_result)
             if need_websocket:
-                ws.send(dumps({"result": result}))
-                ws.close()
+                send_ws_json({"result": result})
+                close_ws_with_drain()
                 return
             else:
                 return [{"result": result}]
@@ -385,8 +406,8 @@ def funix_call(
                 else:
                     for temp_function_result in function(**new_args):
                         function_result = pre_anal_result(None, temp_function_result)
-                        ws.send(dumps(function_result))
-                    ws.close()
+                        send_ws_json(function_result)
+                    close_ws_with_drain()
             else:
                 return wrapped_function(**new_args)
         else:
@@ -396,14 +417,14 @@ def funix_call(
                 else:
                     for temp_function_result in function(**function_kwargs):
                         function_result = pre_anal_result(None, temp_function_result)
-                        ws.send(dumps(function_result))
-                    ws.close()
+                        send_ws_json(function_result)
+                    close_ws_with_drain()
             else:
                 return wrapped_function(**function_kwargs)
     except:
         error = {"error_type": "wrapper", "error_body": format_exc()}
         if need_websocket:
-            ws.send(dumps(error))
-            ws.close()
+            send_ws_json(error)
+            close_ws_with_drain()
         else:
             return error

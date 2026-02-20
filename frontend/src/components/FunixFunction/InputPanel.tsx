@@ -178,6 +178,20 @@ const InputPanel = (props: {
     );
   }, [props.backend.protocol, props.backend.host, props.detail.id]);
 
+  const isWebsocketControlMessage = useCallback((raw: string): boolean => {
+    try {
+      const parsed = JSON.parse(raw) as { __funix_event?: string };
+      return (
+        parsed !== null &&
+        typeof parsed === "object" &&
+        !Array.isArray(parsed) &&
+        typeof parsed.__funix_event === "string"
+      );
+    } catch (e) {
+      return false;
+    }
+  }, []);
+
   const checkResponse = useCallback(async () => {
     await new Promise((resolve) => setTimeout(resolve, 300));
   }, []);
@@ -196,9 +210,15 @@ const InputPanel = (props: {
         });
 
         socket.addEventListener("message", function (event) {
-          props.setResponse(event.data);
+          const data = String(event.data);
+          if (isWebsocketControlMessage(data)) {
+            setWaiting(false);
+            setRequestDone(true);
+            return;
+          }
+          props.setResponse(data);
           props.setOutdated(false);
-          setTempOutput(event.data);
+          setTempOutput(data);
         });
 
         socket.addEventListener("close", async function () {
@@ -221,6 +241,7 @@ const InputPanel = (props: {
       checkResponse,
       props.preview.websocket,
       getWebsocketUrl,
+      isWebsocketControlMessage,
       props.setOutdated,
       props.setResponse,
       props.detail.id,
@@ -244,7 +265,12 @@ const InputPanel = (props: {
       });
 
       socket.addEventListener("message", function (event) {
-        const data = structuredClone(event.data);
+        const data = String(event.data);
+        if (isWebsocketControlMessage(data)) {
+          setWaiting(false);
+          setRequestDone(true);
+          return;
+        }
         props.setResponse(data);
         setTempOutput(data);
       });
@@ -319,6 +345,7 @@ const InputPanel = (props: {
     checkResponse,
     props.preview.websocket,
     getWebsocketUrl,
+    isWebsocketControlMessage,
     props.setOutdated,
     props.setResponse,
     last,
