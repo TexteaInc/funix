@@ -121,7 +121,7 @@ def funix_call(
     def send_ws_done() -> None:
         send_ws_json({"__funix_event": "done"})
 
-    def close_ws_with_drain(delay_seconds: float = 0.05) -> None:
+    def close_ws_with_drain(delay_seconds: float = 0.2) -> None:
         if not ws:
             return
         if delay_seconds > 0:
