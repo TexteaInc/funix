@@ -181,7 +181,7 @@ def get_type_dict(annotation: any) -> dict:
             return {"type": getattr(annotation, "__name__")}
         elif annotation_type_class_name == "range":
             return {"type": "range"}
-        elif annotation_type_class_name in ["UnionType", "_UnionGenericAlias"]:
+        elif annotation_type_class_name in ["Union", "UnionType", "_UnionGenericAlias"]:
             if (
                 len(getattr(annotation, "__args__")) != 2
                 or getattr(annotation, "__args__")[0].__name__ == "NoneType"
