@@ -15,6 +15,7 @@ from _ast import (
     keyword,
 )
 from ast import NodeVisitor, unparse
+from inspect import Parameter, signature
 from typing import Any
 
 import funix
@@ -61,6 +62,36 @@ def set_init_function(cls_name: str, cls: Any):
     set_global_variable("__FUNIX_" + cls_name, cls)
 
 
+def _has_void_constructor(cls: Any) -> bool:
+    """Return True if __init__ only has `self` (or variadics), with no explicit args."""
+    init_sig = signature(cls.__init__)
+    params = list(init_sig.parameters.values())[1:]  # Skip `self`
+    if not params:
+        return True
+    for p in params:
+        if p.kind in (Parameter.VAR_POSITIONAL, Parameter.VAR_KEYWORD):
+            continue
+        return False
+    return True
+
+
+def get_or_init_function(
+    cls_name: str,
+    cls_type: Any,
+    auto_init_when_missing: bool = False,
+) -> Any:
+    """
+    Return class instance from session, optionally auto-initializing it.
+    """
+    inited_class = get_global_variable("__FUNIX_" + cls_name)
+    if inited_class is None and auto_init_when_missing:
+        inited_class = cls_type()
+        set_init_function(cls_name, inited_class)
+    if inited_class is None:
+        raise WrapperException("Class must be inited first!")
+    return inited_class
+
+
 class RuntimeClassVisitor(NodeVisitor):
     """
     The runtime class visitor.
@@ -98,6 +129,7 @@ class RuntimeClassVisitor(NodeVisitor):
             self.class_sock = sock
 
         self.open_function = False
+        self._auto_init_void_constructor = _has_void_constructor(cls)
 
         # keep order number track
         self.number_tracker = 0
@@ -276,6 +308,13 @@ class RuntimeClassVisitor(NodeVisitor):
                 node_doc_string = node.body[0].value.value
 
         if node.name == "__init__":
+            if self._auto_init_void_constructor:
+                funix_decorator.keywords.append(
+                    keyword(
+                        arg="disable",
+                        value=Constant(value=True),
+                    )
+                )
             # new_module.body[0].decorator_list[0].keywords = [
             #     keyword(arg="title", value=Constant(value=self._cls_name))
             # ]
@@ -322,8 +361,12 @@ class RuntimeClassVisitor(NodeVisitor):
                     Assign(
                         targets=[Name(id="_funix_self", ctx=Store())],
                         value=Call(
-                            func=Name(id="get_init_function", ctx=Load()),
-                            args=[Constant(value=self._cls_name)],
+                            func=Name(id="get_or_init_function", ctx=Load()),
+                            args=[
+                                Constant(value=self._cls_name),
+                                Name(id=self._cls_name, ctx=Load()),
+                                Constant(value=self._auto_init_void_constructor),
+                            ],
                             keywords=[],
                         ),
                         lineno=0,
