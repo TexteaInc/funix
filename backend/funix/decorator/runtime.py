@@ -256,6 +256,16 @@ class RuntimeClassVisitor(NodeVisitor):
                 )
             )
 
+        # Align class-method default with normal @funix default:
+        # keep auto-run disabled unless user explicitly sets auto_run.
+        if not any(k.arg == "auto_run" for k in funix_decorator.keywords):
+            funix_decorator.keywords.append(
+                keyword(
+                    arg="auto_run",
+                    value=Constant(value=False),
+                )
+            )
+
         funix_decorator.keywords.append(
             keyword(
                 arg="is_class_method",

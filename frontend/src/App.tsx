@@ -62,6 +62,7 @@ import {
   TemplateString,
 } from "./components/Common/TemplateString";
 import PrivacyDialog from "./components/PrivacyDialog";
+import MarkdownDiv from "./components/Common/MarkdownDiv";
 import {
   appSecretAtom,
   backendAtom,
@@ -549,9 +550,8 @@ const App = () => {
                     </IconButton>
                   )}
                 <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                  <TemplateString
-                    template={theme?.funix_header || "{{org}}"}
-                    records={{
+                  <MarkdownDiv
+                    markdown={stringTemplate(theme?.funix_header || "{{org}}", {
                       org: selectedFunction?.name || "Funix",
                       functionName: selectedFunction?.name || "No name",
                       functionPath: selectedFunction?.path || "No path",
@@ -563,7 +563,8 @@ const App = () => {
                         ? "Yes"
                         : "No",
                       functionModule: selectedFunction?.module || "No module",
-                    }}
+                    })}
+                    isRenderInline={true}
                   />
                 </Typography>
                 {selectedFunction && selectedFunction.secret && (
