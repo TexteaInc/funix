@@ -1,5 +1,4 @@
 import React, { useEffect } from "react";
-import type { InteractionProps } from "react-json-view";
 import { Stack } from "@mui/material";
 import { castValue, getInitValue } from "../Common/ValueOperation";
 import MarkdownDiv from "../Common/MarkdownDiv";
@@ -15,6 +14,13 @@ interface JSONEditorWidgetInterface {
 
 type JSONType = number | string | boolean | object | null | undefined;
 type JSONObjectType = { [key: string]: JSONType | any };
+
+interface EditCallbackParams {
+  updated_src: object;
+  name: string | null;
+  new_value?: any;
+  existing_value: any;
+}
 
 const JSONEditorWidget = (props: JSONEditorWidgetInterface) => {
   let value: { [key: string]: JSONType } | JSONType[] = {};
@@ -37,7 +43,7 @@ const JSONEditorWidget = (props: JSONEditorWidgetInterface) => {
     );
   }, [props.data]);
 
-  const handleEdit = React.useCallback((value: InteractionProps) => {
+  const handleEdit = React.useCallback((value: EditCallbackParams) => {
     if (value.updated_src instanceof Array) {
       const formatList = value.updated_src.map((item) => {
         return castValue(item, props.checkType);
